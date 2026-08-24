@@ -64,7 +64,7 @@ function createItem(type: ToolType, x: number, y: number, extra?: Record<string,
       height: (extra?.height as number) ?? 260,
       color: '#7C3AED',
     } as FrameItem;
-    case 'checklist': return { ...base, type: 'checklist', title: 'Checklist', color: '#0d2a35', entries: [] } as ChecklistItem;
+    case 'checklist': return { ...base, type: 'checklist', title: 'Checklist', color: '#0d2a35', entries: [] } as unknown as ChecklistItem;
     case 'line':      return {
       ...base, type: 'line',
       x2: x + 180, y2: y,

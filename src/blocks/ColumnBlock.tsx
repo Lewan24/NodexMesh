@@ -27,7 +27,7 @@ interface ItemRowProps {
   children: React.ReactNode;
 }
 
-function ItemRow({ item, isDragging, isSelected, onDragHandleMouseDown, onEject, onSelect, children }: ItemRowProps) {
+function ItemRow({ isDragging, isSelected, onDragHandleMouseDown, onEject, onSelect, children }: ItemRowProps) {
   return (
     <div
       className="group/row relative"
@@ -118,7 +118,7 @@ function createDefaultItem(kind: BoardItem['type']): BoardItem {
   const base = { id: uid(), x: 0, y: 0, zIndex: 1 };
   switch (kind) {
     case 'note': return { ...base, type: 'note', content: '', color: '#fefce8', width: 240 } as NoteItem;
-    case 'checklist': return { ...base, type: 'checklist', title: 'Checklist', color: '#f0fdf4', entries: [] } as ChecklistItem;
+    case 'checklist': return { ...base, type: 'checklist', title: 'Checklist', color: '#f0fdf4', entries: [] } as unknown as ChecklistItem;
     case 'link': return { ...base, type: 'link', url: '', title: 'New Link', description: '' } as LinkItem;
     case 'image': return { ...base, type: 'image', url: '', caption: '', width: 240, imgHeight: 150 } as ImageItem;
     case 'text': return { ...base, type: 'text', content: 'Text', size: 'md' } as TextItem;
@@ -203,7 +203,7 @@ export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, on
       const centers = getItemCenters();
       let target = fromIdx;
       for (let i = 0; i < centers.length; i++) {
-        if (me.clientY > centers[i]) target = i;
+        if (me.clientY > centers[i]!) target = i;
       }
       const rect = containerEl.getBoundingClientRect();
       const isOutsideX = me.clientX < rect.left - 40 || me.clientX > rect.right + 40;
@@ -229,7 +229,7 @@ export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, on
         updateItems(items => {
           const next = [...items];
           const [moved] = next.splice(fromIdx, 1);
-          next.splice(finalDrop, 0, moved);
+          next.splice(finalDrop, 0, moved!);
           return next;
         });
       }

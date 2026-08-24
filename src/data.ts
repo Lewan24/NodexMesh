@@ -72,7 +72,7 @@ export const initialProjects: Project[] = [
           },
           {
             id: 'ci4', type: 'checklist', x: 0, y: 0, zIndex: 1,
-            title: 'Assets needed', color: '#f0fdf4',
+            title: 'Assets needed', color: '#f0fdf4', width: 200,
             entries: [
               { id: 'ca1', text: 'Icons export (SVG)', done: true },
               { id: 'ca2', text: 'Photo library', done: false },
@@ -83,7 +83,7 @@ export const initialProjects: Project[] = [
       },
       {
         id: 'cl-design', type: 'checklist', x: 1020, y: 44, zIndex: 2,
-        title: 'Design Checklist', color: '#0d2a35',
+        title: 'Design Checklist', color: '#0d2a35', width: 200,
         entries: [
           { id: 'de1', text: 'Typography scale defined', done: true },
           { id: 'de2', text: 'Component library', done: true },
@@ -163,7 +163,7 @@ export const initialProjects: Project[] = [
       },
       {
         id: 'cl-personal', type: 'checklist', x: 330, y: 290, zIndex: 2,
-        title: 'Weekly habits', color: '#0d2a35',
+        title: 'Weekly habits', color: '#0d2a35', width: 200,
         entries: [
           { id: 'ph1', text: 'Morning run (30 min)', done: false },
           { id: 'ph2', text: 'Read 30 pages', done: true },
