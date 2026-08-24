@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   THEME TOKENS
+   Single source of truth for color. Change a value here and it updates
+   everywhere it's referenced via var(--token-name). Components should
+   prefer these tokens over hard-coded hex values for chrome/UI (sidebar,
+   panels, buttons, text). Per-item colors that users pick on the canvas
+   (note/frame/card colors) are intentionally left as user data, not theme.
+   ──────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Brand */
+  --color-accent: #02a0a0;
+  --color-accent-hover: #039494;
+  --color-accent-soft: rgba(2, 160, 160, 0.12);
+  --color-accent-soft-strong: rgba(2, 160, 160, 0.2);
+
+  /* App surfaces */
+  --color-app-bg: #eef0f4;
+  --color-canvas-dot: rgba(0, 0, 0, 0.12);
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8fafc;
+  --color-surface-translucent: rgba(255, 255, 255, 0.92);
+
+  /* Borders */
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-soft: rgba(0, 0, 0, 0.07);
+
+  /* Text (light surfaces) */
+  --color-text-primary: #1a2530;
+  --color-text-secondary: #4a6070;
+  --color-text-muted: #8a9aaa;
+  --color-text-faint: #9ca3af;
+
+  /* Sidebar / dark chrome */
+  --color-chrome-bg: #17092a;
+  --color-chrome-bg-alt: #08171d;
+  --color-chrome-panel: #0d1e24;
+  --color-chrome-border: #24132f;
+  --color-chrome-border-soft: #1a3040;
+  --color-chrome-text: #6a9aa8;
+  --color-chrome-text-dim: #4a7a88;
+  --color-chrome-text-faint: #3a6070;
+  --color-chrome-text-strong: #ffffff;
+  --color-chrome-hover: #0d1e24;
+
+  /* Semantic */
+  --color-success: #059669;
+  --color-warning: #ffbd65;
+  --color-danger: #ff6b8a;
+  --color-danger-strong: #e05070;
+
+  /* Radii */
+  --radius-card: 1rem;
+  --radius-pill: 999px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--color-app-bg);
+  color: var(--color-text-primary);
+}
+
+/* Reusable text-color utility classes so components can opt into the
+   theme without repeating hex values inline. */
+.text-theme-primary   { color: var(--color-text-primary); }
+.text-theme-secondary { color: var(--color-text-secondary); }
+.text-theme-muted     { color: var(--color-text-muted); }
+.text-theme-accent    { color: var(--color-accent); }
+.text-theme-inverse   { color: var(--color-chrome-text-strong); }
+
+.btn-accent {
+  background-color: var(--color-accent);
+  color: white;
+  transition: background-color 0.15s ease;
+}
+.btn-accent:hover { background-color: var(--color-accent-hover); }
+
+.btn-ghost {
+  color: var(--color-text-secondary);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.btn-ghost:hover { background-color: rgba(0, 0, 0, 0.06); }
+
+.card-surface {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.input-theme {
+  background-color: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  border-radius: 0.75rem;
+  transition: border-color 0.15s ease;
+}
+.input-theme:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
+
+@keyframes item-enter {
+  from { opacity: 0; transform: scale(0.88) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.board-item-enter {
+  animation: item-enter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.hint-pulse {
+  animation: fade-in 0.3s ease forwards;
+}
