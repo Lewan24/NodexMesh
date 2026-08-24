@@ -51,7 +51,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBloc
         className="rounded-2xl shadow-xl overflow-hidden transition-shadow duration-150 group-hover:shadow-2xl"
         style={{
           backgroundColor: item.color,
-          outline: isSelected ? '2px solid #02A0A0' : 'none',
+          outline: isSelected ? '2px solid #7C3AED' : 'none',
           outlineOffset: 3,
         }}
       >

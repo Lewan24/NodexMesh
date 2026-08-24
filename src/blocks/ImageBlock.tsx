@@ -112,7 +112,7 @@ export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: 
               onKeyDown={e => { if (e.key === 'Enter') commitUrl(); if (e.key === 'Escape') { setEditingUrl(false); setUrlInput(item.url); } }}
               onBlur={commitUrl}
               placeholder="Paste image URL…"
-              className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border border-[#02A0A0]/40 focus:border-[#02A0A0] transition-colors"
+              className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border border-[#7C3AED]/40 focus:border-[#7C3AED] transition-colors"
               style={{ backgroundColor: inputBg, color: textColor }}
             />
           </div>
@@ -137,8 +137,8 @@ export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: 
         onMouseDown={e => { e.stopPropagation(); onBlockResize(e, w, imgH); }}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="12" cy="12" r="4" fill="#02A0A0" opacity="0.8" />
-          <path d="M5 12h7M12 5v7" stroke="#02A0A0" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+          <circle cx="12" cy="12" r="4" fill="#7C3AED" opacity="0.8" />
+          <path d="M5 12h7M12 5v7" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
         </svg>
       </div>
     </div>

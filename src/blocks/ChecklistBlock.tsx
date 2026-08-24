@@ -102,7 +102,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete }: Props) {
   const light = isLight(item.color);
   const textColor = light ? '#1e293b' : '#e8f4f4';
   const mutedColor = light ? 'rgba(30,41,59,0.45)' : 'rgba(232,244,244,0.4)';
-  const accentColor = light ? '#02A0A0' : '#e8f4f4';
+  const accentColor = light ? '#7C3AED' : '#e8f4f4';
 
   const update = (patch: Partial<ChecklistItem>) => onUpdate(i => ({ ...i, ...patch } as BoardItem));
   const updateEntries = (fn: (entries: ChecklistEntry[]) => ChecklistEntry[]) =>

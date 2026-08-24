@@ -8,57 +8,88 @@
 
 /* ────────────────────────────────────────────────────────────────────────
    THEME TOKENS
-   Single source of truth for color. Change a value here and it updates
-   everywhere it's referenced via var(--token-name). Components should
-   prefer these tokens over hard-coded hex values for chrome/UI (sidebar,
-   panels, buttons, text). Per-item colors that users pick on the canvas
-   (note/frame/card colors) are intentionally left as user data, not theme.
+   Single source of truth for color. The whole palette is derived from the
+   sidebar's deep violet (--color-chrome-bg) — that's the one color that
+   never changes between themes; everything else (accent, surfaces, text)
+   is tuned to sit well next to it. Light is the default theme; dark
+   overrides live in [data-theme="dark"]. Change a value here and it
+   updates everywhere it's referenced via var(--token-name).
+
+   Per-item colors that users pick on the canvas (note/frame/card colors)
+   are intentionally left as user data, not theme.
    ──────────────────────────────────────────────────────────────────────── */
+
+/* Chrome (sidebar + floating panels) — brand-anchored, same in both themes */
 :root {
-  /* Brand */
-  --color-accent: #02a0a0;
-  --color-accent-hover: #039494;
-  --color-accent-soft: rgba(2, 160, 160, 0.12);
-  --color-accent-soft-strong: rgba(2, 160, 160, 0.2);
-
-  /* App surfaces */
-  --color-app-bg: #eef0f4;
-  --color-canvas-dot: rgba(0, 0, 0, 0.12);
-  --color-surface: #ffffff;
-  --color-surface-alt: #f8fafc;
-  --color-surface-translucent: rgba(255, 255, 255, 0.92);
-
-  /* Borders */
-  --color-border: rgba(0, 0, 0, 0.1);
-  --color-border-soft: rgba(0, 0, 0, 0.07);
-
-  /* Text (light surfaces) */
-  --color-text-primary: #1a2530;
-  --color-text-secondary: #4a6070;
-  --color-text-muted: #8a9aaa;
-  --color-text-faint: #9ca3af;
-
-  /* Sidebar / dark chrome */
   --color-chrome-bg: #17092a;
-  --color-chrome-bg-alt: #08171d;
-  --color-chrome-panel: #0d1e24;
-  --color-chrome-border: #24132f;
-  --color-chrome-border-soft: #1a3040;
-  --color-chrome-text: #6a9aa8;
-  --color-chrome-text-dim: #4a7a88;
-  --color-chrome-text-faint: #3a6070;
+  --color-chrome-bg-alt: #120720;
+  --color-chrome-panel: #1c0e33;
+  --color-chrome-border: #2a1642;
+  --color-chrome-border-soft: rgba(255, 255, 255, 0.08);
+  --color-chrome-text: #b9a8d6;
+  --color-chrome-text-dim: #8f7aad;
+  --color-chrome-text-faint: #6c5c85;
   --color-chrome-text-strong: #ffffff;
-  --color-chrome-hover: #0d1e24;
+  --color-chrome-hover: #1c0e33;
 
-  /* Semantic */
+  /* Semantic (stable across themes) */
   --color-success: #059669;
-  --color-warning: #ffbd65;
+  --color-warning: #f0a94e;
   --color-danger: #ff6b8a;
-  --color-danger-strong: #e05070;
+  --color-danger-strong: #e0507a;
 
-  /* Radii */
   --radius-card: 1rem;
   --radius-pill: 999px;
+}
+
+/* ── Light theme (default) ─────────────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  --color-accent: #7c3aed;
+  --color-accent-hover: #6d28d9;
+  --color-accent-soft: rgba(124, 58, 237, 0.12);
+  --color-accent-soft-strong: rgba(124, 58, 237, 0.2);
+
+  --color-app-bg: #f4f2fa;
+  --color-canvas-dot: rgba(23, 9, 42, 0.12);
+  --color-surface: #ffffff;
+  --color-surface-alt: #f8f7fc;
+  --color-surface-translucent: rgba(255, 255, 255, 0.92);
+
+  --color-border: rgba(23, 9, 42, 0.1);
+  --color-border-soft: rgba(23, 9, 42, 0.07);
+
+  --color-text-primary: #1c1330;
+  --color-text-secondary: #5b5470;
+  --color-text-muted: #948da6;
+  --color-text-faint: #a39cb3;
+}
+
+/* ── Dark theme ───────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --color-accent: #a276f7;
+  --color-accent-hover: #b28cff;
+  --color-accent-soft: rgba(162, 118, 247, 0.2);
+  --color-accent-soft-strong: rgba(162, 118, 247, 0.3);
+
+  --color-app-bg: #15091f;
+  --color-canvas-dot: rgba(255, 255, 255, 0.09);
+  --color-surface: #1f1233;
+  --color-surface-alt: #251639;
+  --color-surface-translucent: rgba(31, 18, 51, 0.92);
+
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-soft: rgba(255, 255, 255, 0.07);
+
+  --color-text-primary: #f2eef9;
+  --color-text-secondary: #bcaed6;
+  --color-text-muted: #8c7fa8;
+  --color-text-faint: #766a8f;
+
+  --color-danger: #ff8aa3;
+  --color-danger-strong: #ff9fb4;
+  --color-success: #34d399;
+  --color-warning: #ffbd65;
 }
 
 *, *::before, *::after {
@@ -75,6 +106,7 @@ body {
   -webkit-font-smoothing: antialiased;
   background-color: var(--color-app-bg);
   color: var(--color-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Reusable text-color utility classes so components can opt into the
@@ -96,12 +128,13 @@ body {
   color: var(--color-text-secondary);
   transition: background-color 0.15s ease, color 0.15s ease;
 }
-.btn-ghost:hover { background-color: rgba(0, 0, 0, 0.06); }
+.btn-ghost:hover { background-color: rgba(124, 58, 237, 0.08); }
 
 .card-surface {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .input-theme {
@@ -109,8 +142,9 @@ body {
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
   border-radius: 0.75rem;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.2s ease;
 }
+.input-theme::placeholder { color: var(--color-text-muted); }
 .input-theme:focus {
   outline: none;
   border-color: var(--color-accent);
@@ -118,7 +152,7 @@ body {
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.2); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
 
 @keyframes item-enter {

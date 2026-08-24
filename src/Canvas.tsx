@@ -52,7 +52,7 @@ function createItem(type: ToolType, x: number, y: number, extra?: Record<string,
       columns: [
         { id: uid(), title: 'To Do', color: '#5a8a94', cards: [] },
         { id: uid(), title: 'In Progress', color: '#FFBD65', cards: [] },
-        { id: uid(), title: 'Done', color: '#02A0A0', cards: [] },
+        { id: uid(), title: 'Done', color: '#7C3AED', cards: [] },
       ],
     } as KanbanItem;
     case 'image':     return { ...base, type: 'image', url: '', caption: '', width: 260, imgHeight: 178 } as ImageItem;
@@ -62,14 +62,14 @@ function createItem(type: ToolType, x: number, y: number, extra?: Record<string,
       ...base, type: 'frame', title: 'Group',
       width: (extra?.width as number) ?? 360,
       height: (extra?.height as number) ?? 260,
-      color: '#02A0A0',
+      color: '#7C3AED',
     } as FrameItem;
     case 'checklist': return { ...base, type: 'checklist', title: 'Checklist', color: '#0d2a35', entries: [] } as ChecklistItem;
     case 'line':      return {
       ...base, type: 'line',
       x2: x + 180, y2: y,
       arrowStart: false, arrowEnd: true,
-      color: '#02A0A0', strokeWidth: 2,
+      color: '#7C3AED', strokeWidth: 2,
     } as LineItem;
     case 'column':    return {
       ...base, type: 'column', title: 'Column', color: '#f0f9ff', width: 320, items: [],
@@ -547,7 +547,7 @@ export default function Canvas({
               {sel && (
                 <div
                   className="absolute pointer-events-none rounded-2xl"
-                  style={{ inset: -4, boxShadow: '0 0 0 2px #02A0A0, 0 0 12px rgba(2,160,160,0.25)' }}
+                  style={{ inset: -4, boxShadow: '0 0 0 2px #7C3AED, 0 0 12px rgba(124, 58, 237,0.25)' }}
                 />
               )}
               <BlockRenderer
@@ -577,7 +577,7 @@ export default function Canvas({
               {sel && (
                 <div
                   className="absolute pointer-events-none rounded-2xl"
-                  style={{ inset: -4, boxShadow: '0 0 0 2px #02A0A0, 0 0 12px rgba(2,160,160,0.25)' }}
+                  style={{ inset: -4, boxShadow: '0 0 0 2px #7C3AED, 0 0 12px rgba(124, 58, 237,0.25)' }}
                 />
               )}
               <ItemWatcher itemId={item.id} onResize={handleItemResize}>
@@ -610,8 +610,8 @@ export default function Canvas({
             style={{
               left: frameDraft.x, top: frameDraft.y,
               width: frameDraft.w, height: frameDraft.h,
-              border: '2px dashed rgba(2,160,160,0.7)',
-              borderRadius: 12, backgroundColor: 'rgba(2,160,160,0.06)',
+              border: '2px dashed rgba(124, 58, 237,0.7)',
+              borderRadius: 12, backgroundColor: 'rgba(124, 58, 237,0.06)',
             }}
           />
         )}
@@ -623,8 +623,8 @@ export default function Canvas({
             style={{
               left: lasso.x1, top: lasso.y1,
               width: lasso.x2 - lasso.x1, height: lasso.y2 - lasso.y1,
-              border: '1.5px solid rgba(2,160,160,0.8)',
-              borderRadius: 4, backgroundColor: 'rgba(2,160,160,0.07)',
+              border: '1.5px solid rgba(124, 58, 237,0.8)',
+              borderRadius: 4, backgroundColor: 'rgba(124, 58, 237,0.07)',
             }}
           />
         )}
@@ -660,7 +660,7 @@ export default function Canvas({
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none hint-pulse">
           <div
             className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm shadow-lg"
-            style={{ backgroundColor: 'var(--color-surface-translucent)', border: '1px solid rgba(2,160,160,0.3)', color: 'var(--color-accent)', backdropFilter: 'blur(8px)' }}
+            style={{ backgroundColor: 'var(--color-surface-translucent)', border: '1px solid rgba(124, 58, 237,0.3)', color: 'var(--color-accent)', backdropFilter: 'blur(8px)' }}
           >
             {selectedTool === 'frame'
               ? 'Drag to draw a frame — items inside will move with it'

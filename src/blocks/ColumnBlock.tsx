@@ -37,8 +37,8 @@ function ItemRow({ item, isDragging, isSelected, onDragHandleMouseDown, onEject,
       <div
         className="relative rounded-xl overflow-hidden shadow-sm border cursor-pointer"
         style={{
-          borderColor: isSelected ? '#02A0A0' : 'rgba(0,0,0,0.07)',
-          boxShadow: isSelected ? '0 0 0 2px rgba(2,160,160,0.2), 0 4px 16px rgba(0,0,0,0.08)' : '',
+          borderColor: isSelected ? '#7C3AED' : 'rgba(0,0,0,0.07)',
+          boxShadow: isSelected ? '0 0 0 2px rgba(124, 58, 237,0.2), 0 4px 16px rgba(0,0,0,0.08)' : '',
           transition: 'box-shadow 0.15s, border-color 0.15s',
         }}
         onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.09)'; }}
@@ -89,7 +89,7 @@ function ItemRow({ item, isDragging, isSelected, onDragHandleMouseDown, onEject,
 // ─── DROP INDICATOR LINE ─────────────────────────────────────────────────────
 function DropLine() {
   return (
-    <div className="h-1 rounded-full mx-1 my-1.5" style={{ backgroundColor: '#02A0A0', boxShadow: '0 0 8px rgba(2,160,160,0.5)' }} />
+    <div className="h-1 rounded-full mx-1 my-1.5" style={{ backgroundColor: '#7C3AED', boxShadow: '0 0 8px rgba(124, 58, 237,0.5)' }} />
   );
 }
 
@@ -247,7 +247,7 @@ export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, on
       {isDragOver && (
         <div
           className="absolute pointer-events-none rounded-2xl"
-          style={{ inset: -4, boxShadow: '0 0 0 3px #02A0A0, 0 0 24px rgba(2,160,160,0.3)', zIndex: 1 }}
+          style={{ inset: -4, boxShadow: '0 0 0 3px #7C3AED, 0 0 24px rgba(124, 58, 237,0.3)', zIndex: 1 }}
         />
       )}
 
@@ -255,7 +255,7 @@ export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, on
         className="rounded-2xl border shadow-xl"
         style={{
           backgroundColor: item.color,
-          borderColor: isSelected ? '#02A0A0' : isDragOver ? '#02A0A0' : columnLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)',
+          borderColor: isSelected ? '#7C3AED' : isDragOver ? '#7C3AED' : columnLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)',
           transition: 'border-color 0.15s',
           minWidth: 220,
         }}
@@ -306,7 +306,7 @@ export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, on
               <input
                 autoFocus
                 className="bg-transparent font-bold text-base outline-none border-b-2 min-w-0 flex-1"
-                style={{ color: headerTextColor, borderColor: '#02A0A0' }}
+                style={{ color: headerTextColor, borderColor: '#7C3AED' }}
                 value={item.title}
                 onChange={e => update({ title: e.target.value })}
                 onBlur={() => setEditingTitle(false)}
@@ -440,12 +440,12 @@ export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, on
             onClick={() => setShowAddMenu(v => !v)}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
             style={{
-              color: '#02A0A0',
-              backgroundColor: columnLight ? 'rgba(2,160,160,0.07)' : 'rgba(2,160,160,0.12)',
-              border: '1.5px dashed rgba(2,160,160,0.35)',
+              color: '#7C3AED',
+              backgroundColor: columnLight ? 'rgba(124, 58, 237,0.07)' : 'rgba(124, 58, 237,0.12)',
+              border: '1.5px dashed rgba(124, 58, 237,0.35)',
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(2,160,160,0.14)'; (e.currentTarget as HTMLElement).style.borderStyle = 'solid'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = columnLight ? 'rgba(2,160,160,0.07)' : 'rgba(2,160,160,0.12)'; (e.currentTarget as HTMLElement).style.borderStyle = 'dashed'; }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(124, 58, 237,0.14)'; (e.currentTarget as HTMLElement).style.borderStyle = 'solid'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = columnLight ? 'rgba(124, 58, 237,0.07)' : 'rgba(124, 58, 237,0.12)'; (e.currentTarget as HTMLElement).style.borderStyle = 'dashed'; }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 5v14M5 12h14" />
@@ -486,7 +486,7 @@ export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, on
       >
         <div
           className="rounded-full"
-          style={{ width: 4, height: 40, backgroundColor: '#02A0A0', opacity: 0.5, margin: '0 auto' }}
+          style={{ width: 4, height: 40, backgroundColor: '#7C3AED', opacity: 0.5, margin: '0 auto' }}
         />
       </div>
     </div>

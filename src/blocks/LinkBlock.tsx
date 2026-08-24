@@ -24,7 +24,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: Props) {
   const textColor = light ? '#1e293b' : '#e2e8f0';
   const mutedColor = light ? '#64748b' : '#5a8a94';
   const borderBase = light ? 'rgba(0,0,0,0.1)' : '#1a3040';
-  const borderHover = light ? 'rgba(2,160,160,0.5)' : 'rgba(2,160,160,0.4)';
+  const borderHover = light ? 'rgba(124, 58, 237,0.5)' : 'rgba(124, 58, 237,0.4)';
   const accentBg = light ? '#f0fdf4' : '#112028';
   const inputBg = light ? '#f8fafc' : '#071317';
   const inputBorder = light ? 'rgba(0,0,0,0.12)' : '#1a3040';
@@ -47,7 +47,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: Props) {
         {/* Top accent strip */}
         {item.topColor
           ? <div style={{ height: 5, backgroundColor: item.topColor }} />
-          : <div className="h-0.5 bg-gradient-to-r from-[#02A0A0] to-[#FFBD65]" />
+          : <div className="h-0.5 bg-gradient-to-r from-[#7C3AED] to-[#FFBD65]" />
         }
 
         <div className="p-4">
@@ -55,7 +55,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: Props) {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ backgroundColor: accentBg }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#02A0A0" strokeWidth="2">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2">
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                 </svg>
@@ -69,7 +69,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: Props) {
                 onClick={() => setEditing(v => !v)}
                 className="opacity-0 group-hover:opacity-100 transition-all"
                 style={{ color: mutedColor }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#02A0A0'; }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#7C3AED'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = mutedColor; }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -99,8 +99,8 @@ export default function LinkBlock({ item, onUpdate, onDelete }: Props) {
                 onChange={e => update({ url: e.target.value })}
                 onKeyDown={e => e.key === 'Escape' && setEditing(false)}
                 placeholder="https://…"
-                className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border focus:border-[#02A0A0] transition-colors"
-                style={{ backgroundColor: inputBg, color: textColor, borderColor: '#02A0A0', caretColor: '#02A0A0' }}
+                className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border focus:border-[#7C3AED] transition-colors"
+                style={{ backgroundColor: inputBg, color: textColor, borderColor: '#7C3AED', caretColor: '#7C3AED' }}
               />
               <input
                 value={item.title}
@@ -132,7 +132,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: Props) {
                   target="_blank"
                   rel="noopener noreferrer"
                   onMouseDown={e => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 text-[#02A0A0] text-xs hover:text-[#FFBD65] transition-colors"
+                  className="inline-flex items-center gap-1 text-[#7C3AED] text-xs hover:text-[#FFBD65] transition-colors"
                 >
                   Open link
                   <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

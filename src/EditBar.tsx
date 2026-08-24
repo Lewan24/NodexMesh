@@ -3,8 +3,8 @@ import type { BoardItem, NoteItem, LineItem, FrameItem, ColumnItem } from './typ
 // ─── Palettes ────────────────────────────────────────────────────────────────
 const LIGHT_BG = ['#ffffff', '#fefce8', '#f0fdf4', '#eff6ff', '#fdf4ff', '#fff7ed', '#f1f5f9', '#fce7f3'];
 const DARK_BG  = ['#0d2a35', '#1e1b4b', '#14532d', '#1c1917', '#0c4a6e', '#431407'];
-const STRIP_COLORS = ['#02A0A0', '#FFBD65', '#FF6B8A', '#8B5CF6', '#059669', '#3b82f6', '#f97316', '#e11d48'];
-const LINE_COLORS  = ['#02A0A0', '#FFBD65', '#FF6B8A', '#8B5CF6', '#e8f4f4', '#5a8a94'];
+const STRIP_COLORS = ['#7C3AED', '#FFBD65', '#FF6B8A', '#02A0A0', '#059669', '#3b82f6', '#f97316', '#e11d48'];
+const LINE_COLORS  = ['#7C3AED', '#FFBD65', '#FF6B8A', '#02A0A0', '#e8f4f4', '#5a8a94'];
 type FontSize = 'sm' | 'base' | 'lg';
 
 // Types that support a background fill color
@@ -34,8 +34,8 @@ function Btn({ active, onClick, title, children }: { active?: boolean; onClick: 
       onClick={onClick}
       className="h-8 min-w-8 px-2 flex items-center justify-center rounded-lg text-sm font-medium transition-colors flex-shrink-0"
       style={{
-        backgroundColor: active ? 'rgba(2,160,160,0.15)' : 'transparent',
-        color: active ? '#02A0A0' : '#4a6070',
+        backgroundColor: active ? 'rgba(124, 58, 237,0.15)' : 'transparent',
+        color: active ? '#7C3AED' : '#4a6070',
       }}
       onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.06)'; }}
       onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
@@ -56,8 +56,8 @@ function Swatch({ color, active, onClick, size = 12 }: { color: string; active?:
         width: active ? size + 3 : size,
         height: active ? size + 3 : size,
         backgroundColor: color,
-        borderColor: active ? '#02A0A0' : 'rgba(0,0,0,0.15)',
-        boxShadow: active ? '0 0 0 2px rgba(2,160,160,0.4)' : 'none',
+        borderColor: active ? '#7C3AED' : 'rgba(0,0,0,0.15)',
+        boxShadow: active ? '0 0 0 2px rgba(124, 58, 237,0.4)' : 'none',
       }}
     />
   );
@@ -181,7 +181,7 @@ function LineControls({ item, onUpdate }: { item: LineItem; onUpdate: (fn: (i: B
 // ─── Frame controls ───────────────────────────────────────────────────────────
 function FrameControls({ item, onUpdate, onFitFrame }: { item: FrameItem; onUpdate: (fn: (i: BoardItem) => BoardItem) => void; onFitFrame: () => void }) {
   const up = (patch: Partial<FrameItem>) => onUpdate(i => ({ ...i, ...patch } as BoardItem));
-  const FRAME_COLORS = ['#02A0A0', '#FFBD65', '#8B5CF6', '#FF6B8A', '#059669', '#3b82f6'];
+  const FRAME_COLORS = ['#7C3AED', '#FFBD65', '#02A0A0', '#FF6B8A', '#059669', '#3b82f6'];
   return (
     <>
       <div className="flex items-center gap-1 px-1">
@@ -311,9 +311,9 @@ export default function EditBar({
           <button
             onClick={onGroupItems}
             className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0"
-            style={{ color: '#02A0A0', backgroundColor: 'rgba(2,160,160,0.1)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(2,160,160,0.2)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(2,160,160,0.1)'; }}
+            style={{ color: '#7C3AED', backgroundColor: 'rgba(124, 58, 237,0.1)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(124, 58, 237,0.2)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(124, 58, 237,0.1)'; }}
             title="Wrap in a frame"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

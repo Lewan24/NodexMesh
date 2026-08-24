@@ -40,7 +40,7 @@ export default function LineBlock({ item, isSelected, onDelete, onLineEndpointDr
   const svgTop = dy >= 0 ? -PAD : -(PAD + Math.abs(dy));
 
   const showHandles = hovered || isSelected;
-  const lineColor = isSelected ? '#02A0A0' : item.color;
+  const lineColor = isSelected ? '#7C3AED' : item.color;
 
   return (
     <div

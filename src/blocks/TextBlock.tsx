@@ -46,7 +46,7 @@ export default function TextBlock({ item, onUpdate, onDelete }: Props) {
             onKeyDown={e => (e.key === 'Enter' || e.key === 'Escape') && setEditing(false)}
             onMouseDown={e => e.stopPropagation()}
             className={`bg-transparent outline-none leading-tight ${SIZE_STYLES[item.size]}`}
-            style={{ minWidth: 80, caretColor: '#02A0A0' }}
+            style={{ minWidth: 80, caretColor: '#7C3AED' }}
           />
         ) : (
           <span
@@ -71,7 +71,7 @@ export default function TextBlock({ item, onUpdate, onDelete }: Props) {
               onClick={() => update({ size: s })}
               className="text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider transition-all duration-100"
               style={{
-                backgroundColor: item.size === s ? '#02A0A0' : '#112028',
+                backgroundColor: item.size === s ? '#7C3AED' : '#112028',
                 color: item.size === s ? 'white' : '#5a8a94',
               }}
             >

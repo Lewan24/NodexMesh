@@ -16,7 +16,7 @@ export const initialProjects: Project[] = [
   {
     id: 'proj-design',
     name: 'Product Design',
-    color: '#02A0A0',
+    color: '#7C3AED',
     ownerId: DEMO_OWNER,
     items: [
       {
@@ -45,7 +45,7 @@ export const initialProjects: Project[] = [
           { id: 'col-wip', title: 'In Progress', color: '#FFBD65', cards: [
             { id: 'c4', text: 'Design system audit', done: false },
           ]},
-          { id: 'col-done', title: 'Done', color: '#02A0A0', cards: [
+          { id: 'col-done', title: 'Done', color: '#7C3AED', cards: [
             { id: 'c6', text: 'Project kickoff', done: true },
             { id: 'c7', text: 'Stakeholder alignment', done: true },
           ]},
@@ -58,7 +58,7 @@ export const initialProjects: Project[] = [
           {
             id: 'ci1', type: 'note', x: 0, y: 0, zIndex: 1, width: 240,
             content: '📁 Figma design file — main workspace\n\nCheck the shared library.',
-            color: '#fefce8', topColor: '#02A0A0',
+            color: '#fefce8', topColor: '#7C3AED',
           },
           {
             id: 'ci2', type: 'link', x: 0, y: 0, zIndex: 1,
@@ -133,7 +133,7 @@ export const initialProjects: Project[] = [
           { id: 'col-writing', title: 'Writing', color: '#FFBD65', cards: [
             { id: 'mc4', text: 'Product launch email sequence', done: false },
           ]},
-          { id: 'col-pub', title: 'Published', color: '#02A0A0', cards: [
+          { id: 'col-pub', title: 'Published', color: '#7C3AED', cards: [
             { id: 'mc6', text: 'Homepage copy refresh', done: true },
           ]},
         ],
@@ -175,14 +175,14 @@ export const initialProjects: Project[] = [
   },
 ];
 
-const PROJECT_COLORS = ['#02A0A0', '#FFBD65', '#8B5CF6', '#FF6B8A', '#059669'];
+const PROJECT_COLORS = ['#7C3AED', '#FFBD65', '#02A0A0', '#FF6B8A', '#059669'];
 
 /** Every brand-new user starts with one empty board of their own. */
 export function createDefaultProjectFor(userId: string): Project {
   return {
     id: 'proj-' + Math.random().toString(36).slice(2, 10),
     name: 'My Board',
-    color: PROJECT_COLORS[Math.floor(Math.random() * PROJECT_COLORS.length)] ?? '#02A0A0',
+    color: PROJECT_COLORS[Math.floor(Math.random() * PROJECT_COLORS.length)] ?? '#7C3AED',
     ownerId: userId,
     items: [],
   };

@@ -7,7 +7,7 @@ import Sidebar from './Sidebar';
 import Canvas from './Canvas';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
-const COLORS = ['#02A0A0', '#FFBD65', '#8B5CF6', '#FF6B8A', '#059669'];
+const COLORS = ['#7C3AED', '#FFBD65', '#02A0A0', '#FF6B8A', '#059669'];
 const randomColor = () => COLORS[Math.floor(Math.random() * COLORS.length)] ?? COLORS[0]!;
 
 function approxSize(item: BoardItem): { w: number; h: number } {
@@ -182,7 +182,7 @@ function Board({ userId }: { userId: string }) {
     const frameItem: FrameItem = {
       id: uid(), type: 'frame', x: minX - PAD, y: minY - PAD, zIndex: 0,
       title: 'Group', width: (maxX - minX) + PAD * 2, height: (maxY - minY) + PAD * 2,
-      color: '#02A0A0',
+      color: '#7C3AED',
     };
     addItem(frameItem);
     setSelectedIds([]);

@@ -34,7 +34,7 @@ export default function LoginPage() {
         className="absolute pointer-events-none"
         style={{
           width: 520, height: 520, borderRadius: '50%', top: -180, left: -160,
-          background: 'radial-gradient(circle, rgba(2,160,160,0.25), transparent 70%)',
+          background: 'radial-gradient(circle, rgba(124, 58, 237,0.25), transparent 70%)',
         }}
       />
       <div

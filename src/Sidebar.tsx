@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Project, ToolType } from './types';
 import { useAuth } from './auth/AuthContext';
+import { useTheme } from './theme/ThemeContext';
 import AdminUsersPanel from './AdminUsersPanel';
 
 interface Props {
@@ -59,6 +60,7 @@ const TOOLS: { id: ToolType; label: string; icon: React.ReactNode }[] = [
 
 export default function Sidebar({ projects, activeProjectId, selectedTool, onSelectProject, onSelectTool, onAddProject }: Props) {
   const { currentUser, isAdmin, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [expanded] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const [addingProject, setAddingProject] = useState(false);
@@ -155,7 +157,7 @@ export default function Sidebar({ projects, activeProjectId, selectedTool, onSel
                   paddingRight: 9,
                   backgroundColor: active ? 'var(--color-accent-soft-strong)' : 'transparent',
                   color: active ? 'var(--color-accent)' : 'var(--color-chrome-text-dim)',
-                  boxShadow: active ? 'inset 0 0 0 1px rgba(2,160,160,0.4)' : 'none',
+                  boxShadow: active ? 'inset 0 0 0 1px rgba(124, 58, 237,0.4)' : 'none',
                   minWidth: 0,
                 }}
                 onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-chrome-hover)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-chrome-text)'; } }}
@@ -254,6 +256,24 @@ export default function Sidebar({ projects, activeProjectId, selectedTool, onSel
             </p>
           </div>
           <div className="py-1.5">
+            <button
+              onClick={toggleTheme}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm transition-colors"
+              style={{ color: 'var(--color-chrome-text)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--color-chrome-panel)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
+            >
+              {theme === 'light' ? (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              ) : (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+              )}
+              {theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            </button>
             {isAdmin && (
               <button
                 onClick={() => { setAdminPanelOpen(true); setAccountOpen(false); }}
@@ -327,7 +347,7 @@ export default function Sidebar({ projects, activeProjectId, selectedTool, onSel
                 }}
                 placeholder="Project name…"
                 className="w-full text-sm px-3 py-2 rounded-xl outline-none text-white placeholder-[#3a6070] transition-colors"
-                style={{ backgroundColor: 'var(--color-chrome-panel)', border: '1px solid rgba(2,160,160,0.4)' }}
+                style={{ backgroundColor: 'var(--color-chrome-panel)', border: '1px solid rgba(124, 58, 237,0.4)' }}
               />
             </div>
           )}
