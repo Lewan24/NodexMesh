@@ -8,7 +8,7 @@ const LINE_COLORS  = ['#7C3AED', '#FFBD65', '#FF6B8A', '#02A0A0', '#e8f4f4', '#5
 type FontSize = 'sm' | 'base' | 'lg';
 
 // Types that support a background fill color
-const HAS_BG = new Set(['note', 'checklist', 'link', 'image', 'kanban', 'column']);
+const HAS_BG = new Set(['note', 'checklist', 'link', 'image', 'kanban', 'column', 'text']);
 
 interface Props {
   selectedItems: BoardItem[];
@@ -75,8 +75,10 @@ function ColorPanel({
   const bg = (item as any).color as string | undefined;
   const strip = item.topColor;
   const showBg = HAS_BG.has(item.type);
+  // Text is the only type where "no background" (plain heading) is a valid state.
+  const canClearBg = item.type === 'text';
 
-  const setColor = (c: string) => onUpdate(i => ({ ...i, color: c }));
+  const setColor = (c: string | undefined) => onUpdate(i => ({ ...i, color: c } as BoardItem));
   const setStrip = (c: string | undefined) => onUpdate(i => ({ ...i, topColor: c }));
 
   return (
@@ -85,6 +87,20 @@ function ColorPanel({
         <>
           {/* Light backgrounds */}
           <div className="flex items-center gap-1 px-1">
+            {canClearBg && (
+              <button
+                onClick={() => setColor(undefined)}
+                title="No background"
+                className="rounded-full flex-shrink-0 transition-all hover:scale-125"
+                style={{
+                  width: !bg ? 15 : 12,
+                  height: !bg ? 15 : 12,
+                  border: `1.5px solid ${!bg ? '#7C3AED' : 'rgba(0,0,0,0.2)'}`,
+                  boxShadow: !bg ? '0 0 0 2px rgba(124, 58, 237,0.4)' : 'none',
+                  backgroundImage: 'linear-gradient(to top right, transparent 46%, #FF6B8A 48%, #FF6B8A 52%, transparent 54%)',
+                }}
+              />
+            )}
             {LIGHT_BG.map(c => (
               <Swatch key={c} color={c} active={bg === c} onClick={() => setColor(c)} />
             ))}

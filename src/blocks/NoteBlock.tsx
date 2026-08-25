@@ -10,6 +10,7 @@ function isLight(hex: string) {
 
 type FontSize = 'sm' | 'base' | 'lg';
 const FS_CLASS: Record<FontSize, string> = { sm: 'text-xs', base: 'text-sm', lg: 'text-base' };
+const MIN_MANUAL_HEIGHT = 60;
 
 interface Props {
   item: NoteItem;
@@ -23,17 +24,21 @@ interface Props {
 export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBlockResize }: Props) {
   const [editing, setEditing] = useState(!item.content);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const light = isLight(item.color);
   const textColor = light ? '#1e293b' : '#e8f4f4';
   const mutedColor = light ? 'rgba(30,41,59,0.4)' : 'rgba(232,244,244,0.4)';
   const fs: FontSize = (item.fontSize as FontSize) ?? 'base';
+  const manualHeight = item.height;
 
   useEffect(() => {
     if (isSelected) setEditing(true);
     else setEditing(false);
   }, [isSelected]);
 
+  // Auto-grow only applies while the user hasn't manually set a height.
   const resize = () => {
+    if (manualHeight) return;
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
@@ -41,9 +46,28 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBloc
   };
 
   useEffect(() => { if (editing) { resize(); textareaRef.current?.focus(); } }, [editing]);
-  useEffect(() => { resize(); }, [item.content]);
+  useEffect(() => { resize(); }, [item.content, manualHeight]);
 
   const update = (patch: Partial<NoteItem>) => onUpdate(i => ({ ...i, ...patch } as BoardItem));
+
+  // Dragging from the bottom edge sets (or adjusts) a fixed height. Once set,
+  // the note stops growing with its content and scrolls internally instead.
+  const startHeightDrag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startY = e.clientY;
+    const startHeight = manualHeight ?? contentRef.current?.offsetHeight ?? 120;
+    const handleMove = (ev: MouseEvent) => {
+      const next = Math.max(MIN_MANUAL_HEIGHT, startHeight + (ev.clientY - startY));
+      update({ height: next });
+    };
+    const handleUp = () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+    };
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+  };
 
   return (
     <div className="group relative" style={{ width: item.width ?? 220 }}>
@@ -51,7 +75,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBloc
         className="rounded-2xl shadow-xl overflow-hidden transition-shadow duration-150 group-hover:shadow-2xl"
         style={{
           backgroundColor: item.color,
-          outline: isSelected ? '2px solid #7C3AED' : 'none',
+          outline: isSelected ? '2px solid var(--color-accent)' : 'none',
           outlineOffset: 3,
         }}
       >
@@ -60,12 +84,23 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBloc
           <div style={{ height: 5, backgroundColor: item.topColor }} />
         )}
 
-        {/* Header — just the delete button now; colors are in EditBar */}
-        <div className="flex items-center justify-end px-3 pt-2.5 pb-0 cursor-grab active:cursor-grabbing">
+        {/* Header — delete button + auto-fit reset when a manual height is set */}
+        <div className="flex items-center justify-between px-3 pt-2.5 pb-0 cursor-grab active:cursor-grabbing">
+          {manualHeight && (
+            <button
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => update({ height: undefined })}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5"
+              style={{ color: mutedColor }}
+              title="Reset to auto height"
+            >
+              Auto-fit
+            </button>
+          )}
           <button
             onMouseDown={e => e.stopPropagation()}
             onClick={onDelete}
-            className="opacity-0 group-hover:opacity-100 transition-opacity rounded-full p-0.5 hover:bg-black/10"
+            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity rounded-full p-0.5 hover:bg-black/10"
             style={{ color: mutedColor }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -75,17 +110,21 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBloc
         </div>
 
         {/* Content */}
-        <div className="px-3 pb-3 pt-1">
+        <div
+          ref={contentRef}
+          className="px-3 pb-3 pt-1"
+          style={manualHeight ? { height: manualHeight, overflowY: 'auto' } : undefined}
+        >
           {editing ? (
             <textarea
               ref={textareaRef}
               value={item.content}
               onChange={e => { update({ content: e.target.value }); resize(); }}
               onMouseDown={e => e.stopPropagation()}
-              className={`w-full bg-transparent resize-none outline-none leading-relaxed overflow-hidden ${FS_CLASS[fs]}`}
+              className={`w-full bg-transparent resize-none outline-none leading-relaxed ${manualHeight ? 'overflow-y-auto h-full' : 'overflow-hidden'} ${FS_CLASS[fs]}`}
               style={{
                 color: textColor,
-                minHeight: 52,
+                minHeight: manualHeight ? undefined : 52,
                 textAlign: item.textAlign ?? 'left',
                 fontWeight: item.bold ? 700 : 400,
                 fontStyle: item.italic ? 'italic' : 'normal',
@@ -99,7 +138,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBloc
               className={`leading-relaxed whitespace-pre-wrap cursor-text select-none ${FS_CLASS[fs]}`}
               style={{
                 color: item.content ? textColor : mutedColor,
-                minHeight: 52,
+                minHeight: manualHeight ? undefined : 52,
                 textAlign: item.textAlign ?? 'left',
                 fontWeight: item.bold ? 700 : 400,
                 fontStyle: item.italic ? 'italic' : 'normal',
@@ -118,6 +157,16 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBloc
         onMouseDown={e => { e.stopPropagation(); onBlockResize(e, item.width ?? 220, null); }}
       >
         <div className="w-1 rounded-full" style={{ height: 32, backgroundColor: light ? 'rgba(30,41,59,0.25)' : 'rgba(232,244,244,0.25)' }} />
+      </div>
+
+      {/* Height resize handle (bottom edge) */}
+      <div
+        className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-ns-resize"
+        style={{ left: 0, right: 0, bottom: -6, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        onMouseDown={startHeightDrag}
+        title="Drag to set a fixed height"
+      >
+        <div className="h-1 rounded-full" style={{ width: 32, backgroundColor: light ? 'rgba(30,41,59,0.25)' : 'rgba(232,244,244,0.25)' }} />
       </div>
     </div>
   );

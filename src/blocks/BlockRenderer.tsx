@@ -22,9 +22,11 @@ interface Props {
   onLineEndpointDrag: (e: React.MouseEvent, endpoint: 1 | 2) => void;
   onEjectItem?: (ejectedItem: BoardItem) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
+  /** Routes a nested delete (e.g. an item inside a column) through the confirm dialog instead of deleting immediately. */
+  onRequestDelete?: (execute: () => void) => void;
 }
 
-export default function BlockRenderer({ item, zoom, isSelected, isDragOver, onUpdate, onDelete, onFrameResize, onFitFrame, onBlockResize, onLineEndpointDrag, onEjectItem, onSelectColumnItem }: Props) {
+export default function BlockRenderer({ item, zoom, isSelected, isDragOver, onUpdate, onDelete, onFrameResize, onFitFrame, onBlockResize, onLineEndpointDrag, onEjectItem, onSelectColumnItem, onRequestDelete }: Props) {
   const base = { item: item as any, zoom, isSelected, isDragOver, onUpdate, onDelete };
   switch (item.type) {
     case 'note':      return <NoteBlock {...base} onBlockResize={onBlockResize} />;
@@ -33,7 +35,7 @@ export default function BlockRenderer({ item, zoom, isSelected, isDragOver, onUp
     case 'link':      return <LinkBlock {...base} />;
     case 'text':      return <TextBlock {...base} />;
     case 'checklist': return <ChecklistBlock {...base} />;
-    case 'column':    return <ColumnBlock {...base} onBlockResize={onBlockResize} onEjectItem={onEjectItem} onSelectColumnItem={onSelectColumnItem} />;
+    case 'column':    return <ColumnBlock {...base} onBlockResize={onBlockResize} onEjectItem={onEjectItem} onSelectColumnItem={onSelectColumnItem} onRequestDelete={onRequestDelete} />;
     case 'frame':     return <FrameBlock {...base} onFrameResize={onFrameResize} onFitFrame={onFitFrame} />;
     case 'line':      return <LineBlock {...base} onLineEndpointDrag={onLineEndpointDrag} />;
     default:          return null;

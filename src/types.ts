@@ -36,6 +36,8 @@ export interface NoteItem extends BaseItem {
   content: string;
   color: string;
   width?: number;
+  /** Manually-set height in px. When unset, the note grows to fit its content. */
+  height?: number;
   textAlign?: 'left' | 'center' | 'right';
   fontSize?: 'sm' | 'base' | 'lg';
   bold?: boolean;
@@ -117,6 +119,10 @@ export interface LineItem extends BaseItem {
   arrowEnd: boolean;
   color: string;
   strokeWidth: number;
+  /** If set, the start point (x,y) follows this item's center instead of being fixed. */
+  startItemId?: string;
+  /** If set, the end point (x2,y2) follows this item's center instead of being fixed. */
+  endItemId?: string;
 }
 
 export interface ColumnItem extends BaseItem {

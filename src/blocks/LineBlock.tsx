@@ -70,21 +70,39 @@ export default function LineBlock({ item, isSelected, onDelete, onLineEndpointDr
         {item.arrowEnd && arrowHead(ex, ey, angle, lineColor)}
         {item.arrowStart && arrowHead(ox, oy, angle + Math.PI, lineColor)}
 
-        {/* Endpoint handles on hover/select */}
+        {/* Endpoint handles on hover/select — a square marks an endpoint attached to an item */}
         {showHandles && (
           <>
-            <circle
-              cx={ox} cy={oy} r={5}
-              fill={item.color} stroke="#08171d" strokeWidth={2}
-              style={{ cursor: 'crosshair', pointerEvents: 'all' }}
-              onMouseDown={e => { e.stopPropagation(); onLineEndpointDrag(e, 1); }}
-            />
-            <circle
-              cx={ex} cy={ey} r={5}
-              fill={item.color} stroke="#08171d" strokeWidth={2}
-              style={{ cursor: 'crosshair', pointerEvents: 'all' }}
-              onMouseDown={e => { e.stopPropagation(); onLineEndpointDrag(e, 2); }}
-            />
+            {item.startItemId ? (
+              <rect
+                x={ox - 4.5} y={oy - 4.5} width={9} height={9} rx={2}
+                fill={item.color} stroke="#08171d" strokeWidth={2}
+                style={{ cursor: 'crosshair', pointerEvents: 'all' }}
+                onMouseDown={e => { e.stopPropagation(); onLineEndpointDrag(e, 1); }}
+              />
+            ) : (
+              <circle
+                cx={ox} cy={oy} r={5}
+                fill={item.color} stroke="#08171d" strokeWidth={2}
+                style={{ cursor: 'crosshair', pointerEvents: 'all' }}
+                onMouseDown={e => { e.stopPropagation(); onLineEndpointDrag(e, 1); }}
+              />
+            )}
+            {item.endItemId ? (
+              <rect
+                x={ex - 4.5} y={ey - 4.5} width={9} height={9} rx={2}
+                fill={item.color} stroke="#08171d" strokeWidth={2}
+                style={{ cursor: 'crosshair', pointerEvents: 'all' }}
+                onMouseDown={e => { e.stopPropagation(); onLineEndpointDrag(e, 2); }}
+              />
+            ) : (
+              <circle
+                cx={ex} cy={ey} r={5}
+                fill={item.color} stroke="#08171d" strokeWidth={2}
+                style={{ cursor: 'crosshair', pointerEvents: 'all' }}
+                onMouseDown={e => { e.stopPropagation(); onLineEndpointDrag(e, 2); }}
+              />
+            )}
           </>
         )}
 

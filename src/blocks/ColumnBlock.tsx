@@ -104,6 +104,7 @@ interface Props {
   onBlockResize: (e: React.MouseEvent, w: number, h: null) => void;
   onEjectItem?: (ejectedItem: BoardItem) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
+  onRequestDelete?: (execute: () => void) => void;
 }
 
 const ADD_TYPES: { kind: BoardItem['type']; label: string; icon: string }[] = [
@@ -126,7 +127,7 @@ function createDefaultItem(kind: BoardItem['type']): BoardItem {
   }
 }
 
-export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, onDelete, onBlockResize, onEjectItem, onSelectColumnItem }: Props) {
+export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, onDelete, onBlockResize, onEjectItem, onSelectColumnItem, onRequestDelete }: Props) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showBgMenu, setShowBgMenu] = useState(false);
@@ -407,7 +408,7 @@ export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, on
                       zoom={1}
                       isSelected={false}
                       onUpdate={fn => updateNested(ni.id, fn)}
-                      onDelete={() => deleteNested(ni.id)}
+                      onDelete={() => (onRequestDelete ? onRequestDelete(() => deleteNested(ni.id)) : deleteNested(ni.id))}
                       onFrameResize={() => {}}
                       onFitFrame={() => {}}
                       onBlockResize={() => {}}

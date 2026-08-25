@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { Project, BoardItem, ToolType, FrameItem, NoteItem, KanbanItem, ImageItem, ColumnItem } from './types';
+import type { Project, BoardItem, ToolType, FrameItem, NoteItem, KanbanItem, ImageItem, ColumnItem, LineItem } from './types';
 import { seedProjectsFor, createDefaultProjectFor } from './data';
 import { useAuth } from './auth/AuthContext';
 import LoginPage from './LoginPage';
@@ -13,7 +13,7 @@ const randomColor = () => COLORS[Math.floor(Math.random() * COLORS.length)] ?? C
 
 function approxSize(item: BoardItem): { w: number; h: number } {
   switch (item.type) {
-    case 'note':      return { w: (item as NoteItem).width ?? 220, h: 170 };
+    case 'note':      return { w: (item as NoteItem).width ?? 220, h: (item as NoteItem).height ?? 170 };
     case 'kanban':    return { w: (item as KanbanItem).columns.length * 184 + 24, h: 340 };
     case 'image':     return { w: (item as ImageItem).width ?? 260, h: ((item as ImageItem).imgHeight ?? 178) + 56 };
     case 'link':      return { w: 240, h: 150 };
@@ -22,6 +22,21 @@ function approxSize(item: BoardItem): { w: number; h: number } {
     case 'column':    return { w: (item as ColumnItem).width ?? 320, h: 260 };
     default:          return { w: 200, h: 150 };
   }
+}
+
+/** Strips dangling line attachments after items are deleted, so a line
+ *  doesn't silently keep referencing an item that no longer exists. */
+function detachLines(items: BoardItem[], removedIds: string[]): BoardItem[] {
+  const removed = new Set(removedIds);
+  return items.map(item => {
+    if (item.type !== 'line') return item;
+    const line = item as LineItem;
+    if (!line.startItemId && !line.endItemId) return item;
+    const patch: Partial<LineItem> = {};
+    if (line.startItemId && removed.has(line.startItemId)) patch.startItemId = undefined;
+    if (line.endItemId && removed.has(line.endItemId)) patch.endItemId = undefined;
+    return Object.keys(patch).length > 0 ? { ...line, ...patch } : item;
+  });
 }
 
 const projectsKey = (userId: string) => `nodexmesh_projects_${userId}`;
@@ -92,11 +107,11 @@ function Board({ userId }: { userId: string }) {
   }, [updateItems]);
 
   const deleteItem = useCallback((id: string) => {
-    updateItems(items => items.filter(item => item.id !== id));
+    updateItems(items => detachLines(items.filter(item => item.id !== id), [id]));
   }, [updateItems]);
 
   const deleteItems = useCallback((ids: string[]) => {
-    updateItems(items => items.filter(item => !ids.includes(item.id)));
+    updateItems(items => detachLines(items.filter(item => !ids.includes(item.id)), ids));
   }, [updateItems]);
 
   const bringToFront = useCallback((id: string) => {

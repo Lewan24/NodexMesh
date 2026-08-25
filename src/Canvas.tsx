@@ -6,6 +6,7 @@ import type {
 } from './types';
 import BlockRenderer from './blocks/BlockRenderer';
 import EditBar from './EditBar';
+import ConfirmDialog from './ConfirmDialog';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -32,7 +33,7 @@ function ItemWatcher({ itemId, onResize, children }: { itemId: string; onResize:
 
 function approxSize(item: BoardItem): { w: number; h: number } {
   switch (item.type) {
-    case 'note':      return { w: (item as NoteItem).width ?? 220, h: 170 };
+    case 'note':      return { w: (item as NoteItem).width ?? 220, h: (item as NoteItem).height ?? 170 };
     case 'kanban':    return { w: (item as KanbanItem).columns.length * 184 + 24, h: 340 };
     case 'image':     return { w: (item as ImageItem).width ?? 260, h: ((item as ImageItem).imgHeight ?? 178) + 56 };
     case 'link':      return { w: 240, h: 150 };
@@ -41,6 +42,28 @@ function approxSize(item: BoardItem): { w: number; h: number } {
     case 'column':    return { w: (item as ColumnItem).width ?? 280, h: 260 };
     default:          return { w: 200, h: 150 };
   }
+}
+
+/** Anchor point (center) that an attached line endpoint follows. */
+function itemAnchor(target: BoardItem): { x: number; y: number } {
+  const s = approxSize(target);
+  return { x: target.x + s.w / 2, y: target.y + s.h / 2 };
+}
+
+/** Resolves a line's endpoints to their attached items' current positions, if any. */
+function resolveLineItem(line: LineItem, items: BoardItem[]): LineItem {
+  let x = line.x, y = line.y, x2 = line.x2, y2 = line.y2;
+  if (line.startItemId) {
+    const t = items.find(i => i.id === line.startItemId);
+    if (t) { const p = itemAnchor(t); x = p.x; y = p.y; }
+  }
+  if (line.endItemId) {
+    const t = items.find(i => i.id === line.endItemId);
+    if (t) { const p = itemAnchor(t); x2 = p.x; y2 = p.y; }
+  }
+  return (x === line.x && y === line.y && x2 === line.x2 && y2 === line.y2)
+    ? line
+    : { ...line, x, y, x2, y2 };
 }
 
 function createItem(type: ToolType, x: number, y: number, extra?: Record<string, unknown>): BoardItem | null {
@@ -112,6 +135,41 @@ export default function Canvas({
   const dragOverColumnIdRef = useRef<string | null>(null);
   const [selectedColumnItem, setSelectedColumnItem] = useState<{ columnId: string; item: BoardItem } | null>(null);
 
+  // Entrance "pop" animation — only ever applied to an item right when it's
+  // created or clicked, never left on permanently (a permanently-applied
+  // animation class replays whenever the browser reorders/reinserts the
+  // element in the DOM, e.g. when z-index/order changes on any click).
+  const [animatingIds, setAnimatingIds] = useState<Set<string>>(new Set());
+  const triggerEnterAnim = useCallback((id: string) => {
+    setAnimatingIds(prev => (prev.has(id) ? prev : new Set(prev).add(id)));
+  }, []);
+  const clearEnterAnim = useCallback((id: string) => {
+    setAnimatingIds(prev => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
+  // Line endpoint attachment: highlights the item under the cursor while
+  // dragging an endpoint, so the person can see what it would attach to.
+  const [attachHoverId, setAttachHoverId] = useState<string | null>(null);
+  const attachHoverIdRef = useRef<string | null>(null);
+  const setAttachHover = (id: string | null) => { attachHoverIdRef.current = id; setAttachHoverId(id); };
+
+  // Delete confirmation — every deletion (single item, multi-select, a nested
+  // column item, or the Delete/Backspace shortcut) routes through this so
+  // nothing disappears without the person confirming first.
+  const [pendingDelete, setPendingDelete] = useState<{ execute: () => void; count: number } | null>(null);
+  const requestDelete = useCallback((execute: () => void, count = 1) => {
+    setPendingDelete({ execute, count });
+  }, []);
+  const confirmDelete = useCallback(() => {
+    setPendingDelete(prev => { prev?.execute(); return null; });
+  }, []);
+  const cancelDelete = useCallback(() => setPendingDelete(null), []);
+
   const panRef = useRef(pan);
   panRef.current = pan;
   const zoomRef = useRef(zoom);
@@ -171,15 +229,15 @@ export default function Canvas({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { onSelectItems([]); onSelectTool('select'); setSelectedColumnItem(null); }
       if ((e.key === 'Delete' || e.key === 'Backspace') && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
-        if (selectedIdsRef.current.length > 0) {
-          onDeleteItems(selectedIdsRef.current);
-          onSelectItems([]);
+        const ids = selectedIdsRef.current;
+        if (ids.length > 0) {
+          requestDelete(() => { onDeleteItems(ids); onSelectItems([]); }, ids.length);
         }
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onSelectItems, onSelectTool, onDeleteItems]);
+  }, [onSelectItems, onSelectTool, onDeleteItems, requestDelete]);
 
   const selectedColumnItemRef = useRef(selectedColumnItem);
   selectedColumnItemRef.current = selectedColumnItem;
@@ -235,6 +293,7 @@ export default function Canvas({
     e.preventDefault();
     e.stopPropagation();
     setSelectedColumnItem(null);
+    triggerEnterAnim(id);
 
     onSelectTool("select")
 
@@ -337,7 +396,7 @@ export default function Canvas({
     };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [onSelectItems, onBringToFront, onUpdateItem, onDropOnColumn]);
+  }, [onSelectItems, onBringToFront, onUpdateItem, onDropOnColumn, triggerEnterAnim]);
 
   // ─── Canvas background mouse down ─────────────────────────────────────────
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
@@ -391,7 +450,7 @@ export default function Canvas({
         const item = w > 40 && h > 40
           ? createItem('frame', Math.min(startCanvas.x, cur.x), Math.min(startCanvas.y, cur.y), { width: w, height: h })
           : createItem('frame', startCanvas.x - 80, startCanvas.y - 40);
-        if (item) { onAddItem(item); onSelectTool('select'); }
+        if (item) { onAddItem(item); triggerEnterAnim(item.id); onSelectTool('select'); }
       };
       document.addEventListener('mousemove', handleMove);
       document.addEventListener('mouseup', handleUp);
@@ -406,7 +465,7 @@ export default function Canvas({
         document.removeEventListener('mouseup', handleUp);
         const c = screenToCanvas(ev.clientX - rect.left, ev.clientY - rect.top);
         const item = createItem(selectedTool, c.x, c.y);
-        if (item) { onAddItem(item); onSelectTool('select'); }
+        if (item) { onAddItem(item); triggerEnterAnim(item.id); onSelectTool('select'); }
       };
       document.addEventListener('mousemove', handleMove);
       document.addEventListener('mouseup', handleUp);
@@ -450,7 +509,7 @@ export default function Canvas({
     };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [selectedTool, pan, screenToCanvas, onPanChange, onAddItem, onSelectTool, onSelectItems]);
+  }, [selectedTool, pan, screenToCanvas, onPanChange, onAddItem, onSelectTool, onSelectItems, triggerEnterAnim]);
 
   // ─── Frame resize ────────────────────────────────────────────────────────
   const handleFrameResize = useCallback((id: string, e: React.MouseEvent, startW: number, startH: number) => {
@@ -487,23 +546,60 @@ export default function Canvas({
   }, [onUpdateItem]);
 
   // ─── Line endpoint drag ───────────────────────────────────────────────────
+  // Grabbing an endpoint detaches it immediately (so it tracks the cursor
+  // instead of snapping back to its attached item every render); dropping it
+  // on another item re-attaches there, dropping on empty canvas leaves it free.
   const handleLineEndpointDrag = useCallback((id: string, e: React.MouseEvent, endpoint: 1 | 2) => {
     e.preventDefault(); e.stopPropagation();
     const item = project.items.find(i => i.id === id) as LineItem | undefined;
     if (!item) return;
+
+    const resolved = resolveLineItem(item, projectRef.current.items);
+    const origX = endpoint === 1 ? resolved.x : resolved.x2;
+    const origY = endpoint === 1 ? resolved.y : resolved.y2;
+
+    onUpdateItem(id, i => ({
+      ...i,
+      ...(endpoint === 1 ? { startItemId: undefined, x: origX, y: origY } : { endItemId: undefined, x2: origX, y2: origY }),
+    } as BoardItem));
+
     const startX = e.clientX; const startY = e.clientY;
-    const origX = endpoint === 1 ? item.x : item.x2;
-    const origY = endpoint === 1 ? item.y : item.y2;
     const curZoom = zoomRef.current;
+
+    const findTarget = (nx: number, ny: number) =>
+      projectRef.current.items.find(t => {
+        if (t.id === id || t.type === 'line' || t.type === 'frame') return false;
+        const s = approxSize(t);
+        return nx >= t.x && ny >= t.y && nx <= t.x + s.w && ny <= t.y + s.h;
+      });
+
     const handleMove = (ev: MouseEvent) => {
       const dx = (ev.clientX - startX) / curZoom;
       const dy = (ev.clientY - startY) / curZoom;
+      const nx = origX + dx;
+      const ny = origY + dy;
       onUpdateItem(id, i => ({
         ...i,
-        ...(endpoint === 1 ? { x: origX + dx, y: origY + dy } : { x2: origX + dx, y2: origY + dy }),
+        ...(endpoint === 1 ? { x: nx, y: ny } : { x2: nx, y2: ny }),
       }));
+      setAttachHover(findTarget(nx, ny)?.id ?? null);
     };
-    const handleUp = () => { document.removeEventListener('mousemove', handleMove); document.removeEventListener('mouseup', handleUp); };
+    const handleUp = () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+      const targetId = attachHoverIdRef.current;
+      if (targetId) {
+        const target = projectRef.current.items.find(t => t.id === targetId);
+        if (target) {
+          const p = itemAnchor(target);
+          onUpdateItem(id, i => ({
+            ...i,
+            ...(endpoint === 1 ? { startItemId: target.id, x: p.x, y: p.y } : { endItemId: target.id, x2: p.x, y2: p.y }),
+          } as BoardItem));
+        }
+      }
+      setAttachHover(null);
+    };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
   }, [project.items, onUpdateItem]);
@@ -542,20 +638,24 @@ export default function Canvas({
             <div
               key={item.id}
               data-board-item="true"
-              className="absolute board-item-enter"
+              className={`absolute${animatingIds.has(item.id) ? ' board-item-enter' : ''}`}
               style={{ left: item.x, top: item.y, zIndex: item.zIndex }}
               onMouseDown={ev => handleItemMouseDown(item.id, ev)}
+              onAnimationEnd={() => clearEnterAnim(item.id)}
             >
               {sel && (
                 <div
                   className="absolute pointer-events-none rounded-2xl"
-                  style={{ inset: -4, boxShadow: '0 0 0 2px #7C3AED, 0 0 12px rgba(124, 58, 237,0.25)' }}
+                  style={{ inset: -4, boxShadow: '0 0 0 2px var(--color-accent), 0 0 12px rgba(124, 58, 237,0.25)' }}
                 />
               )}
               <BlockRenderer
                 item={item} zoom={zoom} isSelected={sel}
                 onUpdate={upd => onUpdateItem(item.id, upd)}
-                onDelete={() => { onDeleteItem(item.id); onSelectItems(safeSelectedIds.filter(x => x !== item.id)); }}
+                onDelete={() => requestDelete(() => {
+                  onDeleteItem(item.id);
+                  onSelectItems(safeSelectedIds.filter(x => x !== item.id));
+                })}
                 onFrameResize={(ev, w, h) => handleFrameResize(item.id, ev, w, h)}
                 onFitFrame={() => handleFitFrame(item.id)}
                 onBlockResize={() => {}}
@@ -568,26 +668,38 @@ export default function Canvas({
         {/* Regular items */}
         {others.map(item => {
           const sel = safeSelectedIds.includes(item.id);
+          const renderItem = item.type === 'line' ? resolveLineItem(item as LineItem, project.items) : item;
+          const isAttachTarget = attachHoverId === item.id;
           return (
             <div
               key={item.id}
               data-board-item="true"
-              className="absolute board-item-enter"
-              style={{ left: item.x, top: item.y, zIndex: item.zIndex, cursor: 'grab' }}
+              className={`absolute${animatingIds.has(item.id) ? ' board-item-enter' : ''}`}
+              style={{ left: renderItem.x, top: renderItem.y, zIndex: item.zIndex, cursor: 'grab' }}
               onMouseDown={ev => handleItemMouseDown(item.id, ev)}
+              onAnimationEnd={() => clearEnterAnim(item.id)}
             >
               {sel && (
                 <div
                   className="absolute pointer-events-none rounded-2xl"
-                  style={{ inset: -4, boxShadow: '0 0 0 2px #7C3AED, 0 0 12px rgba(124, 58, 237,0.25)' }}
+                  style={{ inset: -4, boxShadow: '0 0 0 2px var(--color-accent), 0 0 12px rgba(124, 58, 237,0.25)' }}
+                />
+              )}
+              {isAttachTarget && (
+                <div
+                  className="absolute pointer-events-none rounded-2xl"
+                  style={{ inset: -6, boxShadow: '0 0 0 3px var(--color-accent), 0 0 18px rgba(124, 58, 237,0.35)' }}
                 />
               )}
               <ItemWatcher itemId={item.id} onResize={handleItemResize}>
                 <BlockRenderer
-                  item={item} zoom={zoom} isSelected={sel}
+                  item={renderItem} zoom={zoom} isSelected={sel}
                   isDragOver={dragOverColumnId === item.id}
                   onUpdate={upd => onUpdateItem(item.id, upd)}
-                  onDelete={() => { onDeleteItem(item.id); onSelectItems(safeSelectedIds.filter(x => x !== item.id)); }}
+                  onDelete={() => requestDelete(() => {
+                    onDeleteItem(item.id);
+                    onSelectItems(safeSelectedIds.filter(x => x !== item.id));
+                  })}
                   onFrameResize={() => {}}
                   onFitFrame={() => {}}
                   onBlockResize={(ev, w, h) => handleBlockResize(item.id, ev, w, h)}
@@ -599,6 +711,7 @@ export default function Canvas({
                         else setSelectedColumnItem(null);
                       }
                     : undefined}
+                  onRequestDelete={requestDelete}
                 />
               </ItemWatcher>
             </div>
@@ -637,7 +750,7 @@ export default function Canvas({
         <EditBar
           selectedItems={selectedItems}
           onUpdateItem={onUpdateItem}
-          onDeleteItems={ids => { onDeleteItems(ids); onSelectItems([]); }}
+          onDeleteItems={ids => requestDelete(() => { onDeleteItems(ids); onSelectItems([]); }, ids.length)}
           onGroupItems={onGroupSelected}
           onFitFrame={handleFitFrame}
           onClose={() => { onSelectItems([]); setSelectedColumnItem(null); }}
@@ -646,14 +759,24 @@ export default function Canvas({
             ? fn => handleUpdateColumnItem(selectedColumnItem.columnId, fn)
             : undefined}
           onDeleteColumnItem={selectedColumnItem
-            ? () => {
+            ? () => requestDelete(() => {
                 onUpdateItem(selectedColumnItem.columnId, col => ({
                   ...col,
                   items: (col as ColumnItem).items.filter(i => i.id !== selectedColumnItem.item.id),
                 }));
                 setSelectedColumnItem(null);
-              }
+              })
             : undefined}
+        />
+      )}
+
+      {/* Delete confirmation */}
+      {pendingDelete && (
+        <ConfirmDialog
+          title={pendingDelete.count > 1 ? `Delete ${pendingDelete.count} items?` : 'Delete this item?'}
+          message="This can't be undone."
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
         />
       )}
 
