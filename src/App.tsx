@@ -5,6 +5,7 @@ import { useAuth } from './auth/AuthContext';
 import LoginPage from './LoginPage';
 import Sidebar from './Sidebar';
 import Canvas from './Canvas';
+import AppBar from './AppBar';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const COLORS = ['#7C3AED', '#FFBD65', '#02A0A0', '#FF6B8A', '#059669'];
@@ -204,35 +205,39 @@ function Board({ userId }: { userId: string }) {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden relative" style={{ backgroundColor: 'var(--color-app-bg)' }}>
-      <Sidebar
+    <div className='flex flex-col'>
+      <AppBar 
         projects={projects}
-        activeProjectId={activeProjectId}
-        selectedTool={selectedTool}
-        onSelectProject={handleSelectProject}
-        onSelectTool={t => { setSelectedTool(t); setSelectedIds([]); }}
-        onAddProject={addProject}
-      />
-      <Canvas
-        key={activeProjectId}
-        project={activeProject}
-        selectedTool={selectedTool}
-        pan={pan}
-        zoom={zoom}
-        selectedIds={selectedIds}
-        onPanChange={setPan}
-        onZoomChange={setZoom}
-        onSelectTool={setSelectedTool}
-        onSelectItems={setSelectedIds}
-        onGroupSelected={handleGroupSelected}
-        onAddItem={addItem}
-        onUpdateItem={updateItem}
-        onDeleteItem={deleteItem}
-        onDeleteItems={deleteItems}
-        onBringToFront={bringToFront}
-        onDropOnColumn={handleDropOnColumn}
-        onEjectFromColumn={handleEjectFromColumn}
-      />
+        activeProjectId={activeProjectId} 
+        onSelectProject={handleSelectProject} 
+        onAddProject={addProject} />
+
+      <div className="flex h-screen w-screen overflow-hidden relative" style={{ backgroundColor: 'var(--color-app-bg)' }}>
+        <Sidebar
+          selectedTool={selectedTool}
+          onSelectTool={t => { setSelectedTool(t); setSelectedIds([]); }}
+        />
+        <Canvas
+          key={activeProjectId}
+          project={activeProject}
+          selectedTool={selectedTool}
+          pan={pan}
+          zoom={zoom}
+          selectedIds={selectedIds}
+          onPanChange={setPan}
+          onZoomChange={setZoom}
+          onSelectTool={setSelectedTool}
+          onSelectItems={setSelectedIds}
+          onGroupSelected={handleGroupSelected}
+          onAddItem={addItem}
+          onUpdateItem={updateItem}
+          onDeleteItem={deleteItem}
+          onDeleteItems={deleteItems}
+          onBringToFront={bringToFront}
+          onDropOnColumn={handleDropOnColumn}
+          onEjectFromColumn={handleEjectFromColumn}
+        />
+      </div>
     </div>
   );
 }

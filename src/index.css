@@ -27,7 +27,7 @@
   --color-chrome-border: #2a1642;
   --color-chrome-border-soft: rgba(255, 255, 255, 0.08);
   --color-chrome-text: #b9a8d6;
-  --color-chrome-text-dim: #8f7aad;
+  --color-chrome-text-dim: #b99fde;
   --color-chrome-text-faint: #6c5c85;
   --color-chrome-text-strong: #ffffff;
   --color-chrome-hover: #1c0e33;
@@ -72,7 +72,7 @@
   --color-accent-soft: rgba(162, 118, 247, 0.2);
   --color-accent-soft-strong: rgba(162, 118, 247, 0.3);
 
-  --color-app-bg: #15091f;
+  --color-app-bg: #071317;
   --color-canvas-dot: rgba(255, 255, 255, 0.09);
   --color-surface: #1f1233;
   --color-surface-alt: #251639;

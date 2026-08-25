@@ -2,10 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import type { TextItem, BoardItem } from '../types';
 
 const SIZE_STYLES: Record<TextItem['size'], string> = {
-  sm: 'text-sm font-normal text-[#8aacb8]',
-  md: 'text-base font-medium text-white',
-  lg: 'text-2xl font-bold text-white',
-  xl: 'text-4xl font-extrabold text-white',
+  sm: 'text-sm font-normal',
+  md: 'text-base font-medium',
+  lg: 'text-2xl font-bold',
+  xl: 'text-4xl font-extrabold',
 };
 
 const SIZE_LABELS: TextItem['size'][] = ['sm', 'md', 'lg', 'xl'];
@@ -31,7 +31,7 @@ export default function TextBlock({ item, onUpdate, onDelete }: Props) {
 
   return (
     <div
-      className="group relative"
+      className="group relative p-3"
       style={{ minWidth: 140 }}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
@@ -50,7 +50,7 @@ export default function TextBlock({ item, onUpdate, onDelete }: Props) {
           />
         ) : (
           <span
-            className={`block leading-tight select-none cursor-text ${SIZE_STYLES[item.size]}`}
+            className={`block leading-tight select-none cursor-text text-(--color-text-primary) ${SIZE_STYLES[item.size]} text-nowrap`}
             onDoubleClick={() => setEditing(true)}
           >
             {item.content || 'Text'}
@@ -61,7 +61,7 @@ export default function TextBlock({ item, onUpdate, onDelete }: Props) {
       {/* Floating controls */}
       {showControls && !editing && (
         <div
-          className="absolute -bottom-7 left-0 flex items-center gap-1 z-20"
+          className="relative flex items-center gap-1 z-20"
           onMouseDown={e => e.stopPropagation()}
           style={{ animation: 'slide-up 0.15s ease forwards' }}
         >

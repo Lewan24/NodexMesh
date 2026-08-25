@@ -236,6 +236,8 @@ export default function Canvas({
     e.stopPropagation();
     setSelectedColumnItem(null);
 
+    onSelectTool("select")
+
     const curSelected = selectedIdsRef.current;
     const isSelected = curSelected.includes(id);
 

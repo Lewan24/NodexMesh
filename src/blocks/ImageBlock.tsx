@@ -20,7 +20,7 @@ interface Props {
 export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: Props) {
   const [editingUrl, setEditingUrl] = useState(!item.url);
   const [urlInput, setUrlInput] = useState(item.url);
-  const w = item.width ?? 260;
+  const [editingCaption, setEditingCaption] = useState(false)
   const imgH = item.imgHeight ?? 178;
   const bg = item.color ?? '#08171d';
   const light = isLight(bg);
@@ -33,7 +33,9 @@ export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: 
   const commitUrl = () => { update({ url: urlInput }); setEditingUrl(false); };
 
   return (
-    <div className="group relative" style={{ width: w }}>
+    <div className="group relative" style={{ width: item.width ?? 220 }}
+      onMouseEnter={() => setEditingCaption(true)}
+      onMouseLeave={() => setEditingCaption(false)}>
       <div
         className="rounded-2xl overflow-hidden border shadow-xl"
         style={{ backgroundColor: bg, borderColor }}
@@ -56,7 +58,10 @@ export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: 
           ) : (
             <div
               className="w-full h-full flex flex-col items-center justify-center gap-3 cursor-pointer"
-              onClick={() => setEditingUrl(true)}
+              onClick={() => {
+                setEditingUrl(true)
+                setEditingCaption(false)
+              }}
             >
               <div
                 className="w-12 h-12 rounded-2xl flex items-center justify-center"
@@ -118,23 +123,34 @@ export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: 
           </div>
         )}
 
-        <div className="px-3 py-2.5">
-          <input
-            value={item.caption}
-            onChange={e => update({ caption: e.target.value })}
-            onMouseDown={e => e.stopPropagation()}
-            placeholder="Add caption…"
-            className="w-full bg-transparent text-xs outline-none transition-colors"
-            style={{ color: textColor }}
-          />
-        </div>
+        {editingCaption && (
+          <div className="px-3 py-2.5">
+            <input
+              value={item.caption}
+              onChange={e => update({ caption: e.target.value })}
+              onMouseDown={e => e.stopPropagation()}
+              placeholder="Add caption…"
+              className="w-full bg-transparent text-xs outline-none transition-colors"
+              style={{ color: textColor }}
+            />
+          </div>
+        )}
+
+        {item.caption && !editingCaption && (
+          <div className="px-3 py-2.5">
+            <span
+              className="w-full bg-transparent text-xs outline-none transition-colors"
+              style={{ color: textColor }}
+            >{item.caption}</span>
+          </div>
+        )}
       </div>
 
       {/* Resize handle */}
       <div
         className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-se-resize"
         style={{ bottom: -5, right: -5, width: 14, height: 14 }}
-        onMouseDown={e => { e.stopPropagation(); onBlockResize(e, w, imgH); }}
+        onMouseDown={e => { e.stopPropagation(); onBlockResize(e, item.width!, imgH); }}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <circle cx="12" cy="12" r="4" fill="#7C3AED" opacity="0.8" />
