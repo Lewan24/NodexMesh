@@ -78,12 +78,12 @@ export default function TextBlock({ item, onUpdate, onDelete }: Props) {
             onKeyDown={e => (e.key === 'Enter' || e.key === 'Escape') && setEditing(false)}
             onMouseDown={e => e.stopPropagation()}
             className={`bg-transparent outline-none leading-tight ${SIZE_STYLES[item.size]}`}
-            style={{ minWidth: 80, width: '100%', color: textColor, caretColor: 'var(--color-accent)' }}
+            style={{ minWidth: 80, color: textColor, caretColor: 'var(--color-accent)' }}
           />
         ) : (
           <span
-            className={`block leading-tight select-none cursor-text ${SIZE_STYLES[item.size]} ${isCard ? '' : 'text-nowrap'}`}
-            style={{ color: item.content ? textColor : mutedColor, whiteSpace: isCard ? 'pre-wrap' : 'nowrap' }}
+            className={`block leading-tight select-none cursor-text ${SIZE_STYLES[item.size]} text-nowrap`}
+            style={{ color: item.content ? textColor : mutedColor }}
             onDoubleClick={() => setEditing(true)}
           >
             {item.content || 'Text'}

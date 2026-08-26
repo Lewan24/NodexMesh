@@ -100,7 +100,7 @@ export interface FrameItem extends BaseItem {
 export interface ChecklistItem extends BaseItem {
   type: 'checklist';
   title: string;
-  width: number;
+  width?: number;
   color: string;
   entries: ChecklistEntry[];
 }

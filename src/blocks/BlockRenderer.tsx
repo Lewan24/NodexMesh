@@ -1,4 +1,4 @@
-import type { BoardItem } from '../types';
+import type { BoardItem, ChecklistEntry } from '../types';
 import NoteBlock from './NoteBlock';
 import KanbanBlock from './KanbanBlock';
 import ImageBlock from './ImageBlock';
@@ -24,9 +24,11 @@ interface Props {
   onSelectColumnItem?: (item: BoardItem | null) => void;
   /** Routes a nested delete (e.g. an item inside a column) through the confirm dialog instead of deleting immediately. */
   onRequestDelete?: (execute: () => void) => void;
+  /** A checklist entry was dragged past this item's own bounds — Canvas resolves the drop target. */
+  onEntryDroppedOutside?: (entry: ChecklistEntry, clientX: number, clientY: number) => void;
 }
 
-export default function BlockRenderer({ item, zoom, isSelected, isDragOver, onUpdate, onDelete, onFrameResize, onFitFrame, onBlockResize, onLineEndpointDrag, onEjectItem, onSelectColumnItem, onRequestDelete }: Props) {
+export default function BlockRenderer({ item, zoom, isSelected, isDragOver, onUpdate, onDelete, onFrameResize, onFitFrame, onBlockResize, onLineEndpointDrag, onEjectItem, onSelectColumnItem, onRequestDelete, onEntryDroppedOutside }: Props) {
   const base = { item: item as any, zoom, isSelected, isDragOver, onUpdate, onDelete };
   switch (item.type) {
     case 'note':      return <NoteBlock {...base} onBlockResize={onBlockResize} />;
@@ -34,7 +36,7 @@ export default function BlockRenderer({ item, zoom, isSelected, isDragOver, onUp
     case 'image':     return <ImageBlock {...base} onBlockResize={onBlockResize} />;
     case 'link':      return <LinkBlock {...base} />;
     case 'text':      return <TextBlock {...base} />;
-    case 'checklist': return <ChecklistBlock {...base} />;
+    case 'checklist': return <ChecklistBlock {...base} onBlockResize={onBlockResize} onEntryDroppedOutside={onEntryDroppedOutside} />;
     case 'column':    return <ColumnBlock {...base} onBlockResize={onBlockResize} onEjectItem={onEjectItem} onSelectColumnItem={onSelectColumnItem} onRequestDelete={onRequestDelete} />;
     case 'frame':     return <FrameBlock {...base} onFrameResize={onFrameResize} onFitFrame={onFitFrame} />;
     case 'line':      return <LineBlock {...base} onLineEndpointDrag={onLineEndpointDrag} />;

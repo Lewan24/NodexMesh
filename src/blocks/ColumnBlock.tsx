@@ -119,7 +119,7 @@ function createDefaultItem(kind: BoardItem['type']): BoardItem {
   const base = { id: uid(), x: 0, y: 0, zIndex: 1 };
   switch (kind) {
     case 'note': return { ...base, type: 'note', content: '', color: '#fefce8', width: 240 } as NoteItem;
-    case 'checklist': return { ...base, type: 'checklist', title: 'Checklist', color: '#f0fdf4', entries: [] } as unknown as ChecklistItem;
+    case 'checklist': return { ...base, type: 'checklist', title: 'Checklist', color: '#f0fdf4', entries: [] } as ChecklistItem;
     case 'link': return { ...base, type: 'link', url: '', title: 'New Link', description: '' } as LinkItem;
     case 'image': return { ...base, type: 'image', url: '', caption: '', width: 240, imgHeight: 150 } as ImageItem;
     case 'text': return { ...base, type: 'text', content: 'Text', size: 'md' } as TextItem;
@@ -177,6 +177,7 @@ export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, on
 
   // ─── Internal drag-drop reorder ───────────────────────────────────────────
   const handleDragStart = useCallback((fromIdx: number, e: React.MouseEvent) => {
+    if (e.button !== 0) return;
     e.stopPropagation();
     e.preventDefault();
 

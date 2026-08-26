@@ -2,7 +2,7 @@ import { useRef, useCallback, useState, useEffect } from 'react';
 import type {
   Project, BoardItem, ToolType,
   NoteItem, KanbanItem, ImageItem, LinkItem, TextItem,
-  FrameItem, ChecklistItem, LineItem, ColumnItem,
+  FrameItem, ChecklistItem, ChecklistEntry, LineItem, ColumnItem,
 } from './types';
 import BlockRenderer from './blocks/BlockRenderer';
 import EditBar from './EditBar';
@@ -38,29 +38,50 @@ function approxSize(item: BoardItem): { w: number; h: number } {
     case 'image':     return { w: (item as ImageItem).width ?? 260, h: ((item as ImageItem).imgHeight ?? 178) + 56 };
     case 'link':      return { w: 240, h: 150 };
     case 'text':      return { w: 200, h: 60 };
-    case 'checklist': return { w: 230, h: 200 };
+    case 'checklist': return { w: (item as ChecklistItem).width ?? 230, h: 200 };
     case 'column':    return { w: (item as ColumnItem).width ?? 280, h: 260 };
     default:          return { w: 200, h: 150 };
   }
 }
 
-/** Anchor point (center) that an attached line endpoint follows. */
-function itemAnchor(target: BoardItem): { x: number; y: number } {
+/** Bounding rect (canvas space) approximated for an item. */
+function itemRect(target: BoardItem): { x: number; y: number; w: number; h: number } {
   const s = approxSize(target);
-  return { x: target.x + s.w / 2, y: target.y + s.h / 2 };
+  return { x: target.x, y: target.y, w: s.w, h: s.h };
 }
 
-/** Resolves a line's endpoints to their attached items' current positions, if any. */
+/** Center point of an item's bounding rect. */
+function itemAnchor(target: BoardItem): { x: number; y: number } {
+  const r = itemRect(target);
+  return { x: r.x + r.w / 2, y: r.y + r.h / 2 };
+}
+
+/** Point where the ray from a rectangle's center toward (tx,ty) exits the rectangle's border. */
+function rectBorderPoint(rect: { x: number; y: number; w: number; h: number }, tx: number, ty: number): { x: number; y: number } {
+  const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+  const dx = tx - cx, dy = ty - cy;
+  if (dx === 0 && dy === 0) return { x: cx, y: cy };
+  const hw = Math.max(rect.w / 2, 1), hh = Math.max(rect.h / 2, 1);
+  const scaleX = dx !== 0 ? hw / Math.abs(dx) : Infinity;
+  const scaleY = dy !== 0 ? hh / Math.abs(dy) : Infinity;
+  const scale = Math.min(scaleX, scaleY);
+  return { x: cx + dx * scale, y: cy + dy * scale };
+}
+
+/** Resolves a line's endpoints against whatever item they're attached to: the
+ *  point lands right on that item's border (clipped along the line toward the
+ *  other end), so the arrow touches the edge instead of floating at the center. */
 function resolveLineItem(line: LineItem, items: BoardItem[]): LineItem {
+  const startTarget = line.startItemId ? items.find(i => i.id === line.startItemId) : undefined;
+  const endTarget = line.endItemId ? items.find(i => i.id === line.endItemId) : undefined;
+
+  const startRef = startTarget ? itemAnchor(startTarget) : { x: line.x, y: line.y };
+  const endRef = endTarget ? itemAnchor(endTarget) : { x: line.x2, y: line.y2 };
+
   let x = line.x, y = line.y, x2 = line.x2, y2 = line.y2;
-  if (line.startItemId) {
-    const t = items.find(i => i.id === line.startItemId);
-    if (t) { const p = itemAnchor(t); x = p.x; y = p.y; }
-  }
-  if (line.endItemId) {
-    const t = items.find(i => i.id === line.endItemId);
-    if (t) { const p = itemAnchor(t); x2 = p.x; y2 = p.y; }
-  }
+  if (startTarget) { const p = rectBorderPoint(itemRect(startTarget), endRef.x, endRef.y); x = p.x; y = p.y; }
+  if (endTarget) { const p = rectBorderPoint(itemRect(endTarget), startRef.x, startRef.y); x2 = p.x; y2 = p.y; }
+
   return (x === line.x && y === line.y && x2 === line.x2 && y2 === line.y2)
     ? line
     : { ...line, x, y, x2, y2 };
@@ -87,7 +108,7 @@ function createItem(type: ToolType, x: number, y: number, extra?: Record<string,
       height: (extra?.height as number) ?? 260,
       color: '#7C3AED',
     } as FrameItem;
-    case 'checklist': return { ...base, type: 'checklist', title: 'Checklist', color: '#0d2a35', entries: [] } as unknown as ChecklistItem;
+    case 'checklist': return { ...base, type: 'checklist', title: 'Checklist', color: '#0d2a35', entries: [] } as ChecklistItem;
     case 'line':      return {
       ...base, type: 'line',
       x2: x + 180, y2: y,
@@ -169,6 +190,11 @@ export default function Canvas({
     setPendingDelete(prev => { prev?.execute(); return null; });
   }, []);
   const cancelDelete = useCallback(() => setPendingDelete(null), []);
+
+  // Snap-to-grid — aligns to the same spacing as the visible dot grid so
+  // snapped items line up with what's on screen.
+  const [snapEnabled, setSnapEnabled] = useState(false);
+  const snapVal = useCallback((v: number) => (snapEnabled ? Math.round(v / DOT) * DOT : v), [snapEnabled]);
 
   const panRef = useRef(pan);
   panRef.current = pan;
@@ -351,8 +377,17 @@ export default function Canvas({
 
     const handleMove = (ev: MouseEvent) => {
       hasMoved = true;
-      const dx = (ev.clientX - startX) / curZoom;
-      const dy = (ev.clientY - startY) / curZoom;
+      let dx = (ev.clientX - startX) / curZoom;
+      let dy = (ev.clientY - startY) / curZoom;
+      if (snapEnabled) {
+        const primaryCap = capMap.get(id);
+        if (primaryCap) {
+          const rawX = primaryCap.ox + dx;
+          const rawY = primaryCap.oy + dy;
+          dx += snapVal(rawX) - rawX;
+          dy += snapVal(rawY) - rawY;
+        }
+      }
       capMap.forEach((cap, cid) => {
         onUpdateItem(cid, item => ({
           ...item, x: cap.ox + dx, y: cap.oy + dy,
@@ -396,16 +431,13 @@ export default function Canvas({
     };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [onSelectItems, onBringToFront, onUpdateItem, onDropOnColumn, triggerEnterAnim]);
+  }, [onSelectItems, onBringToFront, onUpdateItem, onDropOnColumn, triggerEnterAnim, snapEnabled, snapVal]);
 
   // ─── Canvas background mouse down ─────────────────────────────────────────
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
-    const target = e.target as Element;
-    if (target.closest('[data-board-item]')) return;
-
-    const rect = containerRef.current!.getBoundingClientRect();
-
-    // Middle mouse = pan
+    // Middle mouse is reserved exclusively for panning — always, regardless
+    // of what's underneath the cursor (including board items), and it does
+    // nothing else (no select, no drag, no placement).
     if (e.button === 1) {
       e.preventDefault();
       const startX = e.clientX;
@@ -424,6 +456,11 @@ export default function Canvas({
     }
 
     if (e.button !== 0) return;
+
+    const target = e.target as Element;
+    if (target.closest('[data-board-item]')) return;
+
+    const rect = containerRef.current!.getBoundingClientRect();
     e.preventDefault();
 
     const startSX = e.clientX - rect.left;
@@ -448,8 +485,8 @@ export default function Canvas({
         const w = Math.abs(cur.x - startCanvas.x);
         const h = Math.abs(cur.y - startCanvas.y);
         const item = w > 40 && h > 40
-          ? createItem('frame', Math.min(startCanvas.x, cur.x), Math.min(startCanvas.y, cur.y), { width: w, height: h })
-          : createItem('frame', startCanvas.x - 80, startCanvas.y - 40);
+          ? createItem('frame', snapVal(Math.min(startCanvas.x, cur.x)), snapVal(Math.min(startCanvas.y, cur.y)), { width: w, height: h })
+          : createItem('frame', snapVal(startCanvas.x - 80), snapVal(startCanvas.y - 40));
         if (item) { onAddItem(item); triggerEnterAnim(item.id); onSelectTool('select'); }
       };
       document.addEventListener('mousemove', handleMove);
@@ -464,7 +501,7 @@ export default function Canvas({
         document.removeEventListener('mousemove', handleMove);
         document.removeEventListener('mouseup', handleUp);
         const c = screenToCanvas(ev.clientX - rect.left, ev.clientY - rect.top);
-        const item = createItem(selectedTool, c.x, c.y);
+        const item = createItem(selectedTool, snapVal(c.x), snapVal(c.y));
         if (item) { onAddItem(item); triggerEnterAnim(item.id); onSelectTool('select'); }
       };
       document.addEventListener('mousemove', handleMove);
@@ -509,47 +546,50 @@ export default function Canvas({
     };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [selectedTool, pan, screenToCanvas, onPanChange, onAddItem, onSelectTool, onSelectItems, triggerEnterAnim]);
+  }, [selectedTool, pan, screenToCanvas, onPanChange, onAddItem, onSelectTool, onSelectItems, triggerEnterAnim, snapVal]);
 
   // ─── Frame resize ────────────────────────────────────────────────────────
   const handleFrameResize = useCallback((id: string, e: React.MouseEvent, startW: number, startH: number) => {
+    if (e.button !== 0) return;
     e.preventDefault(); e.stopPropagation();
     const startX = e.clientX; const startY = e.clientY;
     const curZoom = zoomRef.current;
     const handleMove = (ev: MouseEvent) => {
       onUpdateItem(id, item => ({
         ...item,
-        width: Math.max(120, startW + (ev.clientX - startX) / curZoom),
-        height: Math.max(80, startH + (ev.clientY - startY) / curZoom),
+        width: Math.max(120, snapVal(startW + (ev.clientX - startX) / curZoom)),
+        height: Math.max(80, snapVal(startH + (ev.clientY - startY) / curZoom)),
       } as BoardItem));
     };
     const handleUp = () => { document.removeEventListener('mousemove', handleMove); document.removeEventListener('mouseup', handleUp); };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [onUpdateItem]);
+  }, [onUpdateItem, snapVal]);
 
   // ─── Block resize (width or width+height) ────────────────────────────────
   const handleBlockResize = useCallback((id: string, e: React.MouseEvent, startW: number, startH: number | null) => {
+    if (e.button !== 0) return;
     e.preventDefault(); e.stopPropagation();
     const startX = e.clientX; const startY = e.clientY;
     const curZoom = zoomRef.current;
     const handleMove = (ev: MouseEvent) => {
       onUpdateItem(id, item => ({
         ...item,
-        width: Math.max(140, startW + (ev.clientX - startX) / curZoom),
-        ...(startH !== null ? { imgHeight: Math.max(80, startH + (ev.clientY - startY) / curZoom) } : {}),
+        width: Math.max(140, snapVal(startW + (ev.clientX - startX) / curZoom)),
+        ...(startH !== null ? { imgHeight: Math.max(80, snapVal(startH + (ev.clientY - startY) / curZoom)) } : {}),
       }));
     };
     const handleUp = () => { document.removeEventListener('mousemove', handleMove); document.removeEventListener('mouseup', handleUp); };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [onUpdateItem]);
+  }, [onUpdateItem, snapVal]);
 
   // ─── Line endpoint drag ───────────────────────────────────────────────────
   // Grabbing an endpoint detaches it immediately (so it tracks the cursor
   // instead of snapping back to its attached item every render); dropping it
   // on another item re-attaches there, dropping on empty canvas leaves it free.
   const handleLineEndpointDrag = useCallback((id: string, e: React.MouseEvent, endpoint: 1 | 2) => {
+    if (e.button !== 0) return;
     e.preventDefault(); e.stopPropagation();
     const item = project.items.find(i => i.id === id) as LineItem | undefined;
     if (!item) return;
@@ -584,14 +624,18 @@ export default function Canvas({
       }));
       setAttachHover(findTarget(nx, ny)?.id ?? null);
     };
-    const handleUp = () => {
+    const handleUp = (me: MouseEvent) => {
       document.removeEventListener('mousemove', handleMove);
       document.removeEventListener('mouseup', handleUp);
       const targetId = attachHoverIdRef.current;
       if (targetId) {
         const target = projectRef.current.items.find(t => t.id === targetId);
         if (target) {
-          const p = itemAnchor(target);
+          const dx = (me.clientX - startX) / curZoom;
+          const dy = (me.clientY - startY) / curZoom;
+          // Snap to the item's border, in the direction the person actually
+          // dropped it, rather than always landing dead-center.
+          const p = rectBorderPoint(itemRect(target), origX + dx, origY + dy);
           onUpdateItem(id, i => ({
             ...i,
             ...(endpoint === 1 ? { startItemId: target.id, x: p.x, y: p.y } : { endItemId: target.id, x2: p.x, y2: p.y }),
@@ -604,6 +648,22 @@ export default function Canvas({
     document.addEventListener('mouseup', handleUp);
   }, [project.items, onUpdateItem]);
 
+  // ─── Checklist entry dropped outside its own card ─────────────────────────
+  // Finds whichever checklist (if any) is under the cursor and moves the
+  // entry there; if none is found, the entry goes back where it came from
+  // so a stray drop never loses data.
+  const handleChecklistDragOutside = useCallback((sourceId: string, entry: ChecklistEntry, clientX: number, clientY: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const pt = screenToCanvas(clientX - rect.left, clientY - rect.top);
+    const target = projectRef.current.items.find(t =>
+      t.id !== sourceId && t.type === 'checklist' &&
+      (() => { const s = approxSize(t); return pt.x >= t.x && pt.y >= t.y && pt.x <= t.x + s.w && pt.y <= t.y + s.h; })()
+    );
+    const destId = target?.id ?? sourceId;
+    onUpdateItem(destId, i => ({ ...i, entries: [...(i as ChecklistItem).entries, entry] } as BoardItem));
+  }, [screenToCanvas, onUpdateItem]);
+
   const safeSelectedIds = selectedIds ?? [];
   const selectedItems = project.items.filter(i => safeSelectedIds.includes(i.id));
   const frames = project.items.filter(i => i.type === 'frame');
@@ -613,6 +673,19 @@ export default function Canvas({
   const bpx = ((pan.x % dotInterval) + dotInterval) % dotInterval;
   const bpy = ((pan.y % dotInterval) + dotInterval) % dotInterval;
   const cursorStyle = selectedTool !== 'select' ? 'cursor-crosshair' : 'cursor-default';
+
+  // Clicking anywhere on the canvas — including on another item — should
+  // commit and close whatever text field is currently being edited. Normally
+  // the browser does this via the native blur-on-click behavior, but our
+  // mousedown handlers call preventDefault() (needed for drag/lasso/pan), and
+  // that side-effect also suppresses the native blur. This runs in the
+  // capture phase so it always fires first, before any handler below it can
+  // stopPropagation() it away.
+  const handleBlurActiveElement = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active !== document.body) active.blur();
+  }, []);
 
   return (
     <div
@@ -624,6 +697,7 @@ export default function Canvas({
         backgroundSize: `${dotInterval}px ${dotInterval}px`,
         backgroundPosition: `${bpx}px ${bpy}px`,
       }}
+      onMouseDownCapture={handleBlurActiveElement}
       onMouseDown={handleCanvasMouseDown}
     >
       {/* Transform layer */}
@@ -712,6 +786,9 @@ export default function Canvas({
                       }
                     : undefined}
                   onRequestDelete={requestDelete}
+                  onEntryDroppedOutside={item.type === 'checklist'
+                    ? (entry, cx, cy) => handleChecklistDragOutside(item.id, entry, cx, cy)
+                    : undefined}
                 />
               </ItemWatcher>
             </div>
@@ -782,7 +859,7 @@ export default function Canvas({
 
       {/* Placement hint */}
       {selectedTool !== 'select' && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none hint-pulse">
+        <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none hint-pulse">
           <div
             className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm shadow-lg"
             style={{ backgroundColor: 'var(--color-surface-translucent)', border: '1px solid rgba(124, 58, 237,0.3)', color: 'var(--color-accent)', backdropFilter: 'blur(8px)' }}
@@ -797,7 +874,7 @@ export default function Canvas({
 
       {/* Middle-mouse pan hint */}
       {selectedTool === 'select' && safeSelectedIds.length === 0 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none">
+        <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none">
           <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs shadow-sm opacity-40"
             style={{ backgroundColor: 'var(--color-surface-translucent)', color: 'var(--color-text-secondary)', backdropFilter: 'blur(4px)' }}>
             Middle-click drag to pan · Scroll to zoom
@@ -825,7 +902,23 @@ export default function Canvas({
       )}
 
       {/* Zoom controls */}
-      <div className="absolute bottom-6 right-6 pointer-events-auto">
+      <div className="absolute right-6 pointer-events-auto flex items-center gap-2">
+        <button
+          onClick={() => setSnapEnabled(v => !v)}
+          className="w-9 h-9 flex items-center justify-center rounded-xl border shadow-md transition-colors"
+          style={{
+            backgroundColor: snapEnabled ? 'var(--color-accent)' : 'var(--color-surface-translucent)',
+            borderColor: snapEnabled ? 'var(--color-accent)' : 'var(--color-border)',
+            color: snapEnabled ? 'white' : 'var(--color-text-secondary)',
+            backdropFilter: 'blur(8px)',
+          }}
+          title={snapEnabled ? 'Snap to grid: on' : 'Snap to grid: off'}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 3v18M12 3v18M18 3v18M3 6h18M3 12h18M3 18h18" opacity="0.55" />
+            <rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity={snapEnabled ? 1 : 0.55} />
+          </svg>
+        </button>
         <div className="flex items-center rounded-xl overflow-hidden border shadow-md"
           style={{ backgroundColor: 'var(--color-surface-translucent)', borderColor: 'var(--color-border)', backdropFilter: 'blur(8px)' }}>
           <button

@@ -92,12 +92,20 @@ export default function LinkBlock({ item, onUpdate, onDelete }: Props) {
           </div>
 
           {editing ? (
-            <div className="space-y-2" onMouseDown={e => e.stopPropagation()}>
+            <div
+              className="space-y-2"
+              onMouseDown={e => e.stopPropagation()}
+              onBlur={e => {
+                // Only close once focus actually leaves this group of fields —
+                // tabbing between url/title/description shouldn't close it.
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setEditing(false);
+              }}
+            >
               <input
                 autoFocus
                 value={item.url}
                 onChange={e => update({ url: e.target.value })}
-                onKeyDown={e => e.key === 'Escape' && setEditing(false)}
+                onKeyDown={e => (e.key === 'Enter' || e.key === 'Escape') && setEditing(false)}
                 placeholder="https://…"
                 className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border focus:border-[#7C3AED] transition-colors"
                 style={{ backgroundColor: inputBg, color: textColor, borderColor: '#7C3AED', caretColor: '#7C3AED' }}
@@ -105,6 +113,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: Props) {
               <input
                 value={item.title}
                 onChange={e => update({ title: e.target.value })}
+                onKeyDown={e => (e.key === 'Enter' || e.key === 'Escape') && setEditing(false)}
                 placeholder="Title"
                 className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border transition-colors"
                 style={{ backgroundColor: inputBg, color: textColor, borderColor: inputBorder }}
@@ -112,7 +121,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: Props) {
               <input
                 value={item.description}
                 onChange={e => update({ description: e.target.value })}
-                onKeyDown={e => e.key === 'Enter' && setEditing(false)}
+                onKeyDown={e => (e.key === 'Enter' || e.key === 'Escape') && setEditing(false)}
                 placeholder="Description"
                 className="w-full text-xs px-2.5 py-1.5 rounded-xl outline-none border transition-colors"
                 style={{ backgroundColor: inputBg, color: mutedColor, borderColor: inputBorder }}

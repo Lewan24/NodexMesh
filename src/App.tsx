@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { Project, BoardItem, ToolType, FrameItem, NoteItem, KanbanItem, ImageItem, ColumnItem, LineItem } from './types';
+import type { Project, BoardItem, ToolType, FrameItem, NoteItem, KanbanItem, ImageItem, ColumnItem, LineItem, ChecklistItem } from './types';
 import { seedProjectsFor, createDefaultProjectFor } from './data';
 import { useAuth } from './auth/AuthContext';
 import LoginPage from './LoginPage';
@@ -18,7 +18,7 @@ function approxSize(item: BoardItem): { w: number; h: number } {
     case 'image':     return { w: (item as ImageItem).width ?? 260, h: ((item as ImageItem).imgHeight ?? 178) + 56 };
     case 'link':      return { w: 240, h: 150 };
     case 'text':      return { w: 200, h: 60 };
-    case 'checklist': return { w: 230, h: 200 };
+    case 'checklist': return { w: (item as ChecklistItem).width ?? 230, h: 200 };
     case 'column':    return { w: (item as ColumnItem).width ?? 320, h: 260 };
     default:          return { w: 200, h: 150 };
   }

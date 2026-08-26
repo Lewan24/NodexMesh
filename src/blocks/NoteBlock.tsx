@@ -53,6 +53,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBloc
   // Dragging from the bottom edge sets (or adjusts) a fixed height. Once set,
   // the note stops growing with its content and scrolls internally instead.
   const startHeightDrag = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
     const startY = e.clientY;
@@ -121,6 +122,12 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBloc
               value={item.content}
               onChange={e => { update({ content: e.target.value }); resize(); }}
               onMouseDown={e => e.stopPropagation()}
+              onBlur={() => setEditing(false)}
+              onKeyDown={e => {
+                // Enter stays as a newline here (notes are multi-line);
+                // Escape still gives a quick way to exit and save.
+                if (e.key === 'Escape') { e.currentTarget.blur(); setEditing(false); }
+              }}
               className={`w-full bg-transparent resize-none outline-none leading-relaxed ${manualHeight ? 'overflow-y-auto h-full' : 'overflow-hidden'} ${FS_CLASS[fs]}`}
               style={{
                 color: textColor,
