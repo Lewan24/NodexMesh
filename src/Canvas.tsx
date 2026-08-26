@@ -906,7 +906,7 @@ export default function Canvas({
 
       {/* Placement hint */}
       {selectedTool !== 'select' && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none hint-pulse">
+        <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none hint-pulse">
           <div
             className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm shadow-lg"
             style={{ backgroundColor: 'var(--color-surface-translucent)', border: '1px solid rgba(124, 58, 237,0.3)', color: 'var(--color-accent)', backdropFilter: 'blur(8px)' }}
@@ -921,7 +921,7 @@ export default function Canvas({
 
       {/* Middle-mouse pan hint */}
       {selectedTool === 'select' && safeSelectedIds.length === 0 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none">
+        <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none">
           <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs shadow-sm opacity-40"
             style={{ backgroundColor: 'var(--color-surface-translucent)', color: 'var(--color-text-secondary)', backdropFilter: 'blur(4px)' }}>
             Middle-click drag to pan · Scroll to zoom
@@ -949,7 +949,7 @@ export default function Canvas({
       )}
 
       {/* Zoom controls */}
-      <div className="absolute bottom-6 right-6 pointer-events-auto flex items-center gap-2">
+      <div className="absolute right-6 pointer-events-auto flex items-center gap-2">
         <button
           onClick={() => setSnapEnabled(v => !v)}
           className="w-9 h-9 flex items-center justify-center rounded-xl border shadow-md transition-colors"
