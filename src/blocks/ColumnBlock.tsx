@@ -50,14 +50,15 @@ function ItemRow({ isDragging, isSelected, onDragHandleMouseDown, onEject, onSel
           className="absolute top-1.5 left-1.5 opacity-0 group-hover/row:opacity-100 transition-opacity z-10"
         >
           <div
-            className="flex flex-col items-center justify-center gap-0.5 cursor-grab active:cursor-grabbing rounded-md"
-            style={{ width: 18, height: 18, backgroundColor: 'rgba(255,255,255,0.85)', border: '1px solid rgba(0,0,0,0.08)' }}
+            className="flex flex-col items-center justify-center gap-[3px] cursor-grab active:cursor-grabbing rounded-lg shadow-sm"
+            style={{ width: 24, height: 24, backgroundColor: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.1)' }}
             onMouseDown={onDragHandleMouseDown}
+            title="Drag to reorder or move to canvas"
           >
             {[0, 1, 2].map(i => (
-              <div key={i} className="flex gap-0.5">
-                <div className="w-0.5 h-0.5 rounded-full" style={{ backgroundColor: '#9ca3af' }} />
-                <div className="w-0.5 h-0.5 rounded-full" style={{ backgroundColor: '#9ca3af' }} />
+              <div key={i} className="flex gap-1">
+                <div className="w-1 h-1 rounded-full" style={{ backgroundColor: '#6b7280' }} />
+                <div className="w-1 h-1 rounded-full" style={{ backgroundColor: '#6b7280' }} />
               </div>
             ))}
           </div>
@@ -71,10 +72,10 @@ function ItemRow({ isDragging, isSelected, onDragHandleMouseDown, onEject, onSel
           <button
             onClick={e => { e.stopPropagation(); onEject(); }}
             className="flex items-center justify-center rounded-md transition-colors"
-            style={{ width: 18, height: 18, backgroundColor: 'rgba(255,255,255,0.85)', border: '1px solid rgba(0,0,0,0.08)' }}
+            style={{ width: 24, height: 24, backgroundColor: 'rgba(255,255,255,0.92)', border: '1px solid rgba(0,0,0,0.1)' }}
             title="Pop out to canvas"
           >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 3h6v6M9 21H3v-6M21 3l-9 9M3 21l9-9" />
             </svg>
           </button>
@@ -488,7 +489,7 @@ export default function ColumnBlock({ item, isSelected, isDragOver, onUpdate, on
       >
         <div
           className="rounded-full"
-          style={{ width: 4, height: 40, backgroundColor: '#7C3AED', opacity: 0.5, margin: '0 auto' }}
+          style={{ width: 5, height: 44, backgroundColor: '#7C3AED', opacity: 0.65, margin: '0 auto' }}
         />
       </div>
     </div>

@@ -5,7 +5,7 @@ interface Props {
   onSelectTool: (tool: ToolType) => void;
 }
 
-const TOOLSIZE = 22;
+const TOOLSIZE = 26;
 
 const TOOLS: {
   id: ToolType;
@@ -148,13 +148,13 @@ export default function Sidebar({
 }: Props) {
   return (
     <aside
-      className="w-[72px] h-full flex flex-col flex-shrink-0 relative z-30"
+      className="w-[88px] h-full flex flex-col flex-shrink-0 relative z-30"
       style={{
         backgroundColor: 'var(--color-chrome-bg)',
         borderRight: '1px solid var(--color-chrome-border)',
       }}
     >
-      <div className="flex-1 flex flex-col items-center py-3 gap-1.5 overflow-y-auto">
+      <div className="flex-1 flex flex-col items-center py-3 gap-2 overflow-y-auto">
         {TOOLS.map(tool => {
           const active = selectedTool === tool.id;
 
@@ -163,8 +163,10 @@ export default function Sidebar({
               key={tool.id}
               aria-label={tool.label}
               onClick={() => onSelectTool(tool.id)}
-              className="size-18 flex flex-col items-center justify-center rounded-xl transition-all duration-100 flex-shrink-0"
+              className="flex flex-col items-center justify-center gap-0.5 rounded-2xl transition-all duration-100 flex-shrink-0"
               style={{
+                width: 76,
+                height: 76,
                 backgroundColor: active
                   ? 'var(--color-accent-soft-strong)'
                   : 'transparent',
@@ -174,7 +176,7 @@ export default function Sidebar({
                   : 'var(--color-chrome-text-dim)',
 
                 boxShadow: active
-                  ? 'inset 0 0 0 1px rgba(124, 58, 237, 0.4)'
+                  ? 'inset 0 0 0 1.5px rgba(124, 58, 237, 0.45)'
                   : 'none',
               }}
               onMouseEnter={e => {
@@ -197,7 +199,7 @@ export default function Sidebar({
               }}
             >
               {tool.icon}
-              <span className='text-sm'>{tool.label}</span>
+              <span className="text-sm font-medium">{tool.label}</span>
             </button>
           );
         })}

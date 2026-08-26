@@ -20,41 +20,21 @@ export const initialProjects: Project[] = [
     ownerId: DEMO_OWNER,
     items: [
       {
-        id: 'f-ideation', type: 'frame', x: -112, y: -84, zIndex: 0,
-        title: 'Ideation', width: 605, height: 744, color: '#FFBD65',
+        id: 'f-ideation', type: 'frame', x: 40, y: 24, zIndex: 0,
+        title: 'Ideation', width: 560, height: 210, color: '#FFBD65',
       },
       {
-        id: 't-ideation-heading', type: 'text', content: 'Ideation Section Header', size: 'xl', x: 0, y: -56, zIndex: 2
-      },
-      {
-        id: 'n-goal', type: 'note', x: -76, y: 36, zIndex: 1, width: 220,
+        id: 'n-goal', type: 'note', x: 60, y: 60, zIndex: 1, width: 220,
         content: '🎯 Goal: Redesign the onboarding\n\nFocus on first-time user experience and cut time-to-value in half.',
         color: '#0d2a35',
       },
       {
-        id: 'n-research', type: 'note', x: 176, y: 36, zIndex: 2, width: 281, height: 339,
-        content: '🔍 Research:\n• User interviews ×8\n• Competitor analysis\n• Heatmap review\n• Session recordings\n\n\n And some prepared heigth for future texts',
-        color: '#431407',
+        id: 'n-research', type: 'note', x: 300, y: 44, zIndex: 2, width: 220,
+        content: '🔍 Research:\n• User interviews ×8\n• Competitor analysis\n• Heatmap review\n• Session recordings',
+        color: '#0d2a35',
       },
       {
-        id: 'c-samplechecklist', type: 'checklist', x: -76, y: 232, zIndex: 2, width: 220,
-        title: 'Checklist', color: '#fefce8', entries: [
-          {
-            id: 'ce1-1', text: 'Task one', done: false
-          },
-          {
-            id: 'ce1-2', text: 'Task two', done: true
-          }
-        ]
-      },
-      {
-        id: 'img-landscape', type: 'image', x: -76, y: 428, zIndex: 2,
-        url: 'https://media.gettyimages.com/id/607280514/photo/lupins-of-lake-tekapo.jpg?s=2048x2048&w=gi&k=20&c=7KSjP3WWoCO89Rhwb86aEhFT1nbnT2RjXK7MvkNlELg=',
-        caption: '',
-        width: 532, imgHeight: 142,
-      },
-      {
-        id: 'k-sprint', type: 'kanban', x: 924, y: -84, zIndex: 3,
+        id: 'k-sprint', type: 'kanban', x: 60, y: 280, zIndex: 3,
         title: 'Sprint 12',
         columns: [
           { id: 'col-todo', title: 'To Do', color: '#5a8a94', cards: [
@@ -66,37 +46,44 @@ export const initialProjects: Project[] = [
             { id: 'c4', text: 'Design system audit', done: false },
           ]},
           { id: 'col-done', title: 'Done', color: '#7C3AED', cards: [
-            { id: 'c6', text: 'Project kickoff', done: true }
-          ]},
-          { id: 'col-new', title: 'Test', color: '#02a0a0', cards: [
+            { id: 'c6', text: 'Project kickoff', done: true },
             { id: 'c7', text: 'Stakeholder alignment', done: true },
           ]},
         ],
       },
       {
-        id: 'col-resources', type: 'column', x: 532, y: -84, zIndex: 2,
-        title: 'Resources', color: '#f0f9ff', width: 347,
+        id: 'col-resources', type: 'column', x: 700, y: 44, zIndex: 2,
+        title: 'Resources', color: '#f0f9ff', width: 320,
         items: [
           {
-            id: 'ci1', type: 'link', x: 0, y: 0, zIndex: 1,
-            url: 'https://lewan24.github.io', title: 'Author webpage',
-            description: '',
-          },
-          {
-            id: 'ci2', type: 'note', x: 0, y: 0, zIndex: 1, width: 240,
+            id: 'ci1', type: 'note', x: 0, y: 0, zIndex: 1, width: 240,
             content: '📁 Figma design file — main workspace\n\nCheck the shared library.',
             color: '#fefce8', topColor: '#7C3AED',
+          },
+          {
+            id: 'ci2', type: 'link', x: 0, y: 0, zIndex: 1,
+            url: 'https://notion.so', title: 'User research repo',
+            description: 'All interview notes and synthesis docs',
           },
           {
             id: 'ci3', type: 'note', x: 0, y: 0, zIndex: 1, width: 240,
             content: '🎨 Brand guidelines\n\nColors, typography, tone of voice',
             color: '#fff7ed', topColor: '#FFBD65',
           },
+          {
+            id: 'ci4', type: 'checklist', x: 0, y: 0, zIndex: 1,
+            title: 'Assets needed', color: '#f0fdf4', width: 200,
+            entries: [
+              { id: 'ca1', text: 'Icons export (SVG)', done: true },
+              { id: 'ca2', text: 'Photo library', done: false },
+              { id: 'ca3', text: 'Component docs', done: false },
+            ],
+          },
         ],
       },
       {
-        id: 'cl-design', type: 'checklist', x: 924, y: 336, zIndex: 2,
-        title: 'Design Checklist', color: '#0d2a35', width: 265,
+        id: 'cl-design', type: 'checklist', x: 1020, y: 44, zIndex: 2,
+        title: 'Design Checklist', color: '#0d2a35', width: 200,
         entries: [
           { id: 'de1', text: 'Typography scale defined', done: true },
           { id: 'de2', text: 'Component library', done: true },
@@ -106,12 +93,16 @@ export const initialProjects: Project[] = [
         ],
       },
       {
-        id: 'l-line', type: 'line', x: 1, x2: 1, y: 1, y2: 1, arrowStart: true, arrowEnd: true, color: '#7C3AED', strokeWidth: 2, zIndex: 100,
-        startItemId: 'cl-design', endItemId: 'k-sprint'
+        id: 'line-1', type: 'line', x: 180, y: 252, zIndex: 2,
+        x2: 180, y2: 278,
+        arrowStart: false, arrowEnd: true,
+        color: '#FFBD65', strokeWidth: 2,
       },
       {
-        id: 't-headingtest', type: 'text', color: '#f1f5f9', content: 'Test heading as block', x: 1260, y: 336, size: 'xl', zIndex: 2,
-        topColor: '#e11d48'
+        id: 'img-moodboard', type: 'image', x: 1020, y: 260, zIndex: 2,
+        url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=280&h=190&fit=crop&auto=format',
+        caption: 'Moodboard reference',
+        width: 240, imgHeight: 160,
       },
     ],
   },

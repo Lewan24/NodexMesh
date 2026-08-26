@@ -34,14 +34,14 @@ function EntryRow({ entry, dragging, onToggle, onDelete, onEdit, onDragHandleMou
       {/* Drag handle — visible on hover, grabs the row for reordering */}
       <div
         onMouseDown={onDragHandleMouseDown}
-        className="opacity-0 group-hover/entry:opacity-100 flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity flex flex-col items-center justify-center gap-0.5"
-        style={{ width: 10, height: 16, color: `${textColor}40` }}
+        className="opacity-0 group-hover/entry:opacity-100 flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity flex flex-col items-center justify-center gap-[3px] rounded-md"
+        style={{ width: 16, height: 22, color: `${textColor}90` }}
         title="Drag to reorder or move to another checklist"
       >
         {[0, 1, 2].map(i => (
-          <div key={i} className="flex gap-0.5">
-            <div className="w-0.5 h-0.5 rounded-full" style={{ backgroundColor: 'currentColor' }} />
-            <div className="w-0.5 h-0.5 rounded-full" style={{ backgroundColor: 'currentColor' }} />
+          <div key={i} className="flex gap-1">
+            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'currentColor' }} />
+            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'currentColor' }} />
           </div>
         ))}
       </div>
@@ -56,7 +56,7 @@ function EntryRow({ entry, dragging, onToggle, onDelete, onEdit, onDragHandleMou
         }}
       >
         {entry.done && (
-          <svg viewBox="0 0 10 10" fill="none" width="8" height="8">
+          <svg viewBox="0 0 10 10" fill="none" width="10" height="10">
             <path d="M1.5 5l2.5 2.5 4.5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
@@ -92,7 +92,7 @@ function EntryRow({ entry, dragging, onToggle, onDelete, onEdit, onDragHandleMou
         className="opacity-0 group-hover/entry:opacity-100 flex-shrink-0 transition-opacity"
         style={{ color: `${textColor}55` }}
       >
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
       </button>
@@ -271,7 +271,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onBlockResize
             className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 rounded-full p-0.5 hover:bg-black/10 ml-2"
             style={{ color: mutedColor }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
@@ -345,7 +345,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onBlockResize
               className="flex items-center gap-1.5 text-xs py-1.5 w-full transition-opacity hover:opacity-80"
               style={{ color: mutedColor }}
             >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 5v14M5 12h14" />
               </svg>
               Add item
@@ -360,10 +360,10 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onBlockResize
       {onBlockResize && (
         <div
           className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-ew-resize"
-          style={{ top: 0, bottom: 0, right: -6, width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ top: 0, bottom: 0, right: -7, width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onMouseDown={e => { if (e.button !== 0) return; e.stopPropagation(); onBlockResize(e, item.width ?? 220, null); }}
         >
-          <div className="w-1 rounded-full" style={{ height: 32, backgroundColor: light ? 'rgba(30,41,59,0.25)' : 'rgba(232,244,244,0.25)' }} />
+          <div className="w-1.5 rounded-full" style={{ height: 36, backgroundColor: light ? 'rgba(30,41,59,0.4)' : 'rgba(232,244,244,0.4)' }} />
         </div>
       )}
     </div>

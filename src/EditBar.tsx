@@ -116,7 +116,7 @@ function ColorPanel({
       )}
       {/* Strip accent colors */}
       <div className="flex items-center gap-1 px-1" title="Top accent strip">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" className="flex-shrink-0 mr-0.5" style={{ color: '#9ca3af' }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="flex-shrink-0 mr-0.5" style={{ color: '#9ca3af' }}>
           <rect x="3" y="3" width="18" height="5" rx="1.5" fill="currentColor" />
         </svg>
         {STRIP_COLORS.map(c => (
@@ -147,9 +147,9 @@ function NoteTextControls({ item, onUpdate }: { item: NoteItem; onUpdate: (fn: (
       <Divider />
       {(['left', 'center', 'right'] as const).map(a => (
         <Btn key={a} active={(item.textAlign ?? 'left') === a} onClick={() => up({ textAlign: a })} title={`Align ${a}`}>
-          {a === 'left'   && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M3 12h12M3 18h15" strokeLinecap="round" /></svg>}
-          {a === 'center' && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M6 12h12M4 18h16" strokeLinecap="round" /></svg>}
-          {a === 'right'  && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M9 12h12M6 18h15" strokeLinecap="round" /></svg>}
+          {a === 'left'   && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M3 12h12M3 18h15" strokeLinecap="round" /></svg>}
+          {a === 'center' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M6 12h12M4 18h16" strokeLinecap="round" /></svg>}
+          {a === 'right'  && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18M9 12h12M6 18h15" strokeLinecap="round" /></svg>}
         </Btn>
       ))}
       <Divider />
@@ -214,7 +214,7 @@ function FrameControls({ item, onUpdate, onFitFrame }: { item: FrameItem; onUpda
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
         title="Fit frame to contents"
       >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
         </svg>
         Fit
@@ -283,7 +283,7 @@ export default function EditBar({
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text-faint)'; }}
         title="Deselect (Esc)"
       >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
       </button>
@@ -332,7 +332,7 @@ export default function EditBar({
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(124, 58, 237,0.1)'; }}
             title="Wrap in a frame"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="4 2" />
             </svg>
             Group
@@ -351,7 +351,7 @@ export default function EditBar({
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text-faint)'; }}
         title="Delete"
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         {isMulti ? `Delete ${selectedItems.length}` : 'Delete'}

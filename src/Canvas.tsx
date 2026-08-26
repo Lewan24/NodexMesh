@@ -98,7 +98,7 @@ function resolveLineItem(line: LineItem, items: BoardItem[], sizes?: SizeMap): L
 function createItem(type: ToolType, x: number, y: number, extra?: Record<string, unknown>): BoardItem | null {
   const base = { id: uid(), x, y, zIndex: 1 };
   switch (type) {
-    case 'note':      return { ...base, type: 'note', content: '', color: '#0d2a35', width: 220 } as NoteItem;
+    case 'note':      return { ...base, type: 'note', content: '', color: '#0d2a35', width: 240 } as NoteItem;
     case 'kanban':    return {
       ...base, type: 'kanban', title: 'New Board',
       columns: [
@@ -107,8 +107,8 @@ function createItem(type: ToolType, x: number, y: number, extra?: Record<string,
         { id: uid(), title: 'Done', color: '#7C3AED', cards: [] },
       ],
     } as KanbanItem;
-    case 'image':     return { ...base, type: 'image', url: '', caption: '', width: 260, imgHeight: 178 } as ImageItem;
-    case 'link':      return { ...base, type: 'link', url: '', title: 'New Link', description: '' } as LinkItem;
+    case 'image':     return { ...base, type: 'image', url: '', caption: '', width: 280, imgHeight: 190 } as ImageItem;
+    case 'link':      return { ...base, type: 'link', url: '', title: 'New Link', description: '', width: 260 } as LinkItem;
     case 'text':      return { ...base, type: 'text', content: 'Heading', size: 'lg' } as TextItem;
     case 'frame':     return {
       ...base, type: 'frame', title: 'Group',
@@ -116,7 +116,7 @@ function createItem(type: ToolType, x: number, y: number, extra?: Record<string,
       height: (extra?.height as number) ?? 260,
       color: '#7C3AED',
     } as FrameItem;
-    case 'checklist': return { ...base, type: 'checklist', title: 'Checklist', color: '#0d2a35', entries: [] } as ChecklistItem;
+    case 'checklist': return { ...base, type: 'checklist', title: 'Checklist', color: '#0d2a35', width: 240, entries: [] } as ChecklistItem;
     case 'line':      return {
       ...base, type: 'line',
       x2: x + 180, y2: y,
@@ -148,6 +148,8 @@ interface Props {
   onBringToFront: (id: string) => void;
   onDropOnColumn: (itemId: string, columnId: string) => void;
   onEjectFromColumn: (columnId: string, ejectedItem: BoardItem) => void;
+  /** Bulk-replaces the active project's items — used to restore a snapshot on undo. */
+  onRestoreItems: (items: BoardItem[]) => void;
 }
 
 export default function Canvas({
@@ -155,7 +157,7 @@ export default function Canvas({
   onPanChange, onZoomChange, onSelectTool,
   onSelectItems, onGroupSelected,
   onAddItem, onUpdateItem, onDeleteItem, onDeleteItems, onBringToFront,
-  onDropOnColumn, onEjectFromColumn,
+  onDropOnColumn, onEjectFromColumn, onRestoreItems,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [frameDraft, setFrameDraft] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -187,6 +189,23 @@ export default function Canvas({
   const attachHoverIdRef = useRef<string | null>(null);
   const setAttachHover = (id: string | null) => { attachHoverIdRef.current = id; setAttachHoverId(id); };
 
+  // Undo (Ctrl/Cmd+Z) — a plain snapshot stack of the active project's items.
+  // A snapshot is pushed once at the *start* of an interaction (first move of
+  // a drag/resize, or right before a discrete action like delete/add), never
+  // on every intermediate update, so one Ctrl+Z undoes one whole gesture
+  // instead of a single pixel of movement. Reset automatically per project
+  // since Canvas is remounted (key={activeProjectId}) when the active
+  // project changes.
+  const historyRef = useRef<BoardItem[][]>([]);
+  const pushHistory = useCallback(() => {
+    historyRef.current.push(projectRef.current.items);
+    if (historyRef.current.length > 50) historyRef.current.shift();
+  }, []);
+  const undo = useCallback(() => {
+    const prev = historyRef.current.pop();
+    if (prev) onRestoreItems(prev);
+  }, [onRestoreItems]);
+
   // Delete confirmation — every deletion (single item, multi-select, a nested
   // column item, or the Delete/Backspace shortcut) routes through this so
   // nothing disappears without the person confirming first.
@@ -195,8 +214,8 @@ export default function Canvas({
     setPendingDelete({ execute, count });
   }, []);
   const confirmDelete = useCallback(() => {
-    setPendingDelete(prev => { prev?.execute(); return null; });
-  }, []);
+    setPendingDelete(prev => { if (prev) { pushHistory(); prev.execute(); } return null; });
+  }, [pushHistory]);
   const cancelDelete = useCallback(() => setPendingDelete(null), []);
 
   // Snap-to-grid — aligns to the same spacing as the visible dot grid so
@@ -272,20 +291,25 @@ export default function Canvas({
     return () => el.removeEventListener('wheel', onWheel);
   }, [onPanChange, onZoomChange]);
 
-  // Escape → deselect
+  // Escape → deselect, Delete/Backspace → confirm-delete selection, Ctrl/Cmd+Z → undo
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const inField = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
       if (e.key === 'Escape') { onSelectItems([]); onSelectTool('select'); setSelectedColumnItem(null); }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLTextAreaElement)) {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && !inField) {
         const ids = selectedIdsRef.current;
         if (ids.length > 0) {
           requestDelete(() => { onDeleteItems(ids); onSelectItems([]); }, ids.length);
         }
       }
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && !inField) {
+        e.preventDefault();
+        undo();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onSelectItems, onSelectTool, onDeleteItems, requestDelete]);
+  }, [onSelectItems, onSelectTool, onDeleteItems, requestDelete, undo]);
 
   const selectedColumnItemRef = useRef(selectedColumnItem);
   selectedColumnItemRef.current = selectedColumnItem;
@@ -398,6 +422,7 @@ export default function Canvas({
     };
 
     const handleMove = (ev: MouseEvent) => {
+      if (!hasMoved) pushHistory();
       hasMoved = true;
       let dx = (ev.clientX - startX) / curZoom;
       let dy = (ev.clientY - startY) / curZoom;
@@ -453,7 +478,7 @@ export default function Canvas({
     };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [onSelectItems, onBringToFront, onUpdateItem, onDropOnColumn, triggerEnterAnim, snapEnabled, snapVal]);
+  }, [onSelectItems, onBringToFront, onUpdateItem, onDropOnColumn, triggerEnterAnim, snapEnabled, snapVal, pushHistory]);
 
   // ─── Canvas background mouse down ─────────────────────────────────────────
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
@@ -509,7 +534,7 @@ export default function Canvas({
         const item = w > 40 && h > 40
           ? createItem('frame', snapVal(Math.min(startCanvas.x, cur.x)), snapVal(Math.min(startCanvas.y, cur.y)), { width: w, height: h })
           : createItem('frame', snapVal(startCanvas.x - 80), snapVal(startCanvas.y - 40));
-        if (item) { onAddItem(item); triggerEnterAnim(item.id); onSelectTool('select'); }
+        if (item) { pushHistory(); onAddItem(item); triggerEnterAnim(item.id); onSelectTool('select'); }
       };
       document.addEventListener('mousemove', handleMove);
       document.addEventListener('mouseup', handleUp);
@@ -524,7 +549,7 @@ export default function Canvas({
         document.removeEventListener('mouseup', handleUp);
         const c = screenToCanvas(ev.clientX - rect.left, ev.clientY - rect.top);
         const item = createItem(selectedTool, snapVal(c.x), snapVal(c.y));
-        if (item) { onAddItem(item); triggerEnterAnim(item.id); onSelectTool('select'); }
+        if (item) { pushHistory(); onAddItem(item); triggerEnterAnim(item.id); onSelectTool('select'); }
       };
       document.addEventListener('mousemove', handleMove);
       document.addEventListener('mouseup', handleUp);
@@ -568,7 +593,7 @@ export default function Canvas({
     };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [selectedTool, pan, screenToCanvas, onPanChange, onAddItem, onSelectTool, onSelectItems, triggerEnterAnim, snapVal]);
+  }, [selectedTool, pan, screenToCanvas, onPanChange, onAddItem, onSelectTool, onSelectItems, triggerEnterAnim, snapVal, pushHistory]);
 
   // ─── Frame resize ────────────────────────────────────────────────────────
   const handleFrameResize = useCallback((id: string, e: React.MouseEvent, startW: number, startH: number) => {
@@ -576,7 +601,9 @@ export default function Canvas({
     e.preventDefault(); e.stopPropagation();
     const startX = e.clientX; const startY = e.clientY;
     const curZoom = zoomRef.current;
+    let moved = false;
     const handleMove = (ev: MouseEvent) => {
+      if (!moved) { pushHistory(); moved = true; }
       onUpdateItem(id, item => ({
         ...item,
         width: Math.max(120, snapVal(startW + (ev.clientX - startX) / curZoom)),
@@ -586,7 +613,7 @@ export default function Canvas({
     const handleUp = () => { document.removeEventListener('mousemove', handleMove); document.removeEventListener('mouseup', handleUp); };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [onUpdateItem, snapVal]);
+  }, [onUpdateItem, snapVal, pushHistory]);
 
   // ─── Block resize (width or width+height) ────────────────────────────────
   const handleBlockResize = useCallback((id: string, e: React.MouseEvent, startW: number, startH: number | null) => {
@@ -594,7 +621,9 @@ export default function Canvas({
     e.preventDefault(); e.stopPropagation();
     const startX = e.clientX; const startY = e.clientY;
     const curZoom = zoomRef.current;
+    let moved = false;
     const handleMove = (ev: MouseEvent) => {
+      if (!moved) { pushHistory(); moved = true; }
       onUpdateItem(id, item => ({
         ...item,
         width: Math.max(140, snapVal(startW + (ev.clientX - startX) / curZoom)),
@@ -604,7 +633,7 @@ export default function Canvas({
     const handleUp = () => { document.removeEventListener('mousemove', handleMove); document.removeEventListener('mouseup', handleUp); };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [onUpdateItem, snapVal]);
+  }, [onUpdateItem, snapVal, pushHistory]);
 
   // ─── Line endpoint drag ───────────────────────────────────────────────────
   // Grabbing an endpoint detaches it immediately (so it tracks the cursor
@@ -616,6 +645,7 @@ export default function Canvas({
     const item = project.items.find(i => i.id === id) as LineItem | undefined;
     if (!item) return;
 
+    pushHistory();
     const resolved = resolveLineItem(item, projectRef.current.items, measuredSizes);
     const origX = endpoint === 1 ? resolved.x : resolved.x2;
     const origY = endpoint === 1 ? resolved.y : resolved.y2;
@@ -668,7 +698,7 @@ export default function Canvas({
     };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [project.items, onUpdateItem, measuredSizes]);
+  }, [project.items, onUpdateItem, measuredSizes, pushHistory]);
 
   // ─── Checklist entry dropped outside its own card ─────────────────────────
   // Finds whichever checklist (if any) is under the cursor and moves the
@@ -725,10 +755,18 @@ export default function Canvas({
   // that side-effect also suppresses the native blur. This runs in the
   // capture phase so it always fires first, before any handler below it can
   // stopPropagation() it away.
+  // Clicking anywhere on the canvas — including on another item — should
+  // commit and close whatever text field is currently being edited, since
+  // preventDefault() elsewhere suppresses the browser's native blur-on-click.
+  // But a click *inside* the field that's already focused (e.g. clicking to
+  // place the cursor or drag-select text in a note) must NOT force a blur —
+  // only clicks outside the active field should.
   const handleBlurActiveElement = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
     const active = document.activeElement;
-    if (active instanceof HTMLElement && active !== document.body) active.blur();
+    if (!(active instanceof HTMLElement) || active === document.body) return;
+    if (active.contains(e.target as Node)) return;
+    active.blur();
   }, []);
 
   return (
@@ -822,7 +860,7 @@ export default function Canvas({
                   onFitFrame={() => {}}
                   onBlockResize={(ev, w, h) => handleBlockResize(item.id, ev, w, h)}
                   onLineEndpointDrag={(ev, ep) => handleLineEndpointDrag(item.id, ev, ep)}
-                  onEjectItem={item.type === 'column' ? ejected => onEjectFromColumn(item.id, ejected) : undefined}
+                  onEjectItem={item.type === 'column' ? ejected => { pushHistory(); onEjectFromColumn(item.id, ejected); } : undefined}
                   onSelectColumnItem={item.type === 'column'
                     ? (colItem) => {
                         if (colItem) { setSelectedColumnItem({ columnId: item.id, item: colItem }); onSelectItems([]); }
@@ -875,7 +913,7 @@ export default function Canvas({
           selectedItems={selectedItems}
           onUpdateItem={onUpdateItem}
           onDeleteItems={ids => requestDelete(() => { onDeleteItems(ids); onSelectItems([]); }, ids.length)}
-          onGroupItems={onGroupSelected}
+          onGroupItems={() => { pushHistory(); onGroupSelected(); }}
           onFitFrame={handleFitFrame}
           onClose={() => { onSelectItems([]); setSelectedColumnItem(null); }}
           columnItem={selectedColumnItem?.item}
@@ -936,10 +974,10 @@ export default function Canvas({
             <div className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4"
               style={{ backgroundColor: 'rgba(255,255,255,0.7)', border: '1px solid rgba(0,0,0,0.1)', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="3" width="7" height="7" rx="1.5" fill="rgba(0,0,0,0.12)" />
-                <rect x="14" y="3" width="7" height="7" rx="1.5" fill="rgba(0,0,0,0.08)" />
-                <rect x="3" y="14" width="7" height="7" rx="1.5" fill="rgba(0,0,0,0.08)" />
-                <rect x="14" y="14" width="7" height="7" rx="1.5" fill="rgba(0,0,0,0.05)" />
+                <rect x="3" y="3" width="9" height="9" rx="1.5" fill="rgba(0,0,0,0.12)" />
+                <rect x="14" y="3" width="9" height="9" rx="1.5" fill="rgba(0,0,0,0.08)" />
+                <rect x="3" y="14" width="9" height="9" rx="1.5" fill="rgba(0,0,0,0.08)" />
+                <rect x="14" y="14" width="9" height="9" rx="1.5" fill="rgba(0,0,0,0.05)" />
               </svg>
             </div>
             <p className="text-sm mb-1" style={{ color: 'var(--color-text-secondary)' }}>Empty board</p>
@@ -963,7 +1001,7 @@ export default function Canvas({
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M6 3v18M12 3v18M18 3v18M3 6h18M3 12h18M3 18h18" opacity="0.55" />
-            <rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor" opacity={snapEnabled ? 1 : 0.55} />
+            <rect x="9" y="9" width="8" height="8" rx="1" fill="currentColor" opacity={snapEnabled ? 1 : 0.55} />
           </svg>
         </button>
         <div className="flex items-center rounded-xl overflow-hidden border shadow-md"
@@ -975,7 +1013,7 @@ export default function Canvas({
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.05)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14" /></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14" /></svg>
           </button>
           <button
             onClick={() => { onZoomChange(1); onPanChange({ x: 0, y: 0 }); }}
@@ -993,7 +1031,7 @@ export default function Canvas({
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(0,0,0,0.05)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
           </button>
         </div>
       </div>

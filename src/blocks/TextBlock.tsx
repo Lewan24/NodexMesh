@@ -99,10 +99,10 @@ export default function TextBlock({ item, onUpdate, onDelete, onBlockResize }: P
       {isCard && onBlockResize && (
         <div
           className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-ew-resize"
-          style={{ top: 0, bottom: 0, right: -6, width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ top: 0, bottom: 0, right: -7, width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onMouseDown={e => { if (e.button !== 0) return; e.stopPropagation(); onBlockResize(e, cardWidth, null); }}
         >
-          <div className="w-1 rounded-full" style={{ height: 24, backgroundColor: light ? 'rgba(30,41,59,0.25)' : 'rgba(241,245,249,0.25)' }} />
+          <div className="w-1.5 rounded-full" style={{ height: 28, backgroundColor: light ? 'rgba(30,41,59,0.4)' : 'rgba(241,245,249,0.4)' }} />
         </div>
       )}
 
@@ -137,7 +137,7 @@ export default function TextBlock({ item, onUpdate, onDelete, onBlockResize }: P
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-danger-strong)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text-faint)'; }}
             >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>

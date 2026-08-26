@@ -107,6 +107,10 @@ function Board({ userId }: { userId: string }) {
     updateItems(items => items.map(item => item.id === id ? fn(item) : item));
   }, [updateItems]);
 
+  const restoreItems = useCallback((items: BoardItem[]) => {
+    updateItems(() => items);
+  }, [updateItems]);
+
   const deleteItem = useCallback((id: string) => {
     updateItems(items => detachLines(items.filter(item => item.id !== id), [id]));
   }, [updateItems]);
@@ -252,6 +256,7 @@ function Board({ userId }: { userId: string }) {
           onBringToFront={bringToFront}
           onDropOnColumn={handleDropOnColumn}
           onEjectFromColumn={handleEjectFromColumn}
+          onRestoreItems={restoreItems}
         />
       </div>
     </div>

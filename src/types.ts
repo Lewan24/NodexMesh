@@ -71,6 +71,8 @@ export interface ImageItem extends BaseItem {
   width?: number;
   imgHeight?: number;
   color?: string;
+  /** 'card' (default) shows the image in a card with a caption row; 'sticker' is just the image, no chrome. */
+  variant?: 'card' | 'sticker';
 }
 
 export interface LinkItem extends BaseItem {

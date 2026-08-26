@@ -51,14 +51,14 @@ function CardItem({
       {/* Drag handle — visible on hover, grabs the card for reordering / moving */}
       <div
         onMouseDown={onDragHandleMouseDown}
-        className="opacity-0 group-hover/card:opacity-100 flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity flex flex-col items-center justify-center gap-0.5 mt-1"
-        style={{ width: 8, height: 14, color: mutedColor }}
+        className="opacity-0 group-hover/card:opacity-100 flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity flex flex-col items-center justify-center gap-[3px] mt-1 rounded-md"
+        style={{ width: 14, height: 20, color: mutedColor }}
         title="Drag to reorder or move to another column/board"
       >
         {[0, 1, 2].map(i => (
-          <div key={i} className="flex gap-0.5">
-            <div className="w-0.5 h-0.5 rounded-full" style={{ backgroundColor: 'currentColor' }} />
-            <div className="w-0.5 h-0.5 rounded-full" style={{ backgroundColor: 'currentColor' }} />
+          <div key={i} className="flex gap-1">
+            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'currentColor' }} />
+            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'currentColor' }} />
           </div>
         ))}
       </div>
@@ -70,7 +70,7 @@ function CardItem({
         style={{ backgroundColor: card.done ? accentColor : 'transparent', borderColor: card.done ? accentColor : mutedColor }}
       >
         {card.done && (
-          <svg viewBox="0 0 10 10" fill="none" width="8" height="8">
+          <svg viewBox="0 0 10 10" fill="none" width="10" height="10">
             <path d="M2 5.5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
@@ -106,7 +106,7 @@ function CardItem({
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = mutedColor; }}
         title="Delete card"
       >
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
       </button>
@@ -312,7 +312,7 @@ export default function KanbanBlock({ item, onUpdate, onDelete, onCardDroppedOut
                     style={{ width: `${(doneCards / totalCards) * 100}%`, backgroundColor: accentColor }}
                   />
                 </div>
-                <span className="text-[10px] font-mono" style={{ color: mutedColor }}>{doneCards}/{totalCards}</span>
+                <span className="text-[11px] font-mono" style={{ color: mutedColor }}>{doneCards}/{totalCards}</span>
               </div>
             )}
           </div>
@@ -325,7 +325,7 @@ export default function KanbanBlock({ item, onUpdate, onDelete, onCardDroppedOut
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#FF6B8A'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = mutedColor; }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
@@ -338,7 +338,7 @@ export default function KanbanBlock({ item, onUpdate, onDelete, onCardDroppedOut
               key={col.id}
               ref={el => { if (el) colRefs.current.set(col.id, el); else colRefs.current.delete(col.id); }}
               className="flex flex-col group/col"
-              style={{ width: 172 }}
+              style={{ width: 180 }}
             >
               {/* Column header — editable */}
               <div className="flex items-center gap-1.5 mb-2.5 group/colhdr">
@@ -346,7 +346,7 @@ export default function KanbanBlock({ item, onUpdate, onDelete, onCardDroppedOut
                 {editingColId === col.id ? (
                   <input
                     autoFocus
-                    className="flex-1 text-[10px] font-bold uppercase tracking-widest bg-transparent outline-none border-b"
+                    className="flex-1 text-[11px] font-bold uppercase tracking-widest bg-transparent outline-none border-b"
                     style={{ color: col.color, borderColor: col.color + '80' }}
                     value={col.title}
                     onChange={e => updateColumns(cols => cols.map(c => c.id === col.id ? { ...c, title: e.target.value } : c))}
@@ -356,7 +356,7 @@ export default function KanbanBlock({ item, onUpdate, onDelete, onCardDroppedOut
                   />
                 ) : (
                   <span
-                    className="flex-1 text-[10px] font-bold uppercase tracking-widest select-none cursor-text"
+                    className="flex-1 text-[11px] font-bold uppercase tracking-widest select-none cursor-text"
                     style={{ color: col.color }}
                     onDoubleClick={() => setEditingColId(col.id)}
                     title="Double-click to rename"
@@ -364,7 +364,7 @@ export default function KanbanBlock({ item, onUpdate, onDelete, onCardDroppedOut
                     {col.title}
                   </span>
                 )}
-                <span className="ml-auto text-[10px] font-mono flex-shrink-0" style={{ color: mutedColor }}>{col.cards.length}</span>
+                <span className="ml-auto text-[11px] font-mono flex-shrink-0" style={{ color: mutedColor }}>{col.cards.length}</span>
                 {/* Delete column */}
                 {item.columns.length > 1 && (
                   <button
@@ -375,7 +375,7 @@ export default function KanbanBlock({ item, onUpdate, onDelete, onCardDroppedOut
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#FF6B8A'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = mutedColor; }}
                   >
-                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M18 6 6 18M6 6l12 12" />
                     </svg>
                   </button>
@@ -456,7 +456,7 @@ export default function KanbanBlock({ item, onUpdate, onDelete, onCardDroppedOut
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = accentColor; (e.currentTarget as HTMLElement).style.backgroundColor = cardBg; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = mutedColor; (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
                 >
-                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M12 5v14M5 12h14" />
                   </svg>
                   Add card
@@ -480,7 +480,7 @@ export default function KanbanBlock({ item, onUpdate, onDelete, onCardDroppedOut
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = mutedColor; (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'; }}
             title="Add column"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 5v14M5 12h14" />
             </svg>
           </button>

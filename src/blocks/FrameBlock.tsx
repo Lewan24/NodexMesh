@@ -47,7 +47,7 @@ export default function FrameBlock({ item, onUpdate, onDelete, onFrameResize, on
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl cursor-grab active:cursor-grabbing"
           style={{ backgroundColor: `${item.color}20` }}
         >
-          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+          <svg width="10" height="10" viewBox="0 0 8 8" fill="none">
             <circle cx="2" cy="2" r="1.2" fill={item.color} opacity="0.7" />
             <circle cx="6" cy="2" r="1.2" fill={item.color} opacity="0.7" />
             <circle cx="2" cy="6" r="1.2" fill={item.color} opacity="0.7" />
@@ -83,7 +83,7 @@ export default function FrameBlock({ item, onUpdate, onDelete, onFrameResize, on
           onClick={onFitFrame}
           onMouseDown={e => e.stopPropagation()}
         >
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
           </svg>
         </button>
@@ -121,7 +121,7 @@ export default function FrameBlock({ item, onUpdate, onDelete, onFrameResize, on
           onClick={onDelete}
           onMouseDown={e => e.stopPropagation()}
         >
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
         </button>

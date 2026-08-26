@@ -9,7 +9,7 @@ function isLight(hex: string) {
 }
 
 type FontSize = 'sm' | 'base' | 'lg';
-const FS_CLASS: Record<FontSize, string> = { sm: 'text-xs', base: 'text-sm', lg: 'text-base' };
+const FS_CLASS: Record<FontSize, string> = { sm: 'text-sm', base: 'text-base', lg: 'text-lg' };
 const MIN_MANUAL_HEIGHT = 60;
 
 interface Props {
@@ -101,10 +101,10 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBloc
           <button
             onMouseDown={e => e.stopPropagation()}
             onClick={onDelete}
-            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity rounded-full p-0.5 hover:bg-black/10"
+            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity rounded-full p-1 hover:bg-black/10"
             style={{ color: mutedColor }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
@@ -160,20 +160,20 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, onBloc
       {/* Width resize handle */}
       <div
         className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-ew-resize"
-        style={{ top: 0, bottom: 0, right: -6, width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        style={{ top: 0, bottom: 0, right: -7, width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         onMouseDown={e => { e.stopPropagation(); onBlockResize(e, item.width ?? 220, null); }}
       >
-        <div className="w-1 rounded-full" style={{ height: 32, backgroundColor: light ? 'rgba(30,41,59,0.25)' : 'rgba(232,244,244,0.25)' }} />
+        <div className="w-1.5 rounded-full" style={{ height: 36, backgroundColor: light ? 'rgba(30,41,59,0.4)' : 'rgba(232,244,244,0.4)' }} />
       </div>
 
       {/* Height resize handle (bottom edge) */}
       <div
         className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-ns-resize"
-        style={{ left: 0, right: 0, bottom: -6, height: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        style={{ left: 0, right: 0, bottom: -7, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         onMouseDown={startHeightDrag}
         title="Drag to set a fixed height"
       >
-        <div className="h-1 rounded-full" style={{ width: 32, backgroundColor: light ? 'rgba(30,41,59,0.25)' : 'rgba(232,244,244,0.25)' }} />
+        <div className="h-1.5 rounded-full" style={{ width: 36, backgroundColor: light ? 'rgba(30,41,59,0.4)' : 'rgba(232,244,244,0.4)' }} />
       </div>
     </div>
   );

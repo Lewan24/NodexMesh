@@ -20,7 +20,6 @@ interface Props {
 export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: Props) {
   const [editingUrl, setEditingUrl] = useState(!item.url);
   const [urlInput, setUrlInput] = useState(item.url);
-  const [editingCaption, setEditingCaption] = useState(false)
   const imgH = item.imgHeight ?? 178;
   const bg = item.color ?? '#08171d';
   const light = isLight(bg);
@@ -28,20 +27,21 @@ export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: 
   const mutedColor = light ? '#94a3b8' : '#5a8a94';
   const borderColor = light ? 'rgba(0,0,0,0.1)' : '#1a3040';
   const inputBg = light ? '#f8fafc' : '#071317';
+  const isSticker = item.variant === 'sticker';
 
   const update = (patch: Partial<ImageItem>) => onUpdate(i => ({ ...i, ...patch } as BoardItem));
   const commitUrl = () => { update({ url: urlInput }); setEditingUrl(false); };
 
   return (
-    <div className="group relative" style={{ width: item.width ?? 220 }}
-      onMouseEnter={() => setEditingCaption(true)}
-      onMouseLeave={() => setEditingCaption(false)}>
+    <div className="group relative" style={{ width: item.width ?? 220 }}>
       <div
-        className="rounded-2xl overflow-hidden border shadow-xl"
-        style={{ backgroundColor: bg, borderColor }}
+        className={isSticker ? 'overflow-hidden' : 'rounded-2xl overflow-hidden border shadow-xl'}
+        style={isSticker
+          ? { borderRadius: 14, boxShadow: '0 10px 26px rgba(0,0,0,0.22)' }
+          : { backgroundColor: bg, borderColor }}
       >
         {/* Top accent strip */}
-        {item.topColor && (
+        {!isSticker && item.topColor && (
           <div style={{ height: 5, backgroundColor: item.topColor }} />
         )}
 
@@ -53,55 +53,85 @@ export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: 
           {item.url ? (
             <>
               <img src={item.url} alt={item.caption || 'Board image'} className="w-full h-full object-cover" draggable={false} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+              {!isSticker && <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />}
             </>
           ) : (
             <div
               className="w-full h-full flex flex-col items-center justify-center gap-3 cursor-pointer"
-              onClick={() => {
-                setEditingUrl(true)
-                setEditingCaption(false)
-              }}
+              onClick={() => setEditingUrl(true)}
             >
               <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                className="w-14 h-14 rounded-2xl flex items-center justify-center"
                 style={{ backgroundColor: light ? 'rgba(0,0,0,0.06)' : '#112028' }}
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={mutedColor} strokeWidth="1.5">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={mutedColor} strokeWidth="1.5">
                   <rect x="3" y="3" width="18" height="18" rx="2" />
                   <circle cx="8.5" cy="8.5" r="1.5" />
                   <path d="m21 15-5-5L5 21" />
                 </svg>
               </div>
-              <span className="text-xs" style={{ color: mutedColor }}>Click to add image URL</span>
+              <span className="text-sm" style={{ color: mutedColor }}>Click to add image URL</span>
             </div>
           )}
 
           <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
             {item.url && (
-              <button
-                onMouseDown={e => e.stopPropagation()}
-                onClick={() => setEditingUrl(v => !v)}
-                className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors"
-                style={{ backgroundColor: 'rgba(7,19,23,0.7)', color: '#8aacb8' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#fff'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8aacb8'; }}
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z" />
-                </svg>
-              </button>
+              <>
+                {/* Card / sticker toggle */}
+                <div
+                  className="flex items-center rounded-lg overflow-hidden"
+                  style={{ backgroundColor: 'rgba(7,19,23,0.7)' }}
+                  onMouseDown={e => e.stopPropagation()}
+                >
+                  <button
+                    onClick={() => update({ variant: 'card' })}
+                    className="w-7 h-7 flex items-center justify-center transition-colors"
+                    style={{ color: !isSticker ? '#fff' : '#8aacb8', backgroundColor: !isSticker ? 'rgba(124,58,237,0.5)' : 'transparent' }}
+                    title="Card with caption"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <path d="M3 15h18M8 19h8" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => update({ variant: 'sticker' })}
+                    className="w-7 h-7 flex items-center justify-center transition-colors"
+                    style={{ color: isSticker ? '#fff' : '#8aacb8', backgroundColor: isSticker ? 'rgba(124,58,237,0.5)' : 'transparent' }}
+                    title="Sticker (image only)"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 16.5V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10.5a3.5 3.5 0 0 1-3.5 3.5H7.5A3.5 3.5 0 0 1 4 16.5z" />
+                      <path d="M14 20v-3a3 3 0 0 1 3-3h3" />
+                    </svg>
+                  </button>
+                </div>
+                <button
+                  onMouseDown={e => e.stopPropagation()}
+                  onClick={() => setEditingUrl(v => !v)}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
+                  style={{ backgroundColor: 'rgba(7,19,23,0.7)', color: '#8aacb8' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#fff'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8aacb8'; }}
+                  title="Change image URL"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z" />
+                  </svg>
+                </button>
+              </>
             )}
             <button
               onMouseDown={e => e.stopPropagation()}
               onClick={onDelete}
-              className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
               style={{ backgroundColor: 'rgba(7,19,23,0.7)', color: '#8aacb8' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#FF6B8A'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#8aacb8'; }}
+              title="Delete"
             >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
@@ -109,7 +139,11 @@ export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: 
         </div>
 
         {editingUrl && (
-          <div className="px-3 py-2.5 border-t" style={{ borderColor }} onMouseDown={e => e.stopPropagation()}>
+          <div
+            className={isSticker ? 'p-2 mt-1 rounded-xl' : 'px-3 py-2.5 border-t'}
+            style={isSticker ? { backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' } : { borderColor }}
+            onMouseDown={e => e.stopPropagation()}
+          >
             <input
               autoFocus
               value={urlInput}
@@ -118,30 +152,24 @@ export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: 
               onBlur={commitUrl}
               placeholder="Paste image URL…"
               className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border border-[#7C3AED]/40 focus:border-[#7C3AED] transition-colors"
-              style={{ backgroundColor: inputBg, color: textColor }}
+              style={{ backgroundColor: isSticker ? 'var(--color-surface-alt)' : inputBg, color: isSticker ? 'var(--color-text-primary)' : textColor }}
             />
           </div>
         )}
 
-        {editingCaption && (
-          <div className="px-3 py-2.5">
+        {/* Caption row — only in card mode, and always the same DOM shape
+            regardless of hover, so its height never shifts (that shifting
+            is what caused the flicker while resizing: the box's own bounds
+            would move out from under the cursor and re-trigger hover). */}
+        {!isSticker && (
+          <div className="px-3 py-2.5" onMouseDown={e => e.stopPropagation()}>
             <input
               value={item.caption}
               onChange={e => update({ caption: e.target.value })}
-              onMouseDown={e => e.stopPropagation()}
               placeholder="Add caption…"
-              className="w-full bg-transparent text-xs outline-none transition-colors"
+              className="w-full bg-transparent text-sm outline-none transition-colors"
               style={{ color: textColor }}
             />
-          </div>
-        )}
-
-        {item.caption && !editingCaption && (
-          <div className="px-3 py-2.5">
-            <span
-              className="w-full bg-transparent text-xs outline-none transition-colors"
-              style={{ color: textColor }}
-            >{item.caption}</span>
           </div>
         )}
       </div>
@@ -149,12 +177,12 @@ export default function ImageBlock({ item, onUpdate, onDelete, onBlockResize }: 
       {/* Resize handle */}
       <div
         className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-se-resize"
-        style={{ bottom: -5, right: -5, width: 14, height: 14 }}
-        onMouseDown={e => { e.stopPropagation(); onBlockResize(e, item.width!, imgH); }}
+        style={{ bottom: -6, right: -6, width: 18, height: 18 }}
+        onMouseDown={e => { if (e.button !== 0) return; e.stopPropagation(); onBlockResize(e, item.width!, imgH); }}
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="12" cy="12" r="4" fill="#7C3AED" opacity="0.8" />
-          <path d="M5 12h7M12 5v7" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="15" cy="15" r="5" fill="var(--color-accent)" opacity="0.85" />
+          <path d="M6 15h9M15 6v9" stroke="var(--color-accent)" strokeWidth="1.75" strokeLinecap="round" opacity="0.55" />
         </svg>
       </div>
     </div>
