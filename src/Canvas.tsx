@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import type {
   Project, BoardItem, ToolType,
-  NoteItem, KanbanItem, ImageItem, LinkItem, TextItem,
+  NoteItem, KanbanItem, KanbanCard, ImageItem, LinkItem, TextItem,
   FrameItem, ChecklistItem, ChecklistEntry, LineItem, ColumnItem,
 } from './types';
 import BlockRenderer from './blocks/BlockRenderer';
@@ -37,22 +37,30 @@ function approxSize(item: BoardItem): { w: number; h: number } {
     case 'kanban':    return { w: (item as KanbanItem).columns.length * 184 + 24, h: 340 };
     case 'image':     return { w: (item as ImageItem).width ?? 260, h: ((item as ImageItem).imgHeight ?? 178) + 56 };
     case 'link':      return { w: 240, h: 150 };
-    case 'text':      return { w: 200, h: 60 };
+    case 'text':      return { w: (item as TextItem).width ?? 200, h: 60 };
     case 'checklist': return { w: (item as ChecklistItem).width ?? 230, h: 200 };
     case 'column':    return { w: (item as ColumnItem).width ?? 280, h: 260 };
+    case 'frame':     return { w: (item as FrameItem).width, h: (item as FrameItem).height };
     default:          return { w: 200, h: 150 };
   }
 }
 
-/** Bounding rect (canvas space) approximated for an item. */
-function itemRect(target: BoardItem): { x: number; y: number; w: number; h: number } {
-  const s = approxSize(target);
+type SizeMap = Map<string, { w: number; h: number }>;
+
+/** Bounding rect (canvas space) for an item. Prefers the item's actual
+ *  measured DOM size (kept fresh via ResizeObserver) over the rough
+ *  approxSize guess, since content-driven heights (notes, kanban, etc.)
+ *  can differ a lot from the fallback constants — that mismatch is what
+ *  made attached line endpoints land in the empty space below a card
+ *  instead of right on its edge. */
+function itemRect(target: BoardItem, sizes?: SizeMap): { x: number; y: number; w: number; h: number } {
+  const s = sizes?.get(target.id) ?? approxSize(target);
   return { x: target.x, y: target.y, w: s.w, h: s.h };
 }
 
 /** Center point of an item's bounding rect. */
-function itemAnchor(target: BoardItem): { x: number; y: number } {
-  const r = itemRect(target);
+function itemAnchor(target: BoardItem, sizes?: SizeMap): { x: number; y: number } {
+  const r = itemRect(target, sizes);
   return { x: r.x + r.w / 2, y: r.y + r.h / 2 };
 }
 
@@ -71,16 +79,16 @@ function rectBorderPoint(rect: { x: number; y: number; w: number; h: number }, t
 /** Resolves a line's endpoints against whatever item they're attached to: the
  *  point lands right on that item's border (clipped along the line toward the
  *  other end), so the arrow touches the edge instead of floating at the center. */
-function resolveLineItem(line: LineItem, items: BoardItem[]): LineItem {
+function resolveLineItem(line: LineItem, items: BoardItem[], sizes?: SizeMap): LineItem {
   const startTarget = line.startItemId ? items.find(i => i.id === line.startItemId) : undefined;
   const endTarget = line.endItemId ? items.find(i => i.id === line.endItemId) : undefined;
 
-  const startRef = startTarget ? itemAnchor(startTarget) : { x: line.x, y: line.y };
-  const endRef = endTarget ? itemAnchor(endTarget) : { x: line.x2, y: line.y2 };
+  const startRef = startTarget ? itemAnchor(startTarget, sizes) : { x: line.x, y: line.y };
+  const endRef = endTarget ? itemAnchor(endTarget, sizes) : { x: line.x2, y: line.y2 };
 
   let x = line.x, y = line.y, x2 = line.x2, y2 = line.y2;
-  if (startTarget) { const p = rectBorderPoint(itemRect(startTarget), endRef.x, endRef.y); x = p.x; y = p.y; }
-  if (endTarget) { const p = rectBorderPoint(itemRect(endTarget), startRef.x, startRef.y); x2 = p.x; y2 = p.y; }
+  if (startTarget) { const p = rectBorderPoint(itemRect(startTarget, sizes), endRef.x, endRef.y); x = p.x; y = p.y; }
+  if (endTarget) { const p = rectBorderPoint(itemRect(endTarget, sizes), startRef.x, startRef.y); x2 = p.x; y2 = p.y; }
 
   return (x === line.x && y === line.y && x2 === line.x2 && y2 === line.y2)
     ? line
@@ -205,8 +213,22 @@ export default function Canvas({
   const selectedIdsRef = useRef(selectedIds ?? []);
   selectedIdsRef.current = selectedIds ?? [];
 
+  // Real measured DOM sizes for each item, kept fresh via ResizeObserver.
+  // Used for line-endpoint attachment so arrows land exactly on an item's
+  // edge instead of the rough approxSize guess (which is often off,
+  // especially for content-driven heights like notes/kanban/checklists).
+  const [measuredSizes, setMeasuredSizes] = useState<SizeMap>(new Map());
+
   // Frame auto-expand when item grows
   const handleItemResize = useCallback((itemId: string, w: number, h: number) => {
+    setMeasuredSizes(prev => {
+      const cur = prev.get(itemId);
+      if (cur && cur.w === w && cur.h === h) return prev;
+      const next = new Map(prev);
+      next.set(itemId, { w, h });
+      return next;
+    });
+
     const items = projectRef.current.items;
     const changedItem = items.find(i => i.id === itemId);
     if (!changedItem) return;
@@ -594,7 +616,7 @@ export default function Canvas({
     const item = project.items.find(i => i.id === id) as LineItem | undefined;
     if (!item) return;
 
-    const resolved = resolveLineItem(item, projectRef.current.items);
+    const resolved = resolveLineItem(item, projectRef.current.items, measuredSizes);
     const origX = endpoint === 1 ? resolved.x : resolved.x2;
     const origY = endpoint === 1 ? resolved.y : resolved.y2;
 
@@ -609,7 +631,7 @@ export default function Canvas({
     const findTarget = (nx: number, ny: number) =>
       projectRef.current.items.find(t => {
         if (t.id === id || t.type === 'line' || t.type === 'frame') return false;
-        const s = approxSize(t);
+        const s = measuredSizes.get(t.id) ?? approxSize(t);
         return nx >= t.x && ny >= t.y && nx <= t.x + s.w && ny <= t.y + s.h;
       });
 
@@ -635,7 +657,7 @@ export default function Canvas({
           const dy = (me.clientY - startY) / curZoom;
           // Snap to the item's border, in the direction the person actually
           // dropped it, rather than always landing dead-center.
-          const p = rectBorderPoint(itemRect(target), origX + dx, origY + dy);
+          const p = rectBorderPoint(itemRect(target, measuredSizes), origX + dx, origY + dy);
           onUpdateItem(id, i => ({
             ...i,
             ...(endpoint === 1 ? { startItemId: target.id, x: p.x, y: p.y } : { endItemId: target.id, x2: p.x, y2: p.y }),
@@ -646,7 +668,7 @@ export default function Canvas({
     };
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [project.items, onUpdateItem]);
+  }, [project.items, onUpdateItem, measuredSizes]);
 
   // ─── Checklist entry dropped outside its own card ─────────────────────────
   // Finds whichever checklist (if any) is under the cursor and moves the
@@ -658,11 +680,33 @@ export default function Canvas({
     const pt = screenToCanvas(clientX - rect.left, clientY - rect.top);
     const target = projectRef.current.items.find(t =>
       t.id !== sourceId && t.type === 'checklist' &&
-      (() => { const s = approxSize(t); return pt.x >= t.x && pt.y >= t.y && pt.x <= t.x + s.w && pt.y <= t.y + s.h; })()
+      (() => { const s = measuredSizes.get(t.id) ?? approxSize(t); return pt.x >= t.x && pt.y >= t.y && pt.x <= t.x + s.w && pt.y <= t.y + s.h; })()
     );
     const destId = target?.id ?? sourceId;
     onUpdateItem(destId, i => ({ ...i, entries: [...(i as ChecklistItem).entries, entry] } as BoardItem));
-  }, [screenToCanvas, onUpdateItem]);
+  }, [screenToCanvas, onUpdateItem, measuredSizes]);
+
+  // ─── Kanban card dropped outside its own board ─────────────────────────────
+  // Same idea as the checklist version: finds whichever kanban board (if any)
+  // is under the cursor and appends the card to its first column; if none is
+  // found, the card goes back to its own board so nothing is lost.
+  const handleKanbanCardDroppedOutside = useCallback((sourceId: string, card: KanbanCard, clientX: number, clientY: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const pt = screenToCanvas(clientX - rect.left, clientY - rect.top);
+    const target = projectRef.current.items.find(t =>
+      t.id !== sourceId && t.type === 'kanban' &&
+      (() => { const s = measuredSizes.get(t.id) ?? approxSize(t); return pt.x >= t.x && pt.y >= t.y && pt.x <= t.x + s.w && pt.y <= t.y + s.h; })()
+    ) as KanbanItem | undefined;
+    const destId = target?.id ?? sourceId;
+    onUpdateItem(destId, i => {
+      const k = i as KanbanItem;
+      if (k.columns.length === 0) return i;
+      const cols = [...k.columns];
+      cols[0] = { ...cols[0]!, cards: [...cols[0]!.cards, card] };
+      return { ...k, columns: cols } as BoardItem;
+    });
+  }, [screenToCanvas, onUpdateItem, measuredSizes]);
 
   const safeSelectedIds = selectedIds ?? [];
   const selectedItems = project.items.filter(i => safeSelectedIds.includes(i.id));
@@ -742,7 +786,7 @@ export default function Canvas({
         {/* Regular items */}
         {others.map(item => {
           const sel = safeSelectedIds.includes(item.id);
-          const renderItem = item.type === 'line' ? resolveLineItem(item as LineItem, project.items) : item;
+          const renderItem = item.type === 'line' ? resolveLineItem(item as LineItem, project.items, measuredSizes) : item;
           const isAttachTarget = attachHoverId === item.id;
           return (
             <div
@@ -788,6 +832,9 @@ export default function Canvas({
                   onRequestDelete={requestDelete}
                   onEntryDroppedOutside={item.type === 'checklist'
                     ? (entry, cx, cy) => handleChecklistDragOutside(item.id, entry, cx, cy)
+                    : undefined}
+                  onCardDroppedOutside={item.type === 'kanban'
+                    ? (card, cx, cy) => handleKanbanCardDroppedOutside(item.id, card, cx, cy)
                     : undefined}
                 />
               </ItemWatcher>
@@ -859,7 +906,7 @@ export default function Canvas({
 
       {/* Placement hint */}
       {selectedTool !== 'select' && (
-        <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none hint-pulse">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none hint-pulse">
           <div
             className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm shadow-lg"
             style={{ backgroundColor: 'var(--color-surface-translucent)', border: '1px solid rgba(124, 58, 237,0.3)', color: 'var(--color-accent)', backdropFilter: 'blur(8px)' }}
@@ -874,7 +921,7 @@ export default function Canvas({
 
       {/* Middle-mouse pan hint */}
       {selectedTool === 'select' && safeSelectedIds.length === 0 && (
-        <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none">
           <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs shadow-sm opacity-40"
             style={{ backgroundColor: 'var(--color-surface-translucent)', color: 'var(--color-text-secondary)', backdropFilter: 'blur(4px)' }}>
             Middle-click drag to pan · Scroll to zoom
@@ -902,7 +949,7 @@ export default function Canvas({
       )}
 
       {/* Zoom controls */}
-      <div className="absolute right-6 pointer-events-auto flex items-center gap-2">
+      <div className="absolute bottom-6 right-6 pointer-events-auto flex items-center gap-2">
         <button
           onClick={() => setSnapEnabled(v => !v)}
           className="w-9 h-9 flex items-center justify-center rounded-xl border shadow-md transition-colors"

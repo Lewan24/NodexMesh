@@ -87,6 +87,8 @@ export interface TextItem extends BaseItem {
   content: string;
   size: 'sm' | 'md' | 'lg' | 'xl';
   color?: string;
+  /** Manually-set width in px, used once the block has a card background (so text wraps). */
+  width?: number;
 }
 
 export interface FrameItem extends BaseItem {

@@ -23,9 +23,10 @@ interface Props {
   isSelected?: boolean;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
+  onBlockResize?: (e: React.MouseEvent, w: number, h: null) => void;
 }
 
-export default function TextBlock({ item, onUpdate, onDelete }: Props) {
+export default function TextBlock({ item, onUpdate, onDelete, onBlockResize }: Props) {
   const [editing, setEditing] = useState(!item.content || item.content === 'Heading');
   const [showControls, setShowControls] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -37,16 +38,18 @@ export default function TextBlock({ item, onUpdate, onDelete }: Props) {
   const update = (patch: Partial<TextItem>) => onUpdate(i => ({ ...i, ...patch } as BoardItem));
 
   // When a background color is set (via the edit bar), render as a card
-  // for better readability. With no color, it stays a bare heading.
+  // for better readability. With no color, it stays a bare, single-line
+  // heading that never wraps.
   const isCard = !!item.color;
   const light = isCard && item.color ? isLight(item.color) : true;
   const textColor = isCard ? (light ? '#1e293b' : '#f1f5f9') : 'var(--color-text-primary)';
   const mutedColor = isCard ? (light ? 'rgba(30,41,59,0.4)' : 'rgba(241,245,249,0.4)') : 'var(--color-text-faint)';
+  const cardWidth = item.width ?? 220;
 
   return (
     <div
       className="group relative"
-      style={{ minWidth: 140 }}
+      style={{ minWidth: 140, width: isCard ? cardWidth : undefined }}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
     >
@@ -78,11 +81,11 @@ export default function TextBlock({ item, onUpdate, onDelete }: Props) {
             onKeyDown={e => (e.key === 'Enter' || e.key === 'Escape') && setEditing(false)}
             onMouseDown={e => e.stopPropagation()}
             className={`bg-transparent outline-none leading-tight ${SIZE_STYLES[item.size]}`}
-            style={{ minWidth: 80, color: textColor, caretColor: 'var(--color-accent)' }}
+            style={{ minWidth: 80, width: '100%', color: textColor, caretColor: 'var(--color-accent)' }}
           />
         ) : (
           <span
-            className={`block leading-tight select-none cursor-text ${SIZE_STYLES[item.size]} text-nowrap`}
+            className={`block leading-tight select-none cursor-text ${SIZE_STYLES[item.size]} ${isCard ? 'whitespace-pre-wrap break-words' : 'text-nowrap'}`}
             style={{ color: item.content ? textColor : mutedColor }}
             onDoubleClick={() => setEditing(true)}
           >
@@ -90,6 +93,18 @@ export default function TextBlock({ item, onUpdate, onDelete }: Props) {
           </span>
         )}
       </div>
+
+      {/* Width resize handle — only meaningful once it's a card (plain
+          headings size to their content and never wrap) */}
+      {isCard && onBlockResize && (
+        <div
+          className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-ew-resize"
+          style={{ top: 0, bottom: 0, right: -6, width: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onMouseDown={e => { if (e.button !== 0) return; e.stopPropagation(); onBlockResize(e, cardWidth, null); }}
+        >
+          <div className="w-1 rounded-full" style={{ height: 24, backgroundColor: light ? 'rgba(30,41,59,0.25)' : 'rgba(241,245,249,0.25)' }} />
+        </div>
+      )}
 
       {/* Floating controls */}
       {showControls && !editing && (

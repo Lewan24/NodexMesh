@@ -1,4 +1,4 @@
-import type { BoardItem, ChecklistEntry } from '../types';
+import type { BoardItem, ChecklistEntry, KanbanCard } from '../types';
 import NoteBlock from './NoteBlock';
 import KanbanBlock from './KanbanBlock';
 import ImageBlock from './ImageBlock';
@@ -26,16 +26,18 @@ interface Props {
   onRequestDelete?: (execute: () => void) => void;
   /** A checklist entry was dragged past this item's own bounds — Canvas resolves the drop target. */
   onEntryDroppedOutside?: (entry: ChecklistEntry, clientX: number, clientY: number) => void;
+  /** A kanban card was dragged past this board's own bounds — Canvas resolves the drop target. */
+  onCardDroppedOutside?: (card: KanbanCard, clientX: number, clientY: number) => void;
 }
 
-export default function BlockRenderer({ item, zoom, isSelected, isDragOver, onUpdate, onDelete, onFrameResize, onFitFrame, onBlockResize, onLineEndpointDrag, onEjectItem, onSelectColumnItem, onRequestDelete, onEntryDroppedOutside }: Props) {
+export default function BlockRenderer({ item, zoom, isSelected, isDragOver, onUpdate, onDelete, onFrameResize, onFitFrame, onBlockResize, onLineEndpointDrag, onEjectItem, onSelectColumnItem, onRequestDelete, onEntryDroppedOutside, onCardDroppedOutside }: Props) {
   const base = { item: item as any, zoom, isSelected, isDragOver, onUpdate, onDelete };
   switch (item.type) {
     case 'note':      return <NoteBlock {...base} onBlockResize={onBlockResize} />;
-    case 'kanban':    return <KanbanBlock {...base} />;
+    case 'kanban':    return <KanbanBlock {...base} onCardDroppedOutside={onCardDroppedOutside} />;
     case 'image':     return <ImageBlock {...base} onBlockResize={onBlockResize} />;
     case 'link':      return <LinkBlock {...base} />;
-    case 'text':      return <TextBlock {...base} />;
+    case 'text':      return <TextBlock {...base} onBlockResize={onBlockResize} />;
     case 'checklist': return <ChecklistBlock {...base} onBlockResize={onBlockResize} onEntryDroppedOutside={onEntryDroppedOutside} />;
     case 'column':    return <ColumnBlock {...base} onBlockResize={onBlockResize} onEjectItem={onEjectItem} onSelectColumnItem={onSelectColumnItem} onRequestDelete={onRequestDelete} />;
     case 'frame':     return <FrameBlock {...base} onFrameResize={onFrameResize} onFitFrame={onFitFrame} />;
