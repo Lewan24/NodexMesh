@@ -201,7 +201,7 @@ export default function Canvas({
 
   // Snap-to-grid — aligns to the same spacing as the visible dot grid so
   // snapped items line up with what's on screen.
-  const [snapEnabled, setSnapEnabled] = useState(false);
+  const [snapEnabled, setSnapEnabled] = useState(true);
   const snapVal = useCallback((v: number) => (snapEnabled ? Math.round(v / DOT) * DOT : v), [snapEnabled]);
 
   const panRef = useRef(pan);
