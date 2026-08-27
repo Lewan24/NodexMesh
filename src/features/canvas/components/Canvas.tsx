@@ -1,81 +1,30 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-
-import type {
-  BoardItem,
-  LineItem,
-} from '@/entities/board/types';
-
-import type {
-  Project,
-} from '@/entities/project/types';
-
-import type {
-  ToolType,
-} from '@/entities/board/toolTypes';
-
-import EditBar from '@/layout/EditBar';
-
+import { useCallback, useRef, useState } from 'react';
+import type { BoardItem, LineItem } from '@/entities/board/types';
+import type { Project } from '@/entities/project/types';
+import type { ToolType } from '@/entities/board/toolTypes';
 import ConfirmDialog from '@/shared/components/dialogs/ConfirmDialog';
-
 import CanvasFrame from '@/features/canvas/components/CanvasFrame';
 import CanvasItem from '@/features/canvas/components/CanvasItem';
 import CanvasControls from '@/features/canvas/components/CanvasControls';
 import CanvasOverlays from '@/features/canvas/components/CanvasOverlays';
-
-import {
-  CANVAS_GRID_SIZE,
-  ZOOM_MAX,
-  ZOOM_MIN,
-} from '@/features/canvas/constants';
-
-import {
-  resolveLineItem,
-} from '@/features/canvas/utils/lineGeometry';
-
-import {
-  useCanvasHistory,
-} from '@/features/canvas/hooks/useCanvasHistory';
-
-import {
-  useCanvasMeasurements,
-} from '@/features/canvas/hooks/useCanvasMeasurements';
-
-import {
-  useItemResize,
-} from '@/features/canvas/hooks/useItemResize';
-
-import {
-  useLineDrag,
-} from '@/features/canvas/hooks/useLineDrag';
-
-import {
-  useCrossItemDrop,
-} from '@/features/canvas/hooks/useCrossItemDrop';
-
-import {
-  useCanvasKeyboard,
-} from '@/features/canvas/hooks/useCanvasKeyboard';
-
-import {
-  useItemAnimation,
-} from '@/features/canvas/hooks/useItemAnimation';
-
-import {
-  useItemDrag,
-} from '@/features/canvas/hooks/useItemDrag';
-
-import {
-  useCanvasMouse,
-} from '@/features/canvas/hooks/useCanvasMouse';
-
-import {
-  useFrameActions,
-} from '@/features/canvas/hooks/useFrameActions';
+import { CANVAS_GRID_SIZE } from '@/features/canvas/constants';
+import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
+import { useCanvasHistory } from '@/features/canvas/hooks/useCanvasHistory';
+import { useCanvasMeasurements } from '@/features/canvas/hooks/useCanvasMeasurements';
+import { useItemResize } from '@/features/canvas/hooks/useItemResize';
+import { useLineDrag } from '@/features/canvas/hooks/useLineDrag';
+import { useCrossItemDrop } from '@/features/canvas/hooks/useCrossItemDrop';
+import { useCanvasKeyboard } from '@/features/canvas/hooks/useCanvasKeyboard';
+import { useItemAnimation } from '@/features/canvas/hooks/useItemAnimation';
+import { useItemDrag } from '@/features/canvas/hooks/useItemDrag';
+import { useCanvasMouse } from '@/features/canvas/hooks/useCanvasMouse';
+import { useFrameActions } from '@/features/canvas/hooks/useFrameActions';
+import { useColumnSelection } from '../hooks/useColumnSelection';
+import { useDeleteConfirmation } from '@/features/canvas/hooks/useDeleteConfirmation';
+import CanvasEditBar from '@/features/canvas/components/CanvasEditBar';
+import { useCanvasZoom } from '../hooks/useCanvasZoom';
+import CanvasHints from './CanvasHints';
+import CanvasEmptyState from './CanvasEmptyState';
 
 interface CanvasProps {
   project: Project;
@@ -151,16 +100,6 @@ interface CanvasProps {
   ) => void;
 }
 
-interface SelectedColumnItem {
-  columnId: string;
-  item: BoardItem;
-}
-
-interface PendingDelete {
-  execute: () => void;
-  count: number;
-}
-
 export default function Canvas({
   project,
 
@@ -198,22 +137,6 @@ export default function Canvas({
     );
 
   const [
-    selectedColumnItem,
-    setSelectedColumnItem,
-  ] =
-    useState<SelectedColumnItem | null>(
-      null,
-    );
-
-  const [
-    pendingDelete,
-    setPendingDelete,
-  ] =
-    useState<PendingDelete | null>(
-      null,
-    );
-
-  const [
     snapEnabled,
     setSnapEnabled,
   ] = useState(true);
@@ -243,14 +166,6 @@ export default function Canvas({
   selectedIdsRef.current =
     selectedIds ?? [];
 
-  const selectedColumnItemRef =
-    useRef(
-      selectedColumnItem,
-    );
-
-  selectedColumnItemRef.current =
-    selectedColumnItem;
-
   const snapValue =
     useCallback(
       (
@@ -269,32 +184,6 @@ export default function Canvas({
         );
       },
       [snapEnabled],
-    );
-
-  const screenToCanvas =
-    useCallback(
-      (
-        screenX: number,
-        screenY: number,
-      ) => ({
-        x:
-          (
-            screenX -
-            pan.x
-          ) /
-          zoom,
-
-        y:
-          (
-            screenY -
-            pan.y
-          ) /
-          zoom,
-      }),
-      [
-        pan,
-        zoom,
-      ],
     );
 
   const {
@@ -324,41 +213,14 @@ export default function Canvas({
         onRestoreItems,
     });
 
-  const requestDelete =
-    useCallback(
-      (
-        execute: () => void,
-        count = 1,
-      ) => {
-        setPendingDelete({
-          execute,
-          count,
-        });
-      },
-      [],
-    );
-
-  const confirmDelete =
-    useCallback(() => {
-      setPendingDelete(
-        previous => {
-          if (previous) {
-            pushHistory();
-
-            previous.execute();
-          }
-
-          return null;
-        },
-      );
-    }, [pushHistory]);
-
-  const cancelDelete =
-    useCallback(() => {
-      setPendingDelete(
-        null,
-      );
-    }, []);
+  const {
+    pendingDelete,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+  } = useDeleteConfirmation({
+    pushHistory,
+  });
 
   const {
     measuredSizes,
@@ -392,107 +254,17 @@ export default function Canvas({
       onUpdateItem,
     });
 
-  const clearColumnSelection =
-    useCallback(() => {
-      setSelectedColumnItem(
-        null,
-      );
-    }, []);
-
-  const handleUpdateColumnItem =
-    useCallback(
-      (
-        columnId: string,
-
-        updater: (
-          item: BoardItem,
-        ) => BoardItem,
-      ) => {
-        const current =
-          selectedColumnItemRef.current;
-
-        if (
-          !current ||
-          current.columnId !==
-          columnId
-        ) {
-          return;
-        }
-
-        const itemId =
-          current.item.id;
-
-        setSelectedColumnItem(
-          previous =>
-            previous
-              ? {
-                ...previous,
-                item:
-                  updater(
-                    previous.item,
-                  ),
-              }
-              : null,
-        );
-
-        onUpdateItem(
-          columnId,
-
-          column => {
-            if (
-              column.type !==
-              'column'
-            ) {
-              return column;
-            }
-
-            return {
-              ...column,
-
-              items:
-                column.items.map(
-                  item =>
-                    item.id ===
-                      itemId
-                      ? updater(
-                        item,
-                      )
-                      : item,
-                ),
-            };
-          },
-        );
-      },
-      [
-        onUpdateItem,
-      ],
-    );
-
   const {
-    dragOverColumnId,
-    handleItemMouseDown,
-  } =
-    useItemDrag({
-      projectRef,
-      selectedIdsRef,
-      zoomRef,
-
-      snapEnabled,
-      snapValue,
-
-      pushHistory,
-
-      onSelectItems,
-      onSelectTool,
-
-      onBringToFront,
-      onUpdateItem,
-
-      onDropOnColumn,
-
-      clearColumnSelection,
-      triggerEnterAnimation,
-    });
+    screenToCanvas,
+  } = useCanvasZoom({
+    containerRef,
+    panRef,
+    zoomRef,
+    pan,
+    zoom,
+    onPanChange,
+    onZoomChange,
+  });
 
   const {
     frameDraft,
@@ -549,6 +321,19 @@ export default function Canvas({
       onUpdateItem,
     });
 
+  const {
+    selectedColumnItem,
+    
+    clearColumnSelection,
+    
+    handleSelectColumnItem,
+    handleUpdateColumnItem,
+    deleteSelectedColumnItem
+  } = useColumnSelection({
+    onSelectItems,
+    onUpdateItem,
+  });
+
   useCanvasKeyboard({
     selectedIdsRef,
 
@@ -564,109 +349,31 @@ export default function Canvas({
     undo,
   });
 
-  useEffect(() => {
-    const element =
-      containerRef.current;
+  const {
+    dragOverColumnId,
+    handleItemMouseDown,
+  } =
+    useItemDrag({
+      projectRef,
+      selectedIdsRef,
+      zoomRef,
 
-    if (!element) {
-      return;
-    }
+      snapEnabled,
+      snapValue,
 
-    const handleWheel = (
-      event: WheelEvent,
-    ) => {
-      event.preventDefault();
+      pushHistory,
 
-      const rect =
-        element.getBoundingClientRect();
+      onSelectItems,
+      onSelectTool,
 
-      const mouseX =
-        event.clientX -
-        rect.left;
+      onBringToFront,
+      onUpdateItem,
 
-      const mouseY =
-        event.clientY -
-        rect.top;
+      onDropOnColumn,
 
-      const currentZoom =
-        zoomRef.current;
-
-      const currentPan =
-        panRef.current;
-
-      const factor =
-        event.ctrlKey ||
-          event.metaKey
-          ? 1 -
-          event.deltaY *
-          0.008
-          : event.deltaY > 0
-            ? 0.92
-            : 1 / 0.92;
-
-      const nextZoom =
-        Math.min(
-          ZOOM_MAX,
-
-          Math.max(
-            ZOOM_MIN,
-
-            Number(
-              (
-                currentZoom *
-                factor
-              ).toFixed(4),
-            ),
-          ),
-        );
-
-      onPanChange({
-        x:
-          mouseX -
-          (
-            mouseX -
-            currentPan.x
-          ) *
-          (
-            nextZoom /
-            currentZoom
-          ),
-
-        y:
-          mouseY -
-          (
-            mouseY -
-            currentPan.y
-          ) *
-          (
-            nextZoom /
-            currentZoom
-          ),
-      });
-
-      onZoomChange(
-        nextZoom,
-      );
-    };
-
-    element.addEventListener(
-      'wheel',
-      handleWheel,
-      {
-        passive: false,
-      },
-    );
-
-    return () => {
-      element.removeEventListener(
-        'wheel',
-        handleWheel,
-      );
-    };
-  }, [
-    onPanChange,
-    onZoomChange,
-  ]);
+      clearColumnSelection,
+      triggerEnterAnimation,
+    });
 
   const handleBlurActiveElement =
     useCallback(
@@ -705,32 +412,6 @@ export default function Canvas({
         active.blur();
       },
       [],
-    );
-
-  const handleSelectColumnItem =
-    useCallback(
-      (
-        columnId: string,
-        item: BoardItem | null,
-      ) => {
-        if (!item) {
-          setSelectedColumnItem(
-            null,
-          );
-
-          return;
-        }
-
-        setSelectedColumnItem({
-          columnId,
-          item,
-        });
-
-        onSelectItems([]);
-      },
-      [
-        onSelectItems,
-      ],
     );
 
   const safeSelectedIds =
@@ -977,101 +658,55 @@ export default function Canvas({
         />
       </div>
 
-      {(
-        safeSelectedIds.length >
-        0 ||
-        selectedColumnItem
-      ) && (
-          <EditBar
-            selectedItems={
-              selectedItems
-            }
-            onUpdateItem={
-              onUpdateItem
-            }
-            onDeleteItems={
-              ids =>
-                requestDelete(
-                  () => {
-                    onDeleteItems(
-                      ids,
-                    );
+      <CanvasEditBar
+        selectedItems={
+          selectedItems
+        }
 
-                    onSelectItems(
-                      [],
-                    );
-                  },
-                  ids.length,
-                )
-            }
-            onGroupItems={() => {
-              pushHistory();
+        selectedColumnItem={
+          selectedColumnItem
+        }
 
-              onGroupSelected();
-            }}
-            onFitFrame={
-              handleFitFrame
-            }
-            onClose={() => {
-              onSelectItems([]);
+        onUpdateItem={
+          onUpdateItem
+        }
 
-              setSelectedColumnItem(
-                null,
-              );
-            }}
-            columnItem={
-              selectedColumnItem
-                ?.item
-            }
-            onUpdateColumnItem={
-              selectedColumnItem
-                ? updater =>
-                  handleUpdateColumnItem(
-                    selectedColumnItem.columnId,
-                    updater,
-                  )
-                : undefined
-            }
-            onDeleteColumnItem={
-              selectedColumnItem
-                ? () =>
-                  requestDelete(
-                    () => {
-                      onUpdateItem(
-                        selectedColumnItem.columnId,
+        onDeleteItems={
+          onDeleteItems
+        }
 
-                        column => {
-                          if (
-                            column.type !==
-                            'column'
-                          ) {
-                            return column;
-                          }
+        onSelectItems={
+          onSelectItems
+        }
 
-                          return {
-                            ...column,
+        onGroupSelected={
+          onGroupSelected
+        }
 
-                            items:
-                              column.items.filter(
-                                item =>
-                                  item.id !==
-                                  selectedColumnItem
-                                    .item
-                                    .id,
-                              ),
-                          };
-                        },
-                      );
+        onFitFrame={
+          handleFitFrame
+        }
 
-                      setSelectedColumnItem(
-                        null,
-                      );
-                    },
-                  )
-                : undefined
-            }
-          />
-        )}
+        onUpdateColumnItem={
+          handleUpdateColumnItem
+        }
+
+        deleteSelectedColumnItem={
+          deleteSelectedColumnItem
+        }
+
+        clearColumnSelection={
+          clearColumnSelection
+        }
+
+        pushHistory={
+          pushHistory
+        }
+
+        requestDelete={
+          requestDelete
+        }
+      />
 
       {pendingDelete && (
         <ConfirmDialog
@@ -1091,209 +726,26 @@ export default function Canvas({
         />
       )}
 
-      {selectedTool !==
-        'select' && (
-          <div
-            className="
-            absolute
-            left-1/2
-            -translate-x-1/2
-            pointer-events-none
-            hint-pulse
-          "
-          >
-            <div
-              className="
-              flex
-              items-center
-              gap-2
-              px-5
-              py-2.5
-              rounded-full
-              text-sm
-              shadow-lg
-            "
-              style={{
-                backgroundColor:
-                  'var(--color-surface-translucent)',
+      <CanvasHints
+        selectedTool={
+          selectedTool
+        }
+        hasSelection={
+          safeSelectedIds.length >
+            0 ||
+          selectedColumnItem !==
+            null
+        }
+      />
 
-                border:
-                  '1px solid rgba(124, 58, 237,0.3)',
-
-                color:
-                  'var(--color-accent)',
-
-                backdropFilter:
-                  'blur(8px)',
-              }}
-            >
-              {selectedTool ===
-                'frame'
-                ? 'Drag to draw a frame — items inside will move with it'
-                : `Click to place ${selectedTool}`}
-
-              <span
-                className="text-xs"
-                style={{
-                  color:
-                    'var(--color-text-muted)',
-                }}
-              >
-                ESC to cancel
-              </span>
-            </div>
-          </div>
-        )}
-
-      {selectedTool ===
-        'select' &&
-        safeSelectedIds.length ===
-        0 && (
-          <div
-            className="
-              absolute
-              left-1/2
-              -translate-x-1/2
-              pointer-events-none
-            "
-          >
-            <div
-              className="
-                flex
-                items-center
-                gap-2
-                px-4
-                py-2
-                rounded-full
-                text-xs
-                shadow-sm
-                opacity-40
-              "
-              style={{
-                backgroundColor:
-                  'var(--color-surface-translucent)',
-
-                color:
-                  'var(--color-text-secondary)',
-
-                backdropFilter:
-                  'blur(4px)',
-              }}
-            >
-              Middle-click drag to pan · Scroll to zoom
-            </div>
-          </div>
-        )}
-
-      {project.items.length ===
-        0 &&
-        selectedTool ===
-        'select' && (
-          <div
-            className="
-              absolute
-              inset-0
-              flex
-              items-center
-              justify-center
-              pointer-events-none
-            "
-          >
-            <div
-              className="text-center"
-              style={{
-                animation:
-                  'fade-in 0.4s ease forwards',
-              }}
-            >
-              <div
-                className="
-                  w-16
-                  h-16
-                  rounded-3xl
-                  flex
-                  items-center
-                  justify-center
-                  mx-auto
-                  mb-4
-                "
-                style={{
-                  backgroundColor:
-                    'rgba(255,255,255,0.7)',
-
-                  border:
-                    '1px solid rgba(0,0,0,0.1)',
-
-                  boxShadow:
-                    '0 2px 12px rgba(0,0,0,0.06)',
-                }}
-              >
-                <svg
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <rect
-                    x="3"
-                    y="3"
-                    width="9"
-                    height="9"
-                    rx="1.5"
-                    fill="rgba(0,0,0,0.12)"
-                  />
-
-                  <rect
-                    x="14"
-                    y="3"
-                    width="9"
-                    height="9"
-                    rx="1.5"
-                    fill="rgba(0,0,0,0.08)"
-                  />
-
-                  <rect
-                    x="3"
-                    y="14"
-                    width="9"
-                    height="9"
-                    rx="1.5"
-                    fill="rgba(0,0,0,0.08)"
-                  />
-
-                  <rect
-                    x="14"
-                    y="14"
-                    width="9"
-                    height="9"
-                    rx="1.5"
-                    fill="rgba(0,0,0,0.05)"
-                  />
-                </svg>
-              </div>
-
-              <p
-                className="text-sm mb-1"
-                style={{
-                  color:
-                    'var(--color-text-secondary)',
-                }}
-              >
-                Empty board
-              </p>
-
-              <p
-                className="text-xs"
-                style={{
-                  color:
-                    'var(--color-text-muted)',
-                }}
-              >
-                Select a tool from the sidebar to get started
-              </p>
-            </div>
-          </div>
-        )}
+      <CanvasEmptyState
+        visible={
+          project.items.length ===
+            0 &&
+          selectedTool ===
+            'select'
+        }
+      />
 
       <CanvasControls
         zoom={zoom}
