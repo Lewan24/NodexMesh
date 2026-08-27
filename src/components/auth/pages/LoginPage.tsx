@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuth } from './auth/AuthContext';
+import { useAuth } from '../../auth/AuthContext';
 
 export default function LoginPage() {
   const { login } = useAuth();

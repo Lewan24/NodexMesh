@@ -10,10 +10,7 @@ function getInitialTheme(): Theme {
   } catch {
     /* ignore */
   }
-  // Respect the OS preference the first time, default to light otherwise.
-  if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
-    return 'dark';
-  }
+  
   return 'light';
 }
 

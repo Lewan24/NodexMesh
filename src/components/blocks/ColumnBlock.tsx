@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { ColumnItem, BoardItem, NoteItem, ChecklistItem, LinkItem, ImageItem, TextItem } from '../types';
+import type { ColumnItem, BoardItem, NoteItem, ChecklistItem, LinkItem, ImageItem, TextItem } from '../../data/types';
 import BlockRenderer from './BlockRenderer';
 
 const uid = () => Math.random().toString(36).slice(2, 9);

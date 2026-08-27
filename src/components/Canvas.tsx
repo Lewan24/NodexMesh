@@ -3,10 +3,10 @@ import type {
   Project, BoardItem, ToolType,
   NoteItem, KanbanItem, KanbanCard, ImageItem, LinkItem, TextItem,
   FrameItem, ChecklistItem, ChecklistEntry, LineItem, ColumnItem,
-} from './types';
+} from '../data/types';
 import BlockRenderer from './blocks/BlockRenderer';
-import EditBar from './EditBar';
-import ConfirmDialog from './ConfirmDialog';
+import EditBar from '../components/layout/EditBar';
+import ConfirmDialog from '../components/dialogs/ConfirmDialog';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 

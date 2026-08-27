@@ -1,4 +1,4 @@
-import type { ToolType } from './types';
+import type { ToolType } from '../../data/types';
 
 interface Props {
   selectedTool: ToolType;

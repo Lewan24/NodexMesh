@@ -1,11 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { Project, BoardItem, ToolType, FrameItem, NoteItem, KanbanItem, ImageItem, ColumnItem, LineItem, ChecklistItem, TextItem } from './types';
-import { seedProjectsFor, createDefaultProjectFor } from './data';
-import { useAuth } from './auth/AuthContext';
-import LoginPage from './LoginPage';
-import Sidebar from './Sidebar';
-import Canvas from './Canvas';
-import AppBar from './AppBar';
+import type { Project, BoardItem, ToolType, FrameItem, NoteItem, KanbanItem, ImageItem, ColumnItem, LineItem, ChecklistItem, TextItem } from './data/types';
+import { seedProjectsFor, createDefaultProjectFor } from './data/data';
+import { useAuth } from './components/auth/AuthContext';
+import LoginPage from './components/auth/pages/LoginPage';
+import Sidebar from './components/layout/Sidebar';
+import Canvas from './components/Canvas';
+import AppBar from './components/layout/AppBar';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const COLORS = ['#7C3AED', '#FFBD65', '#02A0A0', '#FF6B8A', '#059669'];

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import type { KanbanItem, KanbanColumn, KanbanCard, BoardItem } from '../types';
+import type { KanbanItem, KanbanColumn, KanbanCard, BoardItem } from '../../data/types';
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 const COL_COLORS = ['#5a8a94', '#FFBD65', '#7C3AED', '#02A0A0', '#FF6B8A', '#059669'];
