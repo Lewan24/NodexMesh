@@ -82,10 +82,9 @@ export default function CanvasFrame({
       data-board-item="true"
       className={`
         absolute
-        ${
-          isAnimating
-            ? 'board-item-enter'
-            : ''
+        ${isAnimating
+          ? 'board-item-enter'
+          : ''
         }
       `}
       style={{
@@ -167,8 +166,8 @@ export default function CanvasFrame({
             item.id,
           )
         }
-        onBlockResize={() => {}}
-        onLineEndpointDrag={() => {}}
+        onBlockResize={() => { }}
+        onLineEndpointDrag={() => { }}
       />
     </div>
   );
