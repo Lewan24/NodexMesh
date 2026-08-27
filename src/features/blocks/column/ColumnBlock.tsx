@@ -27,13 +27,8 @@ import {
 
 interface ColumnBlockProps {
   item: ColumnItem;
-
-  zoom?: number;
-
   isSelected?: boolean;
-
   isDragOver?: boolean;
-
   selectedItemId?: string | null;
 
   onUpdate: (
@@ -961,7 +956,6 @@ export default function ColumnBlock({
                             innerWidth,
                           )
                         }
-                        zoom={1}
                         isSelected={
                           false
                         }

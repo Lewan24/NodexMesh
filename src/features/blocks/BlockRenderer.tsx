@@ -13,7 +13,9 @@ import LineBlock from '@/features/blocks/line/LineBlock';
 import ColumnBlock from '@/features/blocks/column/ColumnBlock';
 
 import type {
+  BlockDeleteHandler,
   BlockResizeHandler,
+  BlockUpdateHandler,
   CardDroppedOutsideHandler,
   EntryDroppedOutsideHandler,
   FrameResizeHandler,
@@ -21,42 +23,50 @@ import type {
   RequestDeleteHandler,
 } from '@/features/blocks/types';
 
-interface BlockRendererProps {
+export interface BlockRendererProps {
   item: BoardItem;
-  zoom: number;
   isSelected: boolean;
   isDragOver?: boolean;
   selectedColumnItemId?: string | null;
 
-  onUpdate: (
-    updater: (
-      item: BoardItem,
-    ) => BoardItem,
-  ) => void;
+  onUpdate:
+    BlockUpdateHandler;
 
-  onDelete: () => void;
-  onFrameResize: FrameResizeHandler;
-  onFitFrame: () => void;
-  onBlockResize: BlockResizeHandler;
-  onLineEndpointDrag: LineEndpointDragHandler;
+  onDelete:
+    BlockDeleteHandler;
+
+  onFrameResize:
+    FrameResizeHandler;
+
+  onFitFrame:
+    () => void;
+
+  onBlockResize:
+    BlockResizeHandler;
+
+  onLineEndpointDrag:
+    LineEndpointDragHandler;
 
   onEjectItem?: (
-    ejectedItem: BoardItem,
+    item: BoardItem,
   ) => void;
 
   onSelectColumnItem?: (
     item: BoardItem | null,
   ) => void;
 
-  onRequestDelete?: RequestDeleteHandler;
-  onEntryDroppedOutside?: EntryDroppedOutsideHandler;
-  onCardDroppedOutside?: CardDroppedOutsideHandler;
+  onRequestDelete?:
+    RequestDeleteHandler;
+
+  onEntryDroppedOutside?:
+    EntryDroppedOutsideHandler;
+
+  onCardDroppedOutside?:
+    CardDroppedOutsideHandler;
 }
 
 export default function BlockRenderer({
   item,
-
-  zoom,
 
   isSelected,
   isDragOver,
@@ -70,6 +80,7 @@ export default function BlockRenderer({
   onFitFrame,
 
   onBlockResize,
+
   onLineEndpointDrag,
 
   onEjectItem,
@@ -80,22 +91,32 @@ export default function BlockRenderer({
   onEntryDroppedOutside,
   onCardDroppedOutside,
 }: BlockRendererProps) {
-  const commonProps = {
-    zoom,
-    isSelected,
-    isDragOver,
-    onUpdate,
-    onDelete,
-  };
-
-  switch (item.type) {
+  switch (
+    item.type
+  ) {
     case 'note':
       return (
         <NoteBlock
-          {...commonProps}
           item={item}
+          isSelected={
+            isSelected
+          }
+          onUpdate={
+            onUpdate
+          }
+          onDelete={
+            onDelete
+          }
           onBlockResize={
-            onBlockResize
+            (
+              event,
+              width,
+            ) =>
+              onBlockResize(
+                event,
+                width,
+                null,
+              )
           }
         />
       );
@@ -103,8 +124,13 @@ export default function BlockRenderer({
     case 'kanban':
       return (
         <KanbanBlock
-          {...commonProps}
           item={item}
+          onUpdate={
+            onUpdate
+          }
+          onDelete={
+            onDelete
+          }
           onCardDroppedOutside={
             onCardDroppedOutside
           }
@@ -114,10 +140,24 @@ export default function BlockRenderer({
     case 'image':
       return (
         <ImageBlock
-          {...commonProps}
           item={item}
+          onUpdate={
+            onUpdate
+          }
+          onDelete={
+            onDelete
+          }
           onBlockResize={
-            onBlockResize
+            (
+              event,
+              width,
+              height,
+            ) =>
+              onBlockResize(
+                event,
+                width,
+                height,
+              )
           }
         />
       );
@@ -125,18 +165,36 @@ export default function BlockRenderer({
     case 'link':
       return (
         <LinkBlock
-          {...commonProps}
           item={item}
+          onUpdate={
+            onUpdate
+          }
+          onDelete={
+            onDelete
+          }
         />
       );
 
     case 'text':
       return (
         <TextBlock
-          {...commonProps}
           item={item}
+          onUpdate={
+            onUpdate
+          }
+          onDelete={
+            onDelete
+          }
           onBlockResize={
-            onBlockResize
+            (
+              event,
+              width,
+            ) =>
+              onBlockResize(
+                event,
+                width,
+                null,
+              )
           }
         />
       );
@@ -144,10 +202,23 @@ export default function BlockRenderer({
     case 'checklist':
       return (
         <ChecklistBlock
-          {...commonProps}
           item={item}
+          onUpdate={
+            onUpdate
+          }
+          onDelete={
+            onDelete
+          }
           onBlockResize={
-            onBlockResize
+            (
+              event,
+              width,
+            ) =>
+              onBlockResize(
+                event,
+                width,
+                null,
+              )
           }
           onEntryDroppedOutside={
             onEntryDroppedOutside
@@ -158,13 +229,32 @@ export default function BlockRenderer({
     case 'column':
       return (
         <ColumnBlock
-          {...commonProps}
           item={item}
+          isSelected={
+            isSelected
+          }
+          isDragOver={
+            isDragOver
+          }
           selectedItemId={
             selectedColumnItemId
           }
+          onUpdate={
+            onUpdate
+          }
+          onDelete={
+            onDelete
+          }
           onBlockResize={
-            onBlockResize
+            (
+              event,
+              width,
+            ) =>
+              onBlockResize(
+                event,
+                width,
+                null,
+              )
           }
           onEjectItem={
             onEjectItem
@@ -181,8 +271,13 @@ export default function BlockRenderer({
     case 'frame':
       return (
         <FrameBlock
-          {...commonProps}
           item={item}
+          onUpdate={
+            onUpdate
+          }
+          onDelete={
+            onDelete
+          }
           onFrameResize={
             onFrameResize
           }
@@ -195,8 +290,13 @@ export default function BlockRenderer({
     case 'line':
       return (
         <LineBlock
-          {...commonProps}
           item={item}
+          isSelected={
+            isSelected
+          }
+          onDelete={
+            onDelete
+          }
           onLineEndpointDrag={
             onLineEndpointDrag
           }

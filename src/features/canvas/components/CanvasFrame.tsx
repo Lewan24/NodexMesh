@@ -60,8 +60,6 @@ interface CanvasFrameProps {
 export default function CanvasFrame({
   item,
 
-  zoom,
-
   isSelected,
   isAnimating,
 
@@ -127,7 +125,6 @@ export default function CanvasFrame({
 
       <BlockRenderer
         item={item}
-        zoom={zoom}
         isSelected={isSelected}
         onUpdate={
           updater =>

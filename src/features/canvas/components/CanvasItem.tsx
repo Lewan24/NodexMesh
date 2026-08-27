@@ -103,8 +103,6 @@ export default function CanvasItem({
   item,
   renderedItem,
 
-  zoom,
-
   isSelected,
   isAttachTarget,
   isDragOver,
@@ -204,7 +202,6 @@ export default function CanvasItem({
       >
         <BlockRenderer
           item={renderedItem}
-          zoom={zoom}
           isSelected={isSelected}
           isDragOver={isDragOver}
           selectedColumnItemId={

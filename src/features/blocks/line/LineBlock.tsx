@@ -3,7 +3,6 @@ import {
 } from 'react';
 
 import type {
-  BoardItem,
   LineItem,
 } from '@/entities/board/types';
 
@@ -17,16 +16,7 @@ import {
 interface LineBlockProps {
   item: LineItem;
 
-  zoom: number;
-
   isSelected: boolean;
-
-  onUpdate: (
-    updater: (
-      item:
-        BoardItem,
-    ) => BoardItem,
-  ) => void;
 
   onDelete:
     () => void;
