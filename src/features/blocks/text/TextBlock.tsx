@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import type { TextItem, BoardItem } from '@/data/types';
+import type { TextItem, BoardItem } from '@/entities/board/types';
 
 const SIZE_STYLES: Record<TextItem['size'], string> = {
   sm: 'text-sm font-normal',

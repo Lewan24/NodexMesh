@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ImageItem, BoardItem } from '@/data/types';
+import type { ImageItem, BoardItem } from '@/entities/board/types';
 
 function isLight(hex: string) {
   const r = parseInt(hex.slice(1, 3), 16);

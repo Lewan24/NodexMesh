@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import type { ChecklistItem, ChecklistEntry, BoardItem } from '@/data/types';
+import type { ChecklistItem, ChecklistEntry, BoardItem } from '@/entities/board/types';
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 

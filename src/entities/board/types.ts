@@ -1,26 +1,3 @@
-export type ToolType = 'select' | 'note' | 'kanban' | 'image' | 'link' | 'text' | 'frame' | 'checklist' | 'line' | 'column';
-
-// ─── Auth ──────────────────────────────────────────────────────────────────
-export type Role = 'admin' | 'user';
-
-export interface User {
-  id: string;
-  username: string;
-  /** Mock-only plaintext password. Replace with a real auth flow when the API lands. */
-  password: string;
-  name: string;
-  role: Role;
-}
-
-export interface Project {
-  id: string;
-  name: string;
-  color: string;
-  items: BoardItem[];
-  /** Owning user's id — each user only sees their own projects. */
-  ownerId: string;
-}
-
 export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem;
 
 export interface BaseItem {

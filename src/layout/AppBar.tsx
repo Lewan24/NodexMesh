@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Project } from '@/data/types';
-import { useAuth } from '@/features/auth/context/AuthContext';
+import type { Project } from '@/entities/project/types';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import AdminUsersPanel from '@/features/auth/pages/AdminUsersPanel';
 

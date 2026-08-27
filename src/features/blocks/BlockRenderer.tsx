@@ -1,4 +1,4 @@
-import type { BoardItem, ChecklistEntry, KanbanCard } from '@/data/types';
+import type { BoardItem, ChecklistEntry, KanbanCard } from '@/entities/board/types';
 import NoteBlock from '@/features/blocks/note/NoteBlock';
 import KanbanBlock from '@/features/blocks/kanban/KanbanBlock';
 import ImageBlock from '@/features/blocks/image/ImageBlock';

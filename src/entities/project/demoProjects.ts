@@ -1,23 +1,13 @@
-import type { Project, User } from './types';
-
-// ─── Mock users ──────────────────────────────────────────────────────────
-// There is no self-registration in this app — accounts are provisioned by
-// an admin (see AdminUsersPanel). These two accounts exist so the app is
-// usable out of the box; replace with a real user store when the API lands.
-export const initialUsers: User[] = [
-  { id: 'user-admin', username: 'admin', password: 'admin123', name: 'Admin', role: 'admin' },
-  { id: 'user-demo', username: 'demo', password: 'demo123', name: 'Demo User', role: 'user' },
-];
-
-const DEMO_OWNER = 'user-demo';
+import { Project } from "@/entities/project/types";
+import { DEMO_USER_ID } from "@/entities/user/mockUsers";
 
 // ─── Mock projects (all owned by the demo user) ────────────────────────────
-export const initialProjects: Project[] = [
+export const demoProjects: Project[] = [
   {
     id: 'proj-design',
     name: 'Product Design',
     color: '#7C3AED',
-    ownerId: DEMO_OWNER,
+    ownerId: DEMO_USER_ID,
     items: [
       {
         id: 'f-ideation', type: 'frame', x: -112, y: -84, zIndex: 0,
@@ -119,7 +109,7 @@ export const initialProjects: Project[] = [
     id: 'proj-marketing',
     name: 'Q4 Marketing',
     color: '#FFBD65',
-    ownerId: DEMO_OWNER,
+    ownerId: DEMO_USER_ID,
     items: [
       {
         id: 'n-launch', type: 'note', x: 80, y: 80, zIndex: 1, width: 220,
@@ -153,7 +143,7 @@ export const initialProjects: Project[] = [
     id: 'proj-personal',
     name: 'Personal',
     color: '#8B5CF6',
-    ownerId: DEMO_OWNER,
+    ownerId: DEMO_USER_ID,
     items: [
       {
         id: 'n-reading', type: 'note', x: 100, y: 80, zIndex: 1, width: 210,
@@ -183,22 +173,3 @@ export const initialProjects: Project[] = [
     ],
   },
 ];
-
-const PROJECT_COLORS = ['#7C3AED', '#FFBD65', '#02A0A0', '#FF6B8A', '#059669'];
-
-/** Every brand-new user starts with one empty board of their own. */
-export function createDefaultProjectFor(userId: string): Project {
-  return {
-    id: 'proj-' + Math.random().toString(36).slice(2, 10),
-    name: 'My Board',
-    color: PROJECT_COLORS[Math.floor(Math.random() * PROJECT_COLORS.length)] ?? '#7C3AED',
-    ownerId: userId,
-    items: [],
-  };
-}
-
-/** Seed data for a given user: the demo user gets the sample boards above, everyone else starts fresh. */
-export function seedProjectsFor(userId: string): Project[] {
-  if (userId === DEMO_OWNER) return initialProjects;
-  return [createDefaultProjectFor(userId)];
-}

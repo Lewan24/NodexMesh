@@ -1,28 +1,15 @@
-import { useState } from 'react';
-import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLoginForm } from '@/features/auth/hooks/useLoginForm';
 
 export default function LoginPage() {
-  const { login } = useAuth();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username.trim() || !password) {
-      setError('Enter your username and password.');
-      return;
-    }
-    setSubmitting(true);
-    setError('');
-    // Mimic a network round trip so the loading state is visible.
-    setTimeout(() => {
-      const result = login(username, password);
-      if (!result.ok) setError(result.error);
-      setSubmitting(false);
-    }, 250);
-  };
+  const {
+    username,
+    password,
+    error,
+    submitting,
+    setUsername,
+    setPassword,
+    handleSubmit,
+  } = useLoginForm();
 
   return (
     <div

@@ -1,0 +1,1 @@
+export const PROJECT_COLORS = ['#7C3AED', '#FFBD65', '#02A0A0', '#FF6B8A', '#059669'] as const;

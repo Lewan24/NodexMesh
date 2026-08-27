@@ -1,9 +1,10 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import type {
-  Project, BoardItem, ToolType,
-  NoteItem, KanbanItem, KanbanCard, ImageItem, LinkItem, TextItem,
+  BoardItem, NoteItem, KanbanItem, KanbanCard, ImageItem, LinkItem, TextItem,
   FrameItem, ChecklistItem, ChecklistEntry, LineItem, ColumnItem,
-} from '@/data/types';
+} from '@/entities/board/types';
+import type { Project } from '@/entities/project/types';
+import type { ToolType } from '@/entities/board/toolTypes';
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import EditBar from '@/layout/EditBar';
 import ConfirmDialog from '@/shared/components/dialogs/ConfirmDialog';
