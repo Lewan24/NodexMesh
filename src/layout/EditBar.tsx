@@ -1,4 +1,4 @@
-import type { BoardItem, NoteItem, LineItem, FrameItem } from '../../data/types';
+import type { BoardItem, NoteItem, LineItem, FrameItem } from '@/data/types';
 
 // ─── Palettes ────────────────────────────────────────────────────────────────
 const LIGHT_BG = ['#ffffff', '#fefce8', '#f0fdf4', '#eff6ff', '#fdf4ff', '#fff7ed', '#f1f5f9', '#fce7f3'];

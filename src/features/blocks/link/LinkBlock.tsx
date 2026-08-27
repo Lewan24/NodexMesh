@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { LinkItem, BoardItem } from '../../data/types';
+import type { LinkItem, BoardItem } from '@/data/types';
 
 function isLight(hex: string) {
   const r = parseInt(hex.slice(1, 3), 16);

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Project } from '../../data/types';
-import { useAuth } from '../../components/auth/AuthContext';
-import { useTheme } from '../../theme/ThemeContext';
-import AdminUsersPanel from '../auth/pages/AdminUsersPanel';
+import type { Project } from '@/data/types';
+import { useAuth } from '@/features/auth/context/AuthContext';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import AdminUsersPanel from '@/features/auth/pages/AdminUsersPanel';
 
 interface Props {
   projects: Project[];

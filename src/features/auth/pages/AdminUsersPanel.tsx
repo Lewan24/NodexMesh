@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Role } from '../../../data/types';
-import { useAuth } from '../../auth/AuthContext';
+import type { Role } from '@/data/types';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 interface Props {
   onClose: () => void;

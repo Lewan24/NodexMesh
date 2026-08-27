@@ -1,13 +1,13 @@
-import type { BoardItem, ChecklistEntry, KanbanCard } from '../../data/types';
-import NoteBlock from './NoteBlock';
-import KanbanBlock from './KanbanBlock';
-import ImageBlock from './ImageBlock';
-import LinkBlock from './LinkBlock';
-import TextBlock from './TextBlock';
-import FrameBlock from './FrameBlock';
-import ChecklistBlock from './ChecklistBlock';
-import LineBlock from './LineBlock';
-import ColumnBlock from './ColumnBlock';
+import type { BoardItem, ChecklistEntry, KanbanCard } from '@/data/types';
+import NoteBlock from '@/features/blocks/note/NoteBlock';
+import KanbanBlock from '@/features/blocks/kanban/KanbanBlock';
+import ImageBlock from '@/features/blocks/image/ImageBlock';
+import LinkBlock from '@/features/blocks/link/LinkBlock';
+import TextBlock from '@/features/blocks/text/TextBlock';
+import FrameBlock from '@/features/blocks/frame/FrameBlock';
+import ChecklistBlock from '@/features/blocks/checklist/ChecklistBlock';
+import LineBlock from '@/features/blocks/line/LineBlock';
+import ColumnBlock from '@/features/blocks/column/ColumnBlock';
 
 interface Props {
   item: BoardItem;

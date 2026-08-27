@@ -1,6 +1,6 @@
 import { createContext, useContext, useCallback, useEffect, useMemo, useState } from 'react';
-import type { User, Role } from '../../data/types';
-import { initialUsers } from '../../data/data';
+import type { User, Role } from '@/data/types';
+import { initialUsers } from '@/data/data';
 
 /**
  * ── Mock auth ────────────────────────────────────────────────────────────

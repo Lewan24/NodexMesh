@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { LineItem, BoardItem } from '../../data/types';
+import type { LineItem, BoardItem } from '@/data/types';
 
 interface Props {
   item: LineItem;
