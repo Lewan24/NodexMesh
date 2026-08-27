@@ -414,6 +414,66 @@ export default function Canvas({
       [],
     );
 
+  const handleCanvasMouseDownCapture =
+  useCallback(
+    (
+      event: React.MouseEvent,
+    ) => {
+      handleBlurActiveElement(
+        event,
+      );
+
+      if (
+        event.button !== 0
+      ) {
+        return;
+      }
+
+      const target =
+        event.target;
+
+      if (
+        !(
+          target instanceof
+          Element
+        )
+      ) {
+        return;
+      }
+
+      /*
+       * Nested itemy w ColumnBlock same zarządzają
+       * wyborem konkretnego itemu.
+       *
+       * Dlatego kliknięcie w nie nie powinno najpierw
+       * kasować column selection.
+       */
+      const clickedColumnItem =
+        target.closest(
+          '[data-column-item="true"]',
+        );
+
+      if (
+        clickedColumnItem
+      ) {
+        return;
+      }
+
+      /*
+       * Wszystkie inne kliknięcia na planszy:
+       * pusty canvas, frame, zwykły item, inna kolumna,
+       * toolbar znajdujący się wewnątrz canvas itd.
+       *
+       * -> nested selection znika.
+       */
+      clearColumnSelection();
+    },
+    [
+      handleBlurActiveElement,
+      clearColumnSelection,
+    ],
+  );
+
   const safeSelectedIds =
     selectedIds ?? [];
 
@@ -499,7 +559,7 @@ export default function Canvas({
           `${backgroundX}px ${backgroundY}px`,
       }}
       onMouseDownCapture={
-        handleBlurActiveElement
+        handleCanvasMouseDownCapture
       }
       onMouseDown={
         handleCanvasMouseDown
@@ -580,6 +640,13 @@ export default function Canvas({
                 item={item}
                 renderedItem={
                   renderedItem
+                }
+                selectedColumnItemId={
+                  item.type === 'column' &&
+                  selectedColumnItem?.columnId ===
+                    item.id
+                    ? selectedColumnItem.item.id
+                    : null
                 }
                 zoom={zoom}
                 isSelected={

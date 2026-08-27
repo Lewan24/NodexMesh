@@ -1,4 +1,7 @@
-import type { BoardItem, ChecklistEntry, KanbanCard } from '@/entities/board/types';
+import type {
+  BoardItem,
+} from '@/entities/board/types';
+
 import NoteBlock from '@/features/blocks/note/NoteBlock';
 import KanbanBlock from '@/features/blocks/kanban/KanbanBlock';
 import ImageBlock from '@/features/blocks/image/ImageBlock';
@@ -9,39 +12,198 @@ import ChecklistBlock from '@/features/blocks/checklist/ChecklistBlock';
 import LineBlock from '@/features/blocks/line/LineBlock';
 import ColumnBlock from '@/features/blocks/column/ColumnBlock';
 
-interface Props {
+import type {
+  BlockResizeHandler,
+  CardDroppedOutsideHandler,
+  EntryDroppedOutsideHandler,
+  FrameResizeHandler,
+  LineEndpointDragHandler,
+  RequestDeleteHandler,
+} from '@/features/blocks/types';
+
+interface BlockRendererProps {
   item: BoardItem;
   zoom: number;
   isSelected: boolean;
   isDragOver?: boolean;
-  onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
+  selectedColumnItemId?: string | null;
+
+  onUpdate: (
+    updater: (
+      item: BoardItem,
+    ) => BoardItem,
+  ) => void;
+
   onDelete: () => void;
-  onFrameResize: (e: React.MouseEvent, w: number, h: number) => void;
+  onFrameResize: FrameResizeHandler;
   onFitFrame: () => void;
-  onBlockResize: (e: React.MouseEvent, w: number, h: number | null) => void;
-  onLineEndpointDrag: (e: React.MouseEvent, endpoint: 1 | 2) => void;
-  onEjectItem?: (ejectedItem: BoardItem) => void;
-  onSelectColumnItem?: (item: BoardItem | null) => void;
-  /** Routes a nested delete (e.g. an item inside a column) through the confirm dialog instead of deleting immediately. */
-  onRequestDelete?: (execute: () => void) => void;
-  /** A checklist entry was dragged past this item's own bounds — Canvas resolves the drop target. */
-  onEntryDroppedOutside?: (entry: ChecklistEntry, clientX: number, clientY: number) => void;
-  /** A kanban card was dragged past this board's own bounds — Canvas resolves the drop target. */
-  onCardDroppedOutside?: (card: KanbanCard, clientX: number, clientY: number) => void;
+  onBlockResize: BlockResizeHandler;
+  onLineEndpointDrag: LineEndpointDragHandler;
+
+  onEjectItem?: (
+    ejectedItem: BoardItem,
+  ) => void;
+
+  onSelectColumnItem?: (
+    item: BoardItem | null,
+  ) => void;
+
+  onRequestDelete?: RequestDeleteHandler;
+  onEntryDroppedOutside?: EntryDroppedOutsideHandler;
+  onCardDroppedOutside?: CardDroppedOutsideHandler;
 }
 
-export default function BlockRenderer({ item, zoom, isSelected, isDragOver, onUpdate, onDelete, onFrameResize, onFitFrame, onBlockResize, onLineEndpointDrag, onEjectItem, onSelectColumnItem, onRequestDelete, onEntryDroppedOutside, onCardDroppedOutside }: Props) {
-  const base = { item: item as any, zoom, isSelected, isDragOver, onUpdate, onDelete };
+export default function BlockRenderer({
+  item,
+
+  zoom,
+
+  isSelected,
+  isDragOver,
+
+  selectedColumnItemId,
+
+  onUpdate,
+  onDelete,
+
+  onFrameResize,
+  onFitFrame,
+
+  onBlockResize,
+  onLineEndpointDrag,
+
+  onEjectItem,
+  onSelectColumnItem,
+
+  onRequestDelete,
+
+  onEntryDroppedOutside,
+  onCardDroppedOutside,
+}: BlockRendererProps) {
+  const commonProps = {
+    zoom,
+    isSelected,
+    isDragOver,
+    onUpdate,
+    onDelete,
+  };
+
   switch (item.type) {
-    case 'note':      return <NoteBlock {...base} onBlockResize={onBlockResize} />;
-    case 'kanban':    return <KanbanBlock {...base} onCardDroppedOutside={onCardDroppedOutside} />;
-    case 'image':     return <ImageBlock {...base} onBlockResize={onBlockResize} />;
-    case 'link':      return <LinkBlock {...base} />;
-    case 'text':      return <TextBlock {...base} onBlockResize={onBlockResize} />;
-    case 'checklist': return <ChecklistBlock {...base} onBlockResize={onBlockResize} onEntryDroppedOutside={onEntryDroppedOutside} />;
-    case 'column':    return <ColumnBlock {...base} onBlockResize={onBlockResize} onEjectItem={onEjectItem} onSelectColumnItem={onSelectColumnItem} onRequestDelete={onRequestDelete} />;
-    case 'frame':     return <FrameBlock {...base} onFrameResize={onFrameResize} onFitFrame={onFitFrame} />;
-    case 'line':      return <LineBlock {...base} onLineEndpointDrag={onLineEndpointDrag} />;
-    default:          return null;
+    case 'note':
+      return (
+        <NoteBlock
+          {...commonProps}
+          item={item}
+          onBlockResize={
+            onBlockResize
+          }
+        />
+      );
+
+    case 'kanban':
+      return (
+        <KanbanBlock
+          {...commonProps}
+          item={item}
+          onCardDroppedOutside={
+            onCardDroppedOutside
+          }
+        />
+      );
+
+    case 'image':
+      return (
+        <ImageBlock
+          {...commonProps}
+          item={item}
+          onBlockResize={
+            onBlockResize
+          }
+        />
+      );
+
+    case 'link':
+      return (
+        <LinkBlock
+          {...commonProps}
+          item={item}
+        />
+      );
+
+    case 'text':
+      return (
+        <TextBlock
+          {...commonProps}
+          item={item}
+          onBlockResize={
+            onBlockResize
+          }
+        />
+      );
+
+    case 'checklist':
+      return (
+        <ChecklistBlock
+          {...commonProps}
+          item={item}
+          onBlockResize={
+            onBlockResize
+          }
+          onEntryDroppedOutside={
+            onEntryDroppedOutside
+          }
+        />
+      );
+
+    case 'column':
+      return (
+        <ColumnBlock
+          {...commonProps}
+          item={item}
+          selectedItemId={
+            selectedColumnItemId
+          }
+          onBlockResize={
+            onBlockResize
+          }
+          onEjectItem={
+            onEjectItem
+          }
+          onSelectColumnItem={
+            onSelectColumnItem
+          }
+          onRequestDelete={
+            onRequestDelete
+          }
+        />
+      );
+
+    case 'frame':
+      return (
+        <FrameBlock
+          {...commonProps}
+          item={item}
+          onFrameResize={
+            onFrameResize
+          }
+          onFitFrame={
+            onFitFrame
+          }
+        />
+      );
+
+    case 'line':
+      return (
+        <LineBlock
+          {...commonProps}
+          item={item}
+          onLineEndpointDrag={
+            onLineEndpointDrag
+          }
+        />
+      );
+
+    default:
+      return null;
   }
 }

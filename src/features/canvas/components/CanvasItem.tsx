@@ -22,6 +22,8 @@ interface CanvasItemProps {
 
   selectedIds: string[];
 
+  selectedColumnItemId?: string | null;
+
   onMouseDown: (
     id: string,
     event: React.MouseEvent,
@@ -109,6 +111,7 @@ export default function CanvasItem({
   isAnimating,
 
   selectedIds,
+  selectedColumnItemId,
 
   onMouseDown,
   onAnimationEnd,
@@ -204,6 +207,9 @@ export default function CanvasItem({
           zoom={zoom}
           isSelected={isSelected}
           isDragOver={isDragOver}
+          selectedColumnItemId={
+            selectedColumnItemId
+          }
           onUpdate={
             updater =>
               onUpdateItem(
