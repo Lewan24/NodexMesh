@@ -214,13 +214,22 @@ export default function Canvas({
   const {
     selectedColumnItem,
     clearColumnSelection,
-    handleSelectColumnItem,
+    handleSelectColumnItem: selectColumnItem,
     handleUpdateColumnItem,
     deleteSelectedColumnItem,
   } = useColumnSelection({
     onSelectItems,
     onUpdateItem,
   });
+
+  const handleSelectColumnItem = useCallback(
+    (columnId: string, item: BoardItem | null) => {
+      selectColumnItem(columnId, item);
+
+      if (item) onSelectTool('select');
+    },
+    [selectColumnItem, onSelectTool],
+  );
 
   useCanvasKeyboard({
     selectedIdsRef,
