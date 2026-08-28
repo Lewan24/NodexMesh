@@ -63,6 +63,8 @@ export interface TextItem extends BaseItem {
   size: 'sm' | 'md' | 'lg' | 'xl';
   color?: string;
   textAlign?: 'left' | 'center' | 'right';
+  bold?: boolean;
+  italic?: boolean;
 }
 
 export interface FrameItem extends BaseItem {

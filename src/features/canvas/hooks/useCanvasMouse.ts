@@ -11,6 +11,8 @@ import type {
 } from '@/features/canvas/types';
 
 import { createCanvasItem } from '@/features/canvas/utils/createCanvasItem';
+import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
+import { getContainedItemIds } from '@/features/canvas/utils/itemGeometry';
 
 interface ProjectLike {
   items: BoardItem[];
@@ -24,6 +26,9 @@ interface UseCanvasMouseOptions {
 
   selectedTool: ToolType;
   pan: CanvasPoint;
+
+  measuredSizes: SizeMap;
+  onFramePreviewChange: (ids: string[]) => void;
 
   screenToCanvas: (
     screenX: number,
@@ -46,6 +51,8 @@ export function useCanvasMouse({
   panRef,
   selectedTool,
   pan,
+  measuredSizes,
+  onFramePreviewChange,
   screenToCanvas,
   snapValue,
   pushHistory,
@@ -136,6 +143,21 @@ export function useCanvasMouse({
             width: right - left,
             height: bottom - top,
           });
+
+          const previewIds = getContainedItemIds(
+            projectRef.current.items,
+            {
+              x: left,
+              y: top,
+              width: right - left,
+              height: bottom - top,
+              right,
+              bottom,
+            },
+            measuredSizes,
+          );
+
+          onFramePreviewChange(previewIds);
         };
 
         const handleUp = (upEvent: MouseEvent) => {
@@ -166,13 +188,30 @@ export function useCanvasMouse({
                   snapValue(startCanvas.y - 40),
                 );
 
-          if (!item) {
+          if (!item || item.type !== 'frame') {
+            onFramePreviewChange([]);
             return;
           }
+
+          const containedIds = getContainedItemIds(
+            projectRef.current.items,
+            {
+              x: item.x,
+              y: item.y,
+              width: item.width,
+              height: item.height,
+              right: item.x + item.width,
+              bottom: item.y + item.height,
+            },
+            measuredSizes,
+          );
 
           pushHistory();
           onAddItem(item);
           triggerEnterAnimation(item.id);
+
+          onFramePreviewChange([]);
+          onSelectItems([item.id, ...containedIds]);
           onSelectTool('select');
         };
 
@@ -306,5 +345,7 @@ export function useCanvasMouse({
     frameDraft,
     lasso,
     handleCanvasMouseDown,
+    measuredSizes,
+    onFramePreviewChange,
   };
 }

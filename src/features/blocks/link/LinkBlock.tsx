@@ -64,7 +64,7 @@ export default function LinkBlock({
 
   const handleEditorKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Enter' || event.key === 'Escape') {
+      if (event.key === 'Escape') {
         setEditing(false);
       }
     },
@@ -256,16 +256,19 @@ export default function LinkBlock({
                 }}
               />
 
-              <input
+              <textarea
                 value={item.description}
                 onChange={event =>
                   update({
                     description: event.target.value,
                   })
                 }
-                onKeyDown={handleEditorKeyDown}
+                onKeyDown={event => {
+                  if (event.key === 'Escape') setEditing(false);
+                }}
                 placeholder="Description"
-                className="w-full text-xs px-2.5 py-1.5 rounded-xl outline-none border transition-colors"
+                rows={3}
+                className="w-full text-xs px-2.5 py-1.5 rounded-xl outline-none border transition-colors resize-none"
                 style={{
                   backgroundColor: inputBackground,
                   color: mutedColor,

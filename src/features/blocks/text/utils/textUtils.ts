@@ -1,10 +1,10 @@
 import type { TextItem } from '@/entities/board/types';
 
 export const TEXT_SIZE_STYLES: Record<TextItem['size'], string> = {
-  sm: 'text-sm font-normal',
-  md: 'text-base font-medium',
-  lg: 'text-2xl font-bold',
-  xl: 'text-4xl font-extrabold',
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-2xl',
+  xl: 'text-4xl',
 };
 
 export const TEXT_SIZE_LABELS: TextItem['size'][] = [

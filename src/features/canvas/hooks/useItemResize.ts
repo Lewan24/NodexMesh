@@ -4,6 +4,7 @@ import type { RefObject } from 'react';
 import type { BoardItem } from '@/entities/board/types';
 import type { ResizeDirection } from '@/features/canvas/types';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
+import { getContainedItemIds } from '@/features/canvas/utils/itemGeometry';
 
 import {
   MIN_BLOCK_WIDTH,
@@ -24,6 +25,8 @@ interface UseItemResizeOptions {
   pushHistory: () => void;
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
   onResizeEnd?: (itemId: string) => void;
+  onFramePreviewChange?: (ids: string[]) => void;
+  onFrameResizeEnd?: (frameId: string, containedIds: string[]) => void;
 }
 
 interface MinSize {
@@ -58,6 +61,8 @@ export function useItemResize({
   pushHistory,
   onUpdateItem,
   onResizeEnd,
+  onFramePreviewChange,
+  onFrameResizeEnd,
 }: UseItemResizeOptions) {
   const handleItemResize = useCallback(
     (id: string, event: React.MouseEvent, direction: ResizeDirection) => {
@@ -85,6 +90,7 @@ export function useItemResize({
       const minimum = getMinSize(item);
 
       let moved = false;
+      let framePreviewIds: string[] = [];
 
       const movesLeft = direction.includes('w');
       const movesRight = direction.includes('e');
@@ -123,6 +129,24 @@ export function useItemResize({
         const width = right - left;
         const height = bottom - top;
 
+        if (item.type === 'frame') {
+          framePreviewIds = getContainedItemIds(
+            projectRef.current.items,
+            {
+              x: left,
+              y: top,
+              width,
+              height,
+              right,
+              bottom,
+            },
+            measuredSizes,
+            item.id,
+          );
+
+          onFramePreviewChange?.(framePreviewIds);
+        }
+
         onUpdateItem(id, current => {
           if (current.type === 'line') return current;
 
@@ -159,7 +183,14 @@ export function useItemResize({
         document.removeEventListener('mousemove', handleMove);
         document.removeEventListener('mouseup', handleUp);
 
-        if (moved) onResizeEnd?.(id);
+        if (moved) {
+          onResizeEnd?.(id);
+
+          if (item.type === 'frame') {
+            onFrameResizeEnd?.(id, framePreviewIds);
+            onFramePreviewChange?.([]);
+          }
+        }
       };
 
       document.addEventListener('mousemove', handleMove);
@@ -173,6 +204,8 @@ export function useItemResize({
       pushHistory,
       onUpdateItem,
       onResizeEnd,
+      onFramePreviewChange,
+      onFrameResizeEnd,
     ],
   );
 

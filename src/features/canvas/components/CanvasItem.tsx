@@ -23,6 +23,8 @@ interface CanvasItemProps {
   selectedIds: string[];
   selectedColumnItemId?: string | null;
 
+  isFrameCapturePreview?: boolean;
+
   onMouseDown: (id: string, event: React.MouseEvent) => void;
   onAnimationEnd: (id: string) => void;
   onResize: (id: string, width: number, height: number) => void;
@@ -88,6 +90,7 @@ export default function CanvasItem({
   isAnimating,
   selectedIds,
   selectedColumnItemId,
+  isFrameCapturePreview = false,
   onMouseDown,
   onAnimationEnd,
   onResize,
@@ -123,6 +126,20 @@ export default function CanvasItem({
             inset: -4,
             boxShadow:
               '0 0 0 2px var(--color-accent), 0 0 12px rgba(124, 58, 237,0.25)',
+          }}
+        />
+      )}
+
+      {isFrameCapturePreview && !isSelected && (
+        <div
+          className="absolute pointer-events-none rounded-2xl"
+          style={{
+            inset: -5,
+            outline: '2px dashed var(--color-accent)',
+            outlineOffset: 2,
+            backgroundColor: 'rgba(124, 58, 237, 0.06)',
+            boxShadow: '0 0 16px rgba(124, 58, 237, 0.2)',
+            zIndex: 30,
           }}
         />
       )}

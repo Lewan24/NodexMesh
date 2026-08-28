@@ -5,7 +5,6 @@ import type { BoardItem, TextItem } from '@/entities/board/types';
 import {
   DEFAULT_TEXT_CARD_WIDTH,
   isLightColor,
-  TEXT_SIZE_LABELS,
   TEXT_SIZE_STYLES,
 } from '@/features/blocks/text/utils/textUtils';
 
@@ -14,21 +13,17 @@ interface TextBlockProps {
   zoom?: number;
   isSelected?: boolean;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
-  onDelete: () => void;
   fillWidth?: boolean;
 }
 
 export default function TextBlock({
   item,
   onUpdate,
-  onDelete,
   fillWidth = false,
 }: TextBlockProps) {
   const [editing, setEditing] = useState(
     !item.content || item.content === 'Heading',
   );
-
-  const [showControls, setShowControls] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -101,8 +96,6 @@ export default function TextBlock({
             : undefined,
         height: item.height,
       }}
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
     >
       <div
         className="transition-all duration-150"
@@ -158,6 +151,9 @@ export default function TextBlock({
               width: '100%',
               color: textColor,
               caretColor: 'var(--color-accent)',
+              textAlign: item.textAlign ?? 'left',
+              fontWeight: item.bold ? 700 : 400,
+              fontStyle: item.italic ? 'italic' : 'normal',
             }}
           />
         ) : (
@@ -167,6 +163,9 @@ export default function TextBlock({
             } ${isCard ? 'whitespace-pre-wrap break-words' : 'text-nowrap'}`}
             style={{
               color: item.content ? textColor : mutedColor,
+              textAlign: item.textAlign ?? 'left',
+              fontWeight: item.bold ? 700 : 400,
+              fontStyle: item.italic ? 'italic' : 'normal',
             }}
             onDoubleClick={() => setEditing(true)}
           >
@@ -174,75 +173,6 @@ export default function TextBlock({
           </span>
         )}
       </div>
-
-      {/* Floating controls */}
-
-      {showControls && !editing && (
-        <div
-          className="relative flex items-center gap-1 z-20"
-          style={{
-            marginTop: isCard ? 6 : 2,
-          }}
-          onMouseDown={event => event.stopPropagation()}
-        >
-          <div
-            className="flex items-center gap-1 px-1 py-1 rounded-lg"
-            style={{
-              backgroundColor: 'var(--color-surface-translucent)',
-              border: '1px solid var(--color-border)',
-              animation: 'slide-up 0.15s ease forwards',
-            }}
-          >
-            {TEXT_SIZE_LABELS.map(size => (
-              <button
-                key={size}
-                onClick={() => update({ size })}
-                className="text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider transition-all duration-100"
-                style={{
-                  backgroundColor:
-                    item.size === size
-                      ? 'var(--color-accent)'
-                      : 'transparent',
-                  color:
-                    item.size === size
-                      ? 'white'
-                      : 'var(--color-text-muted)',
-                }}
-              >
-                {size}
-              </button>
-            ))}
-
-            <button
-              onClick={onDelete}
-              className="ml-1 transition-colors"
-              style={{
-                color: 'var(--color-text-faint)',
-              }}
-              onMouseEnter={event => {
-                event.currentTarget.style.color =
-                  'var(--color-danger-strong)';
-              }}
-              onMouseLeave={event => {
-                event.currentTarget.style.color =
-                  'var(--color-text-faint)';
-              }}
-              title="Delete text"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

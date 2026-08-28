@@ -97,7 +97,6 @@ export default function BlockRenderer({
           item={item}
           fillWidth={isInsideColumn}
           onUpdate={onUpdate}
-          onDelete={onDelete}
         />
       );
 

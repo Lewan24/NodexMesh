@@ -99,3 +99,17 @@ export function isRectInsideRect(inner: ItemRect, outer: ItemRect): boolean {
     inner.bottom <= outer.bottom
   );
 }
+
+export function getContainedItemIds(
+  items: BoardItem[],
+  outerRect: ItemRect,
+  measuredSizes?: SizeMap,
+  excludeId?: string,
+): string[] {
+  return items
+    .filter(item => {
+      if (item.id === excludeId || item.type === 'frame') return false;
+      return isRectInsideRect(getItemRect(item, measuredSizes), outerRect);
+    })
+    .map(item => item.id);
+}

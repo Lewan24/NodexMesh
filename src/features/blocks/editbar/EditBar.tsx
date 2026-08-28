@@ -5,6 +5,7 @@ import LineControls from './components/LineControls';
 import NoteTextControls from './components/NoteTextControls';
 import { EditBarDivider } from './components/EditBarButton';
 import { ITEM_TYPE_LABELS } from './constants';
+import TextControls from './components/TextControls';
 
 interface EditBarProps {
   selectedItems: BoardItem[];
@@ -121,6 +122,12 @@ export default function EditBar({
 
       {!isMulti && single?.type === 'note' && (
         <NoteTextControls item={single} onUpdate={handleUpdate} />
+      )}
+
+      {/* Text */}
+
+      {!isMulti && single?.type === 'text' && (
+        <TextControls item={single} onUpdate={handleUpdate} />
       )}
 
       {/* Line */}

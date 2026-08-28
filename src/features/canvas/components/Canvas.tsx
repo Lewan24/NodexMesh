@@ -83,6 +83,7 @@ export default function Canvas({
 }: CanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [snapEnabled, setSnapEnabled] = useState(true);
+  const [frameCapturePreviewIds, setFrameCapturePreviewIds] = useState<string[]>([]);
 
   const panRef = useRef(pan);
   panRef.current = pan;
@@ -150,6 +151,12 @@ export default function Canvas({
     snapValue,
     pushHistory,
     onUpdateItem,
+
+    onFramePreviewChange: setFrameCapturePreviewIds,
+
+    onFrameResizeEnd: (frameId, containedIds) => {
+      onSelectItems([frameId, ...containedIds]);
+    },
   });
 
   const {
@@ -182,6 +189,7 @@ export default function Canvas({
     projectRef,
     selectedIdsRef,
     panRef,
+    measuredSizes,
     selectedTool,
     pan,
     screenToCanvas,
@@ -192,6 +200,7 @@ export default function Canvas({
     onSelectTool,
     onSelectItems,
     triggerEnterAnimation,
+    onFramePreviewChange: setFrameCapturePreviewIds,
   });
 
   const {
@@ -262,7 +271,16 @@ export default function Canvas({
 
   const handleBlurActiveElement = useCallback(
     (event: React.MouseEvent) => {
-      if (event.button !== 0) {
+      if (event.button !== 0) return;
+
+      const target = event.target;
+
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLButtonElement ||
+        target instanceof HTMLSelectElement
+      ) {
         return;
       }
 
@@ -275,9 +293,7 @@ export default function Canvas({
         return;
       }
 
-      if (active.contains(event.target as Node)) {
-        return;
-      }
+      if (active.contains(target as Node)) return;
 
       active.blur();
     },
@@ -387,6 +403,7 @@ export default function Canvas({
               key={item.id}
               item={item}
               renderedItem={renderedItem}
+              isFrameCapturePreview={frameCapturePreviewIds.includes(item.id)}
               selectedColumnItemId={
                 item.type === 'column' &&
                 selectedColumnItem?.columnId === item.id
