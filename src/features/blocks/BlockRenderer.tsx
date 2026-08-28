@@ -12,11 +12,9 @@ import TextBlock from '@/features/blocks/text/TextBlock';
 
 import type {
   BlockDeleteHandler,
-  BlockResizeHandler,
   BlockUpdateHandler,
   CardDroppedOutsideHandler,
   EntryDroppedOutsideHandler,
-  FrameResizeHandler,
   LineEndpointDragHandler,
   RequestDeleteHandler,
 } from '@/features/blocks/types';
@@ -29,9 +27,7 @@ export interface BlockRendererProps {
   isInsideColumn?: boolean;
   onUpdate: BlockUpdateHandler;
   onDelete: BlockDeleteHandler;
-  onFrameResize: FrameResizeHandler;
   onFitFrame: () => void;
-  onBlockResize: BlockResizeHandler;
   onLineEndpointDrag: LineEndpointDragHandler;
   onEjectItem?: (item: BoardItem) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
@@ -48,9 +44,7 @@ export default function BlockRenderer({
   isInsideColumn = false,
   onUpdate,
   onDelete,
-  onFrameResize,
   onFitFrame,
-  onBlockResize,
   onLineEndpointDrag,
   onEjectItem,
   onSelectColumnItem,
@@ -66,7 +60,6 @@ export default function BlockRenderer({
           isSelected={isSelected}
           onUpdate={onUpdate}
           onDelete={onDelete}
-          onBlockResize={(event, width) => onBlockResize(event, width, null)}
         />
       );
 
@@ -86,9 +79,6 @@ export default function BlockRenderer({
           item={item}
           onUpdate={onUpdate}
           onDelete={onDelete}
-          onBlockResize={(event, width, height) =>
-            onBlockResize(event, width, height)
-          }
         />
       );
 
@@ -108,7 +98,6 @@ export default function BlockRenderer({
           fillWidth={isInsideColumn}
           onUpdate={onUpdate}
           onDelete={onDelete}
-          onBlockResize={(event, width) => onBlockResize(event, width, null)}
         />
       );
 
@@ -118,7 +107,6 @@ export default function BlockRenderer({
           item={item}
           onUpdate={onUpdate}
           onDelete={onDelete}
-          onBlockResize={(event, width) => onBlockResize(event, width, null)}
           onEntryDroppedOutside={onEntryDroppedOutside}
         />
       );
@@ -132,7 +120,6 @@ export default function BlockRenderer({
           selectedItemId={selectedColumnItemId}
           onUpdate={onUpdate}
           onDelete={onDelete}
-          onBlockResize={(event, width) => onBlockResize(event, width, null)}
           onEjectItem={onEjectItem}
           onSelectColumnItem={onSelectColumnItem}
           onRequestDelete={onRequestDelete}
@@ -145,7 +132,6 @@ export default function BlockRenderer({
           item={item}
           onUpdate={onUpdate}
           onDelete={onDelete}
-          onFrameResize={onFrameResize}
           onFitFrame={onFitFrame}
         />
       );

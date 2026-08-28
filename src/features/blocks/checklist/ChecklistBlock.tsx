@@ -11,7 +11,6 @@ interface ChecklistBlockProps {
   isSelected?: boolean;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onBlockResize?: (event: React.MouseEvent, width: number, height: null) => void;
   onEntryDroppedOutside?: (entry: ChecklistEntry, clientX: number, clientY: number) => void;
 }
 
@@ -23,7 +22,7 @@ function DropLine() {
   );
 }
 
-export default function ChecklistBlock({ item, onUpdate, onDelete, onBlockResize, onEntryDroppedOutside }: ChecklistBlockProps) {
+export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppedOutside }: ChecklistBlockProps) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [addingEntry, setAddingEntry] = useState(false);
   const [newEntryText, setNewEntryText] = useState('');
@@ -115,10 +114,18 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onBlockResize
   );
 
   return (
-    <div className="group relative transition-all duration-200 hover:shadow-2xl" style={{ width: item.width ?? 220 }}>
-      <div ref={cardRef} className="rounded-2xl shadow-xl overflow-hidden" style={{ backgroundColor: item.color }}>
+    <div className="group relative transition-all duration-200 hover:shadow-2xl" style={{ 
+        width: item.width ?? 220,
+        height: item.height,
+       }}>
+      <div ref={cardRef} className="rounded-2xl shadow-xl overflow-hidden" style={{ 
+          backgroundColor: item.color,
+          height: item.height ? '100%' : undefined,
+        }}>
         {item.topColor && 
-          <div style={{ height: 5, backgroundColor: item.topColor }} />
+          <div style={{ 
+            height: 5, 
+            backgroundColor: item.topColor }} />
         }
         
         <div className="flex items-center justify-between px-3 pt-3 pb-2 cursor-grab active:cursor-grabbing">
@@ -262,39 +269,6 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onBlockResize
 
         <div className="pb-2" />
       </div>
-
-
-      {/* Width resize */}
-
-      {onBlockResize && 
-        <div 
-          className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-ew-resize"
-          style={{
-            top: 0,
-            bottom: 0,
-            right: -7,
-            width: 16,
-
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          onMouseDown={(event) => {
-            if (event.button !== 0) return;
-
-            event.stopPropagation();
-
-            onBlockResize(event, item.width ?? 220, null);
-          }}
-        >
-          <div className="w-1.5 rounded-full" 
-               style={{
-                 height: 36,
-                 backgroundColor: light ? 'rgba(30,41,59,0.4)' : 'rgba(232,244,244,0.4)',
-               }}
-          />
-        </div>
-      }
     </div>
   );
 }

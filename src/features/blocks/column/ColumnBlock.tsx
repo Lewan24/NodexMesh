@@ -21,7 +21,6 @@ interface ColumnBlockProps {
   selectedItemId?: string | null;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onBlockResize: (event: React.MouseEvent, width: number, height: null) => void;
   onEjectItem?: (ejectedItem: BoardItem) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
   onRequestDelete?: (execute: () => void) => void;
@@ -46,7 +45,6 @@ export default function ColumnBlock({
   selectedItemId = null,
   onUpdate,
   onDelete,
-  onBlockResize,
   onEjectItem,
   onSelectColumnItem,
   onRequestDelete,
@@ -179,7 +177,10 @@ export default function ColumnBlock({
   }
 
   return (
-    <div className="group/col relative" style={{ width: item.width }}>
+    <div className="group/col relative" style={{ 
+        width: item.width,
+        height: item.height,
+       }}>
       {isDragOver && (
         <div
           className="absolute pointer-events-none rounded-2xl"
@@ -192,7 +193,7 @@ export default function ColumnBlock({
       )}
 
       <div
-        className="rounded-2xl border shadow-xl"
+        className="rounded-2xl border shadow-xl flex flex-col"
         style={{
           backgroundColor: item.color,
           borderColor:
@@ -203,6 +204,9 @@ export default function ColumnBlock({
                 : 'rgba(255,255,255,0.1)',
           transition: 'border-color 0.15s',
           minWidth: 220,
+          height: item.height
+          ? '100%'
+          : undefined,
         }}
       >
         {/* Header */}
@@ -314,29 +318,6 @@ export default function ColumnBlock({
             className="flex items-center gap-1.5 flex-shrink-0 ml-2"
             onMouseDown={event => event.stopPropagation()}
           >
-            <div
-              className="opacity-0 group-hover/col:opacity-100 cursor-ew-resize transition-opacity rounded-lg p-1.5"
-              style={{ color: headerMutedColor }}
-              onMouseDown={event => {
-                event.stopPropagation();
-                onBlockResize(event, item.width, null);
-              }}
-              title="Drag to resize width"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M8 9l-4 3 4 3M16 9l4 3-4 3" />
-              </svg>
-            </div>
-
             <button
               onClick={onDelete}
               className="opacity-0 group-hover/col:opacity-100 transition-all rounded-lg p-1.5"
@@ -368,7 +349,8 @@ export default function ColumnBlock({
 
         <div
           ref={containerRef}
-          className="px-4 pt-3 pb-1 flex flex-col gap-2.5"
+          className="px-4 pt-3 pb-1 flex flex-col gap-2.5 overflow-y-auto"
+          style={{ flex: 1 }}
           onClick={event => {
             if (event.target === event.currentTarget) clearNestedSelection();
           }}
@@ -410,12 +392,18 @@ export default function ColumnBlock({
                     }}
                   >
                     <BlockRenderer
-                      item={prepareNestedItemForColumn(nestedItem, innerWidth)}
+                      item={prepareNestedItemForColumn(
+                        nestedItem,
+                        innerWidth,
+                      )}
                       isInsideColumn
                       isSelected={false}
-                      onUpdate={updater => updateNested(nestedItem.id, updater)}
+                      onUpdate={updater =>
+                        updateNested(nestedItem.id, updater)
+                      }
                       onDelete={() => {
-                        const execute = () => deleteNested(nestedItem.id);
+                        const execute = () =>
+                          deleteNested(nestedItem.id);
 
                         if (onRequestDelete) {
                           onRequestDelete(execute);
@@ -423,9 +411,7 @@ export default function ColumnBlock({
                           execute();
                         }
                       }}
-                      onFrameResize={() => {}}
                       onFitFrame={() => {}}
-                      onBlockResize={() => {}}
                       onLineEndpointDrag={() => {}}
                     />
                   </div>
@@ -521,32 +507,6 @@ export default function ColumnBlock({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Right resize handle */}
-
-      <div
-        className="absolute top-0 bottom-0 cursor-ew-resize flex items-center opacity-0 group-hover/col:opacity-100 transition-opacity"
-        style={{
-          right: -8,
-          width: 16,
-        }}
-        onMouseDown={event => {
-          event.stopPropagation();
-          onBlockResize(event, item.width, null);
-        }}
-        title="Drag to resize"
-      >
-        <div
-          className="rounded-full"
-          style={{
-            width: 5,
-            height: 44,
-            backgroundColor: '#7C3AED',
-            opacity: 0.65,
-            margin: '0 auto',
-          }}
-        />
       </div>
     </div>
   );

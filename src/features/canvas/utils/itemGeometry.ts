@@ -1,13 +1,19 @@
 import type { BoardItem } from '@/entities/board/types';
+import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 
 export interface ItemSize {
   width: number;
   height: number;
 }
 
-export function getApproxItemSize(
-  item: BoardItem,
-): ItemSize {
+export interface ItemRect extends ItemSize {
+  x: number;
+  y: number;
+  right: number;
+  bottom: number;
+}
+
+export function getApproxItemSize(item: BoardItem): ItemSize {
   switch (item.type) {
     case 'note':
       return {
@@ -63,4 +69,33 @@ export function getApproxItemSize(
         height: 150,
       };
   }
+}
+
+export function getItemSize(item: BoardItem, measuredSizes?: SizeMap): ItemSize {
+  const measured = measuredSizes?.get(item.id);
+  if (measured) return measured;
+
+  return getApproxItemSize(item);
+}
+
+export function getItemRect(item: BoardItem, measuredSizes?: SizeMap): ItemRect {
+  const size = getItemSize(item, measuredSizes);
+
+  return {
+    x: item.x,
+    y: item.y,
+    width: size.width,
+    height: size.height,
+    right: item.x + size.width,
+    bottom: item.y + size.height,
+  };
+}
+
+export function isRectInsideRect(inner: ItemRect, outer: ItemRect): boolean {
+  return (
+    inner.x >= outer.x &&
+    inner.y >= outer.y &&
+    inner.right <= outer.right &&
+    inner.bottom <= outer.bottom
+  );
 }

@@ -16,3 +16,13 @@ export interface SelectionBox {
   x2: number;
   y2: number;
 }
+
+export type ResizeDirection =
+  | 'n'
+  | 'ne'
+  | 'e'
+  | 'se'
+  | 's'
+  | 'sw'
+  | 'w'
+  | 'nw';

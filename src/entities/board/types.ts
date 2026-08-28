@@ -5,16 +5,15 @@ export interface BaseItem {
   x: number;
   y: number;
   zIndex: number;
-  topColor?: string;  // accent strip color shown at top of item card
+  width?: number;
+  height?: number;
+  topColor?: string;
 }
 
 export interface NoteItem extends BaseItem {
   type: 'note';
   content: string;
   color: string;
-  width?: number;
-  /** Manually-set height in px. When unset, the note grows to fit its content. */
-  height?: number;
   textAlign?: 'left' | 'center' | 'right';
   fontSize?: 'sm' | 'base' | 'lg';
   bold?: boolean;
@@ -45,10 +44,8 @@ export interface ImageItem extends BaseItem {
   type: 'image';
   url: string;
   caption: string;
-  width?: number;
-  imgHeight?: number;
+  imgHeight?: number; // temporary legacy field
   color?: string;
-  /** 'card' (default) shows the image in a card with a caption row; 'sticker' is just the image, no chrome. */
   variant?: 'card' | 'sticker';
 }
 
@@ -56,7 +53,6 @@ export interface LinkItem extends BaseItem {
   type: 'link';
   url: string;
   title: string;
-  width?: number;
   description: string;
   color?: string;
 }
@@ -66,8 +62,7 @@ export interface TextItem extends BaseItem {
   content: string;
   size: 'sm' | 'md' | 'lg' | 'xl';
   color?: string;
-  /** Manually-set width in px, used once the block has a card background (so text wraps). */
-  width?: number;
+  textAlign?: 'left' | 'center' | 'right';
 }
 
 export interface FrameItem extends BaseItem {
@@ -81,7 +76,6 @@ export interface FrameItem extends BaseItem {
 export interface ChecklistItem extends BaseItem {
   type: 'checklist';
   title: string;
-  width?: number;
   color: string;
   entries: ChecklistEntry[];
 }

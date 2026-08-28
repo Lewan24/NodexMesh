@@ -4,7 +4,6 @@ import type { BoardItem, NoteItem } from '@/entities/board/types';
 
 import {
   isLightColor,
-  MIN_NOTE_HEIGHT,
   NOTE_FONT_SIZE_CLASS,
   type NoteFontSize,
 } from '@/features/blocks/note/utils/noteUtils';
@@ -15,11 +14,6 @@ interface NoteBlockProps {
   isSelected: boolean;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onBlockResize: (
-    event: React.MouseEvent,
-    width: number,
-    height: null,
-  ) => void;
 }
 
 export default function NoteBlock({
@@ -27,7 +21,6 @@ export default function NoteBlock({
   isSelected,
   onUpdate,
   onDelete,
-  onBlockResize,
 }: NoteBlockProps) {
   const [editing, setEditing] = useState(!item.content);
 
@@ -42,7 +35,6 @@ export default function NoteBlock({
     : 'rgba(232,244,244,0.4)';
 
   const fontSize: NoteFontSize = item.fontSize ?? 'base';
-  const manualHeight = item.height;
 
   const update = useCallback(
     (patch: Partial<NoteItem>) => {
@@ -71,14 +63,14 @@ export default function NoteBlock({
    */
 
   const resizeTextarea = useCallback(() => {
-    if (manualHeight) return;
+    if (item.height) return;
 
     const textarea = textareaRef.current;
     if (!textarea) return;
 
     textarea.style.height = 'auto';
     textarea.style.height = `${textarea.scrollHeight}px`;
-  }, [manualHeight]);
+  }, [item.height]);
 
   useEffect(() => {
     if (!editing) return;
@@ -91,58 +83,22 @@ export default function NoteBlock({
     resizeTextarea();
   }, [item.content, resizeTextarea]);
 
-  /*
-   * Manual height resize.
-   */
-
-  const startHeightDrag = useCallback(
-    (event: React.MouseEvent) => {
-      if (event.button !== 0) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const startY = event.clientY;
-
-      const startHeight =
-        manualHeight ??
-        contentRef.current?.offsetHeight ??
-        120;
-
-      const handleMove = (moveEvent: MouseEvent) => {
-        const nextHeight = Math.max(
-          MIN_NOTE_HEIGHT,
-          startHeight + (moveEvent.clientY - startY),
-        );
-
-        update({
-          height: nextHeight,
-        });
-      };
-
-      const handleUp = () => {
-        document.removeEventListener('mousemove', handleMove);
-        document.removeEventListener('mouseup', handleUp);
-      };
-
-      document.addEventListener('mousemove', handleMove);
-      document.addEventListener('mouseup', handleUp);
-    },
-    [manualHeight, update],
-  );
-
   return (
     <div
       className="group relative"
       style={{
         width: item.width ?? 220,
+        height: item.height,
       }}
     >
       <div
-        className="rounded-2xl shadow-xl overflow-hidden transition-shadow duration-150 group-hover:shadow-2xl"
+        className="rounded-2xl shadow-xl overflow-hidden transition-shadow duration-150 group-hover:shadow-2xl flex flex-col"
         style={{
+          height: item.height ? '100%' : undefined,
           backgroundColor: item.color,
-          outline: isSelected ? '2px solid var(--color-accent)' : 'none',
+          outline: isSelected
+            ? '2px solid var(--color-accent)'
+            : 'none',
           outlineOffset: 3,
         }}
       >
@@ -160,7 +116,7 @@ export default function NoteBlock({
         {/* Header */}
 
         <div className="flex items-center justify-between px-3 pt-2.5 pb-0 cursor-grab active:cursor-grabbing">
-          {manualHeight && (
+          {item.height && (
             <button
               onMouseDown={event => event.stopPropagation()}
               onClick={() =>
@@ -199,15 +155,12 @@ export default function NoteBlock({
 
         <div
           ref={contentRef}
-          className="px-3 pb-3 pt-1"
-          style={
-            manualHeight
-              ? {
-                  height: manualHeight,
-                  overflowY: 'auto',
-                }
-              : undefined
-          }
+          className="px-3 pb-3 pt-1 flex-1 min-h-0"
+          style={{
+            overflowY: item.height
+              ? 'auto'
+              : undefined,
+          }}
         >
           {editing ? (
             <textarea
@@ -233,11 +186,11 @@ export default function NoteBlock({
                 }
               }}
               className={`w-full bg-transparent resize-none outline-none leading-relaxed ${
-                manualHeight ? 'overflow-y-auto h-full' : 'overflow-hidden'
+                item.height ? 'overflow-y-auto h-full' : 'overflow-hidden'
               } ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
                 color: textColor,
-                minHeight: manualHeight ? undefined : 52,
+                minHeight: item.height ? undefined : 52,
                 textAlign: item.textAlign ?? 'left',
                 fontWeight: item.bold ? 700 : 400,
                 fontStyle: item.italic ? 'italic' : 'normal',
@@ -251,7 +204,7 @@ export default function NoteBlock({
               className={`leading-relaxed whitespace-pre-wrap cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
                 color: item.content ? textColor : mutedColor,
-                minHeight: manualHeight ? undefined : 52,
+                minHeight: item.height ? undefined : 52,
                 textAlign: item.textAlign ?? 'left',
                 fontWeight: item.bold ? 700 : 400,
                 fontStyle: item.italic ? 'italic' : 'normal',
@@ -261,69 +214,6 @@ export default function NoteBlock({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Width resize */}
-
-      <div
-        className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-ew-resize"
-        style={{
-          top: 0,
-          bottom: 0,
-          right: -7,
-          width: 16,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-        onMouseDown={event => {
-          if (event.button !== 0) return;
-
-          event.stopPropagation();
-
-          onBlockResize(
-            event,
-            item.width ?? 220,
-            null,
-          );
-        }}
-      >
-        <div
-          className="w-1.5 rounded-full"
-          style={{
-            height: 36,
-            backgroundColor: light
-              ? 'rgba(30,41,59,0.4)'
-              : 'rgba(232,244,244,0.4)',
-          }}
-        />
-      </div>
-
-      {/* Height resize */}
-
-      <div
-        className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-ns-resize"
-        style={{
-          left: 0,
-          right: 0,
-          bottom: -7,
-          height: 16,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-        onMouseDown={startHeightDrag}
-        title="Drag to set a fixed height"
-      >
-        <div
-          className="h-1.5 rounded-full"
-          style={{
-            width: 36,
-            backgroundColor: light
-              ? 'rgba(30,41,59,0.4)'
-              : 'rgba(232,244,244,0.4)',
-          }}
-        />
       </div>
     </div>
   );

@@ -238,11 +238,20 @@ export default function KanbanBlock({
   }, [updateColumns]);
 
   return (
-    <div className="group relative">
+    <div className="group relative" style={{
+      width: item.width,
+      height: item.height,
+    }}>
       <div
         ref={boardRef}
-        className="rounded-2xl border shadow-xl overflow-visible"
+        className="rounded-2xl border shadow-xl overflow-auto"
         style={{
+          width: item.width
+            ? '100%'
+            : undefined,
+          height: item.height
+            ? '100%'
+            : undefined,
           backgroundColor: background,
           borderColor,
         }}

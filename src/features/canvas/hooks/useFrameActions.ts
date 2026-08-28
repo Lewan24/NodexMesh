@@ -1,12 +1,17 @@
 import { useCallback } from 'react';
 
 import type { BoardItem } from '@/entities/board/types';
+import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 
 import { FRAME_FIT_PADDING } from '@/features/canvas/constants';
-import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
+import {
+  getItemRect,
+  isRectInsideRect,
+} from '@/features/canvas/utils/itemGeometry';
 
 interface UseFrameActionsOptions {
   items: BoardItem[];
+  measuredSizes: SizeMap;
 
   onUpdateItem: (
     id: string,
@@ -16,55 +21,35 @@ interface UseFrameActionsOptions {
 
 export function useFrameActions({
   items,
+  measuredSizes,
   onUpdateItem,
 }: UseFrameActionsOptions) {
   const handleFitFrame = useCallback(
     (frameId: string) => {
-      const frame = items.find(
-        item =>
-          item.id === frameId &&
-          item.type === 'frame',
-      );
+      const frame = items.find(item => item.id === frameId && item.type === 'frame');
+      if (!frame || frame.type !== 'frame') return;
 
-      if (!frame || frame.type !== 'frame') {
-        return;
-      }
+      const frameRect = getItemRect(frame, measuredSizes);
 
-      const inside = items.filter(
-        item =>
-          item.id !== frameId &&
-          item.type !== 'frame' &&
-          item.x >= frame.x &&
-          item.y >= frame.y &&
-          item.x <= frame.x + frame.width &&
-          item.y <= frame.y + frame.height,
-      );
+      const inside = items.filter(item => {
+        if (item.id === frameId || item.type === 'frame') return false;
+        return isRectInsideRect(getItemRect(item, measuredSizes), frameRect);
+      });
 
-      if (inside.length === 0) {
-        return;
-      }
+      if (inside.length === 0) return;
 
-      let minX = Infinity;
-      let minY = Infinity;
-      let maxX = -Infinity;
-      let maxY = -Infinity;
+      const rects = inside.map(item => getItemRect(item, measuredSizes));
 
-      for (const item of inside) {
-        const size = getApproxItemSize(item);
+      const minX = Math.min(...rects.map(rect => rect.x));
+      const minY = Math.min(...rects.map(rect => rect.y));
+      const maxX = Math.max(...rects.map(rect => rect.right));
+      const maxY = Math.max(...rects.map(rect => rect.bottom));
 
-        minX = Math.min(minX, item.x);
-        minY = Math.min(minY, item.y);
-        maxX = Math.max(maxX, item.x + size.width);
-        maxY = Math.max(maxY, item.y + size.height);
-      }
-
-      onUpdateItem(frameId, item => {
-        if (item.type !== 'frame') {
-          return item;
-        }
+      onUpdateItem(frameId, current => {
+        if (current.type !== 'frame') return current;
 
         return {
-          ...item,
+          ...current,
           x: minX - FRAME_FIT_PADDING,
           y: minY - FRAME_FIT_PADDING,
           width: maxX - minX + FRAME_FIT_PADDING * 2,
@@ -72,10 +57,8 @@ export function useFrameActions({
         };
       });
     },
-    [items, onUpdateItem],
+    [items, measuredSizes, onUpdateItem],
   );
 
-  return {
-    handleFitFrame,
-  };
+  return { handleFitFrame };
 }

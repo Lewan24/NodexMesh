@@ -15,11 +15,6 @@ interface TextBlockProps {
   isSelected?: boolean;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onBlockResize?: (
-    event: React.MouseEvent,
-    width: number,
-    height: null,
-  ) => void;
   fillWidth?: boolean;
 }
 
@@ -27,7 +22,6 @@ export default function TextBlock({
   item,
   onUpdate,
   onDelete,
-  onBlockResize,
   fillWidth = false,
 }: TextBlockProps) {
   const [editing, setEditing] = useState(
@@ -99,7 +93,13 @@ export default function TextBlock({
       className="group relative"
       style={{
         minWidth: 140,
-        width: isCard || fillWidth ? cardWidth : undefined,
+        width:
+          isCard ||
+          fillWidth ||
+          item.width
+            ? cardWidth
+            : undefined,
+        height: item.height,
       }}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
@@ -113,9 +113,15 @@ export default function TextBlock({
                 borderRadius: 16,
                 padding: '14px 18px',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                height: item.height
+                ? '100%'
+                : undefined,
               }
             : {
                 padding: 12,
+                height: item.height
+                ? '100%'
+                : undefined,
               }
         }
       >
@@ -168,39 +174,6 @@ export default function TextBlock({
           </span>
         )}
       </div>
-
-      {/* Width resize handle */}
-
-      {isCard && onBlockResize && (
-        <div
-          className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-ew-resize"
-          style={{
-            top: 0,
-            bottom: 0,
-            right: -7,
-            width: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          onMouseDown={event => {
-            if (event.button !== 0) return;
-
-            event.stopPropagation();
-            onBlockResize(event, cardWidth, null);
-          }}
-        >
-          <div
-            className="w-1.5 rounded-full"
-            style={{
-              height: 28,
-              backgroundColor: light
-                ? 'rgba(30,41,59,0.4)'
-                : 'rgba(241,245,249,0.4)',
-            }}
-          />
-        </div>
-      )}
 
       {/* Floating controls */}
 

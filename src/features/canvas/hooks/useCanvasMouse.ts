@@ -125,11 +125,16 @@ export function useCanvasMouse({
             moveEvent.clientY - rect.top,
           );
 
+          const left = snapValue(Math.min(startCanvas.x, current.x));
+          const top = snapValue(Math.min(startCanvas.y, current.y));
+          const right = snapValue(Math.max(startCanvas.x, current.x));
+          const bottom = snapValue(Math.max(startCanvas.y, current.y));
+
           setFrameDraft({
-            x: Math.min(startCanvas.x, current.x),
-            y: Math.min(startCanvas.y, current.y),
-            width: Math.abs(current.x - startCanvas.x),
-            height: Math.abs(current.y - startCanvas.y),
+            x: left,
+            y: top,
+            width: right - left,
+            height: bottom - top,
           });
         };
 
@@ -144,20 +149,17 @@ export function useCanvasMouse({
             upEvent.clientY - rect.top,
           );
 
-          const width = Math.abs(current.x - startCanvas.x);
-          const height = Math.abs(current.y - startCanvas.y);
+          const left = snapValue(Math.min(startCanvas.x, current.x));
+          const top = snapValue(Math.min(startCanvas.y, current.y));
+          const right = snapValue(Math.max(startCanvas.x, current.x));
+          const bottom = snapValue(Math.max(startCanvas.y, current.y));
+
+          const width = right - left;
+          const height = bottom - top;
 
           const item =
             width > 40 && height > 40
-              ? createCanvasItem(
-                  'frame',
-                  snapValue(Math.min(startCanvas.x, current.x)),
-                  snapValue(Math.min(startCanvas.y, current.y)),
-                  {
-                    width,
-                    height,
-                  },
-                )
+              ? createCanvasItem('frame', left, top, { width, height })
               : createCanvasItem(
                   'frame',
                   snapValue(startCanvas.x - 80),

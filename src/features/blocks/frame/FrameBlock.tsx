@@ -10,11 +10,6 @@ interface FrameBlockProps {
   isSelected?: boolean;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onFrameResize: (
-    event: React.MouseEvent,
-    startWidth: number,
-    startHeight: number,
-  ) => void;
   onFitFrame: () => void;
 }
 
@@ -22,7 +17,6 @@ export default function FrameBlock({
   item,
   onUpdate,
   onDelete,
-  onFrameResize,
   onFitFrame,
 }: FrameBlockProps) {
   const [editingTitle, setEditingTitle] = useState(false);
@@ -224,35 +218,6 @@ export default function FrameBlock({
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
         </button>
-      </div>
-
-      {/* Resize handle */}
-
-      <div
-        className="absolute opacity-0 group-hover/frame:opacity-100 transition-opacity"
-        style={{
-          bottom: -6,
-          right: -6,
-          width: 14,
-          height: 14,
-          cursor: 'se-resize',
-          pointerEvents: 'auto',
-        }}
-        onMouseDown={event => {
-          if (event.button !== 0) return;
-
-          event.stopPropagation();
-          onFrameResize(event, item.width, item.height);
-        }}
-        title="Resize frame"
-      >
-        <div
-          className="w-3.5 h-3.5 rounded-full"
-          style={{
-            backgroundColor: item.color,
-            opacity: 0.8,
-          }}
-        />
       </div>
 
       {/* Size indicator */}

@@ -7,6 +7,9 @@ import type {
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import ItemWatcher from '@/features/canvas/components/ItemWatcher';
 
+import type { ResizeDirection } from '@/features/canvas/types';
+import ResizeHandles from '@/features/canvas/components/ResizeHandles';
+
 interface CanvasItemProps {
   item: BoardItem;
   renderedItem: BoardItem;
@@ -37,11 +40,10 @@ interface CanvasItemProps {
     count?: number,
   ) => void;
 
-  onBlockResize: (
+  onItemResize: (
     id: string,
     event: React.MouseEvent,
-    width: number,
-    height: number | null,
+    direction: ResizeDirection,
   ) => void;
 
   onLineEndpointDrag: (
@@ -93,7 +95,7 @@ export default function CanvasItem({
   onDeleteItem,
   onSelectItems,
   onRequestDelete,
-  onBlockResize,
+  onItemResize,
   onLineEndpointDrag,
   onEjectFromColumn,
   onSelectColumnItem,
@@ -125,6 +127,13 @@ export default function CanvasItem({
         />
       )}
 
+      {item.type !== 'line' && (
+        <ResizeHandles
+          visible={isSelected}
+          onResizeStart={(event, direction) => onItemResize(item.id, event, direction)}
+        />
+      )}
+
       {isAttachTarget && (
         <div
           className="absolute pointer-events-none rounded-2xl"
@@ -152,11 +161,7 @@ export default function CanvasItem({
               onSelectItems(selectedIds.filter(id => id !== item.id));
             })
           }
-          onFrameResize={() => {}}
           onFitFrame={() => {}}
-          onBlockResize={(event, width, height) =>
-            onBlockResize(item.id, event, width, height)
-          }
           onLineEndpointDrag={(event, endpoint) =>
             onLineEndpointDrag(item.id, event, endpoint)
           }

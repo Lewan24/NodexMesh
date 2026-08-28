@@ -72,15 +72,17 @@ export function useCanvasMeasurements({
 
         const frame = item;
 
-        const insideFrame =
-          changedItem.x >= frame.x &&
-          changedItem.y >= frame.y &&
+        const itemRight = changedItem.x + width;
+        const itemBottom = changedItem.y + height;
+
+        const touchesFrame =
+          itemRight >= frame.x &&
+          itemBottom >= frame.y &&
           changedItem.x <= frame.x + frame.width &&
           changedItem.y <= frame.y + frame.height;
 
-        if (!insideFrame) {
+        if (!touchesFrame) 
           continue;
-        }
 
         const neededWidth =
           changedItem.x +

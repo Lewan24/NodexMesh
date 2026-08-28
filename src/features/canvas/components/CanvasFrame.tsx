@@ -1,6 +1,8 @@
 import type { BoardItem, FrameItem } from '@/entities/board/types';
 
 import BlockRenderer from '@/features/blocks/BlockRenderer';
+import type { ResizeDirection } from '@/features/canvas/types';
+import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 
 interface CanvasFrameProps {
   item: FrameItem;
@@ -25,11 +27,10 @@ interface CanvasFrameProps {
     count?: number,
   ) => void;
 
-  onFrameResize: (
+  onItemResize: (
     id: string,
     event: React.MouseEvent,
-    width: number,
-    height: number,
+    direction: ResizeDirection,
   ) => void;
 
   onFitFrame: (id: string) => void;
@@ -46,7 +47,7 @@ export default function CanvasFrame({
   onDeleteItem,
   onSelectItems,
   onRequestDelete,
-  onFrameResize,
+  onItemResize,
   onFitFrame,
 }: CanvasFrameProps) {
   return (
@@ -72,6 +73,13 @@ export default function CanvasFrame({
         />
       )}
 
+      {isSelected && (
+        <ResizeHandles
+          visible
+          onResizeStart={(event, direction) => onItemResize(item.id, event, direction)}
+        />
+      )}
+
       <BlockRenderer
         item={item}
         isSelected={isSelected}
@@ -82,11 +90,7 @@ export default function CanvasFrame({
             onSelectItems(selectedIds.filter(id => id !== item.id));
           })
         }
-        onFrameResize={(event, width, height) =>
-          onFrameResize(item.id, event, width, height)
-        }
         onFitFrame={() => onFitFrame(item.id)}
-        onBlockResize={() => {}}
         onLineEndpointDrag={() => {}}
       />
     </div>

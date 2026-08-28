@@ -10,18 +10,6 @@ export type BlockUpdateHandler = (
 
 export type BlockDeleteHandler = () => void;
 
-export type BlockResizeHandler = (
-  event: React.MouseEvent,
-  width: number,
-  height: number | null,
-) => void;
-
-export type FrameResizeHandler = (
-  event: React.MouseEvent,
-  width: number,
-  height: number,
-) => void;
-
 export type LineEndpointDragHandler = (
   event: React.MouseEvent,
   endpoint: 1 | 2,

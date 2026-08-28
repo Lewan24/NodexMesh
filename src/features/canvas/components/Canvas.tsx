@@ -137,17 +137,16 @@ export default function Canvas({
 
   const {
     measuredSizes,
-    handleItemResize,
+    handleItemResize: handleMeasuredItemResize,
   } = useCanvasMeasurements({
     projectRef,
     onUpdateItem,
   });
 
-  const {
-    handleFrameResize,
-    handleBlockResize,
-  } = useItemResize({
+  const { handleItemResize } = useItemResize({
+    projectRef,
     zoomRef,
+    measuredSizes,
     snapValue,
     pushHistory,
     onUpdateItem,
@@ -208,6 +207,7 @@ export default function Canvas({
 
   const { handleFitFrame } = useFrameActions({
     items: project.items,
+    measuredSizes,
     onUpdateItem,
   });
 
@@ -357,6 +357,7 @@ export default function Canvas({
           <CanvasFrame
             key={frame.id}
             item={frame}
+            onItemResize={handleItemResize}
             zoom={zoom}
             isSelected={safeSelectedIds.includes(frame.id)}
             isAnimating={animatingIds.has(frame.id)}
@@ -367,7 +368,6 @@ export default function Canvas({
             onDeleteItem={onDeleteItem}
             onSelectItems={onSelectItems}
             onRequestDelete={requestDelete}
-            onFrameResize={handleFrameResize}
             onFitFrame={handleFitFrame}
           />
         ))}
@@ -401,21 +401,17 @@ export default function Canvas({
               selectedIds={safeSelectedIds}
               onMouseDown={handleItemMouseDown}
               onAnimationEnd={clearEnterAnimation}
-              onResize={handleItemResize}
+              onResize={handleMeasuredItemResize}
+              onItemResize={handleItemResize}
               onUpdateItem={onUpdateItem}
               onDeleteItem={onDeleteItem}
               onSelectItems={onSelectItems}
               onRequestDelete={requestDelete}
-              onBlockResize={handleBlockResize}
               onLineEndpointDrag={handleLineEndpointDrag}
               onEjectFromColumn={onEjectFromColumn}
               onSelectColumnItem={handleSelectColumnItem}
-              onChecklistDropOutside={
-                handleChecklistDropOutside
-              }
-              onKanbanCardDropOutside={
-                handleKanbanCardDropOutside
-              }
+              onChecklistDropOutside={handleChecklistDropOutside}
+              onKanbanCardDropOutside={handleKanbanCardDropOutside}
               pushHistory={pushHistory}
             />
           );

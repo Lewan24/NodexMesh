@@ -15,18 +15,12 @@ interface ImageBlockProps {
   isSelected?: boolean;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onBlockResize: (
-    event: React.MouseEvent,
-    width: number,
-    height: number,
-  ) => void;
 }
 
 export default function ImageBlock({
   item,
   onUpdate,
   onDelete,
-  onBlockResize,
 }: ImageBlockProps) {
   const [editingUrl, setEditingUrl] = useState(!item.url);
   const [urlInput, setUrlInput] = useState(item.url);
@@ -77,7 +71,10 @@ export default function ImageBlock({
   }, [item.url]);
 
   return (
-    <div className="group relative" style={{ width }}>
+    <div className="group relative" style={{ 
+      width,
+      height: item.height,
+     }}>
       <div
         className={
           isSticker
@@ -344,35 +341,6 @@ export default function ImageBlock({
             />
           </div>
         )}
-      </div>
-
-      {/* Resize */}
-
-      <div
-        className="absolute opacity-0 group-hover:opacity-100 transition-opacity cursor-se-resize"
-        style={{
-          bottom: -6,
-          right: -6,
-          width: 18,
-          height: 18,
-        }}
-        onMouseDown={event => {
-          if (event.button !== 0) return;
-
-          event.stopPropagation();
-          onBlockResize(event, width, imageHeight);
-        }}
-      >
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <circle cx="15" cy="15" r="5" fill="var(--color-accent)" opacity="0.85" />
-          <path
-            d="M6 15h9M15 6v9"
-            stroke="var(--color-accent)"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            opacity="0.55"
-          />
-        </svg>
       </div>
     </div>
   );

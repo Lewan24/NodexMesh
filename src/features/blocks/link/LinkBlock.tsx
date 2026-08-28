@@ -74,11 +74,17 @@ export default function LinkBlock({
   return (
     <div
       className="group relative transition-all duration-200 hover:shadow-2xl"
-      style={{ width }}
+      style={{ 
+        width,
+        height: item.height,
+       }}
     >
       <div
         className="rounded-2xl border shadow-xl overflow-hidden transition-colors duration-150"
         style={{
+          height: item.height
+          ? '100%'
+          : undefined,
           backgroundColor: background,
           borderColor: borderBase,
         }}
