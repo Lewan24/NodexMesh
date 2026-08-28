@@ -26,6 +26,7 @@ export interface BlockRendererProps {
   isSelected: boolean;
   isDragOver?: boolean;
   selectedColumnItemId?: string | null;
+  isInsideColumn?: boolean;
   onUpdate: BlockUpdateHandler;
   onDelete: BlockDeleteHandler;
   onFrameResize: FrameResizeHandler;
@@ -44,6 +45,7 @@ export default function BlockRenderer({
   isSelected,
   isDragOver,
   selectedColumnItemId,
+  isInsideColumn = false,
   onUpdate,
   onDelete,
   onFrameResize,
@@ -103,6 +105,7 @@ export default function BlockRenderer({
       return (
         <TextBlock
           item={item}
+          fillWidth={isInsideColumn}
           onUpdate={onUpdate}
           onDelete={onDelete}
           onBlockResize={(event, width) => onBlockResize(event, width, null)}

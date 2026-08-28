@@ -165,21 +165,17 @@ export default function ColumnBlock({
   );
 
   function prepareNestedItemForColumn(item: BoardItem, innerWidth: number): BoardItem {
-    if (item.type === 'note') {
-      return {
-        ...item,
-        width: innerWidth,
-      };
-    }
+    switch (item.type) {
+      case 'note':
+      case 'checklist':
+      case 'link':
+      case 'image':
+      case 'text':
+        return { ...item, width: innerWidth };
 
-    if ('width' in item) {
-      return {
-        ...item,
-        width: typeof item.width === 'number' ? item.width : innerWidth,
-      };
+      default:
+        return item;
     }
-
-    return item;
   }
 
   return (
@@ -415,6 +411,7 @@ export default function ColumnBlock({
                   >
                     <BlockRenderer
                       item={prepareNestedItemForColumn(nestedItem, innerWidth)}
+                      isInsideColumn
                       isSelected={false}
                       onUpdate={updater => updateNested(nestedItem.id, updater)}
                       onDelete={() => {

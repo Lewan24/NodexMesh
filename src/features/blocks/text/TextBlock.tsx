@@ -20,6 +20,7 @@ interface TextBlockProps {
     width: number,
     height: null,
   ) => void;
+  fillWidth?: boolean;
 }
 
 export default function TextBlock({
@@ -27,6 +28,7 @@ export default function TextBlock({
   onUpdate,
   onDelete,
   onBlockResize,
+  fillWidth = false,
 }: TextBlockProps) {
   const [editing, setEditing] = useState(
     !item.content || item.content === 'Heading',
@@ -97,7 +99,7 @@ export default function TextBlock({
       className="group relative"
       style={{
         minWidth: 140,
-        width: isCard ? cardWidth : undefined,
+        width: isCard || fillWidth ? cardWidth : undefined,
       }}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}

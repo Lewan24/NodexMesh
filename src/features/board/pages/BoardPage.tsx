@@ -12,8 +12,8 @@ import { useProjectItems } from '@/features/projects/hooks/useProjectItems';
 import { useProjects } from '@/features/projects/hooks/useProjects';
 
 import Canvas from '@/features/canvas/components/Canvas';
-import AppBar from '@/layout/AppBar';
-import Sidebar from '@/layout/Sidebar';
+import AppBar from '@/layout/appbar/AppBar';
+import Sidebar from '@/layout/sidebar/Sidebar';
 
 interface BoardPageProps {
   userId: string;

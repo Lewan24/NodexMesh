@@ -1,6 +1,6 @@
 import type { BoardItem } from '@/entities/board/types';
 
-import EditBar from '@/layout/EditBar';
+import EditBar from '@/features/blocks/editbar/EditBar';
 
 import type { SelectedColumnItem } from '@/features/canvas/hooks/useColumnSelection';
 
