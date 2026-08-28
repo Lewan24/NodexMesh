@@ -35,13 +35,8 @@ export function loadSessionUserId(): string | null {
   return localStorage.getItem(SESSION_KEY);
 }
 
-export function saveSessionUserId(
-  userId: string,
-): void {
-  localStorage.setItem(
-    SESSION_KEY,
-    userId,
-  );
+export function saveSessionUserId(userId: string): void {
+  localStorage.setItem(SESSION_KEY, userId);
 }
 
 export function clearSession(): void {

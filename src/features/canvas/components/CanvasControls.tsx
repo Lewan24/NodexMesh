@@ -1,23 +1,10 @@
-import {
-  ZOOM_MAX,
-  ZOOM_MIN,
-} from '@/features/canvas/constants';
+import { ZOOM_MAX, ZOOM_MIN } from '@/features/canvas/constants';
 
 interface CanvasControlsProps {
   zoom: number;
   snapEnabled: boolean;
-
-  onZoomChange: (
-    zoom: number,
-  ) => void;
-
-  onPanChange: (
-    pan: {
-      x: number;
-      y: number;
-    },
-  ) => void;
-
+  onZoomChange: (zoom: number) => void;
+  onPanChange: (pan: { x: number; y: number }) => void;
   onToggleSnap: () => void;
 }
 
@@ -29,73 +16,46 @@ export default function CanvasControls({
   onToggleSnap,
 }: CanvasControlsProps) {
   const zoomOut = () => {
-    const nextZoom =
-      Math.max(
-        ZOOM_MIN,
-        Number(
-          (
-            zoom - 0.1
-          ).toFixed(2),
-        ),
-      );
+    const nextZoom = Math.max(
+      ZOOM_MIN,
+      Number((zoom - 0.1).toFixed(2)),
+    );
 
     onZoomChange(nextZoom);
   };
 
   const zoomIn = () => {
-    const nextZoom =
-      Math.min(
-        ZOOM_MAX,
-        Number(
-          (
-            zoom + 0.1
-          ).toFixed(2),
-        ),
-      );
+    const nextZoom = Math.min(
+      ZOOM_MAX,
+      Number((zoom + 0.1).toFixed(2)),
+    );
 
     onZoomChange(nextZoom);
   };
 
   const resetView = () => {
     onZoomChange(1);
-
-    onPanChange({
-      x: 0,
-      y: 0,
-    });
+    onPanChange({ x: 0, y: 0 });
   };
 
   return (
     <div className="absolute right-6 pointer-events-auto flex items-center gap-2">
       <button
-        onClick={
-          onToggleSnap
-        }
+        onClick={onToggleSnap}
         className="w-9 h-9 flex items-center justify-center rounded-xl border shadow-md transition-colors"
         style={{
-          backgroundColor:
-            snapEnabled
-              ? 'var(--color-accent)'
-              : 'var(--color-surface-translucent)',
-
-          borderColor:
-            snapEnabled
-              ? 'var(--color-accent)'
-              : 'var(--color-border)',
-
-          color:
-            snapEnabled
-              ? 'white'
-              : 'var(--color-text-secondary)',
-
-          backdropFilter:
-            'blur(8px)',
+          backgroundColor: snapEnabled
+            ? 'var(--color-accent)'
+            : 'var(--color-surface-translucent)',
+          borderColor: snapEnabled
+            ? 'var(--color-accent)'
+            : 'var(--color-border)',
+          color: snapEnabled
+            ? 'white'
+            : 'var(--color-text-secondary)',
+          backdropFilter: 'blur(8px)',
         }}
-        title={
-          snapEnabled
-            ? 'Snap to grid: on'
-            : 'Snap to grid: off'
-        }
+        title={snapEnabled ? 'Snap to grid: on' : 'Snap to grid: off'}
       >
         <svg
           width="14"
@@ -119,11 +79,7 @@ export default function CanvasControls({
             height="8"
             rx="1"
             fill="currentColor"
-            opacity={
-              snapEnabled
-                ? 1
-                : 0.55
-            }
+            opacity={snapEnabled ? 1 : 0.55}
           />
         </svg>
       </button>
@@ -131,35 +87,21 @@ export default function CanvasControls({
       <div
         className="flex items-center rounded-xl overflow-hidden border shadow-md"
         style={{
-          backgroundColor:
-            'var(--color-surface-translucent)',
-
-          borderColor:
-            'var(--color-border)',
-
-          backdropFilter:
-            'blur(8px)',
+          backgroundColor: 'var(--color-surface-translucent)',
+          borderColor: 'var(--color-border)',
+          backdropFilter: 'blur(8px)',
         }}
       >
         <button
           onClick={zoomOut}
           className="w-8 h-8 flex items-center justify-center transition-colors"
-          style={{
-            color:
-              'var(--color-text-secondary)',
+          style={{ color: 'var(--color-text-secondary)' }}
+          onMouseEnter={event => {
+            event.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)';
           }}
-          onMouseEnter={
-            event => {
-              event.currentTarget.style.backgroundColor =
-                'rgba(0,0,0,0.05)';
-            }
-          }
-          onMouseLeave={
-            event => {
-              event.currentTarget.style.backgroundColor =
-                'transparent';
-            }
-          }
+          onMouseLeave={event => {
+            event.currentTarget.style.backgroundColor = 'transparent';
+          }}
           title="Zoom out"
         >
           <svg
@@ -179,51 +121,30 @@ export default function CanvasControls({
           className="px-2.5 h-8 text-[10px] font-bold font-mono transition-colors border-x"
           style={{
             color: '#4a6070',
-
-            borderColor:
-              'var(--color-border-soft)',
-
+            borderColor: 'var(--color-border-soft)',
             minWidth: 52,
           }}
-          onMouseEnter={
-            event => {
-              event.currentTarget.style.backgroundColor =
-                'rgba(0,0,0,0.05)';
-            }
-          }
-          onMouseLeave={
-            event => {
-              event.currentTarget.style.backgroundColor =
-                'transparent';
-            }
-          }
+          onMouseEnter={event => {
+            event.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)';
+          }}
+          onMouseLeave={event => {
+            event.currentTarget.style.backgroundColor = 'transparent';
+          }}
           title="Reset zoom"
         >
-          {Math.round(
-            zoom * 100,
-          )}
-          %
+          {Math.round(zoom * 100)}%
         </button>
 
         <button
           onClick={zoomIn}
           className="w-8 h-8 flex items-center justify-center transition-colors"
-          style={{
-            color:
-              'var(--color-text-secondary)',
+          style={{ color: 'var(--color-text-secondary)' }}
+          onMouseEnter={event => {
+            event.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)';
           }}
-          onMouseEnter={
-            event => {
-              event.currentTarget.style.backgroundColor =
-                'rgba(0,0,0,0.05)';
-            }
-          }
-          onMouseLeave={
-            event => {
-              event.currentTarget.style.backgroundColor =
-                'transparent';
-            }
-          }
+          onMouseLeave={event => {
+            event.currentTarget.style.backgroundColor = 'transparent';
+          }}
           title="Zoom in"
         >
           <svg

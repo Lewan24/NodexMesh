@@ -17,16 +17,14 @@ export function getApproxItemSize(
 
     case 'kanban':
       return {
-        width:
-          item.columns.length * 184 + 24,
+        width: item.columns.length * 184 + 24,
         height: 340,
       };
 
     case 'image':
       return {
         width: item.width ?? 260,
-        height:
-          (item.imgHeight ?? 178) + 56,
+        height: (item.imgHeight ?? 178) + 56,
       };
 
     case 'link':

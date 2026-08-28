@@ -29,12 +29,8 @@ export function getItemRect(
   item: BoardItem,
   sizes?: SizeMap,
 ): ItemRect {
-  const measuredSize =
-    sizes?.get(item.id);
-
-  const size =
-    measuredSize ??
-    getApproxItemSize(item);
+  const measuredSize = sizes?.get(item.id);
+  const size = measuredSize ?? getApproxItemSize(item);
 
   return {
     x: item.x,
@@ -48,17 +44,11 @@ export function getItemAnchor(
   item: BoardItem,
   sizes?: SizeMap,
 ): Point {
-  const rect =
-    getItemRect(item, sizes);
+  const rect = getItemRect(item, sizes);
 
   return {
-    x:
-      rect.x +
-      rect.width / 2,
-
-    y:
-      rect.y +
-      rect.height / 2,
+    x: rect.x + rect.width / 2,
+    y: rect.y + rect.height / 2,
   };
 }
 
@@ -67,19 +57,11 @@ export function getRectBorderPoint(
   targetX: number,
   targetY: number,
 ): Point {
-  const centerX =
-    rect.x +
-    rect.width / 2;
+  const centerX = rect.x + rect.width / 2;
+  const centerY = rect.y + rect.height / 2;
 
-  const centerY =
-    rect.y +
-    rect.height / 2;
-
-  const dx =
-    targetX - centerX;
-
-  const dy =
-    targetY - centerY;
+  const dx = targetX - centerX;
+  const dy = targetY - centerY;
 
   if (dx === 0 && dy === 0) {
     return {
@@ -88,44 +70,24 @@ export function getRectBorderPoint(
     };
   }
 
-  const halfWidth =
-    Math.max(
-      rect.width / 2,
-      1,
-    );
-
-  const halfHeight =
-    Math.max(
-      rect.height / 2,
-      1,
-    );
+  const halfWidth = Math.max(rect.width / 2, 1);
+  const halfHeight = Math.max(rect.height / 2, 1);
 
   const scaleX =
     dx !== 0
-      ? halfWidth /
-        Math.abs(dx)
+      ? halfWidth / Math.abs(dx)
       : Infinity;
 
   const scaleY =
     dy !== 0
-      ? halfHeight /
-        Math.abs(dy)
+      ? halfHeight / Math.abs(dy)
       : Infinity;
 
-  const scale =
-    Math.min(
-      scaleX,
-      scaleY,
-    );
+  const scale = Math.min(scaleX, scaleY);
 
   return {
-    x:
-      centerX +
-      dx * scale,
-
-    y:
-      centerY +
-      dy * scale,
+    x: centerX + dx * scale,
+    y: centerY + dy * scale,
   };
 }
 
@@ -134,45 +96,27 @@ export function resolveLineItem(
   items: BoardItem[],
   sizes?: SizeMap,
 ): LineItem {
-  const startTarget =
-    line.startItemId
-      ? items.find(
-          item =>
-            item.id ===
-            line.startItemId,
-        )
-      : undefined;
+  const startTarget = line.startItemId
+    ? items.find(item => item.id === line.startItemId)
+    : undefined;
 
-  const endTarget =
-    line.endItemId
-      ? items.find(
-          item =>
-            item.id ===
-            line.endItemId,
-        )
-      : undefined;
+  const endTarget = line.endItemId
+    ? items.find(item => item.id === line.endItemId)
+    : undefined;
 
-  const startReference =
-    startTarget
-      ? getItemAnchor(
-          startTarget,
-          sizes,
-        )
-      : {
-          x: line.x,
-          y: line.y,
-        };
+  const startReference = startTarget
+    ? getItemAnchor(startTarget, sizes)
+    : {
+        x: line.x,
+        y: line.y,
+      };
 
-  const endReference =
-    endTarget
-      ? getItemAnchor(
-          endTarget,
-          sizes,
-        )
-      : {
-          x: line.x2,
-          y: line.y2,
-        };
+  const endReference = endTarget
+    ? getItemAnchor(endTarget, sizes)
+    : {
+        x: line.x2,
+        y: line.y2,
+      };
 
   let x = line.x;
   let y = line.y;
@@ -180,30 +124,22 @@ export function resolveLineItem(
   let y2 = line.y2;
 
   if (startTarget) {
-    const point =
-      getRectBorderPoint(
-        getItemRect(
-          startTarget,
-          sizes,
-        ),
-        endReference.x,
-        endReference.y,
-      );
+    const point = getRectBorderPoint(
+      getItemRect(startTarget, sizes),
+      endReference.x,
+      endReference.y,
+    );
 
     x = point.x;
     y = point.y;
   }
 
   if (endTarget) {
-    const point =
-      getRectBorderPoint(
-        getItemRect(
-          endTarget,
-          sizes,
-        ),
-        startReference.x,
-        startReference.y,
-      );
+    const point = getRectBorderPoint(
+      getItemRect(endTarget, sizes),
+      startReference.x,
+      startReference.y,
+    );
 
     x2 = point.x;
     y2 = point.y;

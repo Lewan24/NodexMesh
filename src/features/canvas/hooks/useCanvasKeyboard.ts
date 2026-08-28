@@ -6,18 +6,9 @@ import type { ToolType } from '@/entities/board/toolTypes';
 
 interface UseCanvasKeyboardOptions {
   selectedIdsRef: RefObject<string[]>;
-
-  onSelectItems: (
-    ids: string[],
-  ) => void;
-
-  onSelectTool: (
-    tool: ToolType,
-  ) => void;
-
-  onDeleteItems: (
-    ids: string[],
-  ) => void;
+  onSelectItems: (ids: string[]) => void;
+  onSelectTool: (tool: ToolType) => void;
+  onDeleteItems: (ids: string[]) => void;
 
   requestDelete: (
     execute: () => void,
@@ -25,7 +16,6 @@ interface UseCanvasKeyboardOptions {
   ) => void;
 
   clearColumnSelection: () => void;
-
   undo: () => void;
 }
 
@@ -39,41 +29,25 @@ export function useCanvasKeyboard({
   undo,
 }: UseCanvasKeyboardOptions) {
   useEffect(() => {
-    const handleKeyDown = (
-      event: KeyboardEvent,
-    ) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       const inField =
-        event.target instanceof
-          HTMLInputElement ||
-        event.target instanceof
-          HTMLTextAreaElement;
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement;
 
-      if (
-        event.key ===
-        'Escape'
-      ) {
+      if (event.key === 'Escape') {
         onSelectItems([]);
         onSelectTool('select');
         clearColumnSelection();
       }
 
       const deletePressed =
-        event.key ===
-          'Delete' ||
-        event.key ===
-          'Backspace';
+        event.key === 'Delete' ||
+        event.key === 'Backspace';
 
-      if (
-        deletePressed &&
-        !inField
-      ) {
-        const ids =
-          selectedIdsRef.current;
+      if (deletePressed && !inField) {
+        const ids = selectedIdsRef.current;
 
-        if (
-          ids &&
-          ids.length > 0
-        ) {
+        if (ids && ids.length > 0) {
           requestDelete(
             () => {
               onDeleteItems(ids);
@@ -85,34 +59,20 @@ export function useCanvasKeyboard({
       }
 
       const undoPressed =
-        (
-          event.metaKey ||
-          event.ctrlKey
-        ) &&
+        (event.metaKey || event.ctrlKey) &&
         !event.shiftKey &&
-        event.key
-          .toLowerCase() ===
-          'z';
+        event.key.toLowerCase() === 'z';
 
-      if (
-        undoPressed &&
-        !inField
-      ) {
+      if (undoPressed && !inField) {
         event.preventDefault();
         undo();
       }
     };
 
-    window.addEventListener(
-      'keydown',
-      handleKeyDown,
-    );
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      window.removeEventListener(
-        'keydown',
-        handleKeyDown,
-      );
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [
     selectedIdsRef,

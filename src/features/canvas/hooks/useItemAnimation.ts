@@ -1,61 +1,35 @@
-import {
-  useCallback,
-  useState,
-} from 'react';
+import { useCallback, useState } from 'react';
 
 export function useItemAnimation() {
-  const [
-    animatingIds,
-    setAnimatingIds,
-  ] = useState<Set<string>>(
+  const [animatingIds, setAnimatingIds] = useState<Set<string>>(
     () => new Set(),
   );
 
-  const triggerEnterAnimation =
-    useCallback(
-      (id: string) => {
-        setAnimatingIds(
-          previous => {
-            if (
-              previous.has(id)
-            ) {
-              return previous;
-            }
+  const triggerEnterAnimation = useCallback((id: string) => {
+    setAnimatingIds(previous => {
+      if (previous.has(id)) {
+        return previous;
+      }
 
-            const next =
-              new Set(previous);
+      const next = new Set(previous);
+      next.add(id);
 
-            next.add(id);
+      return next;
+    });
+  }, []);
 
-            return next;
-          },
-        );
-      },
-      [],
-    );
+  const clearEnterAnimation = useCallback((id: string) => {
+    setAnimatingIds(previous => {
+      if (!previous.has(id)) {
+        return previous;
+      }
 
-  const clearEnterAnimation =
-    useCallback(
-      (id: string) => {
-        setAnimatingIds(
-          previous => {
-            if (
-              !previous.has(id)
-            ) {
-              return previous;
-            }
+      const next = new Set(previous);
+      next.delete(id);
 
-            const next =
-              new Set(previous);
-
-            next.delete(id);
-
-            return next;
-          },
-        );
-      },
-      [],
-    );
+      return next;
+    });
+  }, []);
 
   return {
     animatingIds,

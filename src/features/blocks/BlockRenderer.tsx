@@ -1,16 +1,14 @@
-import type {
-  BoardItem,
-} from '@/entities/board/types';
+import type { BoardItem } from '@/entities/board/types';
 
-import NoteBlock from '@/features/blocks/note/NoteBlock';
-import KanbanBlock from '@/features/blocks/kanban/KanbanBlock';
-import ImageBlock from '@/features/blocks/image/ImageBlock';
-import LinkBlock from '@/features/blocks/link/LinkBlock';
-import TextBlock from '@/features/blocks/text/TextBlock';
-import FrameBlock from '@/features/blocks/frame/FrameBlock';
 import ChecklistBlock from '@/features/blocks/checklist/ChecklistBlock';
-import LineBlock from '@/features/blocks/line/LineBlock';
 import ColumnBlock from '@/features/blocks/column/ColumnBlock';
+import FrameBlock from '@/features/blocks/frame/FrameBlock';
+import ImageBlock from '@/features/blocks/image/ImageBlock';
+import KanbanBlock from '@/features/blocks/kanban/KanbanBlock';
+import LineBlock from '@/features/blocks/line/LineBlock';
+import LinkBlock from '@/features/blocks/link/LinkBlock';
+import NoteBlock from '@/features/blocks/note/NoteBlock';
+import TextBlock from '@/features/blocks/text/TextBlock';
 
 import type {
   BlockDeleteHandler,
@@ -28,96 +26,45 @@ export interface BlockRendererProps {
   isSelected: boolean;
   isDragOver?: boolean;
   selectedColumnItemId?: string | null;
-
-  onUpdate:
-    BlockUpdateHandler;
-
-  onDelete:
-    BlockDeleteHandler;
-
-  onFrameResize:
-    FrameResizeHandler;
-
-  onFitFrame:
-    () => void;
-
-  onBlockResize:
-    BlockResizeHandler;
-
-  onLineEndpointDrag:
-    LineEndpointDragHandler;
-
-  onEjectItem?: (
-    item: BoardItem,
-  ) => void;
-
-  onSelectColumnItem?: (
-    item: BoardItem | null,
-  ) => void;
-
-  onRequestDelete?:
-    RequestDeleteHandler;
-
-  onEntryDroppedOutside?:
-    EntryDroppedOutsideHandler;
-
-  onCardDroppedOutside?:
-    CardDroppedOutsideHandler;
+  onUpdate: BlockUpdateHandler;
+  onDelete: BlockDeleteHandler;
+  onFrameResize: FrameResizeHandler;
+  onFitFrame: () => void;
+  onBlockResize: BlockResizeHandler;
+  onLineEndpointDrag: LineEndpointDragHandler;
+  onEjectItem?: (item: BoardItem) => void;
+  onSelectColumnItem?: (item: BoardItem | null) => void;
+  onRequestDelete?: RequestDeleteHandler;
+  onEntryDroppedOutside?: EntryDroppedOutsideHandler;
+  onCardDroppedOutside?: CardDroppedOutsideHandler;
 }
 
 export default function BlockRenderer({
   item,
-
   isSelected,
   isDragOver,
-
   selectedColumnItemId,
-
   onUpdate,
   onDelete,
-
   onFrameResize,
   onFitFrame,
-
   onBlockResize,
-
   onLineEndpointDrag,
-
   onEjectItem,
   onSelectColumnItem,
-
   onRequestDelete,
-
   onEntryDroppedOutside,
   onCardDroppedOutside,
 }: BlockRendererProps) {
-  switch (
-    item.type
-  ) {
+  switch (item.type) {
     case 'note':
       return (
         <NoteBlock
           item={item}
-          isSelected={
-            isSelected
-          }
-          onUpdate={
-            onUpdate
-          }
-          onDelete={
-            onDelete
-          }
-          onBlockResize={
-            (
-              event,
-              width,
-            ) =>
-              onBlockResize(
-                event,
-                width,
-                null,
-              )
-          }
+          isSelected={isSelected}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onBlockResize={(event, width) => onBlockResize(event, width, null)}
         />
       );
 
@@ -125,15 +72,9 @@ export default function BlockRenderer({
       return (
         <KanbanBlock
           item={item}
-          onUpdate={
-            onUpdate
-          }
-          onDelete={
-            onDelete
-          }
-          onCardDroppedOutside={
-            onCardDroppedOutside
-          }
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onCardDroppedOutside={onCardDroppedOutside}
         />
       );
 
@@ -141,23 +82,10 @@ export default function BlockRenderer({
       return (
         <ImageBlock
           item={item}
-          onUpdate={
-            onUpdate
-          }
-          onDelete={
-            onDelete
-          }
-          onBlockResize={
-            (
-              event,
-              width,
-              height,
-            ) =>
-              onBlockResize(
-                event,
-                width,
-                height,
-              )
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onBlockResize={(event, width, height) =>
+            onBlockResize(event, width, height)
           }
         />
       );
@@ -166,12 +94,8 @@ export default function BlockRenderer({
       return (
         <LinkBlock
           item={item}
-          onUpdate={
-            onUpdate
-          }
-          onDelete={
-            onDelete
-          }
+          onUpdate={onUpdate}
+          onDelete={onDelete}
         />
       );
 
@@ -179,23 +103,9 @@ export default function BlockRenderer({
       return (
         <TextBlock
           item={item}
-          onUpdate={
-            onUpdate
-          }
-          onDelete={
-            onDelete
-          }
-          onBlockResize={
-            (
-              event,
-              width,
-            ) =>
-              onBlockResize(
-                event,
-                width,
-                null,
-              )
-          }
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onBlockResize={(event, width) => onBlockResize(event, width, null)}
         />
       );
 
@@ -203,26 +113,10 @@ export default function BlockRenderer({
       return (
         <ChecklistBlock
           item={item}
-          onUpdate={
-            onUpdate
-          }
-          onDelete={
-            onDelete
-          }
-          onBlockResize={
-            (
-              event,
-              width,
-            ) =>
-              onBlockResize(
-                event,
-                width,
-                null,
-              )
-          }
-          onEntryDroppedOutside={
-            onEntryDroppedOutside
-          }
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onBlockResize={(event, width) => onBlockResize(event, width, null)}
+          onEntryDroppedOutside={onEntryDroppedOutside}
         />
       );
 
@@ -230,41 +124,15 @@ export default function BlockRenderer({
       return (
         <ColumnBlock
           item={item}
-          isSelected={
-            isSelected
-          }
-          isDragOver={
-            isDragOver
-          }
-          selectedItemId={
-            selectedColumnItemId
-          }
-          onUpdate={
-            onUpdate
-          }
-          onDelete={
-            onDelete
-          }
-          onBlockResize={
-            (
-              event,
-              width,
-            ) =>
-              onBlockResize(
-                event,
-                width,
-                null,
-              )
-          }
-          onEjectItem={
-            onEjectItem
-          }
-          onSelectColumnItem={
-            onSelectColumnItem
-          }
-          onRequestDelete={
-            onRequestDelete
-          }
+          isSelected={isSelected}
+          isDragOver={isDragOver}
+          selectedItemId={selectedColumnItemId}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onBlockResize={(event, width) => onBlockResize(event, width, null)}
+          onEjectItem={onEjectItem}
+          onSelectColumnItem={onSelectColumnItem}
+          onRequestDelete={onRequestDelete}
         />
       );
 
@@ -272,18 +140,10 @@ export default function BlockRenderer({
       return (
         <FrameBlock
           item={item}
-          onUpdate={
-            onUpdate
-          }
-          onDelete={
-            onDelete
-          }
-          onFrameResize={
-            onFrameResize
-          }
-          onFitFrame={
-            onFitFrame
-          }
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onFrameResize={onFrameResize}
+          onFitFrame={onFitFrame}
         />
       );
 
@@ -291,15 +151,9 @@ export default function BlockRenderer({
       return (
         <LineBlock
           item={item}
-          isSelected={
-            isSelected
-          }
-          onDelete={
-            onDelete
-          }
-          onLineEndpointDrag={
-            onLineEndpointDrag
-          }
+          isSelected={isSelected}
+          onDelete={onDelete}
+          onLineEndpointDrag={onLineEndpointDrag}
         />
       );
 

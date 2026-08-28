@@ -7,7 +7,7 @@ const getProjectsStorageKey = (userId: string) =>
 export function loadProjects(userId: string): Project[] {
   try {
     const raw = localStorage.getItem(
-      getProjectsStorageKey(userId)
+      getProjectsStorageKey(userId),
     );
 
     if (raw) {

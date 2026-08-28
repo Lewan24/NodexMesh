@@ -1,7 +1,4 @@
-import {
-  useCallback,
-  useRef,
-} from 'react';
+import { useCallback, useRef } from 'react';
 
 import type { Dispatch, SetStateAction } from 'react';
 
@@ -26,20 +23,14 @@ function detachLines(
 
     let nextItem = item;
 
-    if (
-      item.startItemId &&
-      removed.has(item.startItemId)
-    ) {
+    if (item.startItemId && removed.has(item.startItemId)) {
       nextItem = {
         ...nextItem,
         startItemId: undefined,
       };
     }
 
-    if (
-      item.endItemId &&
-      removed.has(item.endItemId)
-    ) {
+    if (item.endItemId && removed.has(item.endItemId)) {
       nextItem = {
         ...nextItem,
         endItemId: undefined,
@@ -62,11 +53,7 @@ export function useProjectItems({
   }, []);
 
   const updateItems = useCallback(
-    (
-      update: (
-        items: BoardItem[],
-      ) => BoardItem[],
-    ) => {
+    (update: (items: BoardItem[]) => BoardItem[]) => {
       setProjects(previous =>
         previous.map(project =>
           project.id === activeProjectId
@@ -102,9 +89,7 @@ export function useProjectItems({
   const updateItem = useCallback(
     (
       id: string,
-      update: (
-        item: BoardItem,
-      ) => BoardItem,
+      update: (item: BoardItem) => BoardItem,
     ) => {
       updateItems(items =>
         items.map(item =>
@@ -128,9 +113,7 @@ export function useProjectItems({
     (id: string) => {
       updateItems(items =>
         detachLines(
-          items.filter(
-            item => item.id !== id,
-          ),
+          items.filter(item => item.id !== id),
           [id],
         ),
       );
@@ -144,9 +127,7 @@ export function useProjectItems({
 
       updateItems(items =>
         detachLines(
-          items.filter(
-            item => !removed.has(item.id),
-          ),
+          items.filter(item => !removed.has(item.id)),
           ids,
         ),
       );

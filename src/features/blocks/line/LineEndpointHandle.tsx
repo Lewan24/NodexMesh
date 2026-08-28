@@ -1,42 +1,23 @@
 interface LineEndpointHandleProps {
   x: number;
   y: number;
-
   attached: boolean;
-
   color: string;
-
-  onMouseDown: (
-    event:
-      React.MouseEvent,
-  ) => void;
+  onMouseDown: (event: React.MouseEvent) => void;
 }
 
 export default function LineEndpointHandle({
   x,
   y,
-
   attached,
-
   color,
-
   onMouseDown,
 }: LineEndpointHandleProps) {
-  const handleMouseDown = (
-    event:
-      React.MouseEvent,
-  ) => {
-    if (
-      event.button !== 0
-    ) {
-      return;
-    }
+  const handleMouseDown = (event: React.MouseEvent) => {
+    if (event.button !== 0) return;
 
     event.stopPropagation();
-
-    onMouseDown(
-      event,
-    );
+    onMouseDown(event);
   };
 
   if (attached) {
@@ -51,15 +32,10 @@ export default function LineEndpointHandle({
         stroke="#08171d"
         strokeWidth={2}
         style={{
-          cursor:
-            'crosshair',
-
-          pointerEvents:
-            'all',
+          cursor: 'crosshair',
+          pointerEvents: 'all',
         }}
-        onMouseDown={
-          handleMouseDown
-        }
+        onMouseDown={handleMouseDown}
       />
     );
   }
@@ -73,15 +49,10 @@ export default function LineEndpointHandle({
       stroke="#08171d"
       strokeWidth={2}
       style={{
-        cursor:
-          'crosshair',
-
-        pointerEvents:
-          'all',
+        cursor: 'crosshair',
+        pointerEvents: 'all',
       }}
-      onMouseDown={
-        handleMouseDown
-      }
+      onMouseDown={handleMouseDown}
     />
   );
 }

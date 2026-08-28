@@ -15,18 +15,15 @@ export function useBoardView() {
   const [selectedTool, setSelectedTool] =
     useState<ToolType>('select');
 
-  const [pan, setPan] =
-    useState<CanvasPoint>({
-      x: 0,
-      y: 0,
-    });
+  const [pan, setPan] = useState<CanvasPoint>({
+    x: 0,
+    y: 0,
+  });
 
   const [zoom, setZoom] = useState(1);
 
-  const [
-    selectedIds,
-    setSelectedIds,
-  ] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] =
+    useState<string[]>([]);
 
   const resetViewport = useCallback(() => {
     setPan({
@@ -43,18 +40,13 @@ export function useBoardView() {
     setSelectedIds([]);
   }, [resetViewport]);
 
-  const selectTool = useCallback(
-    (tool: ToolType) => {
-      setSelectedTool(tool);
-      setSelectedIds([]);
-    },
-    [],
-  );
+  const selectTool = useCallback((tool: ToolType) => {
+    setSelectedTool(tool);
+    setSelectedIds([]);
+  }, []);
 
   useEffect(() => {
-    const handleKeyDown = (
-      event: KeyboardEvent,
-    ) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       const resetShortcut =
         (event.metaKey || event.ctrlKey) &&
         event.key === '0';
@@ -67,16 +59,10 @@ export function useBoardView() {
       resetViewport();
     };
 
-    window.addEventListener(
-      'keydown',
-      handleKeyDown,
-    );
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      window.removeEventListener(
-        'keydown',
-        handleKeyDown,
-      );
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [resetViewport]);
 

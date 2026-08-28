@@ -8,9 +8,7 @@ import {
 
 import type { ReactNode } from 'react';
 
-import type {
-  User,
-} from '@/entities/user/types';
+import type { User } from '@/entities/user/types';
 
 import type {
   AddUserInput,
@@ -31,64 +29,38 @@ interface AuthContextValue {
   currentUser: User | null;
   users: User[];
   isAdmin: boolean;
-
   login: (
     username: string,
     password: string,
   ) => AuthResult;
-
   logout: () => void;
-
-  addUser: (
-    input: AddUserInput,
-  ) => AuthResult;
-
-  removeUser: (
-    id: string,
-  ) => void;
+  addUser: (input: AddUserInput) => AuthResult;
+  removeUser: (id: string) => void;
 }
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthContext =
-  createContext<AuthContextValue | null>(
-    null,
-  );
+export const AuthContext = createContext<AuthContextValue | null>(null);
 
 function createUserId(): string {
-  return `user-${Math.random()
-    .toString(36)
-    .slice(2, 10)}`;
+  return `user-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export function AuthProvider({
   children,
 }: AuthProviderProps) {
-  const [users, setUsers] = useState<User[]>(
-    () => loadUsers(),
-  );
+  const [users, setUsers] = useState<User[]>(() => loadUsers());
 
-  const [
-    currentUser,
-    setCurrentUser,
-  ] = useState<User | null>(null);
-
-  const [
-    hydrated,
-    setHydrated,
-  ] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const savedUserId =
-      loadSessionUserId();
+    const savedUserId = loadSessionUserId();
 
     if (savedUserId) {
-      const user = users.find(
-        item =>
-          item.id === savedUserId,
-      );
+      const user = users.find(item => item.id === savedUserId);
 
       if (user) {
         setCurrentUser(user);
@@ -99,29 +71,18 @@ export function AuthProvider({
   }, [users]);
 
   const login = useCallback(
-    (
-      username: string,
-      password: string,
-    ): AuthResult => {
-      const normalizedUsername =
-        username
-          .trim()
-          .toLowerCase();
+    (username: string, password: string): AuthResult => {
+      const normalizedUsername = username.trim().toLowerCase();
 
       const user = users.find(
         item =>
-          item.username.toLowerCase() ===
-          normalizedUsername,
+          item.username.toLowerCase() === normalizedUsername,
       );
 
-      if (
-        !user ||
-        user.password !== password
-      ) {
+      if (!user || user.password !== password) {
         return {
           ok: false,
-          error:
-            'Incorrect username or password.',
+          error: 'Incorrect username or password.',
         };
       }
 
@@ -139,14 +100,8 @@ export function AuthProvider({
   }, []);
 
   const addUser = useCallback(
-    (
-      input: AddUserInput,
-    ): AuthResult => {
-      const validation =
-        validateNewUser(
-          input,
-          users,
-        );
+    (input: AddUserInput): AuthResult => {
+      const validation = validateNewUser(input, users);
 
       if (!validation.ok) {
         return validation;
@@ -154,24 +109,13 @@ export function AuthProvider({
 
       const newUser: User = {
         id: createUserId(),
-
-        username:
-          input.username.trim(),
-
-        password:
-          input.password,
-
-        name:
-          input.name.trim(),
-
-        role:
-          input.role,
+        username: input.username.trim(),
+        password: input.password,
+        name: input.name.trim(),
+        role: input.role,
       };
 
-      const nextUsers = [
-        ...users,
-        newUser,
-      ];
+      const nextUsers = [...users, newUser];
 
       setUsers(nextUsers);
       saveUsers(nextUsers);
@@ -184,11 +128,7 @@ export function AuthProvider({
   const removeUser = useCallback(
     (id: string) => {
       setUsers(previous => {
-        const nextUsers =
-          previous.filter(
-            user =>
-              user.id !== id,
-          );
+        const nextUsers = previous.filter(user => user.id !== id);
 
         saveUsers(nextUsers);
 
@@ -199,45 +139,35 @@ export function AuthProvider({
         logout();
       }
     },
-    [
-      currentUser,
-      logout,
-    ],
+    [currentUser, logout],
   );
 
-  const value =
-    useMemo<AuthContextValue>(
-      () => ({
-        currentUser,
-        users,
-
-        isAdmin:
-          currentUser?.role ===
-          'admin',
-
-        login,
-        logout,
-        addUser,
-        removeUser,
-      }),
-      [
-        currentUser,
-        users,
-        login,
-        logout,
-        addUser,
-        removeUser,
-      ],
-    );
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      currentUser,
+      users,
+      isAdmin: currentUser?.role === 'admin',
+      login,
+      logout,
+      addUser,
+      removeUser,
+    }),
+    [
+      currentUser,
+      users,
+      login,
+      logout,
+      addUser,
+      removeUser,
+    ],
+  );
 
   if (!hydrated) {
     return null;
   }
 
   return (
-    <AuthContext.Provider
-      value={value}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

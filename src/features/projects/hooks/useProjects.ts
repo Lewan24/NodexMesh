@@ -6,6 +6,7 @@ import {
 
 import type { Project } from '@/entities/project/types';
 import { createDefaultProjectFor } from '@/entities/project/projectFactory';
+
 import {
   loadProjects,
   saveProjects,
@@ -36,9 +37,8 @@ export function useProjects(
   }, [projects, userId]);
 
   const activeProject =
-    projects.find(
-      project => project.id === activeProjectId,
-    ) ?? projects[0];
+    projects.find(project => project.id === activeProjectId) ??
+    projects[0];
 
   const addProject = useCallback(
     (name: string): string => {
@@ -49,11 +49,7 @@ export function useProjects(
         name,
       };
 
-      setProjects(previous => [
-        ...previous,
-        newProject,
-      ]);
-
+      setProjects(previous => [...previous, newProject]);
       setActiveProjectId(newProject.id);
 
       return newProject.id;

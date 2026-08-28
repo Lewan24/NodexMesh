@@ -10,97 +10,50 @@ export default function AdminUsersPanel({
 }: AdminUsersPanelProps) {
   return (
     <div
-      className="
-        fixed
-        inset-0
-        z-[100]
-        flex
-        items-center
-        justify-center
-      "
+      className="fixed inset-0 z-[100] flex items-center justify-center"
       style={{
-        backgroundColor:
-          'rgba(8,16,20,0.55)',
-
-        backdropFilter:
-          'blur(2px)',
+        backgroundColor: 'rgba(8,16,20,0.55)',
+        backdropFilter: 'blur(2px)',
       }}
       onMouseDown={event => {
-        if (
-          event.target ===
-          event.currentTarget
-        ) {
+        if (event.target === event.currentTarget) {
           onClose();
         }
       }}
     >
       <div
-        className="
-          w-full
-          max-w-md
-          mx-4
-          rounded-3xl
-          shadow-2xl
-          overflow-hidden
-        "
+        className="w-full max-w-md mx-4 rounded-3xl shadow-2xl overflow-hidden"
         style={{
-          backgroundColor:
-            'var(--color-surface)',
-
-          border:
-            '1px solid var(--color-border)',
-
-          animation:
-            'slide-up 0.15s ease forwards',
+          backgroundColor: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          animation: 'slide-up 0.15s ease forwards',
         }}
       >
         <div
-          className="
-            flex
-            items-center
-            justify-between
-            px-5
-            py-4
-          "
+          className="flex items-center justify-between px-5 py-4"
           style={{
-            borderBottom:
-              '1px solid var(--color-border)',
+            borderBottom: '1px solid var(--color-border)',
           }}
         >
           <div>
             <h2
               className="text-sm font-bold"
-              style={{
-                color:
-                  'var(--color-text-primary)',
-              }}
+              style={{ color: 'var(--color-text-primary)' }}
             >
               Manage users
             </h2>
 
             <p
               className="text-xs mt-0.5"
-              style={{
-                color:
-                  'var(--color-text-muted)',
-              }}
+              style={{ color: 'var(--color-text-muted)' }}
             >
-              Only admins can create
-              accounts.
+              Only admins can create accounts.
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="
-              w-7
-              h-7
-              flex
-              items-center
-              justify-center
-              rounded-lg
-              btn-ghost
-            "
+            className="w-7 h-7 flex items-center justify-center rounded-lg btn-ghost"
           >
             <svg
               width="12"

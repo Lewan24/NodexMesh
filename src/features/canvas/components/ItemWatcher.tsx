@@ -1,11 +1,6 @@
-import {
-  useEffect,
-  useRef,
-} from 'react';
+import { useEffect, useRef } from 'react';
 
-import type {
-  ReactNode,
-} from 'react';
+import type { ReactNode } from 'react';
 
 interface ItemWatcherProps {
   itemId: string;
@@ -24,50 +19,35 @@ export default function ItemWatcher({
   onResize,
   children,
 }: ItemWatcherProps) {
-  const ref =
-    useRef<HTMLDivElement>(
-      null,
-    );
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const element =
-      ref.current;
+    const element = ref.current;
 
     if (!element) {
       return;
     }
 
-    const observer =
-      new ResizeObserver(
-        entries => {
-          const entry =
-            entries[0];
+    const observer = new ResizeObserver(entries => {
+      const entry = entries[0];
 
-          if (!entry) {
-            return;
-          }
+      if (!entry) {
+        return;
+      }
 
-          onResize(
-            itemId,
-            entry.contentRect.width,
-            entry.contentRect.height,
-          );
-        },
+      onResize(
+        itemId,
+        entry.contentRect.width,
+        entry.contentRect.height,
       );
+    });
 
     observer.observe(element);
 
     return () => {
       observer.disconnect();
     };
-  }, [
-    itemId,
-    onResize,
-  ]);
+  }, [itemId, onResize]);
 
-  return (
-    <div ref={ref}>
-      {children}
-    </div>
-  );
+  return <div ref={ref}>{children}</div>;
 }

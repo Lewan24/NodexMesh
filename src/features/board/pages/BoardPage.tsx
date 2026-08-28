@@ -1,6 +1,4 @@
-import {
-  useCallback,
-} from 'react';
+import { useCallback } from 'react';
 
 import type {
   BoardItem,
@@ -8,23 +6,21 @@ import type {
   FrameItem,
 } from '@/entities/board/types';
 
-import { useProjects } from '@/features/projects/hooks/useProjects';
-import { useProjectItems } from '@/features/projects/hooks/useProjectItems';
 import { useBoardView } from '@/features/board/hooks/useBoardView';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
+import { useProjectItems } from '@/features/projects/hooks/useProjectItems';
+import { useProjects } from '@/features/projects/hooks/useProjects';
 
+import Canvas from '@/features/canvas/components/Canvas';
 import AppBar from '@/layout/AppBar';
 import Sidebar from '@/layout/Sidebar';
-import Canvas from '@/features/canvas/components/Canvas';
 
 interface BoardPageProps {
   userId: string;
 }
 
 function createId(): string {
-  return Math.random()
-    .toString(36)
-    .slice(2, 10);
+  return Math.random().toString(36).slice(2, 10);
 }
 
 export default function BoardPage({
@@ -44,16 +40,12 @@ export default function BoardPage({
     selectedTool,
     setSelectedTool,
     selectTool,
-
     selectedIds,
     setSelectedIds,
-
     pan,
     setPan,
-
     zoom,
     setZoom,
-
     resetViewport,
     resetBoardView,
   } = useBoardView();
@@ -65,7 +57,7 @@ export default function BoardPage({
     deleteItem,
     deleteItems,
     bringToFront,
-    getNextZIndex
+    getNextZIndex,
   } = useProjectItems({
     activeProjectId,
     setProjects,
@@ -76,259 +68,177 @@ export default function BoardPage({
       addProject(name);
       resetViewport();
     },
-    [
-      addProject,
-      resetViewport,
-    ],
+    [addProject, resetViewport],
   );
 
-  const handleSelectProject =
-    useCallback(
-      (id: string) => {
-        selectProject(id);
-        resetBoardView();
-      },
-      [
-        selectProject,
-        resetBoardView,
-      ],
-    );
+  const handleSelectProject = useCallback(
+    (id: string) => {
+      selectProject(id);
+      resetBoardView();
+    },
+    [selectProject, resetBoardView],
+  );
 
-  const handleDropOnColumn =
-    useCallback(
-      (
-        itemId: string,
-        columnId: string,
-      ) => {
-        setProjects(previous =>
-          previous.map(project => {
-            if (
-              project.id !== activeProjectId
-            ) {
-              return project;
-            }
-
-            const droppedItem =
-              project.items.find(
-                item => item.id === itemId,
-              );
-
-            if (!droppedItem) {
-              return project;
-            }
-
-            return {
-              ...project,
-              items: project.items
-                .filter(
-                  item =>
-                    item.id !== itemId,
-                )
-                .map(item => {
-                  if (
-                    item.id !== columnId ||
-                    item.type !== 'column'
-                  ) {
-                    return item;
-                  }
-
-                  return {
-                    ...item,
-                    items: [
-                      ...item.items,
-                      {
-                        ...droppedItem,
-                        x: 0,
-                        y: 0,
-                        zIndex: 1,
-                      },
-                    ],
-                  };
-                }),
-            };
-          }),
-        );
-      },
-      [
-        activeProjectId,
-        setProjects,
-      ],
-    );
-
-    const handleEjectFromColumn = useCallback(
-    (
-        columnId: string,
-        ejectedItem: BoardItem,
-    ) => {
-        setProjects(previous =>
+  const handleDropOnColumn = useCallback(
+    (itemId: string, columnId: string) => {
+      setProjects(previous =>
         previous.map(project => {
-            if (project.id !== activeProjectId) {
+          if (project.id !== activeProjectId) {
             return project;
-            }
+          }
 
-            const column = project.items.find(
+          const droppedItem = project.items.find(
+            item => item.id === itemId,
+          );
+
+          if (!droppedItem) {
+            return project;
+          }
+
+          return {
+            ...project,
+            items: project.items
+              .filter(item => item.id !== itemId)
+              .map(item => {
+                if (item.id !== columnId || item.type !== 'column') {
+                  return item;
+                }
+
+                return {
+                  ...item,
+                  items: [
+                    ...item.items,
+                    {
+                      ...droppedItem,
+                      x: 0,
+                      y: 0,
+                      zIndex: 1,
+                    },
+                  ],
+                };
+              }),
+          };
+        }),
+      );
+    },
+    [activeProjectId, setProjects],
+  );
+
+  const handleEjectFromColumn = useCallback(
+    (columnId: string, ejectedItem: BoardItem) => {
+      setProjects(previous =>
+        previous.map(project => {
+          if (project.id !== activeProjectId) {
+            return project;
+          }
+
+          const column = project.items.find(
             item =>
-                item.id === columnId &&
-                item.type === 'column',
-            ) as ColumnItem | undefined;
+              item.id === columnId &&
+              item.type === 'column',
+          ) as ColumnItem | undefined;
 
-            if (!column) {
+          if (!column) {
             return project;
-            }
+          }
 
-            const newItem: BoardItem = {
+          const newItem: BoardItem = {
             ...ejectedItem,
             id: createId(),
             x: column.x + column.width + 24,
             y: column.y + 40,
             zIndex: getNextZIndex(),
-            };
+          };
 
-            const updatedColumn: ColumnItem = {
+          const updatedColumn: ColumnItem = {
             ...column,
             items: column.items.filter(
-                item => item.id !== ejectedItem.id,
+              item => item.id !== ejectedItem.id,
             ),
-            };
+          };
 
-            return {
+          return {
             ...project,
             items: [
-                ...project.items.filter(
+              ...project.items.filter(
                 item => item.id !== columnId,
-                ),
-                updatedColumn,
-                newItem,
+              ),
+              updatedColumn,
+              newItem,
             ],
-            };
+          };
         }),
-        );
+      );
     },
     [
-        activeProjectId,
-        setProjects,
-        getNextZIndex,
+      activeProjectId,
+      setProjects,
+      getNextZIndex,
     ],
+  );
+
+  const handleGroupSelected = useCallback(() => {
+    if (selectedIds.length < 2 || !activeProject) {
+      return;
+    }
+
+    const selectedItems = activeProject.items.filter(item =>
+      selectedIds.includes(item.id),
     );
 
-  const handleGroupSelected =
-    useCallback(() => {
-      if (
-        selectedIds.length < 2 ||
-        !activeProject
-      ) {
-        return;
-      }
+    if (selectedItems.length < 2) {
+      return;
+    }
 
-      const selectedItems =
-        activeProject.items.filter(
-          item =>
-            selectedIds.includes(
-              item.id,
-            ),
-        );
+    const padding = 32;
 
-      if (
-        selectedItems.length < 2
-      ) {
-        return;
-      }
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
 
-      const padding = 32;
+    for (const item of selectedItems) {
+      const size = getApproxItemSize(item);
 
-      let minX = Infinity;
-      let minY = Infinity;
-      let maxX = -Infinity;
-      let maxY = -Infinity;
+      minX = Math.min(minX, item.x);
+      minY = Math.min(minY, item.y);
 
-      for (
-        const item of selectedItems
-      ) {
-        const size =
-          getApproxItemSize(item);
+      maxX = Math.max(maxX, item.x + size.width);
+      maxY = Math.max(maxY, item.y + size.height);
+    }
 
-        minX = Math.min(
-          minX,
-          item.x,
-        );
+    const frame: FrameItem = {
+      id: createId(),
+      type: 'frame',
+      x: minX - padding,
+      y: minY - padding,
+      zIndex: 0,
+      title: 'Group',
+      width: maxX - minX + padding * 2,
+      height: maxY - minY + padding * 2,
+      color: '#7C3AED',
+    };
 
-        minY = Math.min(
-          minY,
-          item.y,
-        );
-
-        maxX = Math.max(
-          maxX,
-          item.x + size.width,
-        );
-
-        maxY = Math.max(
-          maxY,
-          item.y + size.height,
-        );
-      }
-
-      const frame: FrameItem = {
-        id: createId(),
-
-        type: 'frame',
-
-        x: minX - padding,
-        y: minY - padding,
-
-        zIndex: 0,
-
-        title: 'Group',
-
-        width:
-          maxX -
-          minX +
-          padding * 2,
-
-        height:
-          maxY -
-          minY +
-          padding * 2,
-
-        color: '#7C3AED',
-      };
-
-      addItem(frame);
-      setSelectedIds([]);
-    }, [
-      selectedIds,
-      activeProject,
-      addItem,
-      setSelectedIds,
-    ]);
+    addItem(frame);
+    setSelectedIds([]);
+  }, [
+    selectedIds,
+    activeProject,
+    addItem,
+    setSelectedIds,
+  ]);
 
   if (!activeProject) {
     return (
       <div
-        className="
-          flex
-          h-screen
-          w-screen
-          items-center
-          justify-center
-        "
+        className="flex h-screen w-screen items-center justify-center"
         style={{
-          backgroundColor:
-            'var(--color-app-bg)',
+          backgroundColor: 'var(--color-app-bg)',
         }}
       >
         <button
-          className="
-            btn-accent
-            rounded-xl
-            px-4
-            py-2.5
-            text-sm
-            font-semibold
-          "
-          onClick={
-            createFirstProject
-          }
+          className="btn-accent rounded-xl px-4 py-2.5 text-sm font-semibold"
+          onClick={createFirstProject}
         >
           Create your first board
         </button>
@@ -340,87 +250,42 @@ export default function BoardPage({
     <div className="flex flex-col">
       <AppBar
         projects={projects}
-        activeProjectId={
-          activeProjectId
-        }
-        onSelectProject={
-          handleSelectProject
-        }
-        onAddProject={
-          handleAddProject
-        }
+        activeProjectId={activeProjectId}
+        onSelectProject={handleSelectProject}
+        onAddProject={handleAddProject}
       />
 
       <div
-        className="
-          relative
-          flex
-          h-screen
-          w-screen
-          overflow-hidden
-        "
+        className="relative flex h-screen w-screen overflow-hidden"
         style={{
-          backgroundColor:
-            'var(--color-app-bg)',
+          backgroundColor: 'var(--color-app-bg)',
         }}
       >
         <Sidebar
-          selectedTool={
-            selectedTool
-          }
-          onSelectTool={
-            selectTool
-          }
+          selectedTool={selectedTool}
+          onSelectTool={selectTool}
         />
 
         <Canvas
           key={activeProjectId}
-          project={
-            activeProject
-          }
-          selectedTool={
-            selectedTool
-          }
+          project={activeProject}
+          selectedTool={selectedTool}
           pan={pan}
           zoom={zoom}
-          selectedIds={
-            selectedIds
-          }
+          selectedIds={selectedIds}
           onPanChange={setPan}
           onZoomChange={setZoom}
-          onSelectTool={
-            setSelectedTool
-          }
-          onSelectItems={
-            setSelectedIds
-          }
-          onGroupSelected={
-            handleGroupSelected
-          }
-          onAddItem={
-            addItem
-          }
-          onUpdateItem={
-            updateItem
-          }
-          onDeleteItem={
-            deleteItem
-          }
-          onDeleteItems={
-            deleteItems
-          }
-          onBringToFront={
-            bringToFront
-          }
-          onDropOnColumn={
-            handleDropOnColumn
-          }
-          onEjectFromColumn={
-            handleEjectFromColumn
-          }
-          onRestoreItems={
-            restoreItems
-          }
+          onSelectTool={setSelectedTool}
+          onSelectItems={setSelectedIds}
+          onGroupSelected={handleGroupSelected}
+          onAddItem={addItem}
+          onUpdateItem={updateItem}
+          onDeleteItem={deleteItem}
+          onDeleteItems={deleteItems}
+          onBringToFront={bringToFront}
+          onDropOnColumn={handleDropOnColumn}
+          onEjectFromColumn={handleEjectFromColumn}
+          onRestoreItems={restoreItems}
         />
       </div>
     </div>

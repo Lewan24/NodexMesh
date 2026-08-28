@@ -1,49 +1,23 @@
-import {
-  useState,
-} from 'react';
+import { useState } from 'react';
 
-import type {
-  FormEvent,
-} from 'react';
+import type { FormEvent } from 'react';
 
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export function useLoginForm() {
   const { login } = useAuth();
 
-  const [
-    username,
-    setUsername,
-  ] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
-  const [
-    password,
-    setPassword,
-  ] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const [
-    error,
-    setError,
-  ] = useState('');
-
-  const [
-    submitting,
-    setSubmitting,
-  ] = useState(false);
-
-  const handleSubmit = (
-    event: FormEvent,
-  ) => {
+  const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
-    if (
-      !username.trim() ||
-      !password
-    ) {
-      setError(
-        'Enter your username and password.',
-      );
-
+    if (!username.trim() || !password) {
+      setError('Enter your username and password.');
       return;
     }
 
@@ -51,11 +25,7 @@ export function useLoginForm() {
     setError('');
 
     setTimeout(() => {
-      const result =
-        login(
-          username,
-          password,
-        );
+      const result = login(username, password);
 
       if (!result.ok) {
         setError(result.error);

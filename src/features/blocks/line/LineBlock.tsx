@@ -1,10 +1,6 @@
-import {
-  useState,
-} from 'react';
+import { useState } from 'react';
 
-import type {
-  LineItem,
-} from '@/entities/board/types';
+import type { LineItem } from '@/entities/board/types';
 
 import LineEndpointHandle from '@/features/blocks/line/LineEndpointHandle';
 
@@ -15,61 +11,34 @@ import {
 
 interface LineBlockProps {
   item: LineItem;
-
   isSelected: boolean;
-
-  onDelete:
-    () => void;
-
+  onDelete: () => void;
   onLineEndpointDrag: (
-    event:
-      React.MouseEvent,
-
-    endpoint:
-      1 | 2,
+    event: React.MouseEvent,
+    endpoint: 1 | 2,
   ) => void;
 }
 
 interface ArrowHeadProps {
   x: number;
   y: number;
-
   angle: number;
-
   color: string;
 }
 
-function ArrowHead({
-  x,
-  y,
-
-  angle,
-
-  color,
-}: ArrowHeadProps) {
+function ArrowHead({ x, y, angle, color }: ArrowHeadProps) {
   const {
     firstX,
     firstY,
-
     tipX,
     tipY,
-
     secondX,
     secondY,
-  } =
-    getArrowHeadPoints(
-      x,
-      y,
-      angle,
-    );
+  } = getArrowHeadPoints(x, y, angle);
 
   return (
     <polyline
-      points={`
-        ${firstX},${firstY}
-        ${tipX},${tipY}
-        ${secondX},${secondY}
-      `}
+      points={`${firstX},${firstY} ${tipX},${tipY} ${secondX},${secondY}`}
       stroke={color}
       strokeWidth="2"
       fill="none"
@@ -81,157 +50,84 @@ function ArrowHead({
 
 export default function LineBlock({
   item,
-
   isSelected,
-
   onDelete,
-
   onLineEndpointDrag,
 }: LineBlockProps) {
-  const [
-    hovered,
-    setHovered,
-  ] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const {
     angle,
-
     svgWidth,
     svgHeight,
-
     originX,
     originY,
-
     endX,
     endY,
-
     svgLeft,
     svgTop,
-
     centerX,
     centerY,
-  } =
-    getLineRenderGeometry(
-      item.x,
-      item.y,
-      item.x2,
-      item.y2,
-    );
+  } = getLineRenderGeometry(item.x, item.y, item.x2, item.y2);
 
-  const showHandles =
-    hovered ||
-    isSelected;
-
-  const lineColor =
-    isSelected
-      ? '#7C3AED'
-      : item.color;
+  const showHandles = hovered || isSelected;
+  const lineColor = isSelected ? '#7C3AED' : item.color;
 
   return (
     <div
       className="absolute"
       style={{
-        left:
-          svgLeft,
-
-        top:
-          svgTop,
-
-        pointerEvents:
-          'none',
+        left: svgLeft,
+        top: svgTop,
+        pointerEvents: 'none',
       }}
-      onMouseEnter={() =>
-        setHovered(true)
-      }
-      onMouseLeave={() =>
-        setHovered(false)
-      }
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <svg
-        width={
-          svgWidth
-        }
-        height={
-          svgHeight
-        }
+        width={svgWidth}
+        height={svgHeight}
         style={{
-          overflow:
-            'visible',
-
-          display:
-            'block',
+          overflow: 'visible',
+          display: 'block',
         }}
       >
         {/* Larger invisible hit area */}
 
         <line
-          x1={
-            originX
-          }
-          y1={
-            originY
-          }
-          x2={
-            endX
-          }
-          y2={
-            endY
-          }
+          x1={originX}
+          y1={originY}
+          x2={endX}
+          y2={endY}
           stroke="transparent"
           strokeWidth={16}
           style={{
-            pointerEvents:
-              'stroke',
-
-            cursor:
-              'grab',
+            pointerEvents: 'stroke',
+            cursor: 'grab',
           }}
         />
 
         {/* Visible line */}
 
         <line
-          x1={
-            originX
-          }
-          y1={
-            originY
-          }
-          x2={
-            endX
-          }
-          y2={
-            endY
-          }
-          stroke={
-            lineColor
-          }
-          strokeWidth={
-            item.strokeWidth
-          }
+          x1={originX}
+          y1={originY}
+          x2={endX}
+          y2={endY}
+          stroke={lineColor}
+          strokeWidth={item.strokeWidth}
           strokeLinecap="round"
-          style={{
-            pointerEvents:
-              'none',
-          }}
+          style={{ pointerEvents: 'none' }}
         />
 
         {/* Arrow end */}
 
         {item.arrowEnd && (
           <ArrowHead
-            x={
-              endX
-            }
-            y={
-              endY
-            }
-            angle={
-              angle
-            }
-            color={
-              lineColor
-            }
+            x={endX}
+            y={endY}
+            angle={angle}
+            color={lineColor}
           />
         )}
 
@@ -239,19 +135,10 @@ export default function LineBlock({
 
         {item.arrowStart && (
           <ArrowHead
-            x={
-              originX
-            }
-            y={
-              originY
-            }
-            angle={
-              angle +
-              Math.PI
-            }
-            color={
-              lineColor
-            }
+            x={originX}
+            y={originY}
+            angle={angle + Math.PI}
+            color={lineColor}
           />
         )}
 
@@ -260,51 +147,19 @@ export default function LineBlock({
         {showHandles && (
           <>
             <LineEndpointHandle
-              x={
-                originX
-              }
-              y={
-                originY
-              }
-              attached={
-                Boolean(
-                  item.startItemId,
-                )
-              }
-              color={
-                item.color
-              }
-              onMouseDown={
-                event =>
-                  onLineEndpointDrag(
-                    event,
-                    1,
-                  )
-              }
+              x={originX}
+              y={originY}
+              attached={Boolean(item.startItemId)}
+              color={item.color}
+              onMouseDown={event => onLineEndpointDrag(event, 1)}
             />
 
             <LineEndpointHandle
-              x={
-                endX
-              }
-              y={
-                endY
-              }
-              attached={
-                Boolean(
-                  item.endItemId,
-                )
-              }
-              color={
-                item.color
-              }
-              onMouseDown={
-                event =>
-                  onLineEndpointDrag(
-                    event,
-                    2,
-                  )
-              }
+              x={endX}
+              y={endY}
+              attached={Boolean(item.endItemId)}
+              color={item.color}
+              onMouseDown={event => onLineEndpointDrag(event, 2)}
             />
           </>
         )}
@@ -314,82 +169,38 @@ export default function LineBlock({
         {showHandles && (
           <g
             style={{
-              cursor:
-                'pointer',
-
-              pointerEvents:
-                'all',
+              cursor: 'pointer',
+              pointerEvents: 'all',
             }}
-            onClick={
-              onDelete
-            }
-            onMouseDown={
-              event =>
-                event.stopPropagation()
-            }
+            onClick={onDelete}
+            onMouseDown={event => event.stopPropagation()}
           >
             <circle
-              cx={
-                centerX
-              }
-              cy={
-                centerY
-              }
+              cx={centerX}
+              cy={centerY}
               r={7}
               fill="#08171d"
-              stroke={
-                item.color
-              }
-              strokeWidth={
-                1.5
-              }
+              stroke={item.color}
+              strokeWidth={1.5}
             />
 
             <line
-              x1={
-                centerX -
-                3
-              }
-              y1={
-                centerY -
-                3
-              }
-              x2={
-                centerX +
-                3
-              }
-              y2={
-                centerY +
-                3
-              }
+              x1={centerX - 3}
+              y1={centerY - 3}
+              x2={centerX + 3}
+              y2={centerY + 3}
               stroke="#FF6B8A"
-              strokeWidth={
-                1.5
-              }
+              strokeWidth={1.5}
               strokeLinecap="round"
             />
 
             <line
-              x1={
-                centerX +
-                3
-              }
-              y1={
-                centerY -
-                3
-              }
-              x2={
-                centerX -
-                3
-              }
-              y2={
-                centerY +
-                3
-              }
+              x1={centerX + 3}
+              y1={centerY - 3}
+              x2={centerX - 3}
+              y2={centerY + 3}
               stroke="#FF6B8A"
-              strokeWidth={
-                1.5
-              }
+              strokeWidth={1.5}
               strokeLinecap="round"
             />
           </g>

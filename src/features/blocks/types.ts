@@ -5,13 +5,10 @@ import type {
 } from '@/entities/board/types';
 
 export type BlockUpdateHandler = (
-  updater: (
-    item: BoardItem,
-  ) => BoardItem,
+  updater: (item: BoardItem) => BoardItem,
 ) => void;
 
-export type BlockDeleteHandler =
-  () => void;
+export type BlockDeleteHandler = () => void;
 
 export type BlockResizeHandler = (
   event: React.MouseEvent,

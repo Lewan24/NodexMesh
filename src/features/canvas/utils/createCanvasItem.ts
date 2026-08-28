@@ -14,9 +14,7 @@ import type {
 import type { ToolType } from '@/entities/board/toolTypes';
 
 function createId(): string {
-  return Math.random()
-    .toString(36)
-    .slice(2, 10);
+  return Math.random().toString(36).slice(2, 10);
 }
 
 export function createCanvasItem(

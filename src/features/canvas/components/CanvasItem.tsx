@@ -5,14 +5,11 @@ import type {
 } from '@/entities/board/types';
 
 import BlockRenderer from '@/features/blocks/BlockRenderer';
-
 import ItemWatcher from '@/features/canvas/components/ItemWatcher';
 
 interface CanvasItemProps {
   item: BoardItem;
-
   renderedItem: BoardItem;
-
   zoom: number;
 
   isSelected: boolean;
@@ -21,38 +18,19 @@ interface CanvasItemProps {
   isAnimating: boolean;
 
   selectedIds: string[];
-
   selectedColumnItemId?: string | null;
 
-  onMouseDown: (
-    id: string,
-    event: React.MouseEvent,
-  ) => void;
-
-  onAnimationEnd: (
-    id: string,
-  ) => void;
-
-  onResize: (
-    id: string,
-    width: number,
-    height: number,
-  ) => void;
+  onMouseDown: (id: string, event: React.MouseEvent) => void;
+  onAnimationEnd: (id: string) => void;
+  onResize: (id: string, width: number, height: number) => void;
 
   onUpdateItem: (
     id: string,
-    updater: (
-      item: BoardItem,
-    ) => BoardItem,
+    updater: (item: BoardItem) => BoardItem,
   ) => void;
 
-  onDeleteItem: (
-    id: string,
-  ) => void;
-
-  onSelectItems: (
-    ids: string[],
-  ) => void;
+  onDeleteItem: (id: string) => void;
+  onSelectItems: (ids: string[]) => void;
 
   onRequestDelete: (
     execute: () => void,
@@ -83,18 +61,18 @@ interface CanvasItemProps {
   ) => void;
 
   onChecklistDropOutside: (
-  sourceId: string,
-  entry: ChecklistEntry,
-  clientX: number,
-  clientY: number,
-) => void;
+    sourceId: string,
+    entry: ChecklistEntry,
+    clientX: number,
+    clientY: number,
+  ) => void;
 
-onKanbanCardDropOutside: (
-  sourceId: string,
-  card: KanbanCard,
-  clientX: number,
-  clientY: number,
-) => void;
+  onKanbanCardDropOutside: (
+    sourceId: string,
+    card: KanbanCard,
+    clientX: number,
+    clientY: number,
+  ) => void;
 
   pushHistory: () => void;
 }
@@ -102,78 +80,45 @@ onKanbanCardDropOutside: (
 export default function CanvasItem({
   item,
   renderedItem,
-
   isSelected,
   isAttachTarget,
   isDragOver,
   isAnimating,
-
   selectedIds,
   selectedColumnItemId,
-
   onMouseDown,
   onAnimationEnd,
-
   onResize,
-
   onUpdateItem,
   onDeleteItem,
   onSelectItems,
-
   onRequestDelete,
-
   onBlockResize,
   onLineEndpointDrag,
-
   onEjectFromColumn,
   onSelectColumnItem,
-
   onChecklistDropOutside,
   onKanbanCardDropOutside,
-
   pushHistory,
 }: CanvasItemProps) {
   return (
     <div
       data-board-item="true"
-      className={`
-        absolute
-        ${
-          isAnimating
-            ? 'board-item-enter'
-            : ''
-        }
-      `}
+      className={`absolute ${isAnimating ? 'board-item-enter' : ''}`}
       style={{
         left: renderedItem.x,
         top: renderedItem.y,
         zIndex: item.zIndex,
         cursor: 'grab',
       }}
-      onMouseDown={
-        event =>
-          onMouseDown(
-            item.id,
-            event,
-          )
-      }
-      onAnimationEnd={
-        () =>
-          onAnimationEnd(
-            item.id,
-          )
-      }
+      onMouseDown={event => onMouseDown(item.id, event)}
+      onAnimationEnd={() => onAnimationEnd(item.id)}
     >
       {isSelected && (
         <div
-          className="
-            absolute
-            pointer-events-none
-            rounded-2xl
-          "
+          className="absolute pointer-events-none rounded-2xl"
           style={{
             inset: -4,
-
             boxShadow:
               '0 0 0 2px var(--color-accent), 0 0 12px rgba(124, 58, 237,0.25)',
           }}
@@ -182,14 +127,9 @@ export default function CanvasItem({
 
       {isAttachTarget && (
         <div
-          className="
-            absolute
-            pointer-events-none
-            rounded-2xl
-          "
+          className="absolute pointer-events-none rounded-2xl"
           style={{
             inset: -6,
-
             boxShadow:
               '0 0 0 3px var(--color-accent), 0 0 18px rgba(124, 58, 237,0.35)',
           }}
@@ -204,91 +144,39 @@ export default function CanvasItem({
           item={renderedItem}
           isSelected={isSelected}
           isDragOver={isDragOver}
-          selectedColumnItemId={
-            selectedColumnItemId
-          }
-          onUpdate={
-            updater =>
-              onUpdateItem(
-                item.id,
-                updater,
-              )
-          }
+          selectedColumnItemId={selectedColumnItemId}
+          onUpdate={updater => onUpdateItem(item.id, updater)}
           onDelete={() =>
-            onRequestDelete(
-              () => {
-                onDeleteItem(
-                  item.id,
-                );
-
-                onSelectItems(
-                  selectedIds.filter(
-                    id =>
-                      id !==
-                      item.id,
-                  ),
-                );
-              },
-            )
+            onRequestDelete(() => {
+              onDeleteItem(item.id);
+              onSelectItems(selectedIds.filter(id => id !== item.id));
+            })
           }
           onFrameResize={() => {}}
           onFitFrame={() => {}}
-          onBlockResize={(
-            event,
-            width,
-            height,
-          ) =>
-            onBlockResize(
-              item.id,
-              event,
-              width,
-              height,
-            )
+          onBlockResize={(event, width, height) =>
+            onBlockResize(item.id, event, width, height)
           }
-          onLineEndpointDrag={(
-            event,
-            endpoint,
-          ) =>
-            onLineEndpointDrag(
-              item.id,
-              event,
-              endpoint,
-            )
+          onLineEndpointDrag={(event, endpoint) =>
+            onLineEndpointDrag(item.id, event, endpoint)
           }
           onEjectItem={
-            item.type ===
-            'column'
+            item.type === 'column'
               ? ejectedItem => {
                   pushHistory();
-
-                  onEjectFromColumn(
-                    item.id,
-                    ejectedItem,
-                  );
+                  onEjectFromColumn(item.id, ejectedItem);
                 }
               : undefined
           }
           onSelectColumnItem={
-            item.type ===
-            'column'
-              ? columnItem =>
-                  onSelectColumnItem(
-                    item.id,
-                    columnItem,
-                  )
+            item.type === 'column'
+              ? columnItem => onSelectColumnItem(item.id, columnItem)
               : undefined
           }
-          onRequestDelete={
-            onRequestDelete
-          }
+          onRequestDelete={onRequestDelete}
           onEntryDroppedOutside={
-            item.type ===
-            'checklist'
-              ? (
-                  entry,
-                  clientX,
-                  clientY,
-                ) =>
+            item.type === 'checklist'
+              ? (entry, clientX, clientY) =>
                   onChecklistDropOutside(
                     item.id,
                     entry,
@@ -298,13 +186,8 @@ export default function CanvasItem({
               : undefined
           }
           onCardDroppedOutside={
-            item.type ===
-            'kanban'
-              ? (
-                  card,
-                  clientX,
-                  clientY,
-                ) =>
+            item.type === 'kanban'
+              ? (card, clientX, clientY) =>
                   onKanbanCardDropOutside(
                     item.id,
                     card,

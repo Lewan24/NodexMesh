@@ -8,13 +8,9 @@ import type {
   KanbanCard,
 } from '@/entities/board/types';
 
-import type {
-  SizeMap,
-} from '@/features/canvas/utils/lineGeometry';
+import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 
-import {
-  getApproxItemSize,
-} from '@/features/canvas/utils/itemGeometry';
+import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
 
 interface ProjectLike {
   items: BoardItem[];
@@ -38,9 +34,7 @@ interface UseCrossItemDropOptions {
 
   onUpdateItem: (
     id: string,
-    updater: (
-      item: BoardItem,
-    ) => BoardItem,
+    updater: (item: BoardItem) => BoardItem,
   ) => void;
 }
 
@@ -51,205 +45,147 @@ export function useCrossItemDrop({
   screenToCanvas,
   onUpdateItem,
 }: UseCrossItemDropOptions) {
-  const getCanvasPoint =
-    useCallback(
-      (
-        clientX: number,
-        clientY: number,
-      ): CanvasPoint | null => {
-        const rect =
-          containerRef.current
-            ?.getBoundingClientRect();
+  const getCanvasPoint = useCallback(
+    (
+      clientX: number,
+      clientY: number,
+    ): CanvasPoint | null => {
+      const rect = containerRef.current?.getBoundingClientRect();
 
-        if (!rect) {
-          return null;
+      if (!rect) {
+        return null;
+      }
+
+      return screenToCanvas(
+        clientX - rect.left,
+        clientY - rect.top,
+      );
+    },
+    [containerRef, screenToCanvas],
+  );
+
+  const isPointInsideItem = useCallback(
+    (
+      item: BoardItem,
+      point: CanvasPoint,
+    ) => {
+      const size =
+        measuredSizes.get(item.id) ??
+        getApproxItemSize(item);
+
+      return (
+        point.x >= item.x &&
+        point.y >= item.y &&
+        point.x <= item.x + size.width &&
+        point.y <= item.y + size.height
+      );
+    },
+    [measuredSizes],
+  );
+
+  const handleChecklistDropOutside = useCallback(
+    (
+      sourceId: string,
+      entry: ChecklistEntry,
+      clientX: number,
+      clientY: number,
+    ) => {
+      const point = getCanvasPoint(clientX, clientY);
+
+      if (!point) {
+        return;
+      }
+
+      const target = projectRef.current.items.find(
+        item =>
+          item.id !== sourceId &&
+          item.type === 'checklist' &&
+          isPointInsideItem(item, point),
+      );
+
+      const destinationId = target?.id ?? sourceId;
+
+      onUpdateItem(destinationId, item => {
+        if (item.type !== 'checklist') {
+          return item;
         }
 
-        return screenToCanvas(
-          clientX - rect.left,
-          clientY - rect.top,
-        );
-      },
-      [
-        containerRef,
-        screenToCanvas,
-      ],
-    );
+        return {
+          ...item,
+          entries: [
+            ...item.entries,
+            entry,
+          ],
+        };
+      });
+    },
+    [
+      projectRef,
+      getCanvasPoint,
+      isPointInsideItem,
+      onUpdateItem,
+    ],
+  );
 
-  const isPointInsideItem =
-    useCallback(
-      (
-        item: BoardItem,
-        point: CanvasPoint,
-      ) => {
-        const size =
-          measuredSizes.get(
-            item.id,
-          ) ??
-          getApproxItemSize(item);
+  const handleKanbanCardDropOutside = useCallback(
+    (
+      sourceId: string,
+      card: KanbanCard,
+      clientX: number,
+      clientY: number,
+    ) => {
+      const point = getCanvasPoint(clientX, clientY);
 
-        return (
-          point.x >= item.x &&
-          point.y >= item.y &&
-          point.x <=
-            item.x +
-              size.width &&
-          point.y <=
-            item.y +
-              size.height
-        );
-      },
-      [measuredSizes],
-    );
+      if (!point) {
+        return;
+      }
 
-  const handleChecklistDropOutside =
-    useCallback(
-      (
-        sourceId: string,
-        entry: ChecklistEntry,
-        clientX: number,
-        clientY: number,
-      ) => {
-        const point =
-          getCanvasPoint(
-            clientX,
-            clientY,
-          );
+      const target = projectRef.current.items.find(
+        item =>
+          item.id !== sourceId &&
+          item.type === 'kanban' &&
+          isPointInsideItem(item, point),
+      );
 
-        if (!point) {
-          return;
+      const destinationId = target?.id ?? sourceId;
+
+      onUpdateItem(destinationId, item => {
+        if (item.type !== 'kanban') {
+          return item;
         }
 
-        const target =
-          projectRef.current
-            .items.find(
-              item =>
-                item.id !==
-                  sourceId &&
-                item.type ===
-                  'checklist' &&
-                isPointInsideItem(
-                  item,
-                  point,
-                ),
-            );
-
-        const destinationId =
-          target?.id ?? sourceId;
-
-        onUpdateItem(
-          destinationId,
-          item => {
-            if (
-              item.type !==
-              'checklist'
-            ) {
-              return item;
-            }
-
-            return {
-              ...item,
-              entries: [
-                ...item.entries,
-                entry,
-              ],
-            };
-          },
-        );
-      },
-      [
-        projectRef,
-        getCanvasPoint,
-        isPointInsideItem,
-        onUpdateItem,
-      ],
-    );
-
-  const handleKanbanCardDropOutside =
-    useCallback(
-      (
-        sourceId: string,
-        card: KanbanCard,
-        clientX: number,
-        clientY: number,
-      ) => {
-        const point =
-          getCanvasPoint(
-            clientX,
-            clientY,
-          );
-
-        if (!point) {
-          return;
+        if (item.columns.length === 0) {
+          return item;
         }
 
-        const target =
-          projectRef.current
-            .items.find(
-              item =>
-                item.id !==
-                  sourceId &&
-                item.type ===
-                  'kanban' &&
-                isPointInsideItem(
-                  item,
-                  point,
-                ),
-            );
+        const columns = [...item.columns];
+        const firstColumn = columns[0];
 
-        const destinationId =
-          target?.id ?? sourceId;
+        if (!firstColumn) {
+          return item;
+        }
 
-        onUpdateItem(
-          destinationId,
-          item => {
-            if (
-              item.type !==
-              'kanban'
-            ) {
-              return item;
-            }
+        columns[0] = {
+          ...firstColumn,
+          cards: [
+            ...firstColumn.cards,
+            card,
+          ],
+        };
 
-            if (
-              item.columns.length ===
-              0
-            ) {
-              return item;
-            }
-
-            const columns =
-              [...item.columns];
-
-            const firstColumn =
-              columns[0];
-
-            if (!firstColumn) {
-              return item;
-            }
-
-            columns[0] = {
-              ...firstColumn,
-
-              cards: [
-                ...firstColumn.cards,
-                card,
-              ],
-            };
-
-            return {
-              ...item,
-              columns,
-            };
-          },
-        );
-      },
-      [
-        projectRef,
-        getCanvasPoint,
-        isPointInsideItem,
-        onUpdateItem,
-      ],
-    );
+        return {
+          ...item,
+          columns,
+        };
+      });
+    },
+    [
+      projectRef,
+      getCanvasPoint,
+      isPointInsideItem,
+      onUpdateItem,
+    ],
+  );
 
   return {
     handleChecklistDropOutside,

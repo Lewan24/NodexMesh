@@ -1,4 +1,5 @@
 import type { User } from '@/entities/user/types';
+
 import type {
   AddUserInput,
   AuthResult,
@@ -11,11 +12,7 @@ export function validateNewUser(
   const username = input.username.trim();
   const name = input.name.trim();
 
-  if (
-    !username ||
-    !input.password ||
-    !name
-  ) {
+  if (!username || !input.password || !name) {
     return {
       ok: false,
       error: 'All fields are required.',

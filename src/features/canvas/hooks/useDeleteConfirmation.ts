@@ -1,7 +1,4 @@
-import {
-  useCallback,
-  useState,
-} from 'react';
+import { useCallback, useState } from 'react';
 
 interface PendingDelete {
   execute: () => void;
@@ -15,48 +12,38 @@ interface UseDeleteConfirmationOptions {
 export function useDeleteConfirmation({
   pushHistory,
 }: UseDeleteConfirmationOptions) {
-  const [
-    pendingDelete,
-    setPendingDelete,
-  ] =
-    useState<PendingDelete | null>(
-      null,
-    );
+  const [pendingDelete, setPendingDelete] =
+    useState<PendingDelete | null>(null);
 
-  const requestDelete =
-    useCallback(
-      (
-        execute: () => void,
-        count = 1,
-      ) => {
-        setPendingDelete({
-          execute,
-          count,
-        });
-      },
-      [],
-    );
+  const requestDelete = useCallback(
+    (
+      execute: () => void,
+      count = 1,
+    ) => {
+      setPendingDelete({
+        execute,
+        count,
+      });
+    },
+    [],
+  );
 
-  const confirmDelete =
-    useCallback(() => {
-      setPendingDelete(
-        previous => {
-          if (!previous) {
-            return null;
-          }
+  const confirmDelete = useCallback(() => {
+    setPendingDelete(previous => {
+      if (!previous) {
+        return null;
+      }
 
-          pushHistory();
-          previous.execute();
+      pushHistory();
+      previous.execute();
 
-          return null;
-        },
-      );
-    }, [pushHistory]);
+      return null;
+    });
+  }, [pushHistory]);
 
-  const cancelDelete =
-    useCallback(() => {
-      setPendingDelete(null);
-    }, []);
+  const cancelDelete = useCallback(() => {
+    setPendingDelete(null);
+  }, []);
 
   return {
     pendingDelete,
