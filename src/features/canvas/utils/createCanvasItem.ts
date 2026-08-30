@@ -11,6 +11,8 @@ import type {
   TextItem,
 } from '@/entities/board/types';
 
+import { ITEM_WIDTH } from '@/features/canvas/constants';
+
 import type { ToolType } from '@/entities/board/toolTypes';
 
 function createId(): string {
@@ -37,7 +39,7 @@ export function createCanvasItem(
         type: 'note',
         content: '',
         color: '#0d2a35',
-        width: 240,
+        width: ITEM_WIDTH.note,
       } as NoteItem;
 
     case 'kanban':
@@ -45,6 +47,7 @@ export function createCanvasItem(
         ...base,
         type: 'kanban',
         title: 'New Board',
+        width: ITEM_WIDTH.kanban,
         columns: [
           {
             id: createId(),
@@ -73,8 +76,8 @@ export function createCanvasItem(
         type: 'image',
         url: '',
         caption: '',
-        width: 280,
-        imgHeight: 190,
+        width: ITEM_WIDTH.image,
+        imgHeight: 192,
       } as ImageItem;
 
     case 'link':
@@ -84,7 +87,7 @@ export function createCanvasItem(
         url: '',
         title: 'New Link',
         description: '',
-        width: 260,
+        width: ITEM_WIDTH.link,
       } as LinkItem;
 
     case 'text':
@@ -93,6 +96,7 @@ export function createCanvasItem(
         type: 'text',
         content: 'Heading',
         size: 'lg',
+        width: ITEM_WIDTH.text
       } as TextItem;
 
     case 'frame':
@@ -103,11 +107,11 @@ export function createCanvasItem(
         width:
           typeof extra?.width === 'number'
             ? extra.width
-            : 360,
+            : ITEM_WIDTH.frame,
         height:
           typeof extra?.height === 'number'
             ? extra.height
-            : 260,
+            : 256,
         color: '#7C3AED',
       } as FrameItem;
 
@@ -117,7 +121,7 @@ export function createCanvasItem(
         type: 'checklist',
         title: 'Checklist',
         color: '#0d2a35',
-        width: 240,
+        width: ITEM_WIDTH.checklist,
         entries: [],
       } as ChecklistItem;
 
@@ -125,7 +129,7 @@ export function createCanvasItem(
       return {
         ...base,
         type: 'line',
-        x2: x + 180,
+        x2: x + ITEM_WIDTH.line,
         y2: y,
         arrowStart: false,
         arrowEnd: true,
@@ -139,7 +143,7 @@ export function createCanvasItem(
         type: 'column',
         title: 'Column',
         color: '#f0f9ff',
-        width: 320,
+        width: ITEM_WIDTH.column,
         items: [],
       } as ColumnItem;
 

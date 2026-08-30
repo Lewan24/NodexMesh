@@ -193,7 +193,7 @@ export default function ColumnBlock({
       )}
 
       <div
-        className="rounded-2xl border shadow-xl flex flex-col"
+        className="item-rounded border shadow-xl flex flex-col"
         style={{
           backgroundColor: item.color,
           borderColor:
@@ -445,7 +445,7 @@ export default function ColumnBlock({
         >
           <button
             onClick={() => setShowAddMenu(previous => !previous)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 item-rounded text-sm font-semibold transition-all"
             style={{
               color: '#7C3AED',
               backgroundColor: columnLight

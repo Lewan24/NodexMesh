@@ -244,7 +244,7 @@ export default function KanbanBlock({
     }}>
       <div
         ref={boardRef}
-        className="rounded-2xl border shadow-xl overflow-auto"
+        className="item-rounded border shadow-xl overflow-auto"
         style={{
           width: item.width
             ? '100%'
@@ -427,7 +427,7 @@ export default function KanbanBlock({
                   <button
                     onMouseDown={event => event.stopPropagation()}
                     onClick={() => deleteColumn(column.id)}
-                    className="opacity-0 group-hover/col:opacity-100 transition-all flex-shrink-0 ml-0.5"
+                    className="transition-all flex-shrink-0 ml-0.5"
                     style={{ color: mutedColor }}
                     onMouseEnter={event => {
                       event.currentTarget.style.color = '#FF6B8A';

@@ -65,7 +65,7 @@ export default function TextControls({ item, onUpdate }: TextControlsProps) {
           </span>
         </EditBarButton>
       ))}
-
+      
       <EditBarDivider />
 
       <EditBarButton

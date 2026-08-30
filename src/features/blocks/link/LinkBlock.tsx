@@ -80,7 +80,7 @@ export default function LinkBlock({
        }}
     >
       <div
-        className="rounded-2xl border shadow-xl overflow-hidden transition-colors duration-150"
+        className="item-rounded border shadow-xl overflow-hidden transition-colors duration-150"
         style={{
           height: item.height
           ? '100%'

@@ -69,7 +69,7 @@ export default function FrameBlock({
       {/* Frame background / border */}
 
       <div
-        className="absolute inset-0 rounded-2xl"
+        className="absolute inset-0 item-rounded"
         style={{
           border: `2px solid ${item.color}50`,
           backgroundColor: `${item.color}70`,
@@ -80,7 +80,7 @@ export default function FrameBlock({
       {/* Hover border */}
 
       <div
-        className="absolute inset-0 rounded-2xl opacity-0 group-hover/frame:opacity-100 transition-opacity duration-200 pointer-events-none"
+        className="absolute inset-0 item-rounded opacity-0 group-hover/frame:opacity-100 transition-opacity duration-200 pointer-events-none"
         style={{
           border: `2px solid ${item.color}aa`,
           boxShadow: `0 0 0 1px ${item.color}20`,

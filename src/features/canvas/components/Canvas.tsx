@@ -14,7 +14,7 @@ import CanvasHints from './CanvasHints';
 import CanvasEmptyState from './CanvasEmptyState';
 import ToolDragGhost from '@/features/canvas/components/ToolDragGhost';
 
-import { CANVAS_GRID_SIZE } from '@/features/canvas/constants';
+import { CANVAS_GRID_SIZE, CANVAS_MAJOR_GRID_SIZE } from '@/features/canvas/constants';
 import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
 
 import { useCanvasHistory } from '@/features/canvas/hooks/useCanvasHistory';
@@ -31,12 +31,14 @@ import { useDeleteConfirmation } from '@/features/canvas/hooks/useDeleteConfirma
 import { useColumnSelection } from '../hooks/useColumnSelection';
 import { useCanvasZoom } from '../hooks/useCanvasZoom';
 import { createCanvasItem } from '@/features/canvas/utils/createCanvasItem';
+import { getToolDefaultSize } from '@/features/canvas/utils/itemGeometry';
 
 import {
   TOOL_DRAG_END_EVENT,
   TOOL_DRAG_MOVE_EVENT,
   type ToolDragDetail,
 } from '@/features/canvas/utils/toolDrag';
+import CanvasDropPreview from './CanvasDropPreview';
 
 interface ToolDragGhostState extends ToolDragDetail {
   overCanvas: boolean;
@@ -98,6 +100,13 @@ export default function Canvas({
   const [frameCapturePreviewIds, setFrameCapturePreviewIds] = useState<string[]>([]);
 
   const [toolDragGhost, setToolDragGhost] = useState<ToolDragGhostState | null>(null);
+  const [toolDropPreview, setToolDropPreview] =
+    useState<{
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    } | null>(null);
 
   const panRef = useRef(pan);
   panRef.current = pan;
@@ -265,6 +274,20 @@ export default function Canvas({
         clientY: position.ghostClientY,
         overCanvas: position.overCanvas,
       });
+
+      if (position.overCanvas) {
+        const size =
+          getToolDefaultSize(detail.tool);
+
+        setToolDropPreview({
+          x: snapValue(position.canvasX),
+          y: snapValue(position.canvasY),
+          width: size.width,
+          height: size.height,
+        });
+      } else {
+        setToolDropPreview(null);
+      }
     };
 
     const handleToolDragEnd = (event: Event) => {
@@ -275,6 +298,7 @@ export default function Canvas({
       const position = getDropPosition(detail);
 
       setToolDragGhost(null);
+      setToolDropPreview(null); 
 
       if (!position?.overCanvas) return;
 
@@ -405,12 +429,15 @@ export default function Canvas({
     dragOverColumnId,
     draggingIds,
     settlingIds,
+    dropPreview,
+    dragTilt,
     handleItemMouseDown,
   } = useItemDrag({
     projectRef,
     selectedIdsRef,
     zoomRef,
     snapEnabled,
+    measuredSizes,
     snapValue,
     pushHistory,
     onSelectItems,
@@ -419,7 +446,6 @@ export default function Canvas({
     onUpdateItem,
     onDropOnColumn,
     clearColumnSelection,
-    triggerEnterAnimation,
   });
 
   const handleBlurActiveElement = useCallback(
@@ -486,15 +512,31 @@ export default function Canvas({
     .filter(item => item.type !== 'frame')
     .sort((a, b) => a.zIndex - b.zIndex);
 
-  const dotInterval = CANVAS_GRID_SIZE * zoom;
+  const minorGridInterval =
+    CANVAS_GRID_SIZE * zoom;
 
-  const backgroundX =
-    ((pan.x % dotInterval) + dotInterval) %
-    dotInterval;
+  const majorGridInterval =
+    CANVAS_MAJOR_GRID_SIZE * zoom;
 
-  const backgroundY =
-    ((pan.y % dotInterval) + dotInterval) %
-    dotInterval;
+  const minorBackgroundX =
+    ((pan.x % minorGridInterval) +
+      minorGridInterval) %
+    minorGridInterval;
+
+  const minorBackgroundY =
+    ((pan.y % minorGridInterval) +
+      minorGridInterval) %
+    minorGridInterval;
+
+  const majorBackgroundX =
+    ((pan.x % majorGridInterval) +
+      majorGridInterval) %
+    majorGridInterval;
+
+  const majorBackgroundY =
+    ((pan.y % majorGridInterval) +
+      majorGridInterval) %
+    majorGridInterval;
 
   const cursorClass =
     selectedTool !== 'select'
@@ -507,10 +549,29 @@ export default function Canvas({
       className={`flex-1 relative overflow-hidden select-none ${cursorClass}`}
       style={{
         backgroundColor: 'var(--color-app-bg)',
-        backgroundImage:
-          'radial-gradient(circle, var(--color-canvas-dot) 1.2px, transparent 1.5px)',
-        backgroundSize: `${dotInterval}px ${dotInterval}px`,
-        backgroundPosition: `${backgroundX}px ${backgroundY}px`,
+
+        backgroundImage: `
+          radial-gradient(
+            circle,
+            var(--color-canvas-dot) 1.8px,
+            transparent 2.1px
+          ),
+          radial-gradient(
+            circle,
+            var(--color-canvas-dot) 0.8px,
+            transparent 1.1px
+          )
+        `,
+
+        backgroundSize: `
+          ${majorGridInterval}px ${majorGridInterval}px,
+          ${minorGridInterval}px ${minorGridInterval}px
+        `,
+
+        backgroundPosition: `
+          ${majorBackgroundX}px ${majorBackgroundY}px,
+          ${minorBackgroundX}px ${minorBackgroundY}px
+        `,
       }}
       onMouseDownCapture={handleCanvasMouseDownCapture}
       onMouseDown={handleCanvasMouseDown}
@@ -531,6 +592,11 @@ export default function Canvas({
             zoom={zoom}
             isSelected={safeSelectedIds.includes(frame.id)}
             isDragging={draggingIds.includes(frame.id)}
+            dragTilt={
+              draggingIds.includes(frame.id)
+                ? dragTilt
+                : 0
+            }
             isAnimating={animatingIds.has(frame.id)}
             selectedIds={safeSelectedIds}
             onMouseDown={handleItemMouseDown}
@@ -567,6 +633,11 @@ export default function Canvas({
               }
               isSettling={settlingIds.includes(item.id)}
               isDragging={draggingIds.includes(item.id)}
+              dragTilt={
+                draggingIds.includes(item.id)
+                  ? dragTilt
+                  : 0
+              }
               zoom={zoom}
               isSelected={safeSelectedIds.includes(item.id)}
               isAttachTarget={attachHoverId === item.id}
@@ -590,6 +661,26 @@ export default function Canvas({
             />
           );
         })}
+
+        {dropPreview && (
+          <CanvasDropPreview
+            x={dropPreview.x}
+            y={dropPreview.y}
+            width={dropPreview.width}
+            height={dropPreview.height}
+            label="Grid snap"
+          />
+        )}
+
+        {toolDropPreview && (
+          <CanvasDropPreview
+            x={toolDropPreview.x}
+            y={toolDropPreview.y}
+            width={toolDropPreview.width}
+            height={toolDropPreview.height}
+            label="Place here"
+          />
+        )}
 
         <CanvasOverlays
           frameDraft={frameDraft}

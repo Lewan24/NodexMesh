@@ -78,13 +78,12 @@ export default function ImageBlock({
       <div
         className={
           isSticker
-            ? 'overflow-hidden'
-            : 'rounded-2xl overflow-hidden border shadow-xl'
+            ? 'overflow-hidden item-rounded'
+            : 'overflow-hidden border shadow-xl item-rounded'
         }
         style={
           isSticker
             ? {
-                borderRadius: 14,
                 boxShadow: '0 10px 26px rgba(0,0,0,0.22)',
               }
             : {

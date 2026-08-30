@@ -25,6 +25,9 @@ export default function TextBlock({
     !item.content || item.content === 'Heading',
   );
 
+  if(!item.textAlign)
+    item.textAlign = 'center';
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -98,12 +101,11 @@ export default function TextBlock({
       }}
     >
       <div
-        className="transition-all duration-150"
+        className="transition-all duration-150 item-rounded"
         style={
           isCard
             ? {
                 backgroundColor: item.color,
-                borderRadius: 16,
                 padding: '14px 18px',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                 height: item.height
@@ -151,7 +153,7 @@ export default function TextBlock({
               width: '100%',
               color: textColor,
               caretColor: 'var(--color-accent)',
-              textAlign: item.textAlign ?? 'left',
+              textAlign: item.textAlign ?? 'center',
               fontWeight: item.bold ? 700 : 400,
               fontStyle: item.italic ? 'italic' : 'normal',
             }}
@@ -163,9 +165,9 @@ export default function TextBlock({
             } ${isCard ? 'whitespace-pre-wrap break-words' : 'text-nowrap'}`}
             style={{
               color: item.content ? textColor : mutedColor,
-              textAlign: item.textAlign ?? 'left',
+              textAlign: item.textAlign ?? 'center',
               fontWeight: item.bold ? 700 : 400,
-              fontStyle: item.italic ? 'italic' : 'normal',
+              fontStyle: item.italic ? 'italic' : 'normal'
             }}
             onDoubleClick={() => setEditing(true)}
           >

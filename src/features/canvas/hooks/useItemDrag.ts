@@ -1,17 +1,22 @@
 import { useCallback, useRef, useState } from 'react';
-
 import type { RefObject } from 'react';
-
 import type {
   BoardItem,
   ColumnItem,
   FrameItem,
   LineItem,
 } from '@/entities/board/types';
-
 import type { ToolType } from '@/entities/board/toolTypes';
-
 import { DROPPABLE_ON_COLUMN } from '@/features/canvas/constants';
+import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
+import { getItemSize } from '@/features/canvas/utils/itemGeometry';
+
+export interface ItemDropPreview {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 interface ProjectLike {
   items: BoardItem[];
@@ -29,6 +34,7 @@ interface UseItemDragOptions {
   projectRef: RefObject<ProjectLike>;
   selectedIdsRef: RefObject<string[]>;
   zoomRef: RefObject<number>;
+  measuredSizes: SizeMap;
 
   snapEnabled: boolean;
   snapValue: (value: number) => number;
@@ -48,7 +54,6 @@ interface UseItemDragOptions {
   ) => void;
 
   clearColumnSelection: () => void;
-  triggerEnterAnimation: (id: string) => void;
 }
 
 export function useItemDrag({
@@ -56,6 +61,7 @@ export function useItemDrag({
   selectedIdsRef,
   zoomRef,
   snapEnabled,
+  measuredSizes,
   snapValue,
   pushHistory,
   onSelectItems,
@@ -64,12 +70,15 @@ export function useItemDrag({
   onUpdateItem,
   onDropOnColumn,
   clearColumnSelection,
-  triggerEnterAnimation,
 }: UseItemDragOptions) {
   const [dragOverColumnId, setDragOverColumnId] =
     useState<string | null>(null);
   const [settlingIds, setSettlingIds] = useState<string[]>([]);
   const [draggingIds, setDraggingIds] = useState<string[]>([]);
+  const [dropPreview, setDropPreview] =
+    useState<ItemDropPreview | null>(null);
+
+  const [dragTilt, setDragTilt] = useState(0);
 
   const dragOverColumnIdRef = useRef<string | null>(null);
 
@@ -103,7 +112,6 @@ export function useItemDrag({
       event.stopPropagation();
 
       clearColumnSelection();
-      triggerEnterAnimation(id);
       onSelectTool('select');
 
       const currentSelected = selectedIdsRef.current;
@@ -197,6 +205,8 @@ export function useItemDrag({
       let lastDx = 0;
       let lastDy = 0;
 
+      let previousClientX = event.clientX;
+
       const handleMove = (moveEvent: MouseEvent) => {
         if (!hasMoved) {
           pushHistory();
@@ -208,11 +218,56 @@ export function useItemDrag({
 
         hasMoved = true;
 
-        let dx = (moveEvent.clientX - startX) / currentZoom;
-        let dy = (moveEvent.clientY - startY) / currentZoom;
+        const dx = (moveEvent.clientX - startX) / currentZoom;
+        const dy = (moveEvent.clientY - startY) / currentZoom;
 
         lastDx = dx;
         lastDy = dy;
+
+        const movementX =
+          moveEvent.clientX - previousClientX;
+
+        previousClientX = moveEvent.clientX;
+
+        const nextTilt = Math.max(
+          -3,
+          Math.min(3, movementX * 0.35),
+        );
+
+        setDragTilt(nextTilt);
+
+        const primaryCapture =
+          captureMap.get(id);
+
+        const primaryItem =
+          items.find(item => item.id === id);
+
+        if (
+          primaryCapture &&
+          primaryItem &&
+          primaryItem.type !== 'line'
+        ) {
+          const rawX =
+            primaryCapture.x + dx;
+
+          const rawY =
+            primaryCapture.y + dy;
+
+          const size =
+            getItemSize(
+              primaryItem,
+              measuredSizes,
+            );
+
+          setDropPreview({
+            x: snapValue(rawX),
+            y: snapValue(rawY),
+            width: size.width,
+            height: size.height,
+          });
+        } else {
+          setDropPreview(null);
+        }
 
         captureMap.forEach((capture, capturedId) => {
           onUpdateItem(capturedId, item => ({
@@ -274,6 +329,8 @@ export function useItemDrag({
         );
 
         setDraggingIds([]);
+        setDropPreview(null);
+        setDragTilt(0);
 
         const columnId =
           dragOverColumnIdRef.current;
@@ -408,7 +465,6 @@ export function useItemDrag({
       onUpdateItem,
       onDropOnColumn,
       clearColumnSelection,
-      triggerEnterAnimation,
       setColumnHover,
     ],
   );
@@ -417,6 +473,8 @@ export function useItemDrag({
     dragOverColumnId,
     draggingIds,
     settlingIds,
+    dropPreview,
+    dragTilt,
     handleItemMouseDown,
   };
 }

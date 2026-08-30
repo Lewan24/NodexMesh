@@ -17,6 +17,7 @@ interface CanvasItemProps {
 
   isSettling?: boolean;
   isDragging?: boolean;
+  dragTilt?: number;
 
   isSelected: boolean;
   isAttachTarget: boolean;
@@ -96,6 +97,7 @@ export default function CanvasItem({
   isFrameCapturePreview = false,
   isSettling = false,
   isDragging = false,
+  dragTilt = 0,
   onMouseDown,
   onAnimationEnd,
   onResize,
@@ -132,6 +134,17 @@ export default function CanvasItem({
         top: renderedItem.y,
         zIndex: item.zIndex,
         cursor: 'grab',
+        transform: isDragging
+          ? `
+              perspective(900px)
+              rotateY(${dragTilt}deg)
+              rotateZ(${dragTilt * 0.18}deg)
+              translateZ(8px)
+              scale(1.012)
+            `
+          : undefined,
+
+        transformOrigin: 'center center',
       }}
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}

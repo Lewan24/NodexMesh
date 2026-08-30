@@ -10,8 +10,10 @@ interface CanvasFrameProps {
   isSelected: boolean;
   isAnimating: boolean;
   selectedIds: string[];
+  
   isSettling?: boolean;
   isDragging?: boolean;
+  dragTilt?: number;
 
   onMouseDown: (id: string, event: React.MouseEvent) => void;
   onAnimationEnd: (id: string) => void;
@@ -45,6 +47,7 @@ export default function CanvasFrame({
   selectedIds,
   isSettling = false,
   isDragging = false,
+  dragTilt = 0,
   onMouseDown,
   onAnimationEnd,
   onUpdateItem,
@@ -74,6 +77,17 @@ export default function CanvasFrame({
         left: item.x,
         top: item.y,
         zIndex: item.zIndex,
+        transform: isDragging
+          ? `
+              perspective(900px)
+              rotateY(${dragTilt}deg)
+              rotateZ(${dragTilt * 0.18}deg)
+              translateZ(8px)
+              scale(1.012)
+            `
+          : undefined,
+
+        transformOrigin: 'center center',
       }}
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}

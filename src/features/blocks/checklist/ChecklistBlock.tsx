@@ -118,7 +118,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
         width: item.width ?? 220,
         height: item.height,
        }}>
-      <div ref={cardRef} className="rounded-2xl shadow-xl overflow-hidden" style={{ 
+      <div ref={cardRef} className="item-rounded shadow-xl overflow-hidden" style={{ 
           backgroundColor: item.color,
           height: item.height ? '100%' : undefined,
         }}>

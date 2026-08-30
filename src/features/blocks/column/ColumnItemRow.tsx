@@ -27,7 +27,7 @@ export default function ColumnItemRow({
       }}
     >
       <div
-        className="relative rounded-xl overflow-hidden shadow-sm border cursor-pointer"
+        className="relative item-rounded overflow-hidden shadow-sm border cursor-pointer"
         style={{
           borderColor: isSelected ? '#7C3AED' : 'rgba(0,0,0,0.07)',
           boxShadow: isSelected

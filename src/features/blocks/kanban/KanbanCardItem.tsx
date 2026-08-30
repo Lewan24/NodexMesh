@@ -60,7 +60,7 @@ export default function KanbanCardItem({
 
   return (
     <div
-      className="group/card flex items-start gap-1.5 rounded-xl px-2 py-2 mb-1.5 border transition-all duration-150"
+      className="group/card flex items-center gap-1.5 item-rounded px-2 py-2 mb-1.5 border transition-all duration-150"
       style={{
         backgroundColor: cardBackground,
         borderColor: cardBorder,
@@ -77,10 +77,9 @@ export default function KanbanCardItem({
 
       <div
         onMouseDown={onDragHandleMouseDown}
-        className="opacity-0 group-hover/card:opacity-100 flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity flex flex-col items-center justify-center gap-[3px] mt-1 rounded-md"
+        className="py-2 px-4 mr-[-2px] flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity flex flex-col items-center justify-center gap-[3px] mt-1 rounded-md hover:ring-1"
         style={{
-          width: 14,
-          height: 20,
+          width: 20,
           color: mutedColor,
         }}
         title="Drag to reorder or move to another column/board"
