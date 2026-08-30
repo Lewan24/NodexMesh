@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BoardItem, LineItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
@@ -12,6 +12,7 @@ import CanvasOverlays from '@/features/canvas/components/CanvasOverlays';
 import CanvasEditBar from '@/features/canvas/components/CanvasEditBar';
 import CanvasHints from './CanvasHints';
 import CanvasEmptyState from './CanvasEmptyState';
+import ToolDragGhost from '@/features/canvas/components/ToolDragGhost';
 
 import { CANVAS_GRID_SIZE } from '@/features/canvas/constants';
 import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
@@ -29,6 +30,17 @@ import { useFrameActions } from '@/features/canvas/hooks/useFrameActions';
 import { useDeleteConfirmation } from '@/features/canvas/hooks/useDeleteConfirmation';
 import { useColumnSelection } from '../hooks/useColumnSelection';
 import { useCanvasZoom } from '../hooks/useCanvasZoom';
+import { createCanvasItem } from '@/features/canvas/utils/createCanvasItem';
+
+import {
+  TOOL_DRAG_END_EVENT,
+  TOOL_DRAG_MOVE_EVENT,
+  type ToolDragDetail,
+} from '@/features/canvas/utils/toolDrag';
+
+interface ToolDragGhostState extends ToolDragDetail {
+  overCanvas: boolean;
+}
 
 interface CanvasProps {
   project: Project;
@@ -84,6 +96,8 @@ export default function Canvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [frameCapturePreviewIds, setFrameCapturePreviewIds] = useState<string[]>([]);
+
+  const [toolDragGhost, setToolDragGhost] = useState<ToolDragGhostState | null>(null);
 
   const panRef = useRef(pan);
   panRef.current = pan;
@@ -179,6 +193,137 @@ export default function Canvas({
     onPanChange,
     onZoomChange,
   });
+
+  useEffect(() => {
+    const getDropPosition = (
+      detail: ToolDragDetail,
+    ) => {
+      const container = containerRef.current;
+      if (!container) return null;
+
+      const rect = container.getBoundingClientRect();
+
+      const overCanvas =
+        detail.clientX >= rect.left &&
+        detail.clientX <= rect.right &&
+        detail.clientY >= rect.top &&
+        detail.clientY <= rect.bottom;
+
+      if (!overCanvas) {
+        return {
+          overCanvas: false,
+          canvasX: 0,
+          canvasY: 0,
+          ghostClientX: detail.clientX,
+          ghostClientY: detail.clientY,
+        };
+      }
+
+      const point = screenToCanvas(
+        detail.clientX - rect.left,
+        detail.clientY - rect.top,
+      );
+
+      const canvasX = snapValue(point.x);
+      const canvasY = snapValue(point.y);
+
+      /*
+      * Convert the snapped canvas position back to screen coordinates.
+      * This makes the ghost show the exact final drop position.
+      */
+      const ghostClientX =
+        rect.left +
+        panRef.current.x +
+        canvasX * zoomRef.current;
+
+      const ghostClientY =
+        rect.top +
+        panRef.current.y +
+        canvasY * zoomRef.current;
+
+      return {
+        overCanvas: true,
+        canvasX,
+        canvasY,
+        ghostClientX,
+        ghostClientY,
+      };
+    };
+
+    const handleToolDragMove = (event: Event) => {
+      const detail = (
+        event as CustomEvent<ToolDragDetail>
+      ).detail;
+
+      const position = getDropPosition(detail);
+
+      if (!position) return;
+
+      setToolDragGhost({
+        tool: detail.tool,
+        clientX: position.ghostClientX,
+        clientY: position.ghostClientY,
+        overCanvas: position.overCanvas,
+      });
+    };
+
+    const handleToolDragEnd = (event: Event) => {
+      const detail = (
+        event as CustomEvent<ToolDragDetail>
+      ).detail;
+
+      const position = getDropPosition(detail);
+
+      setToolDragGhost(null);
+
+      if (!position?.overCanvas) return;
+
+      const item = createCanvasItem(
+        detail.tool,
+        position.canvasX,
+        position.canvasY,
+      );
+
+      if (!item) return;
+
+      pushHistory();
+      onAddItem(item);
+      triggerEnterAnimation(item.id);
+
+      onSelectItems([item.id]);
+      onSelectTool('select');
+    };
+
+    window.addEventListener(
+      TOOL_DRAG_MOVE_EVENT,
+      handleToolDragMove,
+    );
+
+    window.addEventListener(
+      TOOL_DRAG_END_EVENT,
+      handleToolDragEnd,
+    );
+
+    return () => {
+      window.removeEventListener(
+        TOOL_DRAG_MOVE_EVENT,
+        handleToolDragMove,
+      );
+
+      window.removeEventListener(
+        TOOL_DRAG_END_EVENT,
+        handleToolDragEnd,
+      );
+    };
+  }, [
+    screenToCanvas,
+    snapValue,
+    pushHistory,
+    onAddItem,
+    triggerEnterAnimation,
+    onSelectItems,
+    onSelectTool,
+  ]);
 
   const {
     frameDraft,
@@ -439,6 +584,15 @@ export default function Canvas({
           lasso={lasso}
         />
       </div>
+
+      {toolDragGhost && (
+        <ToolDragGhost
+          tool={toolDragGhost.tool}
+          clientX={toolDragGhost.clientX}
+          clientY={toolDragGhost.clientY}
+          overCanvas={toolDragGhost.overCanvas}
+        />
+      )}
 
       <CanvasEditBar
         selectedItems={selectedItems}

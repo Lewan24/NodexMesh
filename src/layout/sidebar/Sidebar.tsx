@@ -1,6 +1,11 @@
 import type { ToolType } from '@/entities/board/toolTypes';
 import { SIDEBAR_TOOLS } from './sidebarTools';
 
+import {
+  consumeToolDragClickSuppression,
+  startToolDrag,
+} from '@/features/canvas/utils/toolDrag';
+
 interface SidebarProps {
   selectedTool: ToolType;
   onSelectTool: (tool: ToolType) => void;
@@ -24,8 +29,15 @@ export default function Sidebar({ selectedTool, onSelectTool }: SidebarProps) {
               key={tool.id}
               aria-label={tool.label}
               title={tool.label}
-              onClick={() => onSelectTool(tool.id)}
-              className="flex flex-col items-center justify-center gap-0.5 rounded-2xl transition-all duration-100 flex-shrink-0"
+              onClick={() => {
+                if (consumeToolDragClickSuppression()) return;
+
+                onSelectTool(tool.id);
+              }}
+              onMouseDown={event => {
+                startToolDrag(tool.id, event);
+              }}
+              className="flex flex-col items-center justify-center gap-0.5 rounded-2xl transition-all duration-100 flex-shrink-0 cursor-grab active:cursor-grabbing"
               style={{
                 width: 76,
                 height: 76,
