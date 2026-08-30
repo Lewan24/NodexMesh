@@ -15,6 +15,9 @@ interface CanvasItemProps {
   renderedItem: BoardItem;
   zoom: number;
 
+  isSettling?: boolean;
+  isDragging?: boolean;
+
   isSelected: boolean;
   isAttachTarget: boolean;
   isDragOver: boolean;
@@ -91,6 +94,8 @@ export default function CanvasItem({
   selectedIds,
   selectedColumnItemId,
   isFrameCapturePreview = false,
+  isSettling = false,
+  isDragging = false,
   onMouseDown,
   onAnimationEnd,
   onResize,
@@ -109,7 +114,19 @@ export default function CanvasItem({
   return (
     <div
       data-board-item="true"
-      className={`absolute ${isAnimating ? 'board-item-enter' : ''}`}
+      className={`absolute ${
+        isAnimating
+          ? 'board-item-enter'
+          : ''
+      } ${
+        isDragging
+          ? 'board-item-dragging'
+          : ''
+      } ${
+        isSettling
+          ? 'board-item-settling'
+          : ''
+      }`}
       style={{
         left: renderedItem.x,
         top: renderedItem.y,

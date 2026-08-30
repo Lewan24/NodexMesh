@@ -68,6 +68,8 @@ export function useItemDrag({
 }: UseItemDragOptions) {
   const [dragOverColumnId, setDragOverColumnId] =
     useState<string | null>(null);
+  const [settlingIds, setSettlingIds] = useState<string[]>([]);
+  const [draggingIds, setDraggingIds] = useState<string[]>([]);
 
   const dragOverColumnIdRef = useRef<string | null>(null);
 
@@ -192,9 +194,16 @@ export function useItemDrag({
         ? DROPPABLE_ON_COLUMN.has(singleDragItem.type)
         : false;
 
+      let lastDx = 0;
+      let lastDy = 0;
+
       const handleMove = (moveEvent: MouseEvent) => {
         if (!hasMoved) {
           pushHistory();
+
+          setDraggingIds(
+            Array.from(captureMap.keys()),
+          );
         }
 
         hasMoved = true;
@@ -202,17 +211,8 @@ export function useItemDrag({
         let dx = (moveEvent.clientX - startX) / currentZoom;
         let dy = (moveEvent.clientY - startY) / currentZoom;
 
-        if (snapEnabled) {
-          const primary = captureMap.get(id);
-
-          if (primary) {
-            const rawX = primary.x + dx;
-            const rawY = primary.y + dy;
-
-            dx += snapValue(rawX) - rawX;
-            dy += snapValue(rawY) - rawY;
-          }
-        }
+        lastDx = dx;
+        lastDy = dy;
 
         captureMap.forEach((capture, capturedId) => {
           onUpdateItem(capturedId, item => ({
@@ -263,18 +263,35 @@ export function useItemDrag({
       };
 
       const handleUp = () => {
-        document.removeEventListener('mousemove', handleMove);
-        document.removeEventListener('mouseup', handleUp);
+        document.removeEventListener(
+          'mousemove',
+          handleMove,
+        );
 
-        const columnId = dragOverColumnIdRef.current;
+        document.removeEventListener(
+          'mouseup',
+          handleUp,
+        );
 
+        setDraggingIds([]);
+
+        const columnId =
+          dragOverColumnIdRef.current;
+
+        /*
+        * Drop inside a Column takes priority over
+        * normal canvas grid snapping.
+        */
         if (
           hasMoved &&
           columnId &&
           singleDragItem &&
           canDropOnColumn
         ) {
-          onDropOnColumn(singleDragItem.id, columnId);
+          onDropOnColumn(
+            singleDragItem.id,
+            columnId,
+          );
 
           onSelectItems([]);
           setColumnHover(null);
@@ -283,6 +300,88 @@ export function useItemDrag({
         }
 
         setColumnHover(null);
+
+        /*
+        * While dragging the item follows the cursor freely.
+        * Only after mouseup do we settle it onto the grid.
+        */
+        if (hasMoved && snapEnabled) {
+          const primary = captureMap.get(id);
+
+          if (primary) {
+            const rawX =
+              primary.x + lastDx;
+
+            const rawY =
+              primary.y + lastDy;
+
+            const snappedX =
+              snapValue(rawX);
+
+            const snappedY =
+              snapValue(rawY);
+
+            const snapDx =
+              snappedX - rawX;
+
+            const snapDy =
+              snappedY - rawY;
+
+            if (
+              Math.abs(snapDx) > 0.01 ||
+              Math.abs(snapDy) > 0.01
+            ) {
+              const idsToSettle =
+                Array.from(captureMap.keys());
+
+              setSettlingIds(idsToSettle);
+
+              requestAnimationFrame(() => {
+                captureMap.forEach(
+                  (
+                    capture,
+                    capturedId,
+                  ) => {
+                    onUpdateItem(
+                      capturedId,
+                      current => ({
+                        ...current,
+
+                        x:
+                          capture.x +
+                          lastDx +
+                          snapDx,
+
+                        y:
+                          capture.y +
+                          lastDy +
+                          snapDy,
+
+                        ...(capture.isLine
+                          ? {
+                              x2:
+                                capture.x2! +
+                                lastDx +
+                                snapDx,
+
+                              y2:
+                                capture.y2! +
+                                lastDy +
+                                snapDy,
+                            }
+                          : {}),
+                      }),
+                    );
+                  },
+                );
+
+                window.setTimeout(() => {
+                  setSettlingIds([]);
+                }, 160);
+              });
+            }
+          }
+        }
 
         if (
           !hasMoved &&
@@ -316,6 +415,8 @@ export function useItemDrag({
 
   return {
     dragOverColumnId,
+    draggingIds,
+    settlingIds,
     handleItemMouseDown,
   };
 }

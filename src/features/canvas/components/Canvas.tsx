@@ -224,8 +224,8 @@ export default function Canvas({
         detail.clientY - rect.top,
       );
 
-      const canvasX = snapValue(point.x);
-      const canvasY = snapValue(point.y);
+      const canvasX = point.x;
+      const canvasY = point.y;
 
       /*
       * Convert the snapped canvas position back to screen coordinates.
@@ -278,10 +278,16 @@ export default function Canvas({
 
       if (!position?.overCanvas) return;
 
+      const finalX =
+        snapValue(position.canvasX);
+
+      const finalY =
+        snapValue(position.canvasY);
+
       const item = createCanvasItem(
         detail.tool,
-        position.canvasX,
-        position.canvasY,
+        finalX,
+        finalY,
       );
 
       if (!item) return;
@@ -397,6 +403,8 @@ export default function Canvas({
 
   const {
     dragOverColumnId,
+    draggingIds,
+    settlingIds,
     handleItemMouseDown,
   } = useItemDrag({
     projectRef,
@@ -519,8 +527,10 @@ export default function Canvas({
             key={frame.id}
             item={frame}
             onItemResize={handleItemResize}
+            isSettling={settlingIds.includes(frame.id)}
             zoom={zoom}
             isSelected={safeSelectedIds.includes(frame.id)}
+            isDragging={draggingIds.includes(frame.id)}
             isAnimating={animatingIds.has(frame.id)}
             selectedIds={safeSelectedIds}
             onMouseDown={handleItemMouseDown}
@@ -555,6 +565,8 @@ export default function Canvas({
                   ? selectedColumnItem.item.id
                   : null
               }
+              isSettling={settlingIds.includes(item.id)}
+              isDragging={draggingIds.includes(item.id)}
               zoom={zoom}
               isSelected={safeSelectedIds.includes(item.id)}
               isAttachTarget={attachHoverId === item.id}

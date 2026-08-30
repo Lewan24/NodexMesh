@@ -10,6 +10,8 @@ interface CanvasFrameProps {
   isSelected: boolean;
   isAnimating: boolean;
   selectedIds: string[];
+  isSettling?: boolean;
+  isDragging?: boolean;
 
   onMouseDown: (id: string, event: React.MouseEvent) => void;
   onAnimationEnd: (id: string) => void;
@@ -41,6 +43,8 @@ export default function CanvasFrame({
   isSelected,
   isAnimating,
   selectedIds,
+  isSettling = false,
+  isDragging = false,
   onMouseDown,
   onAnimationEnd,
   onUpdateItem,
@@ -53,7 +57,19 @@ export default function CanvasFrame({
   return (
     <div
       data-board-item="true"
-      className={`absolute ${isAnimating ? 'board-item-enter' : ''}`}
+      className={`absolute ${
+        isAnimating
+          ? 'board-item-enter'
+          : ''
+      } ${
+        isDragging
+          ? 'board-item-dragging'
+          : ''
+      } ${
+        isSettling
+          ? 'board-item-settling'
+          : ''
+      }`}
       style={{
         left: item.x,
         top: item.y,
