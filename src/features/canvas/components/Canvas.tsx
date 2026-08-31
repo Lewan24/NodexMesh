@@ -32,6 +32,13 @@ import { useColumnSelection } from '../hooks/useColumnSelection';
 import { useCanvasZoom } from '../hooks/useCanvasZoom';
 import { createCanvasItem } from '@/features/canvas/utils/createCanvasItem';
 import { getItemRect, getToolDefaultSize } from '@/features/canvas/utils/itemGeometry';
+import NestedDragGhost from '@/features/canvas/components/NestedDragGhost';
+
+import {
+  NESTED_DRAG_END_EVENT,
+  NESTED_DRAG_MOVE_EVENT,
+  type NestedDragDetail,
+} from '@/features/canvas/utils/nestedDrag';
 
 import {
   TOOL_DRAG_END_EVENT,
@@ -73,6 +80,10 @@ interface CanvasProps {
   onEjectFromColumn: (
     columnId: string,
     ejectedItem: BoardItem,
+    position?: {
+      x: number;
+      y: number;
+    },
   ) => void;
   onRestoreItems: (items: BoardItem[]) => void;
 }
@@ -102,6 +113,7 @@ export default function Canvas({
   const [frameCapturePreviewIds, setFrameCapturePreviewIds] = useState<string[]>([]);
 
   const [toolDragGhost, setToolDragGhost] = useState<ToolDragGhostState | null>(null);
+  const [nestedDragGhost, setNestedDragGhost] = useState<NestedDragDetail | null>(null);
   const [toolDropPreview, setToolDropPreview] =
     useState<{
       x: number;
@@ -210,6 +222,128 @@ export default function Canvas({
     onPanChange,
     onZoomChange,
   });
+
+  const handleEjectFromColumn =
+  useCallback(
+    (
+      columnId: string,
+      ejectedItem: BoardItem,
+      clientX?: number,
+      clientY?: number,
+    ) => {
+      /*
+       * Kliknięcie przycisku ↗.
+       * Nie ma pozycji drag/drop,
+       * więc parent użyje standardowego
+       * miejsca obok Column.
+       */
+      if (
+        clientX === undefined ||
+        clientY === undefined
+      ) {
+        onEjectFromColumn(
+          columnId,
+          ejectedItem,
+        );
+
+        return;
+      }
+
+      const container =
+        containerRef.current;
+
+      if (!container) {
+        onEjectFromColumn(
+          columnId,
+          ejectedItem,
+        );
+
+        return;
+      }
+
+      const rect =
+        container.getBoundingClientRect();
+
+      /*
+       * Screen coordinates
+       * ↓
+       * Canvas/world coordinates.
+       */
+      const point =
+        screenToCanvas(
+          clientX - rect.left,
+          clientY - rect.top,
+        );
+
+      /*
+       * Lekki offset, żeby kursor
+       * nie był dokładnie w lewym
+       * górnym rogu itemu.
+       */
+      const x =
+        snapValue(
+          point.x - 16,
+        );
+
+      const y =
+        snapValue(
+          point.y - 16,
+        );
+
+      onEjectFromColumn(
+        columnId,
+        ejectedItem,
+        {
+          x,
+          y,
+        },
+      );
+    },
+    [
+      onEjectFromColumn,
+      screenToCanvas,
+      snapValue,
+    ],
+  );
+
+  useEffect(() => {
+    const handleMove = (
+      event: Event,
+    ) => {
+      const detail =
+        (
+          event as CustomEvent<NestedDragDetail>
+        ).detail;
+
+      setNestedDragGhost(detail);
+    };
+
+    const handleEnd = () => {
+      setNestedDragGhost(null);
+    };
+
+    window.addEventListener(
+      NESTED_DRAG_MOVE_EVENT,
+      handleMove,
+    );
+
+    window.addEventListener(
+      NESTED_DRAG_END_EVENT,
+      handleEnd,
+    );
+
+    return () => {
+      window.removeEventListener(
+        NESTED_DRAG_MOVE_EVENT,
+        handleMove,
+      );
+
+      window.removeEventListener(
+        NESTED_DRAG_END_EVENT,
+        handleEnd,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     const container =
@@ -415,10 +549,7 @@ export default function Canvas({
     handleChecklistDropOutside,
     handleKanbanCardDropOutside,
   } = useCrossItemDrop({
-    containerRef,
     projectRef,
-    measuredSizes,
-    screenToCanvas,
     onUpdateItem,
   });
 
@@ -886,7 +1017,7 @@ export default function Canvas({
               onSelectItems={onSelectItems}
               onRequestDelete={requestDelete}
               onLineEndpointDrag={handleLineEndpointDrag}
-              onEjectFromColumn={onEjectFromColumn}
+              onEjectFromColumn={handleEjectFromColumn}
               onSelectColumnItem={handleSelectColumnItem}
               onChecklistDropOutside={handleChecklistDropOutside}
               onKanbanCardDropOutside={handleKanbanCardDropOutside}
@@ -930,7 +1061,19 @@ export default function Canvas({
         />
       )}
 
-
+      {nestedDragGhost && (
+        <NestedDragGhost
+          payload={
+            nestedDragGhost.payload
+          }
+          clientX={
+            nestedDragGhost.clientX
+          }
+          clientY={
+            nestedDragGhost.clientY
+          }
+        />
+      )}
 
       <CanvasEditBar
         selectedItems={selectedItems}

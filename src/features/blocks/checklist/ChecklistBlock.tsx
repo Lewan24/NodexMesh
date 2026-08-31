@@ -12,7 +12,7 @@ interface ChecklistBlockProps {
   isSelected?: boolean;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onEntryDroppedOutside?: (entry: ChecklistEntry, clientX: number, clientY: number) => void;
+  onEntryDroppedOutside?: (entry: ChecklistEntry, clientX: number, clientY: number) => boolean;
 }
 
 function DropLine() {
@@ -121,7 +121,10 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
         width: item.width ?? 220,
         height: item.height,
        }}>
-      <div ref={cardRef} className="item-rounded shadow-xl overflow-hidden" style={{ 
+      <div ref={cardRef}
+        data-checklist-id={item.id}
+        className="item-rounded shadow-xl overflow-hidden" 
+        style={{ 
           backgroundColor: item.color,
           height: item.height ? '100%' : undefined,
         }}>
@@ -211,7 +214,9 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                   <DropLine />
                 }
 
-                <div ref={(element) => {
+                <div 
+                data-checklist-entry-index={index}
+                ref={(element) => {
                   if (element) {
                     rowRefs.current.set(index, element);
                   } else {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import type { ChecklistEntry } from '@/entities/board/types';
+import DragHandle from '../shared/DragHandle';
 
 interface ChecklistEntryRowProps {
   entry: ChecklistEntry;
@@ -42,20 +43,12 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
       className="group/entry flex items-center gap-1 py-1"
       style={{ opacity: isDragging ? 0.35 : 1 }}
     >
-      {/* Drag handle */}
-      <div
-        onMouseDown={onDragHandleMouseDown}
-        className="opacity-0 group-hover/entry:opacity-100 flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity flex flex-col items-center justify-center gap-[3px] rounded-md"
-        style={{ width: 16, height: 22, color: `${textColor}90` }}
+      <DragHandle
+        compact
+        color={`${textColor}90`}
         title="Drag to reorder or move to another checklist"
-      >
-        {[0, 1, 2].map(index => (
-          <div key={index} className="flex gap-1">
-            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'currentColor' }} />
-            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'currentColor' }} />
-          </div>
-        ))}
-      </div>
+        onMouseDown={onDragHandleMouseDown}
+      />
 
       {/* Toggle */}
       <button

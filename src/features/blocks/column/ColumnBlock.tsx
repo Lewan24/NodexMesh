@@ -22,7 +22,11 @@ interface ColumnBlockProps {
   selectedItemId?: string | null;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onEjectItem?: (ejectedItem: BoardItem) => void;
+  onEjectItem?: (
+    ejectedItem: BoardItem,
+    clientX?: number,
+    clientY?: number,
+  ) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
   onRequestDelete?: (execute: () => void) => void;
 }
@@ -82,7 +86,20 @@ export default function ColumnBlock({
   }, [showAddMenu, showBackgroundMenu]);
 
   const items = item.items ?? [];
-  const innerWidth = item.width - 32;
+  const columnContentWidth =
+    item.width - 32;
+
+  const nestedControlsWidth =
+    24 + // drag
+    24 + // eject
+    16;  // dwa gap-2 po 8px
+
+  const nestedItemWidth =
+    Math.max(
+      120,
+      columnContentWidth -
+        nestedControlsWidth,
+    );
   const columnLight = isLightColor(item.color);
 
   const headerTextColor = columnLight ? '#1e293b' : '#f1f5f9';
@@ -128,6 +145,7 @@ export default function ColumnBlock({
   );
 
   const { draggingIndex, dropIndex, handleDragStart } = useColumnDrag({
+    columnId: item.id,
     items,
     containerRef,
     itemRefsMap,
@@ -156,23 +174,30 @@ export default function ColumnBlock({
   );
 
   const ejectNestedItem = useCallback(
-    (nestedItem: BoardItem) => {
+    (
+      nestedItem: BoardItem,
+      clientX?: number,
+      clientY?: number,
+    ) => {
       deleteNested(nestedItem.id);
-      onEjectItem?.(nestedItem);
+      onEjectItem?.(
+        nestedItem, 
+        clientX,
+        clientY,);
 
       if (selectedItemId === nestedItem.id) clearNestedSelection();
     },
     [deleteNested, onEjectItem, selectedItemId, clearNestedSelection],
   );
 
-  function prepareNestedItemForColumn(item: BoardItem, innerWidth: number): BoardItem {
+  function prepareNestedItemForColumn(item: BoardItem, nestedItemWidth: number): BoardItem {
     switch (item.type) {
       case 'note':
       case 'checklist':
       case 'link':
       case 'image':
       case 'text':
-        return { ...item, width: innerWidth };
+        return { ...item, width: nestedItemWidth };
 
       default:
         return item;
@@ -400,7 +425,7 @@ export default function ColumnBlock({
                     <BlockRenderer
                       item={prepareNestedItemForColumn(
                         nestedItem,
-                        innerWidth,
+                        nestedItemWidth,
                       )}
                       isInsideColumn
                       isSelected={false}

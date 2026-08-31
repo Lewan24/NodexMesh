@@ -29,7 +29,7 @@ interface KanbanBlockProps {
     card: KanbanCard,
     clientX: number,
     clientY: number,
-  ) => void;
+  ) => boolean;
 }
 
 function DropLine() {
@@ -248,6 +248,7 @@ export default function KanbanBlock({
     }}>
       <div
         ref={boardRef}
+        data-kanban-id={item.id}
         className="item-rounded border shadow-xl overflow-auto"
         style={{
           width: item.width
@@ -380,6 +381,8 @@ export default function KanbanBlock({
           {item.columns.map(column => (
             <div
               key={column.id}
+              data-kanban-id={item.id}
+              data-kanban-column-id={column.id}
               ref={element => {
                 if (element) {
                   columnRefs.current.set(column.id, element);
@@ -497,6 +500,7 @@ export default function KanbanBlock({
                       draggingCardId !== card.id && <DropLine />}
 
                     <div
+                      data-kanban-card-id={card.id}
                       ref={element => {
                         if (element) {
                           cardRowRefs.current.set(card.id, element);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import type { KanbanCard } from '@/entities/board/types';
+import DragHandle from '../shared/DragHandle';
 
 interface KanbanCardItemProps {
   card: KanbanCard;
@@ -75,24 +76,12 @@ export default function KanbanCardItem({
         event.currentTarget.style.borderColor = cardBorder;
       }}
     >
-      {/* Drag handle */}
-
-      <div
+      <DragHandle
+        compact
+        color={mutedColor}
+        title="Drag card"
         onMouseDown={onDragHandleMouseDown}
-        className="py-2 px-4 mr-[-2px] flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity flex flex-col items-center justify-center gap-[3px] mt-1 rounded-md hover:ring-1"
-        style={{
-          width: 20,
-          color: mutedColor,
-        }}
-        title="Drag to reorder or move to another column/board"
-      >
-        {[0, 1, 2].map(index => (
-          <div key={index} className="flex gap-1">
-            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'currentColor' }} />
-            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'currentColor' }} />
-          </div>
-        ))}
-      </div>
+      />
 
       {/* Done toggle */}
 

@@ -1,18 +1,54 @@
-import { useCallback, useRef, useState } from 'react';
-import type { RefObject } from 'react';
+import {
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
 
-import type { BoardItem } from '@/entities/board/types';
+import type {
+  RefObject,
+} from 'react';
+
+import type {
+  BoardItem,
+} from '@/entities/board/types';
+
+import {
+  emitNestedDragEnd,
+  emitNestedDragMove,
+} from '@/features/canvas/utils/nestedDrag';
 
 interface UseColumnDragOptions {
+  columnId: string;
+
   items: BoardItem[];
-  containerRef: RefObject<HTMLDivElement | null>;
-  itemRefsMap: RefObject<Map<number, HTMLDivElement>>;
-  updateItems: (updater: (items: BoardItem[]) => BoardItem[]) => void;
-  deleteNested: (id: string) => void;
-  onEjectItem?: (item: BoardItem) => void;
+
+  containerRef:
+    RefObject<HTMLDivElement | null>;
+
+  itemRefsMap:
+    RefObject<
+      Map<number, HTMLDivElement>
+    >;
+
+  updateItems: (
+    updater: (
+      items: BoardItem[],
+    ) => BoardItem[],
+  ) => void;
+
+  deleteNested: (
+    id: string,
+  ) => void;
+
+  onEjectItem?: (
+    item: BoardItem,
+    clientX?: number,
+    clientY?: number,
+  ) => void;
 }
 
 export function useColumnDrag({
+  columnId,
   items,
   containerRef,
   itemRefsMap,
@@ -20,104 +56,327 @@ export function useColumnDrag({
   deleteNested,
   onEjectItem,
 }: UseColumnDragOptions) {
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const [
+    draggingIndex,
+    setDraggingIndex,
+  ] =
+    useState<number | null>(
+      null,
+    );
 
-  const dropIndexRef = useRef<number | null>(null);
-  const itemsRef = useRef(items);
+  const [
+    dropIndex,
+    setDropIndex,
+  ] =
+    useState<number | null>(
+      null,
+    );
 
-  itemsRef.current = items;
+  const dropIndexRef =
+    useRef<number | null>(
+      null,
+    );
 
-  const handleDragStart = useCallback(
-    (fromIndex: number, event: React.MouseEvent) => {
-      if (event.button !== 0) return;
+  const itemsRef =
+    useRef(items);
 
-      event.stopPropagation();
-      event.preventDefault();
+  itemsRef.current =
+    items;
 
-      const container = containerRef.current;
-      if (!container) return;
+  const handleDragStart =
+    useCallback(
+      (
+        fromIndex: number,
+        event: React.MouseEvent,
+      ) => {
+        if (
+          event.button !== 0
+        ) {
+          return;
+        }
 
-      setDraggingIndex(fromIndex);
-      setDropIndex(fromIndex);
-      dropIndexRef.current = fromIndex;
+        event.stopPropagation();
+        event.preventDefault();
 
-      const getItemCenters = () => {
-        const centers: number[] = [];
+        const container =
+          containerRef.current;
 
-        for (let index = 0; index < itemsRef.current.length; index++) {
-          const element = itemRefsMap.current.get(index);
+        if (!container) return;
 
-          if (!element) {
-            centers.push(0);
-            continue;
+        const draggedItem =
+          itemsRef.current[
+            fromIndex
+          ];
+
+        if (!draggedItem) {
+          return;
+        }
+
+        setDraggingIndex(
+          fromIndex,
+        );
+
+        setDropIndex(
+          fromIndex,
+        );
+
+        dropIndexRef.current =
+          fromIndex;
+
+        const getItemCenters =
+          () => {
+            const centers:
+              number[] = [];
+
+            for (
+              let index = 0;
+              index <
+              itemsRef.current.length;
+              index++
+            ) {
+              const element =
+                itemRefsMap.current.get(
+                  index,
+                );
+
+              if (!element) {
+                centers.push(0);
+                continue;
+              }
+
+              const rect =
+                element.getBoundingClientRect();
+
+              centers.push(
+                rect.top +
+                  rect.height / 2,
+              );
+            }
+
+            return centers;
+          };
+
+        const isOutside =
+          (
+            clientX: number,
+            clientY: number,
+          ) => {
+            const rect =
+              container.getBoundingClientRect();
+
+            return (
+              clientX <
+                rect.left - 40 ||
+              clientX >
+                rect.right + 40 ||
+              clientY <
+                rect.top - 40 ||
+              clientY >
+                rect.bottom + 40
+            );
+          };
+
+        const handleMove = (
+          moveEvent: MouseEvent,
+        ) => {
+          emitNestedDragMove(
+            {
+              kind:
+                'column-item',
+
+              item:
+                draggedItem,
+
+              columnId,
+            },
+            moveEvent.clientX,
+            moveEvent.clientY,
+          );
+
+          if (
+            isOutside(
+              moveEvent.clientX,
+              moveEvent.clientY,
+            )
+          ) {
+            dropIndexRef.current =
+              null;
+
+            setDropIndex(null);
+
+            return;
           }
 
-          const rect = element.getBoundingClientRect();
-          centers.push(rect.top + rect.height / 2);
-        }
+          const centers =
+            getItemCenters();
 
-        return centers;
-      };
+          let targetIndex =
+            itemsRef.current.length;
 
-      const handleMove = (moveEvent: MouseEvent) => {
-        const centers = getItemCenters();
-        let targetIndex = fromIndex;
+          for (
+            let index = 0;
+            index <
+            centers.length;
+            index++
+          ) {
+            if (
+              moveEvent.clientY <
+              centers[index]!
+            ) {
+              targetIndex =
+                index;
 
-        for (let index = 0; index < centers.length; index++) {
-          if (moveEvent.clientY > centers[index]!) targetIndex = index;
-        }
-
-        const rect = container.getBoundingClientRect();
-
-        const outsideX =
-          moveEvent.clientX < rect.left - 40 || moveEvent.clientX > rect.right + 40;
-
-        const nextDropIndex = outsideX ? null : targetIndex;
-
-        dropIndexRef.current = nextDropIndex;
-        setDropIndex(nextDropIndex);
-      };
-
-      const handleUp = (upEvent: MouseEvent) => {
-        document.removeEventListener('mousemove', handleMove);
-        document.removeEventListener('mouseup', handleUp);
-
-        const finalDropIndex = dropIndexRef.current;
-        const rect = container.getBoundingClientRect();
-
-        const outsideX =
-          upEvent.clientX < rect.left - 40 || upEvent.clientX > rect.right + 40;
-
-        if (outsideX && onEjectItem) {
-          const ejectedItem = itemsRef.current[fromIndex];
-
-          if (ejectedItem) {
-            deleteNested(ejectedItem.id);
-            onEjectItem(ejectedItem);
+              break;
+            }
           }
-        } else if (finalDropIndex !== null && finalDropIndex !== fromIndex) {
-          updateItems(currentItems => {
-            const next = [...currentItems];
-            const [moved] = next.splice(fromIndex, 1);
 
-            if (!moved) return currentItems;
+          dropIndexRef.current =
+            targetIndex;
 
-            next.splice(finalDropIndex, 0, moved);
-            return next;
-          });
-        }
+          setDropIndex(
+            targetIndex,
+          );
+        };
 
-        setDraggingIndex(null);
-        setDropIndex(null);
-        dropIndexRef.current = null;
-      };
+        const handleUp = (
+          upEvent: MouseEvent,
+        ) => {
+          document.removeEventListener(
+            'mousemove',
+            handleMove,
+          );
 
-      document.addEventListener('mousemove', handleMove);
-      document.addEventListener('mouseup', handleUp);
-    },
-    [containerRef, itemRefsMap, updateItems, deleteNested, onEjectItem],
-  );
+          document.removeEventListener(
+            'mouseup',
+            handleUp,
+          );
+
+          emitNestedDragEnd(
+            {
+              kind:
+                'column-item',
+
+              item:
+                draggedItem,
+
+              columnId,
+            },
+            upEvent.clientX,
+            upEvent.clientY,
+          );
+
+          if (
+            isOutside(
+              upEvent.clientX,
+              upEvent.clientY,
+            ) &&
+            onEjectItem
+          ) {
+            deleteNested(
+              draggedItem.id,
+            );
+
+            onEjectItem(
+              draggedItem,
+              upEvent.clientX,
+              upEvent.clientY,
+            );
+          } else {
+            const finalDropIndex =
+              dropIndexRef.current;
+
+            if (
+              finalDropIndex !==
+                null &&
+              finalDropIndex !==
+                fromIndex
+            ) {
+              updateItems(
+                currentItems => {
+                  const next = [
+                    ...currentItems,
+                  ];
+
+                  const sourceIndex =
+                    next.findIndex(
+                      candidate =>
+                        candidate.id ===
+                        draggedItem.id,
+                    );
+
+                  if (
+                    sourceIndex ===
+                    -1
+                  ) {
+                    return currentItems;
+                  }
+
+                  const [moved] =
+                    next.splice(
+                      sourceIndex,
+                      1,
+                    );
+
+                  if (!moved) {
+                    return currentItems;
+                  }
+
+                  let insertIndex =
+                    finalDropIndex;
+
+                  if (
+                    sourceIndex <
+                    finalDropIndex
+                  ) {
+                    insertIndex -= 1;
+                  }
+
+                  insertIndex =
+                    Math.max(
+                      0,
+                      Math.min(
+                        insertIndex,
+                        next.length,
+                      ),
+                    );
+
+                  next.splice(
+                    insertIndex,
+                    0,
+                    moved,
+                  );
+
+                  return next;
+                },
+              );
+            }
+          }
+
+          setDraggingIndex(null);
+          setDropIndex(null);
+          dropIndexRef.current =
+            null;
+        };
+
+        document.addEventListener(
+          'mousemove',
+          handleMove,
+        );
+
+        document.addEventListener(
+          'mouseup',
+          handleUp,
+        );
+      },
+      [
+        columnId,
+        containerRef,
+        itemRefsMap,
+        updateItems,
+        deleteNested,
+        onEjectItem,
+      ],
+    );
 
   return {
     draggingIndex,

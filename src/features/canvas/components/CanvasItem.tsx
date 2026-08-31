@@ -61,6 +61,8 @@ interface CanvasItemProps {
   onEjectFromColumn: (
     columnId: string,
     ejectedItem: BoardItem,
+    clientX?: number,
+    clientY?: number,
   ) => void;
 
   onSelectColumnItem: (
@@ -73,14 +75,14 @@ interface CanvasItemProps {
     entry: ChecklistEntry,
     clientX: number,
     clientY: number,
-  ) => void;
+  ) => boolean;
 
   onKanbanCardDropOutside: (
     sourceId: string,
     card: KanbanCard,
     clientX: number,
     clientY: number,
-  ) => void;
+  ) => boolean;
 
   pushHistory: () => void;
 }
@@ -110,8 +112,7 @@ export default function CanvasItem({
   onEjectFromColumn,
   onSelectColumnItem,
   onChecklistDropOutside,
-  onKanbanCardDropOutside,
-  pushHistory,
+  onKanbanCardDropOutside
 }: CanvasItemProps) {
   return (
     <div
@@ -214,10 +215,17 @@ export default function CanvasItem({
           }
           onEjectItem={
             item.type === 'column'
-              ? ejectedItem => {
-                  pushHistory();
-                  onEjectFromColumn(item.id, ejectedItem);
-                }
+              ? (
+                  ejectedItem,
+                  clientX,
+                  clientY,
+                ) =>
+                  onEjectFromColumn(
+                    item.id,
+                    ejectedItem,
+                    clientX,
+                    clientY,
+                  )
               : undefined
           }
           onSelectColumnItem={
@@ -228,7 +236,11 @@ export default function CanvasItem({
           onRequestDelete={onRequestDelete}
           onEntryDroppedOutside={
             item.type === 'checklist'
-              ? (entry, clientX, clientY) =>
+              ? (
+                  entry,
+                  clientX,
+                  clientY,
+                ) =>
                   onChecklistDropOutside(
                     item.id,
                     entry,
@@ -239,7 +251,11 @@ export default function CanvasItem({
           }
           onCardDroppedOutside={
             item.type === 'kanban'
-              ? (card, clientX, clientY) =>
+              ? (
+                  card,
+                  clientX,
+                  clientY,
+                ) =>
                   onKanbanCardDropOutside(
                     item.id,
                     card,
