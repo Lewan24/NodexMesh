@@ -29,7 +29,11 @@ export interface BlockRendererProps {
   onDelete: BlockDeleteHandler;
   onFitFrame: () => void;
   onLineEndpointDrag: LineEndpointDragHandler;
-  onEjectItem?: (item: BoardItem) => void;
+  onEjectItem?: (
+    item: BoardItem,
+    clientX?: number,
+    clientY?: number,
+  ) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
   onRequestDelete?: RequestDeleteHandler;
   onEntryDroppedOutside?: EntryDroppedOutsideHandler;

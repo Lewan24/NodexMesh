@@ -13,6 +13,7 @@ import {
 } from '@/features/blocks/column/utils/columnItems';
 
 import { useColumnDrag } from '@/features/blocks/column/hooks/useColumnDrag';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface ColumnBlockProps {
   item: ColumnItem;
@@ -21,7 +22,11 @@ interface ColumnBlockProps {
   selectedItemId?: string | null;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onEjectItem?: (ejectedItem: BoardItem) => void;
+  onEjectItem?: (
+    ejectedItem: BoardItem,
+    clientX?: number,
+    clientY?: number,
+  ) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
   onRequestDelete?: (execute: () => void) => void;
 }
@@ -53,6 +58,8 @@ export default function ColumnBlock({
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showBackgroundMenu, setShowBackgroundMenu] = useState(false);
 
+  const typographyStyle = getTypographyStyle(item);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefsMap = useRef<Map<number, HTMLDivElement>>(new Map());
   const backgroundMenuRef = useRef<HTMLDivElement>(null);
@@ -79,7 +86,20 @@ export default function ColumnBlock({
   }, [showAddMenu, showBackgroundMenu]);
 
   const items = item.items ?? [];
-  const innerWidth = item.width - 32;
+  const columnContentWidth =
+    item.width - 32;
+
+  const nestedControlsWidth =
+    24 + // drag
+    24 + // eject
+    16;  // dwa gap-2 po 8px
+
+  const nestedItemWidth =
+    Math.max(
+      120,
+      columnContentWidth -
+        nestedControlsWidth,
+    );
   const columnLight = isLightColor(item.color);
 
   const headerTextColor = columnLight ? '#1e293b' : '#f1f5f9';
@@ -125,6 +145,7 @@ export default function ColumnBlock({
   );
 
   const { draggingIndex, dropIndex, handleDragStart } = useColumnDrag({
+    columnId: item.id,
     items,
     containerRef,
     itemRefsMap,
@@ -153,23 +174,30 @@ export default function ColumnBlock({
   );
 
   const ejectNestedItem = useCallback(
-    (nestedItem: BoardItem) => {
+    (
+      nestedItem: BoardItem,
+      clientX?: number,
+      clientY?: number,
+    ) => {
       deleteNested(nestedItem.id);
-      onEjectItem?.(nestedItem);
+      onEjectItem?.(
+        nestedItem, 
+        clientX,
+        clientY,);
 
       if (selectedItemId === nestedItem.id) clearNestedSelection();
     },
     [deleteNested, onEjectItem, selectedItemId, clearNestedSelection],
   );
 
-  function prepareNestedItemForColumn(item: BoardItem, innerWidth: number): BoardItem {
+  function prepareNestedItemForColumn(item: BoardItem, nestedItemWidth: number): BoardItem {
     switch (item.type) {
       case 'note':
       case 'checklist':
       case 'link':
       case 'image':
       case 'text':
-        return { ...item, width: innerWidth };
+        return { ...item, width: nestedItemWidth };
 
       default:
         return item;
@@ -193,7 +221,7 @@ export default function ColumnBlock({
       )}
 
       <div
-        className="rounded-2xl border shadow-xl flex flex-col"
+        className="item-rounded border shadow-xl flex flex-col"
         style={{
           backgroundColor: item.color,
           borderColor:
@@ -278,6 +306,7 @@ export default function ColumnBlock({
                 autoFocus
                 className="bg-transparent font-bold text-base outline-none border-b-2 min-w-0 flex-1"
                 style={{
+                  ...typographyStyle,
                   color: headerTextColor,
                   borderColor: '#7C3AED',
                 }}
@@ -294,7 +323,9 @@ export default function ColumnBlock({
             ) : (
               <span
                 className="font-bold text-base select-none cursor-text truncate"
-                style={{ color: headerTextColor }}
+                style={{ 
+                  ...typographyStyle,
+                  color: headerTextColor }}
                 onDoubleClick={() => setEditingTitle(true)}
               >
                 {item.title}
@@ -394,7 +425,7 @@ export default function ColumnBlock({
                     <BlockRenderer
                       item={prepareNestedItemForColumn(
                         nestedItem,
-                        innerWidth,
+                        nestedItemWidth,
                       )}
                       isInsideColumn
                       isSelected={false}
@@ -445,7 +476,7 @@ export default function ColumnBlock({
         >
           <button
             onClick={() => setShowAddMenu(previous => !previous)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 item-rounded text-sm font-semibold transition-all"
             style={{
               color: '#7C3AED',
               backgroundColor: columnLight

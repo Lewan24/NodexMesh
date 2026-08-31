@@ -17,6 +17,7 @@ import {
 } from '@/features/blocks/kanban/utils/kanbanUtils';
 
 import { useKanbanDrag } from '@/features/blocks/kanban/hooks/useKanbanDrag';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface KanbanBlockProps {
   item: KanbanItem;
@@ -28,7 +29,7 @@ interface KanbanBlockProps {
     card: KanbanCard,
     clientX: number,
     clientY: number,
-  ) => void;
+  ) => boolean;
 }
 
 function DropLine() {
@@ -53,6 +54,9 @@ export default function KanbanBlock({
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
   const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(null);
   const [newCardText, setNewCardText] = useState('');
+
+  const typographyStyle = getTypographyStyle(item);
+  const baseFontSize = item.typography?.fontSize;
 
   const boardRef = useRef<HTMLDivElement>(null);
   const columnRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -244,7 +248,8 @@ export default function KanbanBlock({
     }}>
       <div
         ref={boardRef}
-        className="rounded-2xl border shadow-xl overflow-auto"
+        data-kanban-id={item.id}
+        className="item-rounded border shadow-xl overflow-auto"
         style={{
           width: item.width
             ? '100%'
@@ -283,6 +288,10 @@ export default function KanbanBlock({
                 style={{
                   color: textColor,
                   borderColor: accentColor,
+                  ...typographyStyle,
+                  fontSize: baseFontSize
+                    ? `${baseFontSize + 2}px`
+                    : undefined,
                 }}
                 value={item.title}
                 onChange={event =>
@@ -301,7 +310,12 @@ export default function KanbanBlock({
             ) : (
               <span
                 className="font-semibold text-sm cursor-text select-none"
-                style={{ color: textColor }}
+                style={{ 
+                  ...typographyStyle,
+                  color: textColor,
+                  fontSize: baseFontSize
+                    ? `${baseFontSize + 2}px`
+                    : undefined, }}
                 onDoubleClick={() => setEditingTitle(true)}
               >
                 {item.title}
@@ -367,6 +381,8 @@ export default function KanbanBlock({
           {item.columns.map(column => (
             <div
               key={column.id}
+              data-kanban-id={item.id}
+              data-kanban-column-id={column.id}
               ref={element => {
                 if (element) {
                   columnRefs.current.set(column.id, element);
@@ -392,6 +408,10 @@ export default function KanbanBlock({
                     style={{
                       color: column.color,
                       borderColor: `${column.color}80`,
+                      ...typographyStyle,
+                      fontSize: baseFontSize
+                        ? `${baseFontSize}px`
+                        : undefined,
                     }}
                     value={column.title}
                     onChange={event =>
@@ -408,7 +428,12 @@ export default function KanbanBlock({
                 ) : (
                   <span
                     className="flex-1 text-[11px] font-bold uppercase tracking-widest select-none cursor-text"
-                    style={{ color: column.color }}
+                    style={{ 
+                      color: column.color,
+                      ...typographyStyle,
+                      fontSize: baseFontSize
+                        ? `${baseFontSize}px`
+                        : undefined, }}
                     onDoubleClick={() => setEditingColumnId(column.id)}
                     title="Double-click to rename"
                   >
@@ -427,7 +452,7 @@ export default function KanbanBlock({
                   <button
                     onMouseDown={event => event.stopPropagation()}
                     onClick={() => deleteColumn(column.id)}
-                    className="opacity-0 group-hover/col:opacity-100 transition-all flex-shrink-0 ml-0.5"
+                    className="transition-all flex-shrink-0 ml-0.5"
                     style={{ color: mutedColor }}
                     onMouseEnter={event => {
                       event.currentTarget.style.color = '#FF6B8A';
@@ -475,6 +500,7 @@ export default function KanbanBlock({
                       draggingCardId !== card.id && <DropLine />}
 
                     <div
+                      data-kanban-card-id={card.id}
                       ref={element => {
                         if (element) {
                           cardRowRefs.current.set(card.id, element);
@@ -501,6 +527,12 @@ export default function KanbanBlock({
                         onEdit={text =>
                           editCard(column.id, card.id, text)
                         }
+                        textStyle={{
+                          ...typographyStyle,
+                          fontSize: baseFontSize
+                            ? `${baseFontSize}px`
+                            : undefined,
+                        }}
                       />
                     </div>
                   </div>

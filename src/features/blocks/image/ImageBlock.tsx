@@ -8,6 +8,7 @@ import {
   DEFAULT_IMAGE_WIDTH,
   isLightColor,
 } from '@/features/blocks/image/utils/imageUtils';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface ImageBlockProps {
   item: ImageItem;
@@ -24,6 +25,8 @@ export default function ImageBlock({
 }: ImageBlockProps) {
   const [editingUrl, setEditingUrl] = useState(!item.url);
   const [urlInput, setUrlInput] = useState(item.url);
+
+  const typographyStyle = getTypographyStyle(item);
 
   const width = item.width ?? DEFAULT_IMAGE_WIDTH;
   const imageHeight = item.imgHeight ?? DEFAULT_IMAGE_HEIGHT;
@@ -78,13 +81,12 @@ export default function ImageBlock({
       <div
         className={
           isSticker
-            ? 'overflow-hidden'
-            : 'rounded-2xl overflow-hidden border shadow-xl'
+            ? 'overflow-hidden item-rounded'
+            : 'overflow-hidden border shadow-xl item-rounded'
         }
         style={
           isSticker
             ? {
-                borderRadius: 14,
                 boxShadow: '0 10px 26px rgba(0,0,0,0.22)',
               }
             : {
@@ -337,7 +339,9 @@ export default function ImageBlock({
               onChange={event => update({ caption: event.target.value })}
               placeholder="Add caption…"
               className="w-full bg-transparent text-sm outline-none transition-colors"
-              style={{ color: textColor }}
+              style={{ color: textColor,
+                ...typographyStyle,
+               }}
             />
           </div>
         )}

@@ -7,6 +7,7 @@ import {
   NOTE_FONT_SIZE_CLASS,
   type NoteFontSize,
 } from '@/features/blocks/note/utils/noteUtils';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface NoteBlockProps {
   item: NoteItem;
@@ -23,6 +24,7 @@ export default function NoteBlock({
   onDelete,
 }: NoteBlockProps) {
   const [editing, setEditing] = useState(!item.content);
+  const typographyStyle = getTypographyStyle(item);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -92,7 +94,7 @@ export default function NoteBlock({
       }}
     >
       <div
-        className="rounded-2xl shadow-xl overflow-hidden transition-shadow duration-150 group-hover:shadow-2xl flex flex-col"
+        className="item-rounded shadow-xl transition-shadow duration-150 group-hover:shadow-2xl flex flex-col"
         style={{
           height: item.height ? '100%' : undefined,
           backgroundColor: item.color,
@@ -158,7 +160,7 @@ export default function NoteBlock({
           className="px-3 pb-3 pt-1 flex-1 min-h-0"
           style={{
             overflowY: item.height
-              ? 'auto'
+              ? 'hidden'
               : undefined,
           }}
         >
@@ -185,15 +187,13 @@ export default function NoteBlock({
                   setEditing(false);
                 }
               }}
-              className={`w-full bg-transparent resize-none outline-none leading-relaxed ${
+              className={`w-full bg-transparent resize-none outline-none wrap-break-word leading-relaxed ${
                 item.height ? 'overflow-y-auto h-full' : 'overflow-hidden'
               } ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
                 color: textColor,
-                minHeight: item.height ? undefined : 52,
-                textAlign: item.textAlign ?? 'left',
-                fontWeight: item.bold ? 700 : 400,
-                fontStyle: item.italic ? 'italic' : 'normal',
+                resize: 'none',
+                ...typographyStyle,
               }}
               placeholder="Type your note…"
               rows={1}
@@ -201,13 +201,10 @@ export default function NoteBlock({
           ) : (
             <div
               onClick={() => setEditing(true)}
-              className={`leading-relaxed whitespace-pre-wrap cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
+              className={`leading-relaxed whitespace-pre-wrap wrap-break-word overflow-y-hidden cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
-                color: item.content ? textColor : mutedColor,
-                minHeight: item.height ? undefined : 52,
-                textAlign: item.textAlign ?? 'left',
-                fontWeight: item.bold ? 700 : 400,
-                fontStyle: item.italic ? 'italic' : 'normal',
+                color: textColor,
+                ...typographyStyle,
               }}
             >
               {item.content || 'Click to edit…'}

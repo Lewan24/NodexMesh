@@ -4,6 +4,7 @@ import type { BoardItem, ChecklistEntry, ChecklistItem } from '@/entities/board/
 import ChecklistEntryRow from '@/features/blocks/checklist/ChecklistEntryRow';
 import { createChecklistEntry, isLightColor } from '@/features/blocks/checklist/utils/checklistUtils';
 import { useChecklistDrag } from '@/features/blocks/checklist/hooks/useChecklistDrag';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface ChecklistBlockProps {
   item: ChecklistItem;
@@ -11,7 +12,7 @@ interface ChecklistBlockProps {
   isSelected?: boolean;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onEntryDroppedOutside?: (entry: ChecklistEntry, clientX: number, clientY: number) => void;
+  onEntryDroppedOutside?: (entry: ChecklistEntry, clientX: number, clientY: number) => boolean;
 }
 
 function DropLine() {
@@ -27,6 +28,8 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
   const [addingEntry, setAddingEntry] = useState(false);
   const [newEntryText, setNewEntryText] = useState('');
   
+  const typographyStyle = getTypographyStyle(item);
+
   const addInputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -118,7 +121,10 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
         width: item.width ?? 220,
         height: item.height,
        }}>
-      <div ref={cardRef} className="rounded-2xl shadow-xl overflow-hidden" style={{ 
+      <div ref={cardRef}
+        data-checklist-id={item.id}
+        className="item-rounded shadow-xl overflow-hidden" 
+        style={{ 
           backgroundColor: item.color,
           height: item.height ? '100%' : undefined,
         }}>
@@ -144,7 +150,16 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
             ) : (
               <h3 
                 className="font-bold text-base leading-snug cursor-text select-none truncate" 
-                style={{ color: textColor }}
+                style={{
+                  ...typographyStyle,
+                  fontSize: item.typography?.fontSize
+                    ? `${item.typography.fontSize + 2}px`
+                    : undefined,
+                  fontWeight:
+                    item.typography?.bold
+                      ? 700
+                      : 600,
+                }}
                 onDoubleClick={() => setEditingTitle(true)}
               >{item.title}</h3>
             )}
@@ -199,13 +214,16 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                   <DropLine />
                 }
 
-                <div ref={(element) => {
+                <div 
+                data-checklist-entry-index={index}
+                ref={(element) => {
                   if (element) {
                     rowRefs.current.set(index, element);
                   } else {
                     rowRefs.current.delete(index);
                   }
-                }}>
+                }}
+                style={{ ...typographyStyle }}>
                   <ChecklistEntryRow
                     entry={entry}
                     isDragging={draggingIndex === index}

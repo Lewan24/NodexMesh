@@ -1,107 +1,145 @@
 import type { ReactNode } from 'react';
 
+import DragHandle from '@/features/blocks/shared/DragHandle';
+
 interface ColumnItemRowProps {
-  isDragging: boolean;
-  isSelected: boolean;
-  onDragHandleMouseDown: (event: React.MouseEvent) => void;
+  children: ReactNode;
+
+  isDragging?: boolean;
+  isSelected?: boolean;
+
+  onDragHandleMouseDown: (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => void;
+
   onEject: () => void;
   onSelect: () => void;
-  children: ReactNode;
 }
 
 export default function ColumnItemRow({
-  isDragging,
-  isSelected,
+  children,
+  isDragging = false,
+  isSelected = false,
   onDragHandleMouseDown,
   onEject,
   onSelect,
-  children,
 }: ColumnItemRowProps) {
   return (
     <div
       data-column-item="true"
-      className="group/row relative"
+      className="
+        group/row
+        relative
+
+        grid
+        grid-cols-[24px_minmax(0,1fr)_24px]
+        gap-2
+
+        items-start
+
+        w-full
+        min-w-0
+
+        rounded-xl
+        transition-all
+      "
       style={{
-        opacity: isDragging ? 0.3 : 1,
-        transition: 'opacity 0.15s',
+        opacity: isDragging ? 0.32 : 1,
+
+        boxShadow: isSelected
+          ? '0 0 0 2px var(--color-accent)'
+          : undefined,
+      }}
+      onClick={event => {
+        event.stopPropagation();
+        onSelect();
       }}
     >
+      {/* Drag column */}
+
       <div
-        className="relative rounded-xl overflow-hidden shadow-sm border cursor-pointer"
-        style={{
-          borderColor: isSelected ? '#7C3AED' : 'rgba(0,0,0,0.07)',
-          boxShadow: isSelected
-            ? '0 0 0 2px rgba(124, 58, 237,0.2), 0 4px 16px rgba(0,0,0,0.08)'
-            : '',
-          transition: 'box-shadow 0.15s, border-color 0.15s',
-        }}
-        onMouseEnter={event => {
-          if (!isSelected) {
-            event.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.09)';
-          }
-        }}
-        onMouseLeave={event => {
-          if (!isSelected) {
-            event.currentTarget.style.boxShadow = '';
-          }
-        }}
-        onClick={onSelect}
+        className="
+          flex
+          flex-shrink-0
+          items-start
+          justify-center
+          pt-2
+        "
+        onClick={event =>
+          event.stopPropagation()
+        }
       >
-        <div className="absolute top-1.5 left-1.5 opacity-0 group-hover/row:opacity-100 transition-opacity z-10">
-          <div
-            className="flex flex-col items-center justify-center gap-[3px] cursor-grab active:cursor-grabbing rounded-lg shadow-sm"
-            style={{
-              width: 24,
-              height: 24,
-              backgroundColor: 'rgba(255,255,255,0.92)',
-              border: '1px solid rgba(0,0,0,0.1)',
-            }}
-            onMouseDown={onDragHandleMouseDown}
-            title="Drag to reorder or move to canvas"
-          >
-            {[0, 1, 2].map(index => (
-              <div key={index} className="flex gap-1">
-                <div className="w-1 h-1 rounded-full" style={{ backgroundColor: '#6b7280' }} />
-                <div className="w-1 h-1 rounded-full" style={{ backgroundColor: '#6b7280' }} />
-              </div>
-            ))}
-          </div>
-        </div>
+        <DragHandle
+          color="var(--color-text-faint)"
+          title="Drag to reorder or move out of column"
+          onMouseDown={
+            onDragHandleMouseDown
+          }
+        />
+      </div>
 
-        <div
-          className="absolute top-1.5 right-1.5 opacity-0 group-hover/row:opacity-100 transition-opacity z-10"
-          onMouseDown={event => event.stopPropagation()}
-        >
-          <button
-            onClick={event => {
-              event.stopPropagation();
-              onEject();
-            }}
-            className="flex items-center justify-center rounded-md transition-colors"
-            style={{
-              width: 24,
-              height: 24,
-              backgroundColor: 'rgba(255,255,255,0.92)',
-              border: '1px solid rgba(0,0,0,0.1)',
-            }}
-            title="Pop out to canvas"
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#6b7280"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 3h6v6M9 21H3v-6M21 3l-9 9M3 21l9-9" />
-            </svg>
-          </button>
-        </div>
+      {/* Actual nested block */}
 
+      <div className="min-w-0 w-full overflow-hidden">
         {children}
+      </div>
+
+      {/* Eject */}
+
+      <div
+        className="
+          flex
+          flex-shrink-0
+          items-start
+          pt-2
+        "
+        onMouseDown={event =>
+          event.stopPropagation()
+        }
+      >
+        <button
+          type="button"
+          onClick={event => {
+            event.stopPropagation();
+            onEject();
+          }}
+          className="
+            w-6
+            h-6
+
+            flex
+            items-center
+            justify-center
+
+            rounded-md
+
+            transition-all
+
+            hover:ring-1
+            hover:ring-[var(--color-accent)]
+            hover:bg-black/5
+          "
+          style={{
+            color:
+              'var(--color-text-faint)',
+          }}
+          title="Move item to canvas"
+        >
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M14 3h7v7" />
+            <path d="M10 14 21 3" />
+            <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
+          </svg>
+        </button>
       </div>
     </div>
   );

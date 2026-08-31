@@ -150,9 +150,9 @@ body {
   border-color: var(--color-accent);
 }
 
-::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar { width: 8px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.2); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.4); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
 
 @keyframes fade-in {
@@ -167,4 +167,22 @@ body {
 
 .hint-pulse {
   animation: fade-in 0.3s ease forwards;
+}
+
+.board-item-settling {
+  transition:
+    left 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    top 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.board-item-dragging {
+  filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.16));
+  transition:
+    transform 70ms ease-out,
+    filter 120ms ease;
+  will-change: left, top, transform;
+}
+
+.item-rounded{
+  border-radius: var(--radius-xs);
 }

@@ -1,17 +1,22 @@
 import { useCallback, useRef, useState } from 'react';
-
 import type { RefObject } from 'react';
-
 import type {
   BoardItem,
   ColumnItem,
   FrameItem,
   LineItem,
 } from '@/entities/board/types';
-
 import type { ToolType } from '@/entities/board/toolTypes';
-
 import { DROPPABLE_ON_COLUMN } from '@/features/canvas/constants';
+import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
+import { getItemSize } from '@/features/canvas/utils/itemGeometry';
+
+export interface ItemDropPreview {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 interface ProjectLike {
   items: BoardItem[];
@@ -29,6 +34,7 @@ interface UseItemDragOptions {
   projectRef: RefObject<ProjectLike>;
   selectedIdsRef: RefObject<string[]>;
   zoomRef: RefObject<number>;
+  measuredSizes: SizeMap;
 
   snapEnabled: boolean;
   snapValue: (value: number) => number;
@@ -48,7 +54,6 @@ interface UseItemDragOptions {
   ) => void;
 
   clearColumnSelection: () => void;
-  triggerEnterAnimation: (id: string) => void;
 }
 
 export function useItemDrag({
@@ -56,6 +61,7 @@ export function useItemDrag({
   selectedIdsRef,
   zoomRef,
   snapEnabled,
+  measuredSizes,
   snapValue,
   pushHistory,
   onSelectItems,
@@ -64,10 +70,15 @@ export function useItemDrag({
   onUpdateItem,
   onDropOnColumn,
   clearColumnSelection,
-  triggerEnterAnimation,
 }: UseItemDragOptions) {
   const [dragOverColumnId, setDragOverColumnId] =
     useState<string | null>(null);
+  const [settlingIds, setSettlingIds] = useState<string[]>([]);
+  const [draggingIds, setDraggingIds] = useState<string[]>([]);
+  const [dropPreview, setDropPreview] =
+    useState<ItemDropPreview | null>(null);
+
+  const [dragTilt, setDragTilt] = useState(0);
 
   const dragOverColumnIdRef = useRef<string | null>(null);
 
@@ -101,7 +112,6 @@ export function useItemDrag({
       event.stopPropagation();
 
       clearColumnSelection();
-      triggerEnterAnimation(id);
       onSelectTool('select');
 
       const currentSelected = selectedIdsRef.current;
@@ -192,26 +202,71 @@ export function useItemDrag({
         ? DROPPABLE_ON_COLUMN.has(singleDragItem.type)
         : false;
 
+      let lastDx = 0;
+      let lastDy = 0;
+
+      let previousClientX = event.clientX;
+
       const handleMove = (moveEvent: MouseEvent) => {
         if (!hasMoved) {
           pushHistory();
+
+          setDraggingIds(
+            Array.from(captureMap.keys()),
+          );
         }
 
         hasMoved = true;
 
-        let dx = (moveEvent.clientX - startX) / currentZoom;
-        let dy = (moveEvent.clientY - startY) / currentZoom;
+        const dx = (moveEvent.clientX - startX) / currentZoom;
+        const dy = (moveEvent.clientY - startY) / currentZoom;
 
-        if (snapEnabled) {
-          const primary = captureMap.get(id);
+        lastDx = dx;
+        lastDy = dy;
 
-          if (primary) {
-            const rawX = primary.x + dx;
-            const rawY = primary.y + dy;
+        const movementX =
+          moveEvent.clientX - previousClientX;
 
-            dx += snapValue(rawX) - rawX;
-            dy += snapValue(rawY) - rawY;
-          }
+        previousClientX = moveEvent.clientX;
+
+        const nextTilt = Math.max(
+          -3,
+          Math.min(3, movementX * 0.35),
+        );
+
+        setDragTilt(nextTilt);
+
+        const primaryCapture =
+          captureMap.get(id);
+
+        const primaryItem =
+          items.find(item => item.id === id);
+
+        if (
+          primaryCapture &&
+          primaryItem &&
+          primaryItem.type !== 'line'
+        ) {
+          const rawX =
+            primaryCapture.x + dx;
+
+          const rawY =
+            primaryCapture.y + dy;
+
+          const size =
+            getItemSize(
+              primaryItem,
+              measuredSizes,
+            );
+
+          setDropPreview({
+            x: snapValue(rawX),
+            y: snapValue(rawY),
+            width: size.width,
+            height: size.height,
+          });
+        } else {
+          setDropPreview(null);
         }
 
         captureMap.forEach((capture, capturedId) => {
@@ -263,18 +318,37 @@ export function useItemDrag({
       };
 
       const handleUp = () => {
-        document.removeEventListener('mousemove', handleMove);
-        document.removeEventListener('mouseup', handleUp);
+        document.removeEventListener(
+          'mousemove',
+          handleMove,
+        );
 
-        const columnId = dragOverColumnIdRef.current;
+        document.removeEventListener(
+          'mouseup',
+          handleUp,
+        );
 
+        setDraggingIds([]);
+        setDropPreview(null);
+        setDragTilt(0);
+
+        const columnId =
+          dragOverColumnIdRef.current;
+
+        /*
+        * Drop inside a Column takes priority over
+        * normal canvas grid snapping.
+        */
         if (
           hasMoved &&
           columnId &&
           singleDragItem &&
           canDropOnColumn
         ) {
-          onDropOnColumn(singleDragItem.id, columnId);
+          onDropOnColumn(
+            singleDragItem.id,
+            columnId,
+          );
 
           onSelectItems([]);
           setColumnHover(null);
@@ -283,6 +357,88 @@ export function useItemDrag({
         }
 
         setColumnHover(null);
+
+        /*
+        * While dragging the item follows the cursor freely.
+        * Only after mouseup do we settle it onto the grid.
+        */
+        if (hasMoved && snapEnabled) {
+          const primary = captureMap.get(id);
+
+          if (primary) {
+            const rawX =
+              primary.x + lastDx;
+
+            const rawY =
+              primary.y + lastDy;
+
+            const snappedX =
+              snapValue(rawX);
+
+            const snappedY =
+              snapValue(rawY);
+
+            const snapDx =
+              snappedX - rawX;
+
+            const snapDy =
+              snappedY - rawY;
+
+            if (
+              Math.abs(snapDx) > 0.01 ||
+              Math.abs(snapDy) > 0.01
+            ) {
+              const idsToSettle =
+                Array.from(captureMap.keys());
+
+              setSettlingIds(idsToSettle);
+
+              requestAnimationFrame(() => {
+                captureMap.forEach(
+                  (
+                    capture,
+                    capturedId,
+                  ) => {
+                    onUpdateItem(
+                      capturedId,
+                      current => ({
+                        ...current,
+
+                        x:
+                          capture.x +
+                          lastDx +
+                          snapDx,
+
+                        y:
+                          capture.y +
+                          lastDy +
+                          snapDy,
+
+                        ...(capture.isLine
+                          ? {
+                              x2:
+                                capture.x2! +
+                                lastDx +
+                                snapDx,
+
+                              y2:
+                                capture.y2! +
+                                lastDy +
+                                snapDy,
+                            }
+                          : {}),
+                      }),
+                    );
+                  },
+                );
+
+                window.setTimeout(() => {
+                  setSettlingIds([]);
+                }, 160);
+              });
+            }
+          }
+        }
 
         if (
           !hasMoved &&
@@ -309,13 +465,16 @@ export function useItemDrag({
       onUpdateItem,
       onDropOnColumn,
       clearColumnSelection,
-      triggerEnterAnimation,
       setColumnHover,
     ],
   );
 
   return {
     dragOverColumnId,
+    draggingIds,
+    settlingIds,
+    dropPreview,
+    dragTilt,
     handleItemMouseDown,
   };
 }

@@ -1,5 +1,7 @@
 import type { BoardItem } from '@/entities/board/types';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
+import type { ToolType } from '@/entities/board/toolTypes';
+import { ITEM_WIDTH } from '@/features/canvas/constants';
 
 export interface ItemSize {
   width: number;
@@ -112,4 +114,68 @@ export function getContainedItemIds(
       return isRectInsideRect(getItemRect(item, measuredSizes), outerRect);
     })
     .map(item => item.id);
+}
+
+export function getToolDefaultSize(type: ToolType): ItemSize {
+  switch (type) {
+    case 'note':
+      return {
+        width: ITEM_WIDTH.note,
+        height: 160,
+      };
+
+    case 'kanban':
+      return {
+        width: ITEM_WIDTH.kanban,
+        height: 336,
+      };
+
+    case 'image':
+      return {
+        width: ITEM_WIDTH.image,
+        height: 248,
+      };
+
+    case 'link':
+      return {
+        width: ITEM_WIDTH.link,
+        height: 144,
+      };
+
+    case 'text':
+      return {
+        width: ITEM_WIDTH.text,
+        height: 64,
+      };
+
+    case 'checklist':
+      return {
+        width: ITEM_WIDTH.checklist,
+        height: 192,
+      };
+
+    case 'column':
+      return {
+        width: ITEM_WIDTH.column,
+        height: 256,
+      };
+
+    case 'frame':
+      return {
+        width: ITEM_WIDTH.frame,
+        height: 256,
+      };
+
+    case 'line':
+      return {
+        width: ITEM_WIDTH.line,
+        height: 24,
+      };
+
+    default:
+      return {
+        width: 160,
+        height: 96,
+      };
+  }
 }

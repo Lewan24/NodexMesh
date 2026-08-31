@@ -23,10 +23,10 @@ export type EntryDroppedOutsideHandler = (
   entry: ChecklistEntry,
   clientX: number,
   clientY: number,
-) => void;
+) => boolean;
 
 export type CardDroppedOutsideHandler = (
   card: KanbanCard,
   clientX: number,
   clientY: number,
-) => void;
+) => boolean;

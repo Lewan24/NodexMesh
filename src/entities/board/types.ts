@@ -1,7 +1,27 @@
 export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem;
 
+export type FontFamily =
+  | 'sans'
+  | 'serif'
+  | 'mono'
+  | 'arial'
+  | 'georgia'
+  | 'verdana'
+  | 'trebuchet';
+
+export type TextAlign = 'left' | 'center' | 'right';
+
+export interface TypographySettings {
+  fontFamily?: FontFamily;
+  fontSize?: number;
+  bold?: boolean;
+  italic?: boolean;
+  textAlign?: TextAlign;
+}
+
 export interface BaseItem {
   id: string;
+  typography?: TypographySettings;
   x: number;
   y: number;
   zIndex: number;

@@ -15,6 +15,10 @@ interface CanvasItemProps {
   renderedItem: BoardItem;
   zoom: number;
 
+  isSettling?: boolean;
+  isDragging?: boolean;
+  dragTilt?: number;
+
   isSelected: boolean;
   isAttachTarget: boolean;
   isDragOver: boolean;
@@ -57,6 +61,8 @@ interface CanvasItemProps {
   onEjectFromColumn: (
     columnId: string,
     ejectedItem: BoardItem,
+    clientX?: number,
+    clientY?: number,
   ) => void;
 
   onSelectColumnItem: (
@@ -69,14 +75,14 @@ interface CanvasItemProps {
     entry: ChecklistEntry,
     clientX: number,
     clientY: number,
-  ) => void;
+  ) => boolean;
 
   onKanbanCardDropOutside: (
     sourceId: string,
     card: KanbanCard,
     clientX: number,
     clientY: number,
-  ) => void;
+  ) => boolean;
 
   pushHistory: () => void;
 }
@@ -91,6 +97,9 @@ export default function CanvasItem({
   selectedIds,
   selectedColumnItemId,
   isFrameCapturePreview = false,
+  isSettling = false,
+  isDragging = false,
+  dragTilt = 0,
   onMouseDown,
   onAnimationEnd,
   onResize,
@@ -103,27 +112,49 @@ export default function CanvasItem({
   onEjectFromColumn,
   onSelectColumnItem,
   onChecklistDropOutside,
-  onKanbanCardDropOutside,
-  pushHistory,
+  onKanbanCardDropOutside
 }: CanvasItemProps) {
   return (
     <div
       data-board-item="true"
-      className={`absolute ${isAnimating ? 'board-item-enter' : ''}`}
+      className={`absolute ${
+        isAnimating
+          ? 'board-item-enter'
+          : ''
+      } ${
+        isDragging
+          ? 'board-item-dragging'
+          : ''
+      } ${
+        isSettling
+          ? 'board-item-settling'
+          : ''
+      }`}
       style={{
         left: renderedItem.x,
         top: renderedItem.y,
         zIndex: item.zIndex,
         cursor: 'grab',
+        transform: isDragging
+          ? `
+              perspective(900px)
+              rotateY(${dragTilt}deg)
+              rotateZ(${dragTilt * 0.18}deg)
+              translateZ(8px)
+              scale(1.012)
+            `
+          : undefined,
+
+        transformOrigin: 'center center',
       }}
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
     >
       {isSelected && (
         <div
-          className="absolute pointer-events-none rounded-2xl"
+          className="absolute pointer-events-none rounded-sm"
           style={{
-            inset: -4,
+            inset: -2,
             boxShadow:
               '0 0 0 2px var(--color-accent), 0 0 12px rgba(124, 58, 237,0.25)',
           }}
@@ -184,10 +215,17 @@ export default function CanvasItem({
           }
           onEjectItem={
             item.type === 'column'
-              ? ejectedItem => {
-                  pushHistory();
-                  onEjectFromColumn(item.id, ejectedItem);
-                }
+              ? (
+                  ejectedItem,
+                  clientX,
+                  clientY,
+                ) =>
+                  onEjectFromColumn(
+                    item.id,
+                    ejectedItem,
+                    clientX,
+                    clientY,
+                  )
               : undefined
           }
           onSelectColumnItem={
@@ -198,7 +236,11 @@ export default function CanvasItem({
           onRequestDelete={onRequestDelete}
           onEntryDroppedOutside={
             item.type === 'checklist'
-              ? (entry, clientX, clientY) =>
+              ? (
+                  entry,
+                  clientX,
+                  clientY,
+                ) =>
                   onChecklistDropOutside(
                     item.id,
                     entry,
@@ -209,7 +251,11 @@ export default function CanvasItem({
           }
           onCardDroppedOutside={
             item.type === 'kanban'
-              ? (card, clientX, clientY) =>
+              ? (
+                  card,
+                  clientX,
+                  clientY,
+                ) =>
                   onKanbanCardDropOutside(
                     item.id,
                     card,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import type { KanbanCard } from '@/entities/board/types';
+import DragHandle from '../shared/DragHandle';
 
 interface KanbanCardItemProps {
   card: KanbanCard;
@@ -12,6 +13,7 @@ interface KanbanCardItemProps {
   cardBorder: string;
   cardBorderHover: string;
   accentColor: string;
+  textStyle?: React.CSSProperties;
   onToggle: () => void;
   onDelete: () => void;
   onEdit: (text: string) => void;
@@ -28,6 +30,7 @@ export default function KanbanCardItem({
   cardBorder,
   cardBorderHover,
   accentColor,
+  textStyle,
   onToggle,
   onDelete,
   onEdit,
@@ -60,7 +63,7 @@ export default function KanbanCardItem({
 
   return (
     <div
-      className="group/card flex items-start gap-1.5 rounded-xl px-2 py-2 mb-1.5 border transition-all duration-150"
+      className="group/card flex items-center gap-1.5 item-rounded px-2 py-2 mb-1.5 border transition-all duration-150"
       style={{
         backgroundColor: cardBackground,
         borderColor: cardBorder,
@@ -73,25 +76,12 @@ export default function KanbanCardItem({
         event.currentTarget.style.borderColor = cardBorder;
       }}
     >
-      {/* Drag handle */}
-
-      <div
+      <DragHandle
+        compact
+        color={mutedColor}
+        title="Drag card"
         onMouseDown={onDragHandleMouseDown}
-        className="opacity-0 group-hover/card:opacity-100 flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity flex flex-col items-center justify-center gap-[3px] mt-1 rounded-md"
-        style={{
-          width: 14,
-          height: 20,
-          color: mutedColor,
-        }}
-        title="Drag to reorder or move to another column/board"
-      >
-        {[0, 1, 2].map(index => (
-          <div key={index} className="flex gap-1">
-            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'currentColor' }} />
-            <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'currentColor' }} />
-          </div>
-        ))}
-      </div>
+      />
 
       {/* Done toggle */}
 
@@ -123,7 +113,10 @@ export default function KanbanCardItem({
         <input
           autoFocus
           className="flex-1 bg-transparent text-sm outline-none min-w-0"
-          style={{ color: textColor }}
+          style={{ 
+            color: textColor,
+            ...textStyle
+          }}
           value={text}
           onChange={event => setText(event.target.value)}
           onBlur={commit}
@@ -141,6 +134,7 @@ export default function KanbanCardItem({
           style={{
             color: card.done ? doneColor : textColor,
             textDecoration: card.done ? 'line-through' : 'none',
+            ...textStyle
           }}
         >
           {card.text}

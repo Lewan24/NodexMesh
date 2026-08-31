@@ -125,7 +125,14 @@ export default function BoardPage({
   );
 
   const handleEjectFromColumn = useCallback(
-    (columnId: string, ejectedItem: BoardItem) => {
+    (
+      columnId: string,
+      ejectedItem: BoardItem,
+      position?: {
+        x: number;
+        y: number;
+      },
+    ) => {
       setProjects(previous =>
         previous.map(project => {
           if (project.id !== activeProjectId) {
@@ -144,25 +151,38 @@ export default function BoardPage({
 
           const newItem: BoardItem = {
             ...ejectedItem,
+
             id: createId(),
-            x: column.x + column.width + 24,
-            y: column.y + 40,
+
+            x:
+              position?.x ??
+              column.x + column.width + 24,
+
+            y:
+              position?.y ??
+              column.y + 40,
+
             zIndex: getNextZIndex(),
           };
 
           const updatedColumn: ColumnItem = {
             ...column,
+
             items: column.items.filter(
-              item => item.id !== ejectedItem.id,
+              item =>
+                item.id !== ejectedItem.id,
             ),
           };
 
           return {
             ...project,
+
             items: [
               ...project.items.filter(
-                item => item.id !== columnId,
+                item =>
+                  item.id !== columnId,
               ),
+
               updatedColumn,
               newItem,
             ],

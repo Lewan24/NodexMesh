@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 
 import type { KanbanCard, KanbanColumn } from '@/entities/board/types';
+import { emitNestedDragEnd, emitNestedDragMove } from '@/features/canvas/utils/nestedDrag';
 
 interface DropTarget {
   columnId: string;
@@ -18,7 +19,7 @@ interface UseKanbanDragOptions {
     card: KanbanCard,
     clientX: number,
     clientY: number,
-  ) => void;
+  ) => boolean;
 }
 
 export function useKanbanDrag({
@@ -87,6 +88,19 @@ export function useKanbanDrag({
       const board = boardRef.current;
       if (!board) return;
 
+      const sourceColumn =
+        columnsRef.current.find(
+          column =>
+            column.id === sourceColumnId,
+        );
+
+      const draggedCard =
+        sourceColumn?.cards.find(
+          card => card.id === cardId,
+        );
+
+      if (!draggedCard) return;
+
       setDraggingCardId(cardId);
 
       const initialTarget = {
@@ -98,6 +112,14 @@ export function useKanbanDrag({
       dropTargetRef.current = initialTarget;
 
       const handleMove = (moveEvent: MouseEvent) => {
+        emitNestedDragMove(
+          {
+            kind: 'kanban-card',
+            card: draggedCard,
+          },
+          moveEvent.clientX,
+          moveEvent.clientY,
+        );
         const rect = board.getBoundingClientRect();
 
         const inside =
@@ -125,6 +147,15 @@ export function useKanbanDrag({
         document.removeEventListener('mousemove', handleMove);
         document.removeEventListener('mouseup', handleUp);
 
+        emitNestedDragEnd(
+          {
+            kind: 'kanban-card',
+            card: draggedCard,
+          },
+          upEvent.clientX,
+          upEvent.clientY,
+        );
+
         const rect = board.getBoundingClientRect();
 
         const inside =
@@ -140,21 +171,40 @@ export function useKanbanDrag({
         const card = sourceColumn?.cards.find(candidate => candidate.id === cardId);
 
         if (!inside) {
-          if (card && onCardDroppedOutside) {
-            updateColumns(currentColumns =>
-              currentColumns.map(column =>
-                column.id === sourceColumnId
-                  ? {
-                      ...column,
-                      cards: column.cards.filter(currentCard => currentCard.id !== cardId),
-                    }
-                  : column,
-              ),
-            );
+          if (
+            card &&
+            onCardDroppedOutside
+          ) {
+            const accepted =
+              onCardDroppedOutside(
+                card,
+                upEvent.clientX,
+                upEvent.clientY,
+              );
 
-            onCardDroppedOutside(card, upEvent.clientX, upEvent.clientY);
+            if (accepted) {
+              updateColumns(
+                currentColumns =>
+                  currentColumns.map(
+                    column =>
+                      column.id ===
+                      sourceColumnId
+                        ? {
+                            ...column,
+
+                            cards:
+                              column.cards.filter(
+                                currentCard =>
+                                  currentCard.id !==
+                                  cardId,
+                              ),
+                          }
+                        : column,
+                  ),
+              );
+            }
           }
-        } else {
+        }else {
           const target = dropTargetRef.current;
 
           if (card && target) {

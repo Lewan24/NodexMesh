@@ -1,5 +1,5 @@
 export const LINE_PADDING = 20;
-export const ARROW_SIZE = 10;
+export const ARROW_SIZE = 16;
 
 export interface LineRenderGeometry {
   dx: number;

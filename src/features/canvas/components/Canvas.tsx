@@ -14,7 +14,7 @@ import CanvasHints from './CanvasHints';
 import CanvasEmptyState from './CanvasEmptyState';
 import ToolDragGhost from '@/features/canvas/components/ToolDragGhost';
 
-import { CANVAS_GRID_SIZE } from '@/features/canvas/constants';
+import { CANVAS_GRID_SIZE, CANVAS_MAJOR_GRID_SIZE, ZOOM_MAX, ZOOM_MIN } from '@/features/canvas/constants';
 import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
 
 import { useCanvasHistory } from '@/features/canvas/hooks/useCanvasHistory';
@@ -31,12 +31,23 @@ import { useDeleteConfirmation } from '@/features/canvas/hooks/useDeleteConfirma
 import { useColumnSelection } from '../hooks/useColumnSelection';
 import { useCanvasZoom } from '../hooks/useCanvasZoom';
 import { createCanvasItem } from '@/features/canvas/utils/createCanvasItem';
+import { getItemRect, getToolDefaultSize } from '@/features/canvas/utils/itemGeometry';
+import NestedDragGhost from '@/features/canvas/components/NestedDragGhost';
+
+import {
+  NESTED_DRAG_END_EVENT,
+  NESTED_DRAG_MOVE_EVENT,
+  type NestedDragDetail,
+} from '@/features/canvas/utils/nestedDrag';
 
 import {
   TOOL_DRAG_END_EVENT,
   TOOL_DRAG_MOVE_EVENT,
   type ToolDragDetail,
 } from '@/features/canvas/utils/toolDrag';
+import CanvasDropPreview from './CanvasDropPreview';
+import { useCanvasLostState } from '../hooks/useCanvasLostState';
+import CanvasLostPrompt from './CanvasLostPrompt';
 
 interface ToolDragGhostState extends ToolDragDetail {
   overCanvas: boolean;
@@ -69,6 +80,10 @@ interface CanvasProps {
   onEjectFromColumn: (
     columnId: string,
     ejectedItem: BoardItem,
+    position?: {
+      x: number;
+      y: number;
+    },
   ) => void;
   onRestoreItems: (items: BoardItem[]) => void;
 }
@@ -98,6 +113,20 @@ export default function Canvas({
   const [frameCapturePreviewIds, setFrameCapturePreviewIds] = useState<string[]>([]);
 
   const [toolDragGhost, setToolDragGhost] = useState<ToolDragGhostState | null>(null);
+  const [nestedDragGhost, setNestedDragGhost] = useState<NestedDragDetail | null>(null);
+  const [toolDropPreview, setToolDropPreview] =
+    useState<{
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    } | null>(null);
+
+  const [viewportSize, setViewportSize] =
+    useState({
+      width: 0,
+      height: 0,
+    });
 
   const panRef = useRef(pan);
   panRef.current = pan;
@@ -194,6 +223,153 @@ export default function Canvas({
     onZoomChange,
   });
 
+  const handleEjectFromColumn =
+  useCallback(
+    (
+      columnId: string,
+      ejectedItem: BoardItem,
+      clientX?: number,
+      clientY?: number,
+    ) => {
+      /*
+       * Kliknięcie przycisku ↗.
+       * Nie ma pozycji drag/drop,
+       * więc parent użyje standardowego
+       * miejsca obok Column.
+       */
+      if (
+        clientX === undefined ||
+        clientY === undefined
+      ) {
+        onEjectFromColumn(
+          columnId,
+          ejectedItem,
+        );
+
+        return;
+      }
+
+      const container =
+        containerRef.current;
+
+      if (!container) {
+        onEjectFromColumn(
+          columnId,
+          ejectedItem,
+        );
+
+        return;
+      }
+
+      const rect =
+        container.getBoundingClientRect();
+
+      /*
+       * Screen coordinates
+       * ↓
+       * Canvas/world coordinates.
+       */
+      const point =
+        screenToCanvas(
+          clientX - rect.left,
+          clientY - rect.top,
+        );
+
+      /*
+       * Lekki offset, żeby kursor
+       * nie był dokładnie w lewym
+       * górnym rogu itemu.
+       */
+      const x =
+        snapValue(
+          point.x - 16,
+        );
+
+      const y =
+        snapValue(
+          point.y - 16,
+        );
+
+      onEjectFromColumn(
+        columnId,
+        ejectedItem,
+        {
+          x,
+          y,
+        },
+      );
+    },
+    [
+      onEjectFromColumn,
+      screenToCanvas,
+      snapValue,
+    ],
+  );
+
+  useEffect(() => {
+    const handleMove = (
+      event: Event,
+    ) => {
+      const detail =
+        (
+          event as CustomEvent<NestedDragDetail>
+        ).detail;
+
+      setNestedDragGhost(detail);
+    };
+
+    const handleEnd = () => {
+      setNestedDragGhost(null);
+    };
+
+    window.addEventListener(
+      NESTED_DRAG_MOVE_EVENT,
+      handleMove,
+    );
+
+    window.addEventListener(
+      NESTED_DRAG_END_EVENT,
+      handleEnd,
+    );
+
+    return () => {
+      window.removeEventListener(
+        NESTED_DRAG_MOVE_EVENT,
+        handleMove,
+      );
+
+      window.removeEventListener(
+        NESTED_DRAG_END_EVENT,
+        handleEnd,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    const container =
+      containerRef.current;
+
+    if (!container) return;
+
+    const updateSize = () => {
+      setViewportSize({
+        width: container.clientWidth,
+        height: container.clientHeight,
+      });
+    };
+
+    updateSize();
+
+    const observer =
+      new ResizeObserver(updateSize);
+
+    observer.observe(container);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     const getDropPosition = (
       detail: ToolDragDetail,
@@ -224,8 +400,8 @@ export default function Canvas({
         detail.clientY - rect.top,
       );
 
-      const canvasX = snapValue(point.x);
-      const canvasY = snapValue(point.y);
+      const canvasX = point.x;
+      const canvasY = point.y;
 
       /*
       * Convert the snapped canvas position back to screen coordinates.
@@ -265,6 +441,20 @@ export default function Canvas({
         clientY: position.ghostClientY,
         overCanvas: position.overCanvas,
       });
+
+      if (position.overCanvas) {
+        const size =
+          getToolDefaultSize(detail.tool);
+
+        setToolDropPreview({
+          x: snapValue(position.canvasX),
+          y: snapValue(position.canvasY),
+          width: size.width,
+          height: size.height,
+        });
+      } else {
+        setToolDropPreview(null);
+      }
     };
 
     const handleToolDragEnd = (event: Event) => {
@@ -275,13 +465,20 @@ export default function Canvas({
       const position = getDropPosition(detail);
 
       setToolDragGhost(null);
+      setToolDropPreview(null); 
 
       if (!position?.overCanvas) return;
 
+      const finalX =
+        snapValue(position.canvasX);
+
+      const finalY =
+        snapValue(position.canvasY);
+
       const item = createCanvasItem(
         detail.tool,
-        position.canvasX,
-        position.canvasY,
+        finalX,
+        finalY,
       );
 
       if (!item) return;
@@ -352,10 +549,7 @@ export default function Canvas({
     handleChecklistDropOutside,
     handleKanbanCardDropOutside,
   } = useCrossItemDrop({
-    containerRef,
     projectRef,
-    measuredSizes,
-    screenToCanvas,
     onUpdateItem,
   });
 
@@ -397,12 +591,17 @@ export default function Canvas({
 
   const {
     dragOverColumnId,
+    draggingIds,
+    settlingIds,
+    dropPreview,
+    dragTilt,
     handleItemMouseDown,
   } = useItemDrag({
     projectRef,
     selectedIdsRef,
     zoomRef,
     snapEnabled,
+    measuredSizes,
     snapValue,
     pushHistory,
     onSelectItems,
@@ -411,8 +610,192 @@ export default function Canvas({
     onUpdateItem,
     onDropOnColumn,
     clearColumnSelection,
-    triggerEnterAnimation,
   });
+
+  const { isLost } =
+  useCanvasLostState({
+    items: project.items,
+    measuredSizes,
+
+    pan,
+    zoom,
+
+    viewportWidth:
+      viewportSize.width,
+
+    viewportHeight:
+      viewportSize.height,
+
+    delay: 900,
+  });
+
+  const handleReturnToBoard =
+  useCallback(() => {
+    if (project.items.length === 0) {
+      onPanChange({
+        x: 0,
+        y: 0,
+      });
+
+      onZoomChange(1);
+      return;
+    }
+
+    const rects =
+      project.items.map(item =>
+        getItemRect(
+          item,
+          measuredSizes,
+        ),
+      );
+
+    const left =
+      Math.min(
+        ...rects.map(rect => rect.x),
+      );
+
+    const top =
+      Math.min(
+        ...rects.map(rect => rect.y),
+      );
+
+    const right =
+      Math.max(
+        ...rects.map(
+          rect => rect.right,
+        ),
+      );
+
+    const bottom =
+      Math.max(
+        ...rects.map(
+          rect => rect.bottom,
+        ),
+      );
+
+    const boardWidth =
+      right - left;
+
+    const boardHeight =
+      bottom - top;
+
+    const padding = 100;
+
+    const availableWidth =
+      Math.max(
+        1,
+        viewportSize.width -
+          padding * 2,
+      );
+
+    const availableHeight =
+      Math.max(
+        1,
+        viewportSize.height -
+          padding * 2,
+      );
+
+    const fitZoom =
+      Math.min(
+        availableWidth /
+          Math.max(boardWidth, 1),
+
+        availableHeight /
+          Math.max(boardHeight, 1),
+
+        1,
+      );
+
+    const nextZoom =
+      Math.max(
+        ZOOM_MIN,
+        Math.min(
+          ZOOM_MAX,
+          fitZoom,
+        ),
+      );
+
+    const centerX =
+      left + boardWidth / 2;
+
+    const centerY =
+      top + boardHeight / 2;
+
+    onZoomChange(nextZoom);
+
+    onPanChange({
+      x:
+        viewportSize.width / 2 -
+        centerX * nextZoom,
+
+      y:
+        viewportSize.height / 2 -
+        centerY * nextZoom,
+    });
+  }, [
+    project.items,
+    measuredSizes,
+    viewportSize,
+    onPanChange,
+    onZoomChange,
+  ]);
+
+  const handleGoToFirstItem =
+  useCallback(() => {
+    const firstItem =
+      project.items[0];
+
+    if (!firstItem) {
+      onPanChange({
+        x: 0,
+        y: 0,
+      });
+
+      onZoomChange(1);
+      return;
+    }
+
+    const rect =
+      getItemRect(
+        firstItem,
+        measuredSizes,
+      );
+
+    const targetZoom =
+      Math.max(zoom, 0.8);
+
+    onZoomChange(targetZoom);
+
+    onPanChange({
+      x:
+        viewportSize.width / 2 -
+        (
+          rect.x +
+          rect.width / 2
+        ) *
+          targetZoom,
+
+      y:
+        viewportSize.height / 2 -
+        (
+          rect.y +
+          rect.height / 2
+        ) *
+          targetZoom,
+    });
+
+    onSelectItems([
+      firstItem.id,
+    ]);
+  }, [
+    project.items,
+    measuredSizes,
+    viewportSize,
+    zoom,
+    onPanChange,
+    onZoomChange,
+    onSelectItems,
+  ]);
 
   const handleBlurActiveElement = useCallback(
     (event: React.MouseEvent) => {
@@ -478,15 +861,31 @@ export default function Canvas({
     .filter(item => item.type !== 'frame')
     .sort((a, b) => a.zIndex - b.zIndex);
 
-  const dotInterval = CANVAS_GRID_SIZE * zoom;
+  const minorGridInterval =
+    CANVAS_GRID_SIZE * zoom;
 
-  const backgroundX =
-    ((pan.x % dotInterval) + dotInterval) %
-    dotInterval;
+  const majorGridInterval =
+    CANVAS_MAJOR_GRID_SIZE * zoom;
 
-  const backgroundY =
-    ((pan.y % dotInterval) + dotInterval) %
-    dotInterval;
+  const minorBackgroundX =
+    ((pan.x % minorGridInterval) +
+      minorGridInterval) %
+    minorGridInterval;
+
+  const minorBackgroundY =
+    ((pan.y % minorGridInterval) +
+      minorGridInterval) %
+    minorGridInterval;
+
+  const majorBackgroundX =
+    ((pan.x % majorGridInterval) +
+      majorGridInterval) %
+    majorGridInterval;
+
+  const majorBackgroundY =
+    ((pan.y % majorGridInterval) +
+      majorGridInterval) %
+    majorGridInterval;
 
   const cursorClass =
     selectedTool !== 'select'
@@ -499,14 +898,48 @@ export default function Canvas({
       className={`flex-1 relative overflow-hidden select-none ${cursorClass}`}
       style={{
         backgroundColor: 'var(--color-app-bg)',
-        backgroundImage:
-          'radial-gradient(circle, var(--color-canvas-dot) 1.2px, transparent 1.5px)',
-        backgroundSize: `${dotInterval}px ${dotInterval}px`,
-        backgroundPosition: `${backgroundX}px ${backgroundY}px`,
+
+        backgroundImage: `
+          radial-gradient(
+            circle,
+            var(--color-canvas-dot) 1.8px,
+            transparent 2.1px
+          ),
+          radial-gradient(
+            circle,
+            var(--color-canvas-dot) 0.8px,
+            transparent 1.1px
+          )
+        `,
+
+        backgroundSize: `
+          ${majorGridInterval}px ${majorGridInterval}px,
+          ${minorGridInterval}px ${minorGridInterval}px
+        `,
+
+        backgroundPosition: `
+          ${majorBackgroundX}px ${majorBackgroundY}px,
+          ${minorBackgroundX}px ${minorBackgroundY}px
+        `,
       }}
       onMouseDownCapture={handleCanvasMouseDownCapture}
       onMouseDown={handleCanvasMouseDown}
     >
+      <CanvasLostPrompt
+        visible={
+          isLost &&
+          project.items.length > 0 &&
+          draggingIds.length === 0 &&
+          !toolDragGhost
+        }
+        onReturnToBoard={
+          handleReturnToBoard
+        }
+        onGoToFirstItem={
+          handleGoToFirstItem
+        }
+      />
+
       <div
         className="absolute"
         style={{
@@ -519,8 +952,15 @@ export default function Canvas({
             key={frame.id}
             item={frame}
             onItemResize={handleItemResize}
+            isSettling={settlingIds.includes(frame.id)}
             zoom={zoom}
             isSelected={safeSelectedIds.includes(frame.id)}
+            isDragging={draggingIds.includes(frame.id)}
+            dragTilt={
+              draggingIds.includes(frame.id)
+                ? dragTilt
+                : 0
+            }
             isAnimating={animatingIds.has(frame.id)}
             selectedIds={safeSelectedIds}
             onMouseDown={handleItemMouseDown}
@@ -555,6 +995,13 @@ export default function Canvas({
                   ? selectedColumnItem.item.id
                   : null
               }
+              isSettling={settlingIds.includes(item.id)}
+              isDragging={draggingIds.includes(item.id)}
+              dragTilt={
+                draggingIds.includes(item.id)
+                  ? dragTilt
+                  : 0
+              }
               zoom={zoom}
               isSelected={safeSelectedIds.includes(item.id)}
               isAttachTarget={attachHoverId === item.id}
@@ -570,7 +1017,7 @@ export default function Canvas({
               onSelectItems={onSelectItems}
               onRequestDelete={requestDelete}
               onLineEndpointDrag={handleLineEndpointDrag}
-              onEjectFromColumn={onEjectFromColumn}
+              onEjectFromColumn={handleEjectFromColumn}
               onSelectColumnItem={handleSelectColumnItem}
               onChecklistDropOutside={handleChecklistDropOutside}
               onKanbanCardDropOutside={handleKanbanCardDropOutside}
@@ -578,6 +1025,26 @@ export default function Canvas({
             />
           );
         })}
+
+        {dropPreview && (
+          <CanvasDropPreview
+            x={dropPreview.x}
+            y={dropPreview.y}
+            width={dropPreview.width}
+            height={dropPreview.height}
+            label="Grid snap"
+          />
+        )}
+
+        {toolDropPreview && (
+          <CanvasDropPreview
+            x={toolDropPreview.x}
+            y={toolDropPreview.y}
+            width={toolDropPreview.width}
+            height={toolDropPreview.height}
+            label="Place here"
+          />
+        )}
 
         <CanvasOverlays
           frameDraft={frameDraft}
@@ -591,6 +1058,20 @@ export default function Canvas({
           clientX={toolDragGhost.clientX}
           clientY={toolDragGhost.clientY}
           overCanvas={toolDragGhost.overCanvas}
+        />
+      )}
+
+      {nestedDragGhost && (
+        <NestedDragGhost
+          payload={
+            nestedDragGhost.payload
+          }
+          clientX={
+            nestedDragGhost.clientX
+          }
+          clientY={
+            nestedDragGhost.clientY
+          }
         />
       )}
 

@@ -2,10 +2,9 @@ import type { BoardItem } from '@/entities/board/types';
 import ColorPanel from './components/ColorPanel';
 import FrameControls from './components/FrameControls';
 import LineControls from './components/LineControls';
-import NoteTextControls from './components/NoteTextControls';
 import { EditBarDivider } from './components/EditBarButton';
 import { ITEM_TYPE_LABELS } from './constants';
-import TextControls from './components/TextControls';
+import TypographyControls from './components/TypographyControls';
 
 interface EditBarProps {
   selectedItems: BoardItem[];
@@ -118,17 +117,14 @@ export default function EditBar({
         <ColorPanel item={single} onUpdate={handleUpdate} />
       )}
 
-      {/* Note */}
-
-      {!isMulti && single?.type === 'note' && (
-        <NoteTextControls item={single} onUpdate={handleUpdate} />
-      )}
-
-      {/* Text */}
-
-      {!isMulti && single?.type === 'text' && (
-        <TextControls item={single} onUpdate={handleUpdate} />
-      )}
+      {!isMulti &&
+        single &&
+        single.type !== 'line' && (
+          <TypographyControls
+            item={single}
+            onUpdate={handleUpdate}
+          />
+        )}
 
       {/* Line */}
 
