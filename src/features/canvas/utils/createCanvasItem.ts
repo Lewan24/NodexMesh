@@ -30,6 +30,7 @@ export function createCanvasItem(
     x,
     y,
     zIndex: 1,
+    typography: undefined
   };
 
   switch (type) {

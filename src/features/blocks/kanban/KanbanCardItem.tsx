@@ -12,6 +12,7 @@ interface KanbanCardItemProps {
   cardBorder: string;
   cardBorderHover: string;
   accentColor: string;
+  textStyle?: React.CSSProperties;
   onToggle: () => void;
   onDelete: () => void;
   onEdit: (text: string) => void;
@@ -28,6 +29,7 @@ export default function KanbanCardItem({
   cardBorder,
   cardBorderHover,
   accentColor,
+  textStyle,
   onToggle,
   onDelete,
   onEdit,
@@ -122,7 +124,10 @@ export default function KanbanCardItem({
         <input
           autoFocus
           className="flex-1 bg-transparent text-sm outline-none min-w-0"
-          style={{ color: textColor }}
+          style={{ 
+            color: textColor,
+            ...textStyle
+          }}
           value={text}
           onChange={event => setText(event.target.value)}
           onBlur={commit}
@@ -140,6 +145,7 @@ export default function KanbanCardItem({
           style={{
             color: card.done ? doneColor : textColor,
             textDecoration: card.done ? 'line-through' : 'none',
+            ...textStyle
           }}
         >
           {card.text}

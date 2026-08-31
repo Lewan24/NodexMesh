@@ -4,6 +4,7 @@ import type { BoardItem, ChecklistEntry, ChecklistItem } from '@/entities/board/
 import ChecklistEntryRow from '@/features/blocks/checklist/ChecklistEntryRow';
 import { createChecklistEntry, isLightColor } from '@/features/blocks/checklist/utils/checklistUtils';
 import { useChecklistDrag } from '@/features/blocks/checklist/hooks/useChecklistDrag';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface ChecklistBlockProps {
   item: ChecklistItem;
@@ -27,6 +28,8 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
   const [addingEntry, setAddingEntry] = useState(false);
   const [newEntryText, setNewEntryText] = useState('');
   
+  const typographyStyle = getTypographyStyle(item);
+
   const addInputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -144,7 +147,16 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
             ) : (
               <h3 
                 className="font-bold text-base leading-snug cursor-text select-none truncate" 
-                style={{ color: textColor }}
+                style={{
+                  ...typographyStyle,
+                  fontSize: item.typography?.fontSize
+                    ? `${item.typography.fontSize + 2}px`
+                    : undefined,
+                  fontWeight:
+                    item.typography?.bold
+                      ? 700
+                      : 600,
+                }}
                 onDoubleClick={() => setEditingTitle(true)}
               >{item.title}</h3>
             )}
@@ -205,7 +217,8 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                   } else {
                     rowRefs.current.delete(index);
                   }
-                }}>
+                }}
+                style={{ ...typographyStyle }}>
                   <ChecklistEntryRow
                     entry={entry}
                     isDragging={draggingIndex === index}

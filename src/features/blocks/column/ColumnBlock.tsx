@@ -13,6 +13,7 @@ import {
 } from '@/features/blocks/column/utils/columnItems';
 
 import { useColumnDrag } from '@/features/blocks/column/hooks/useColumnDrag';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface ColumnBlockProps {
   item: ColumnItem;
@@ -52,6 +53,8 @@ export default function ColumnBlock({
   const [editingTitle, setEditingTitle] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showBackgroundMenu, setShowBackgroundMenu] = useState(false);
+
+  const typographyStyle = getTypographyStyle(item);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefsMap = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -278,6 +281,7 @@ export default function ColumnBlock({
                 autoFocus
                 className="bg-transparent font-bold text-base outline-none border-b-2 min-w-0 flex-1"
                 style={{
+                  ...typographyStyle,
                   color: headerTextColor,
                   borderColor: '#7C3AED',
                 }}
@@ -294,7 +298,9 @@ export default function ColumnBlock({
             ) : (
               <span
                 className="font-bold text-base select-none cursor-text truncate"
-                style={{ color: headerTextColor }}
+                style={{ 
+                  ...typographyStyle,
+                  color: headerTextColor }}
                 onDoubleClick={() => setEditingTitle(true)}
               >
                 {item.title}

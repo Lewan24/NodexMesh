@@ -7,6 +7,7 @@ import {
   isLightColor,
   TEXT_SIZE_STYLES,
 } from '@/features/blocks/text/utils/textUtils';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface TextBlockProps {
   item: TextItem;
@@ -24,6 +25,8 @@ export default function TextBlock({
   const [editing, setEditing] = useState(
     !item.content || item.content === 'Heading',
   );
+
+  const typographyStyle = getTypographyStyle(item);
 
   if(!item.textAlign)
     item.textAlign = 'center';
@@ -147,27 +150,43 @@ export default function TextBlock({
             onBlur={finishEditing}
             onKeyDown={handleKeyDown}
             onMouseDown={event => event.stopPropagation()}
-            className={`bg-transparent outline-none leading-tight ${TEXT_SIZE_STYLES[item.size]}`}
+            className={`bg-transparent outline-none leading-tight ${
+              item.typography?.fontSize
+                ? ''
+                : TEXT_SIZE_STYLES[item.size]
+            }`}
             style={{
               minWidth: 80,
               width: '100%',
               color: textColor,
               caretColor: 'var(--color-accent)',
-              textAlign: item.textAlign ?? 'center',
-              fontWeight: item.bold ? 700 : 400,
-              fontStyle: item.italic ? 'italic' : 'normal',
+
+              ...typographyStyle,
+
+              fontSize:
+                item.typography?.fontSize
+                  ? `${item.typography.fontSize}px`
+                  : undefined,
             }}
           />
         ) : (
           <span
             className={`block leading-tight select-none cursor-text ${
-              TEXT_SIZE_STYLES[item.size]
-            } ${isCard ? 'whitespace-pre-wrap break-words' : 'text-nowrap'}`}
+              item.typography?.fontSize
+                ? ''
+                : TEXT_SIZE_STYLES[item.size]
+            } ${
+              isCard
+                ? 'whitespace-pre-wrap break-words'
+                : 'text-nowrap'
+            }`}
             style={{
-              color: item.content ? textColor : mutedColor,
-              textAlign: item.textAlign ?? 'center',
-              fontWeight: item.bold ? 700 : 400,
-              fontStyle: item.italic ? 'italic' : 'normal'
+              color:
+                item.content
+                  ? textColor
+                  : mutedColor,
+
+              ...typographyStyle,
             }}
             onDoubleClick={() => setEditing(true)}
           >

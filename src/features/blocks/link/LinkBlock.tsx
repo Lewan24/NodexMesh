@@ -7,6 +7,7 @@ import {
   getLinkDomain,
   isLightColor,
 } from '@/features/blocks/link/utils/linkUtils';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface LinkBlockProps {
   item: LinkItem;
@@ -24,6 +25,8 @@ export default function LinkBlock({
   const [editing, setEditing] = useState(
     !item.url || item.url === 'https://',
   );
+
+  const typographyStyle = getTypographyStyle(item);
 
   const background = item.color ?? DEFAULT_LINK_BACKGROUND;
   const light = isLightColor(background);
@@ -280,15 +283,27 @@ export default function LinkBlock({
             <div>
               <h4
                 className="text-sm font-semibold leading-snug mb-1"
-                style={{ color: textColor }}
+                style={{
+                  color: textColor,
+                  ...typographyStyle,
+                }}
               >
                 {item.title || 'Untitled link'}
               </h4>
 
               {item.description && (
                 <p
-                  className="text-xs leading-relaxed mb-2"
-                  style={{ color: mutedColor }}
+                  className="leading-relaxed mb-2"
+                  style={{
+                    color: mutedColor,
+                    ...typographyStyle,
+                    fontSize: item.typography?.fontSize
+                      ? `${Math.max(
+                          8,
+                          item.typography.fontSize - 2,
+                        )}px`
+                      : undefined,
+                  }}
                 >
                   {item.description}
                 </p>

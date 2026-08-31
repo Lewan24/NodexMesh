@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import type { BoardItem, FrameItem } from '@/entities/board/types';
 
 import { FRAME_COLORS } from '@/features/blocks/frame/utils/frameUtils';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface FrameBlockProps {
   item: FrameItem;
@@ -21,6 +22,8 @@ export default function FrameBlock({
 }: FrameBlockProps) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+
+  const typographyStyle = getTypographyStyle(item);
 
   const update = useCallback(
     (patch: Partial<FrameItem>) => {
@@ -120,6 +123,7 @@ export default function FrameBlock({
                 color: item.color,
                 minWidth: 60,
                 maxWidth: 160,
+                ...typographyStyle,
               }}
               value={item.title}
               onChange={event => update({ title: event.target.value })}
@@ -130,7 +134,10 @@ export default function FrameBlock({
           ) : (
             <span
               className="text-md font-semibold select-none cursor-text"
-              style={{ color: item.color }}
+              style={{ 
+                color: item.color,
+                ...typographyStyle, 
+              }}
               onDoubleClick={() => setEditingTitle(true)}
             >
               {item.title}

@@ -8,6 +8,7 @@ import {
   DEFAULT_IMAGE_WIDTH,
   isLightColor,
 } from '@/features/blocks/image/utils/imageUtils';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface ImageBlockProps {
   item: ImageItem;
@@ -24,6 +25,8 @@ export default function ImageBlock({
 }: ImageBlockProps) {
   const [editingUrl, setEditingUrl] = useState(!item.url);
   const [urlInput, setUrlInput] = useState(item.url);
+
+  const typographyStyle = getTypographyStyle(item);
 
   const width = item.width ?? DEFAULT_IMAGE_WIDTH;
   const imageHeight = item.imgHeight ?? DEFAULT_IMAGE_HEIGHT;
@@ -336,7 +339,9 @@ export default function ImageBlock({
               onChange={event => update({ caption: event.target.value })}
               placeholder="Add caption…"
               className="w-full bg-transparent text-sm outline-none transition-colors"
-              style={{ color: textColor }}
+              style={{ color: textColor,
+                ...typographyStyle,
+               }}
             />
           </div>
         )}

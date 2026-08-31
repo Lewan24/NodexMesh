@@ -7,6 +7,7 @@ import {
   NOTE_FONT_SIZE_CLASS,
   type NoteFontSize,
 } from '@/features/blocks/note/utils/noteUtils';
+import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface NoteBlockProps {
   item: NoteItem;
@@ -23,6 +24,7 @@ export default function NoteBlock({
   onDelete,
 }: NoteBlockProps) {
   const [editing, setEditing] = useState(!item.content);
+  const typographyStyle = getTypographyStyle(item);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -190,10 +192,8 @@ export default function NoteBlock({
               } ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
                 color: textColor,
-                minHeight: item.height ? undefined : 52,
-                textAlign: item.textAlign ?? 'left',
-                fontWeight: item.bold ? 700 : 400,
-                fontStyle: item.italic ? 'italic' : 'normal',
+                resize: 'none',
+                ...typographyStyle,
               }}
               placeholder="Type your note…"
               rows={1}
@@ -203,11 +203,8 @@ export default function NoteBlock({
               onClick={() => setEditing(true)}
               className={`leading-relaxed whitespace-pre-wrap wrap-break-word overflow-y-hidden cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
-                color: item.content ? textColor : mutedColor,
-                minHeight: item.height ? undefined : 52,
-                textAlign: item.textAlign ?? 'left',
-                fontWeight: item.bold ? 700 : 400,
-                fontStyle: item.italic ? 'italic' : 'normal'
+                color: textColor,
+                ...typographyStyle,
               }}
             >
               {item.content || 'Click to edit…'}
