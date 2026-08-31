@@ -14,7 +14,7 @@ import CanvasHints from './CanvasHints';
 import CanvasEmptyState from './CanvasEmptyState';
 import ToolDragGhost from '@/features/canvas/components/ToolDragGhost';
 
-import { CANVAS_GRID_SIZE, CANVAS_MAJOR_GRID_SIZE } from '@/features/canvas/constants';
+import { CANVAS_GRID_SIZE, CANVAS_MAJOR_GRID_SIZE, ZOOM_MAX, ZOOM_MIN } from '@/features/canvas/constants';
 import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
 
 import { useCanvasHistory } from '@/features/canvas/hooks/useCanvasHistory';
@@ -31,7 +31,7 @@ import { useDeleteConfirmation } from '@/features/canvas/hooks/useDeleteConfirma
 import { useColumnSelection } from '../hooks/useColumnSelection';
 import { useCanvasZoom } from '../hooks/useCanvasZoom';
 import { createCanvasItem } from '@/features/canvas/utils/createCanvasItem';
-import { getToolDefaultSize } from '@/features/canvas/utils/itemGeometry';
+import { getItemRect, getToolDefaultSize } from '@/features/canvas/utils/itemGeometry';
 
 import {
   TOOL_DRAG_END_EVENT,
@@ -39,6 +39,8 @@ import {
   type ToolDragDetail,
 } from '@/features/canvas/utils/toolDrag';
 import CanvasDropPreview from './CanvasDropPreview';
+import { useCanvasLostState } from '../hooks/useCanvasLostState';
+import CanvasLostPrompt from './CanvasLostPrompt';
 
 interface ToolDragGhostState extends ToolDragDetail {
   overCanvas: boolean;
@@ -107,6 +109,12 @@ export default function Canvas({
       width: number;
       height: number;
     } | null>(null);
+
+  const [viewportSize, setViewportSize] =
+    useState({
+      width: 0,
+      height: 0,
+    });
 
   const panRef = useRef(pan);
   panRef.current = pan;
@@ -202,6 +210,31 @@ export default function Canvas({
     onPanChange,
     onZoomChange,
   });
+
+  useEffect(() => {
+    const container =
+      containerRef.current;
+
+    if (!container) return;
+
+    const updateSize = () => {
+      setViewportSize({
+        width: container.clientWidth,
+        height: container.clientHeight,
+      });
+    };
+
+    updateSize();
+
+    const observer =
+      new ResizeObserver(updateSize);
+
+    observer.observe(container);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const getDropPosition = (
@@ -448,6 +481,191 @@ export default function Canvas({
     clearColumnSelection,
   });
 
+  const { isLost } =
+  useCanvasLostState({
+    items: project.items,
+    measuredSizes,
+
+    pan,
+    zoom,
+
+    viewportWidth:
+      viewportSize.width,
+
+    viewportHeight:
+      viewportSize.height,
+
+    delay: 900,
+  });
+
+  const handleReturnToBoard =
+  useCallback(() => {
+    if (project.items.length === 0) {
+      onPanChange({
+        x: 0,
+        y: 0,
+      });
+
+      onZoomChange(1);
+      return;
+    }
+
+    const rects =
+      project.items.map(item =>
+        getItemRect(
+          item,
+          measuredSizes,
+        ),
+      );
+
+    const left =
+      Math.min(
+        ...rects.map(rect => rect.x),
+      );
+
+    const top =
+      Math.min(
+        ...rects.map(rect => rect.y),
+      );
+
+    const right =
+      Math.max(
+        ...rects.map(
+          rect => rect.right,
+        ),
+      );
+
+    const bottom =
+      Math.max(
+        ...rects.map(
+          rect => rect.bottom,
+        ),
+      );
+
+    const boardWidth =
+      right - left;
+
+    const boardHeight =
+      bottom - top;
+
+    const padding = 100;
+
+    const availableWidth =
+      Math.max(
+        1,
+        viewportSize.width -
+          padding * 2,
+      );
+
+    const availableHeight =
+      Math.max(
+        1,
+        viewportSize.height -
+          padding * 2,
+      );
+
+    const fitZoom =
+      Math.min(
+        availableWidth /
+          Math.max(boardWidth, 1),
+
+        availableHeight /
+          Math.max(boardHeight, 1),
+
+        1,
+      );
+
+    const nextZoom =
+      Math.max(
+        ZOOM_MIN,
+        Math.min(
+          ZOOM_MAX,
+          fitZoom,
+        ),
+      );
+
+    const centerX =
+      left + boardWidth / 2;
+
+    const centerY =
+      top + boardHeight / 2;
+
+    onZoomChange(nextZoom);
+
+    onPanChange({
+      x:
+        viewportSize.width / 2 -
+        centerX * nextZoom,
+
+      y:
+        viewportSize.height / 2 -
+        centerY * nextZoom,
+    });
+  }, [
+    project.items,
+    measuredSizes,
+    viewportSize,
+    onPanChange,
+    onZoomChange,
+  ]);
+
+  const handleGoToFirstItem =
+  useCallback(() => {
+    const firstItem =
+      project.items[0];
+
+    if (!firstItem) {
+      onPanChange({
+        x: 0,
+        y: 0,
+      });
+
+      onZoomChange(1);
+      return;
+    }
+
+    const rect =
+      getItemRect(
+        firstItem,
+        measuredSizes,
+      );
+
+    const targetZoom =
+      Math.max(zoom, 0.8);
+
+    onZoomChange(targetZoom);
+
+    onPanChange({
+      x:
+        viewportSize.width / 2 -
+        (
+          rect.x +
+          rect.width / 2
+        ) *
+          targetZoom,
+
+      y:
+        viewportSize.height / 2 -
+        (
+          rect.y +
+          rect.height / 2
+        ) *
+          targetZoom,
+    });
+
+    onSelectItems([
+      firstItem.id,
+    ]);
+  }, [
+    project.items,
+    measuredSizes,
+    viewportSize,
+    zoom,
+    onPanChange,
+    onZoomChange,
+    onSelectItems,
+  ]);
+
   const handleBlurActiveElement = useCallback(
     (event: React.MouseEvent) => {
       if (event.button !== 0) return;
@@ -576,6 +794,21 @@ export default function Canvas({
       onMouseDownCapture={handleCanvasMouseDownCapture}
       onMouseDown={handleCanvasMouseDown}
     >
+      <CanvasLostPrompt
+        visible={
+          isLost &&
+          project.items.length > 0 &&
+          draggingIds.length === 0 &&
+          !toolDragGhost
+        }
+        onReturnToBoard={
+          handleReturnToBoard
+        }
+        onGoToFirstItem={
+          handleGoToFirstItem
+        }
+      />
+
       <div
         className="absolute"
         style={{
@@ -696,6 +929,8 @@ export default function Canvas({
           overCanvas={toolDragGhost.overCanvas}
         />
       )}
+
+
 
       <CanvasEditBar
         selectedItems={selectedItems}
