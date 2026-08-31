@@ -3,6 +3,23 @@ import type { BoardItem, FrameItem } from '@/entities/board/types';
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import type { ResizeDirection } from '@/features/canvas/types';
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
+import { useState } from 'react';
+import { getTypographyStyle } from '@/features/blocks/typography/typographyUtils';
+
+function getFrameLabelScale(zoom: number): number {
+  if (zoom >= 1) return 1;
+
+  return Math.min(3.2, 1 / zoom);
+}
+
+function getFrameLabelMode(
+  zoom: number,
+): 'normal' | 'overview' | 'far' {
+  if (zoom >= 0.65) return 'normal';
+  if (zoom >= 0.3) return 'overview';
+
+  return 'far';
+}
 
 interface CanvasFrameProps {
   item: FrameItem;
@@ -48,6 +65,7 @@ export default function CanvasFrame({
   isSettling = false,
   isDragging = false,
   dragTilt = 0,
+  zoom,
   onMouseDown,
   onAnimationEnd,
   onUpdateItem,
@@ -57,6 +75,11 @@ export default function CanvasFrame({
   onItemResize,
   onFitFrame,
 }: CanvasFrameProps) {
+  const [editingTitle, setEditingTitle] = useState(false);
+  const labelScale = getFrameLabelScale(zoom);
+  const labelMode = getFrameLabelMode(zoom);
+  const typographyStyle = getTypographyStyle(item);
+  
   return (
     <div
       data-board-item="true"
@@ -92,6 +115,181 @@ export default function CanvasFrame({
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
     >
+      {/* Semantic frame label */}
+
+      <div
+        className="absolute pointer-events-auto"
+        style={{
+          left: 8,
+          top: -10,
+
+          transform: `
+            translateY(-100%)
+            scale(${labelScale})
+          `,
+
+          transformOrigin: 'bottom left',
+
+          zIndex: 50,
+        }}
+        onMouseDown={event =>
+          event.stopPropagation()
+        }
+      >
+        <div
+          className="flex items-center gap-2 rounded-xl"
+          style={{
+            padding:
+              labelMode === 'far'
+                ? '6px 11px'
+                : '4px 9px',
+
+            backgroundColor:
+              labelMode === 'far'
+                ? item.color
+                : 'var(--color-surface-translucent)',
+
+            border:
+              labelMode === 'far'
+                ? 'none'
+                : `1px solid ${item.color}66`,
+
+            boxShadow:
+              labelMode === 'far'
+                ? '0 4px 14px rgba(0,0,0,0.18)'
+                : '0 2px 8px rgba(0,0,0,0.08)',
+
+            backdropFilter:
+              labelMode === 'far'
+                ? undefined
+                : 'blur(8px)',
+
+            maxWidth: Math.max(
+              160,
+              Math.min(item.width, 420),
+            ),
+          }}
+        >
+          {/* Section marker */}
+
+          <div
+            className="rounded-full flex-shrink-0"
+            style={{
+              width:
+                labelMode === 'far'
+                  ? 7
+                  : 6,
+
+              height:
+                labelMode === 'far'
+                  ? 7
+                  : 6,
+
+              backgroundColor:
+                labelMode === 'far'
+                  ? '#fff'
+                  : item.color,
+            }}
+          />
+
+          {/* Title */}
+
+          {editingTitle ? (
+            <input
+              autoFocus
+              value={item.title}
+              onChange={event =>
+                onUpdateItem(
+                  item.id,
+                  current =>
+                    current.type === 'frame'
+                      ? {
+                          ...current,
+                          title:
+                            event.target.value,
+                        }
+                      : current,
+                )
+              }
+              onBlur={() =>
+                setEditingTitle(false)
+              }
+              onKeyDown={event => {
+                if (
+                  event.key === 'Enter' ||
+                  event.key === 'Escape'
+                ) {
+                  setEditingTitle(false);
+                }
+              }}
+              onMouseDown={event =>
+                event.stopPropagation()
+              }
+              className="bg-transparent outline-none min-w-0"
+              style={{
+                color:
+                  labelMode === 'far'
+                    ? '#fff'
+                    : item.color,
+
+                minWidth: 100,
+                maxWidth: 300,
+
+                ...typographyStyle,
+
+                fontSize:
+                  item.typography?.fontSize
+                    ? `${item.typography.fontSize}px`
+                    : '14px',
+
+                fontWeight:
+                  item.typography?.bold
+                    ? 700
+                    : 650,
+              }}
+            />
+          ) : (
+            <span
+              className="truncate cursor-text select-none whitespace-nowrap"
+              style={{
+                color:
+                  labelMode === 'far'
+                    ? '#fff'
+                    : item.color,
+
+                ...typographyStyle,
+
+                fontSize:
+                  item.typography?.fontSize
+                    ? `${item.typography.fontSize}px`
+                    : '14px',
+
+                fontWeight:
+                  item.typography?.bold
+                    ? 700
+                    : 650,
+
+                textTransform:
+                  labelMode === 'far'
+                    ? 'uppercase'
+                    : undefined,
+
+                letterSpacing:
+                  labelMode === 'far'
+                    ? '0.06em'
+                    : undefined,
+              }}
+              title={item.title}
+              onDoubleClick={() =>
+                setEditingTitle(true)
+              }
+            >
+              {item.title || 'Untitled frame'}
+            </span>
+          )}
+        </div>
+      </div>
+
       {isSelected && (
         <div
           className="absolute pointer-events-none rounded-2xl"
