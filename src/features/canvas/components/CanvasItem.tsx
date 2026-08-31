@@ -152,9 +152,9 @@ export default function CanvasItem({
     >
       {isSelected && (
         <div
-          className="absolute pointer-events-none rounded-2xl"
+          className="absolute pointer-events-none rounded-sm"
           style={{
-            inset: -4,
+            inset: -2,
             boxShadow:
               '0 0 0 2px var(--color-accent), 0 0 12px rgba(124, 58, 237,0.25)',
           }}

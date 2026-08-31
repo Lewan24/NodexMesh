@@ -28,7 +28,7 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
 
       <EditBarDivider />
 
-      {[1, 2, 3, 4].map(thickness => (
+      {[1, 2, 3, 4, 5, 6].map(thickness => (
         <EditBarButton
           key={thickness}
           active={item.strokeWidth === thickness}
