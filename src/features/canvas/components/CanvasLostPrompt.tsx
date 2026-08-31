@@ -74,6 +74,18 @@ export default function CanvasLostPrompt({
           Are you lost?
         </p>
 
+        <span
+            className="text-[9px] italic select-none"
+            style={{
+                marginTop: 1,
+                color: 'var(--color-text-faint)',
+                opacity: 0.45,
+                letterSpacing: '0.03em',
+            }}
+            >
+            baby girl
+            </span>
+
         <p
           className="text-xl mt-1 mb-4 text-center"
           style={{
