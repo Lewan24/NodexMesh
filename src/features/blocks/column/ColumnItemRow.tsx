@@ -1,12 +1,14 @@
 import type { ReactNode } from 'react';
 
 import DragHandle from '@/features/blocks/shared/DragHandle';
+import type { ColumnLayout } from '@/entities/board/types';
 
 interface ColumnItemRowProps {
   children: ReactNode;
 
   isDragging?: boolean;
   isSelected?: boolean;
+  layout: ColumnLayout;
 
   onDragHandleMouseDown: (
     event: React.MouseEvent<HTMLButtonElement>,
@@ -18,6 +20,7 @@ interface ColumnItemRowProps {
 
 export default function ColumnItemRow({
   children,
+  layout,
   isDragging = false,
   isSelected = false,
   onDragHandleMouseDown,
@@ -27,28 +30,11 @@ export default function ColumnItemRow({
   return (
     <div
       data-column-item="true"
-      className="
-        group/row
-        relative
-
-        grid
-        grid-cols-[24px_minmax(0,1fr)_24px]
-        gap-2
-
-        items-start
-
-        w-full
-        min-w-0
-
-        rounded-xl
-        transition-all
-      "
+      className="group/row relative grid grid-cols-[24px_minmax(0,1fr)_24px] gap-2 items-start w-full min-w-0 rounded-xl transition-all"
       style={{
+        width: layout === 'horizontal' ? 200 : '100%',
         opacity: isDragging ? 0.32 : 1,
-
-        boxShadow: isSelected
-          ? '0 0 0 2px var(--color-accent)'
-          : undefined,
+        boxShadow: isSelected ? '0 0 0 2px var(--color-accent)' : undefined,
       }}
       onClick={event => {
         event.stopPropagation();

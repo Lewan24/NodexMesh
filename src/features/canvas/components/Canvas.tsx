@@ -894,6 +894,7 @@ export default function Canvas({
 
   return (
     <div
+      data-canvas-root="true"
       ref={containerRef}
       className={`flex-1 relative overflow-hidden select-none ${cursorClass}`}
       style={{

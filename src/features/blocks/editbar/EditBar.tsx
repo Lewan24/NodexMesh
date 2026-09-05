@@ -5,6 +5,7 @@ import LineControls from './components/LineControls';
 import { EditBarDivider } from './components/EditBarButton';
 import { ITEM_TYPE_LABELS } from './constants';
 import TypographyControls from './components/TypographyControls';
+import ColumnLayoutControls from './components/ColumnLayoutControls';
 
 interface EditBarProps {
   selectedItems: BoardItem[];
@@ -187,6 +188,13 @@ export default function EditBar({
         >
           {single.type !== 'line' && single.type !== 'frame' && (
             <ColorPanel item={single} onUpdate={handleUpdate} />
+          )}
+          
+          {single.type === 'column' && (
+            <ColumnLayoutControls
+              item={single}
+              onUpdate={handleUpdate}
+            />
           )}
 
           {single.type !== 'line' && (

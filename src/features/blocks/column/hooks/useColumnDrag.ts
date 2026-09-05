@@ -9,7 +9,7 @@ import type {
 } from 'react';
 
 import type {
-  BoardItem,
+  BoardItem, ColumnLayout 
 } from '@/entities/board/types';
 
 import {
@@ -29,6 +29,8 @@ interface UseColumnDragOptions {
     RefObject<
       Map<number, HTMLDivElement>
     >;
+
+  layout: ColumnLayout;
 
   updateItems: (
     updater: (
@@ -50,6 +52,7 @@ interface UseColumnDragOptions {
 export function useColumnDrag({
   columnId,
   items,
+  layout,
   containerRef,
   itemRefsMap,
   updateItems,
@@ -123,38 +126,70 @@ export function useColumnDrag({
         dropIndexRef.current =
           fromIndex;
 
-        const getItemCenters =
-          () => {
-            const centers:
-              number[] = [];
+        const getLinearDropIndex = (clientX: number, clientY: number) => {
+          const coordinate = layout === 'horizontal' ? clientX : clientY;
 
-            for (
-              let index = 0;
-              index <
-              itemsRef.current.length;
-              index++
-            ) {
-              const element =
-                itemRefsMap.current.get(
-                  index,
-                );
+          for (let index = 0; index < itemsRef.current.length; index++) {
+            const element = itemRefsMap.current.get(index);
+            if (!element) continue;
 
-              if (!element) {
-                centers.push(0);
-                continue;
-              }
+            const rect = element.getBoundingClientRect();
 
-              const rect =
-                element.getBoundingClientRect();
+            const center = layout === 'horizontal'
+              ? rect.left + rect.width / 2
+              : rect.top + rect.height / 2;
 
-              centers.push(
-                rect.top +
-                  rect.height / 2,
-              );
+            if (coordinate < center) return index;
+          }
+
+          return itemsRef.current.length;
+        };
+
+        const getGridDropIndex = (clientX: number, clientY: number) => {
+          if (itemsRef.current.length === 0) return 0;
+
+          let closestIndex = 0;
+          let closestDistance = Infinity;
+          let closestRect: DOMRect | null = null;
+
+          for (let index = 0; index < itemsRef.current.length; index++) {
+            const element = itemRefsMap.current.get(index);
+            if (!element) continue;
+
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            const distance = Math.hypot(clientX - centerX, clientY - centerY);
+
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = index;
+              closestRect = rect;
             }
+          }
 
-            return centers;
-          };
+          if (!closestRect) return itemsRef.current.length;
+
+          const afterCenter =
+            clientY > closestRect.top + closestRect.height / 2 ||
+            (
+              clientY >= closestRect.top &&
+              clientY <= closestRect.bottom &&
+              clientX > closestRect.left + closestRect.width / 2
+            );
+
+          return Math.min(
+            closestIndex + (afterCenter ? 1 : 0),
+            itemsRef.current.length,
+          );
+        };
+
+        const getDropIndex = (clientX: number, clientY: number) => {
+          if (layout === 'grid') return getGridDropIndex(clientX, clientY);
+
+          return getLinearDropIndex(clientX, clientY);
+        };
 
         const isOutside =
           (
@@ -207,35 +242,13 @@ export function useColumnDrag({
             return;
           }
 
-          const centers =
-            getItemCenters();
-
-          let targetIndex =
-            itemsRef.current.length;
-
-          for (
-            let index = 0;
-            index <
-            centers.length;
-            index++
-          ) {
-            if (
-              moveEvent.clientY <
-              centers[index]!
-            ) {
-              targetIndex =
-                index;
-
-              break;
-            }
-          }
-
-          dropIndexRef.current =
-            targetIndex;
-
-          setDropIndex(
-            targetIndex,
+          const targetIndex = getDropIndex(
+            moveEvent.clientX,
+            moveEvent.clientY,
           );
+
+          dropIndexRef.current = targetIndex;
+          setDropIndex(targetIndex);
         };
 
         const handleUp = (
@@ -372,6 +385,7 @@ export function useColumnDrag({
         columnId,
         containerRef,
         itemRefsMap,
+        layout,
         updateItems,
         deleteNested,
         onEjectItem,
