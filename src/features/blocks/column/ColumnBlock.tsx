@@ -20,6 +20,7 @@ interface ColumnBlockProps {
   isSelected?: boolean;
   isDragOver?: boolean;
   selectedItemId?: string | null;
+  zoom?: number;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
   onEjectItem?: (ejectedItem: BoardItem, clientX?: number, clientY?: number) => void;
@@ -70,6 +71,7 @@ export default function ColumnBlock({
   item,
   isSelected,
   isDragOver,
+  zoom = 1,
   selectedItemId = null,
   onUpdate,
   onDelete,
@@ -117,22 +119,30 @@ export default function ColumnBlock({
   const columnContentWidth = item.width - 32;
   const nestedControlsWidth = 24 + 24 + 16;
 
-  const getNestedItemWidth = () => {
+  const getNestedItemWidth = (nestedItem: BoardItem) => {
     if (isVertical) {
-      return Math.max(120, columnContentWidth - nestedControlsWidth);
+      return Math.max(
+        120,
+        columnContentWidth - nestedControlsWidth,
+      );
     }
 
-    const columns = isGrid ? gridColumns : Math.max(items.length, 1);
-    const totalGap = gap * Math.max(0, columns - 1);
-    const calculatedCellWidth = (columnContentWidth - totalGap) / columns;
-    const cellWidth = isHorizontal
-      ? Math.max(260, calculatedCellWidth)
-      : calculatedCellWidth;
+    if (isHorizontal) {
+      return Math.max(
+        140,
+        (nestedItem.width ?? 260) - nestedControlsWidth,
+      );
+    }
 
-    return Math.max(140, cellWidth - nestedControlsWidth);
+    const totalGap = gap * Math.max(0, gridColumns - 1);
+    const cellWidth =
+      (columnContentWidth - totalGap) / gridColumns;
+
+    return Math.max(
+      140,
+      cellWidth - nestedControlsWidth,
+    );
   };
-
-  const nestedItemWidth = getNestedItemWidth();
 
   const columnLight = isLightColor(item.color);
   const headerTextColor = columnLight ? '#1e293b' : '#f1f5f9';
@@ -185,6 +195,110 @@ export default function ColumnBlock({
       setShowAddMenu(false);
     },
     [updateItems],
+  );
+
+  const updateNestedItem = useCallback(
+    (
+      itemId: string,
+      updater: (item: BoardItem) => BoardItem,
+    ) => {
+      onUpdate(current => {
+        if (current.type !== 'column') return current;
+
+        return {
+          ...current,
+          items: current.items.map(item =>
+            item.id === itemId
+              ? updater(item)
+              : item,
+          ),
+        };
+      });
+    },
+    [onUpdate],
+  );
+
+  const resetNestedItemWidth = useCallback(
+    (itemId: string) => {
+      updateNestedItem(itemId, current => ({
+        ...current,
+        width: 260,
+      }));
+    },
+    [updateNestedItem],
+  );
+
+  const handleNestedWidthResizeStart = useCallback(
+    (
+      itemId: string,
+      event: React.MouseEvent,
+    ) => {
+      if (!isHorizontal || event.button !== 0) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const nestedItem = items.find(
+        item => item.id === itemId,
+      );
+
+      if (!nestedItem) return;
+
+      const startX = event.clientX;
+      const startWidth =
+        nestedItem.width ?? 260;
+
+      const handleMove = (moveEvent: MouseEvent) => {
+        const deltaX =
+          (moveEvent.clientX - startX) / zoom;
+
+        const width = Math.max(
+          140,
+          Math.min(
+            800,
+            startWidth + deltaX,
+          ),
+        );
+
+        updateNestedItem(
+          itemId,
+          current => ({
+            ...current,
+            width: Math.round(width),
+          }),
+        );
+      };
+
+      const handleUp = () => {
+        document.removeEventListener(
+          'mousemove',
+          handleMove,
+        );
+
+        document.removeEventListener(
+          'mouseup',
+          handleUp,
+        );
+      };
+
+      document.addEventListener(
+        'mousemove',
+        handleMove,
+      );
+
+      document.addEventListener(
+        'mouseup',
+        handleUp,
+      );
+    },
+    [
+      isHorizontal,
+      items,
+      zoom,
+      updateNestedItem,
+    ],
   );
 
   const clearNestedSelection = useCallback(() => {
@@ -405,15 +519,14 @@ export default function ColumnBlock({
           className="px-4 pt-3 pb-1 overflow-auto"
           style={{
             flex: 1,
-            display: isGrid || isHorizontal ? 'grid' : 'flex',
-            flexDirection: isVertical ? 'column' : undefined,
+            display: isGrid ? 'grid' : 'flex',
+            flexDirection: isHorizontal ? 'row' : 'column',
             gridTemplateColumns: isGrid
               ? `repeat(${gridColumns}, minmax(0, 1fr))`
-              : isHorizontal
-                ? `repeat(${Math.max(items.length, 1)}, minmax(260px, 1fr))`
-                : undefined,
+              : undefined,
             gap,
             alignContent: 'start',
+            alignItems: 'flex-start',
           }}
           onClick={event => {
             if (event.target === event.currentTarget) clearNestedSelection();
@@ -433,12 +546,15 @@ export default function ColumnBlock({
                     itemRefsMap.current.delete(index);
                   }
                 }}
+                className="relative flex-shrink-0 group/nested"
                 style={{
+                  width: isHorizontal
+                    ? nestedItem.width ?? 260
+                    : '100%',
                   minWidth: 0,
                 }}
               >
                 <ColumnItemRow
-                  layout={layout}
                   isDragging={draggingIndex === index}
                   isSelected={selectedItemId === nestedItem.id}
                   onDragHandleMouseDown={event => handleDragStart(index, event)}
@@ -461,7 +577,7 @@ export default function ColumnBlock({
                     }}
                   >
                     <BlockRenderer
-                      item={prepareNestedItemForColumn(nestedItem, nestedItemWidth)}
+                      item={prepareNestedItemForColumn(nestedItem, getNestedItemWidth(nestedItem))}
                       isInsideColumn
                       isSelected={false}
                       onUpdate={updater => updateNested(nestedItem.id, updater)}
@@ -479,6 +595,35 @@ export default function ColumnBlock({
                     />
                   </div>
                 </ColumnItemRow>
+
+                {isHorizontal && (
+                  <div
+                    className="absolute top-0 -right-2 w-4 h-full cursor-col-resize z-30 group/resize"
+                    onMouseDown={event =>
+                      handleNestedWidthResizeStart(
+                        nestedItem.id,
+                        event,
+                      )
+                    }
+                    onDoubleClick={event => {
+                      event.stopPropagation();
+                      resetNestedItemWidth(
+                        nestedItem.id,
+                      );
+                    }}
+                    title={`Resize item (${Math.round(
+                      nestedItem.width ?? 260,
+                    )}px) · Double-click to reset`}
+                  >
+                    <div
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-8 rounded-full opacity-0 group-hover/nested:opacity-50 group-hover/resize:opacity-100 transition-all"
+                      style={{
+                        backgroundColor:
+                          'var(--color-accent)',
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </Fragment>
           ))}
