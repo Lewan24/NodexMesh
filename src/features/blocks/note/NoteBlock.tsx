@@ -157,11 +157,10 @@ export default function NoteBlock({
 
         <div
           ref={contentRef}
+          data-wheel-scroll="true"
           className="px-3 pb-3 pt-1 flex-1 min-h-0"
           style={{
-            overflowY: item.height
-              ? 'hidden'
-              : undefined,
+            overflow: editing ? 'hidden' : 'scroll'
           }}
         >
           {editing ? (
@@ -187,9 +186,7 @@ export default function NoteBlock({
                   setEditing(false);
                 }
               }}
-              className={`w-full bg-transparent resize-none outline-none wrap-break-word leading-relaxed ${
-                item.height ? 'overflow-y-auto h-full' : 'overflow-hidden'
-              } ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
+              className={`w-full bg-transparent resize-none outline-none wrap-break-word leading-relaxed h-full ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
                 color: textColor,
                 resize: 'none',
@@ -201,7 +198,7 @@ export default function NoteBlock({
           ) : (
             <div
               onClick={() => setEditing(true)}
-              className={`leading-relaxed whitespace-pre-wrap wrap-break-word overflow-y-hidden cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
+              className={`leading-relaxed whitespace-pre-wrap wrap-break-word cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
                 color: textColor,
                 ...typographyStyle,

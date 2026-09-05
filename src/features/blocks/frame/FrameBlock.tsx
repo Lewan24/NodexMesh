@@ -1,4 +1,5 @@
 import type { BoardItem, FrameItem } from '@/entities/board/types';
+import { colorWithOpacity } from '@/features/canvas/utils/colorUtils';
 
 interface FrameBlockProps {
   item: FrameItem;
@@ -26,8 +27,8 @@ export default function FrameBlock({
       <div
         className="absolute inset-0 item-rounded"
         style={{
-          border: `2px solid ${item.color}50`,
-          backgroundColor: `${item.color}12`,
+          border: `2px solid ${item.color}60`,
+          backgroundColor: colorWithOpacity(item.color, item.opacity ?? 0.2),
           transition:
             'border-color 0.15s, background-color 0.15s',
         }}

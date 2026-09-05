@@ -93,6 +93,7 @@ export interface FrameItem extends BaseItem {
   width: number;
   height: number;
   color: string;
+  opacity?: number;
 }
 
 export interface ChecklistItem extends BaseItem {
@@ -122,10 +123,15 @@ export interface LineItem extends BaseItem {
   endItemId?: string;
 }
 
+export type ColumnLayout = 'vertical' | 'horizontal' | 'grid';
+
 export interface ColumnItem extends BaseItem {
   type: 'column';
   title: string;
   color: string;
   width: number;
   items: BoardItem[];
+  layout?: ColumnLayout;
+  gridColumns?: number;
+  gap?: number;
 }

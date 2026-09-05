@@ -232,7 +232,10 @@ export default function BoardPage({
       type: 'frame',
       x: minX - padding,
       y: minY - padding,
-      zIndex: 0,
+      zIndex: Math.max(
+        0,
+        Math.min(...selectedItems.map(item => item.zIndex)) - 1,
+      ),
       title: 'Group',
       width: maxX - minX + padding * 2,
       height: maxY - minY + padding * 2,

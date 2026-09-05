@@ -894,6 +894,7 @@ export default function Canvas({
 
   return (
     <div
+      data-canvas-root="true"
       ref={containerRef}
       className={`flex-1 relative overflow-hidden select-none ${cursorClass}`}
       style={{
@@ -962,6 +963,7 @@ export default function Canvas({
                 : 0
             }
             isAnimating={animatingIds.has(frame.id)}
+            isAttachTarget={attachHoverId === frame.id}
             selectedIds={safeSelectedIds}
             onMouseDown={handleItemMouseDown}
             onAnimationEnd={clearEnterAnimation}

@@ -1,15 +1,18 @@
 import type { BoardItem, FrameItem } from '@/entities/board/types';
+
 import ColorSwatch from './ColorSwatch';
 import { EditBarDivider } from './EditBarButton';
 import { FRAME_COLORS } from '../constants';
+import CustomColorInput from './CustomColorInput';
 
 interface FrameControlsProps {
   item: FrameItem;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
-  onFitFrame: () => void;
 }
 
-export default function FrameControls({ item, onUpdate, onFitFrame }: FrameControlsProps) {
+export default function FrameControls({ item, onUpdate }: FrameControlsProps) {
+  const opacity = item.opacity ?? 0.2;
+
   const update = (patch: Partial<FrameItem>) => {
     onUpdate(current => current.type === 'frame' ? { ...current, ...patch } : current);
   };
@@ -25,27 +28,42 @@ export default function FrameControls({ item, onUpdate, onFitFrame }: FrameContr
             onClick={() => update({ color })}
           />
         ))}
+
+        <CustomColorInput
+          value={item.color}
+          onChange={color => update({ color })}
+          title="Custom frame color"
+        />
       </div>
 
       <EditBarDivider />
 
-      <button
-        onClick={onFitFrame}
-        className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0"
-        style={{ color: '#4a6070' }}
-        onMouseEnter={e => {
-          e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}
-        title="Fit frame to contents"
-      >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-        </svg>
-        Fit
-      </button>
+      <div className="flex items-center gap-2 px-1">
+        <span
+          className="text-[10px] font-semibold uppercase tracking-wide flex-shrink-0"
+          style={{ color: 'var(--color-text-faint)' }}
+        >
+          Opacity
+        </span>
+
+        <input
+          type="range"
+          min="0.1"
+          max="1"
+          step="0.05"
+          value={opacity}
+          onChange={event => update({ opacity: Number(event.target.value) })}
+          className="w-24 cursor-pointer"
+          title={`Opacity ${Math.round(opacity * 100)}%`}
+        />
+
+        <span
+          className="w-9 text-[10px] font-mono text-right flex-shrink-0"
+          style={{ color: 'var(--color-text-faint)' }}
+        >
+          {Math.round(opacity * 100)}%
+        </span>
+      </div>
     </>
   );
 }

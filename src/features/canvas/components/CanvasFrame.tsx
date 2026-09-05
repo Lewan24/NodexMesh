@@ -1,23 +1,20 @@
+import { useState } from 'react';
+
 import type { BoardItem, FrameItem } from '@/entities/board/types';
 
 import BlockRenderer from '@/features/blocks/BlockRenderer';
-import type { ResizeDirection } from '@/features/canvas/types';
-import ResizeHandles from '@/features/canvas/components/ResizeHandles';
-import { useState } from 'react';
 import { getTypographyStyle } from '@/features/blocks/typography/typographyUtils';
+import ResizeHandles from '@/features/canvas/components/ResizeHandles';
+import type { ResizeDirection } from '@/features/canvas/types';
 
 function getFrameLabelScale(zoom: number): number {
   if (zoom >= 1) return 1;
-
   return Math.min(3.2, 1 / zoom);
 }
 
-function getFrameLabelMode(
-  zoom: number,
-): 'normal' | 'overview' | 'far' {
+function getFrameLabelMode(zoom: number): 'normal' | 'overview' | 'far' {
   if (zoom >= 0.65) return 'normal';
   if (zoom >= 0.3) return 'overview';
-
   return 'far';
 }
 
@@ -27,10 +24,11 @@ interface CanvasFrameProps {
   isSelected: boolean;
   isAnimating: boolean;
   selectedIds: string[];
-  
+
   isSettling?: boolean;
   isDragging?: boolean;
   dragTilt?: number;
+  isAttachTarget?: boolean;
 
   onMouseDown: (id: string, event: React.MouseEvent) => void;
   onAnimationEnd: (id: string) => void;
@@ -65,6 +63,7 @@ export default function CanvasFrame({
   isSettling = false,
   isDragging = false,
   dragTilt = 0,
+  isAttachTarget = false,
   zoom,
   onMouseDown,
   onAnimationEnd,
@@ -76,25 +75,21 @@ export default function CanvasFrame({
   onFitFrame,
 }: CanvasFrameProps) {
   const [editingTitle, setEditingTitle] = useState(false);
+
   const labelScale = getFrameLabelScale(zoom);
   const labelMode = getFrameLabelMode(zoom);
   const typographyStyle = getTypographyStyle(item);
-  
+
   return (
     <div
       data-board-item="true"
+      data-frame-id={item.id}
       className={`absolute ${
-        isAnimating
-          ? 'board-item-enter'
-          : ''
+        isAnimating ? 'board-item-enter' : ''
       } ${
-        isDragging
-          ? 'board-item-dragging'
-          : ''
+        isDragging ? 'board-item-dragging' : ''
       } ${
-        isSettling
-          ? 'board-item-settling'
-          : ''
+        isSettling ? 'board-item-settling' : ''
       }`}
       style={{
         left: item.x,
@@ -109,90 +104,57 @@ export default function CanvasFrame({
               scale(1.012)
             `
           : undefined,
-
         transformOrigin: 'center center',
       }}
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
     >
       {/* Semantic frame label */}
-
       <div
         className="absolute pointer-events-auto"
         style={{
           left: 8,
           top: -10,
-
-          transform: `
-            translateY(-100%)
-            scale(${labelScale})
-          `,
-
+          transform: `translateY(-100%) scale(${labelScale})`,
           transformOrigin: 'bottom left',
-
           zIndex: 50,
         }}
-        onMouseDown={event =>
-          event.stopPropagation()
-        }
+        onMouseDown={event => event.stopPropagation()}
       >
         <div
           className="flex items-center gap-2 rounded-xl"
           style={{
-            padding:
-              labelMode === 'far'
-                ? '6px 11px'
-                : '4px 9px',
-
+            padding: labelMode === 'far' ? '6px 11px' : '4px 9px',
             backgroundColor:
               labelMode === 'far'
                 ? item.color
                 : 'var(--color-surface-translucent)',
-
             border:
               labelMode === 'far'
                 ? 'none'
                 : `1px solid ${item.color}66`,
-
             boxShadow:
               labelMode === 'far'
                 ? '0 4px 14px rgba(0,0,0,0.18)'
                 : '0 2px 8px rgba(0,0,0,0.08)',
-
             backdropFilter:
               labelMode === 'far'
                 ? undefined
                 : 'blur(8px)',
-
-            maxWidth: Math.max(
-              160,
-              Math.min(item.width, 420),
-            ),
+            maxWidth: Math.max(160, Math.min(item.width, 420)),
           }}
         >
-          {/* Section marker */}
-
           <div
             className="rounded-full flex-shrink-0"
             style={{
-              width:
-                labelMode === 'far'
-                  ? 7
-                  : 6,
-
-              height:
-                labelMode === 'far'
-                  ? 7
-                  : 6,
-
+              width: labelMode === 'far' ? 7 : 6,
+              height: labelMode === 'far' ? 7 : 6,
               backgroundColor:
                 labelMode === 'far'
                   ? '#fff'
                   : item.color,
             }}
           />
-
-          {/* Title */}
 
           {editingTitle ? (
             <input
@@ -205,84 +167,45 @@ export default function CanvasFrame({
                     current.type === 'frame'
                       ? {
                           ...current,
-                          title:
-                            event.target.value,
+                          title: event.target.value,
                         }
                       : current,
                 )
               }
-              onBlur={() =>
-                setEditingTitle(false)
-              }
+              onBlur={() => setEditingTitle(false)}
               onKeyDown={event => {
-                if (
-                  event.key === 'Enter' ||
-                  event.key === 'Escape'
-                ) {
+                if (event.key === 'Enter' || event.key === 'Escape') {
                   setEditingTitle(false);
                 }
               }}
-              onMouseDown={event =>
-                event.stopPropagation()
-              }
+              onMouseDown={event => event.stopPropagation()}
               className="bg-transparent outline-none min-w-0"
               style={{
-                color:
-                  labelMode === 'far'
-                    ? '#fff'
-                    : item.color,
-
+                color: labelMode === 'far' ? '#fff' : item.color,
                 minWidth: 100,
                 maxWidth: 300,
-
                 ...typographyStyle,
-
-                fontSize:
-                  item.typography?.fontSize
-                    ? `${item.typography.fontSize}px`
-                    : '14px',
-
-                fontWeight:
-                  item.typography?.bold
-                    ? 700
-                    : 650,
+                fontSize: item.typography?.fontSize
+                  ? `${item.typography.fontSize}px`
+                  : '14px',
+                fontWeight: item.typography?.bold ? 700 : 650,
               }}
             />
           ) : (
             <span
               className="truncate cursor-text select-none whitespace-nowrap"
               style={{
-                color:
-                  labelMode === 'far'
-                    ? '#fff'
-                    : item.color,
-
+                color: labelMode === 'far' ? '#fff' : item.color,
                 ...typographyStyle,
-
-                fontSize:
-                  item.typography?.fontSize
-                    ? `${item.typography.fontSize}px`
-                    : '14px',
-
-                fontWeight:
-                  item.typography?.bold
-                    ? 700
-                    : 650,
-
-                textTransform:
-                  labelMode === 'far'
-                    ? 'uppercase'
-                    : undefined,
-
-                letterSpacing:
-                  labelMode === 'far'
-                    ? '0.06em'
-                    : undefined,
+                fontSize: item.typography?.fontSize
+                  ? `${item.typography.fontSize}px`
+                  : '14px',
+                fontWeight: item.typography?.bold ? 700 : 650,
+                textTransform: labelMode === 'far' ? 'uppercase' : undefined,
+                letterSpacing: labelMode === 'far' ? '0.06em' : undefined,
               }}
               title={item.title}
-              onDoubleClick={() =>
-                setEditingTitle(true)
-              }
+              onDoubleClick={() => setEditingTitle(true)}
             >
               {item.title || 'Untitled frame'}
             </span>
@@ -290,21 +213,37 @@ export default function CanvasFrame({
         </div>
       </div>
 
+      {/* Selection */}
       {isSelected && (
         <div
           className="absolute pointer-events-none rounded-2xl"
           style={{
             inset: -4,
             boxShadow:
-              '0 0 0 2px var(--color-accent), 0 0 12px rgba(124, 58, 237,0.25)',
+              '0 0 0 2px var(--color-accent), 0 0 12px rgba(124,58,237,0.25)',
           }}
         />
       )}
 
+      {/* Line attach target */}
+      {isAttachTarget && (
+        <div
+          className="absolute pointer-events-none rounded-2xl"
+          style={{
+            inset: -6,
+            boxShadow:
+              '0 0 0 3px var(--color-accent), 0 0 18px rgba(124,58,237,0.35)',
+          }}
+        />
+      )}
+
+      {/* Resize */}
       {isSelected && (
         <ResizeHandles
           visible
-          onResizeStart={(event, direction) => onItemResize(item.id, event, direction)}
+          onResizeStart={(event, direction) =>
+            onItemResize(item.id, event, direction)
+          }
         />
       )}
 

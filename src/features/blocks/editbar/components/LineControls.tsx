@@ -2,6 +2,7 @@ import type { BoardItem, LineItem } from '@/entities/board/types';
 import ColorSwatch from './ColorSwatch';
 import EditBarButton, { EditBarDivider } from './EditBarButton';
 import { LINE_COLORS } from '../constants';
+import CustomColorInput from './CustomColorInput';
 
 interface LineControlsProps {
   item: LineItem;
@@ -24,6 +25,12 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
             onClick={() => update({ color })}
           />
         ))}
+
+        <CustomColorInput
+          value={item.color}
+          onChange={color => update({ color })}
+          title="Custom line color"
+        />
       </div>
 
       <EditBarDivider />

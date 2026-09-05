@@ -10,6 +10,7 @@ import type { ToolType } from '@/entities/board/toolTypes';
 import { DROPPABLE_ON_COLUMN } from '@/features/canvas/constants';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import { getItemSize } from '@/features/canvas/utils/itemGeometry';
+import { isItemInsideFrame } from '../utils/frameGeometry';
 
 export interface ItemDropPreview {
   x: number;
@@ -160,22 +161,22 @@ export function useItemDrag({
         if (item.type === 'frame') {
           const frame = item as FrameItem;
 
-          const children = items.filter(
-            child =>
-              !dragIds.includes(child.id) &&
-              !captureMap.has(child.id) &&
-              child.type !== 'frame' &&
-              child.x >= frame.x &&
-              child.y >= frame.y &&
-              child.x <= frame.x + frame.width &&
-              child.y <= frame.y + frame.height,
-          );
+          const children = items.filter(child => {
+            if (dragIds.includes(child.id)) return false;
+            if (captureMap.has(child.id)) return false;
+
+            return isItemInsideFrame(child, frame, measuredSizes);
+          });
 
           for (const child of children) {
+            const isChildLine = child.type === 'line';
+
             captureMap.set(child.id, {
               x: child.x,
               y: child.y,
-              isLine: false,
+              isLine: isChildLine,
+              x2: isChildLine ? child.x2 : undefined,
+              y2: isChildLine ? child.y2 : undefined,
             });
           }
         }

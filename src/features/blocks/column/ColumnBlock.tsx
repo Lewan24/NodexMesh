@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BoardItem, ColumnItem } from '@/entities/board/types';
 
@@ -22,22 +22,45 @@ interface ColumnBlockProps {
   selectedItemId?: string | null;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onEjectItem?: (
-    ejectedItem: BoardItem,
-    clientX?: number,
-    clientY?: number,
-  ) => void;
+  onEjectItem?: (ejectedItem: BoardItem, clientX?: number, clientY?: number) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
   onRequestDelete?: (execute: () => void) => void;
 }
 
-function DropLine() {
+function DropIndicator({ layout }: { layout: 'vertical' | 'horizontal' | 'grid' }) {
+  if (layout === 'grid') {
+    return (
+      <div
+        className="rounded-xl border-2 border-dashed"
+        style={{
+          minHeight: 80,
+          borderColor: 'var(--color-accent)',
+          backgroundColor: 'var(--color-accent-soft)',
+          boxShadow: '0 0 12px rgba(124,58,237,0.18)',
+        }}
+      />
+    );
+  }
+
+  if (layout === 'horizontal') {
+    return (
+      <div
+        className="w-1 self-stretch rounded-full mx-1"
+        style={{
+          minHeight: 60,
+          backgroundColor: 'var(--color-accent)',
+          boxShadow: '0 0 8px rgba(124,58,237,0.5)',
+        }}
+      />
+    );
+  }
+
   return (
     <div
       className="h-1 rounded-full mx-1 my-1.5"
       style={{
-        backgroundColor: '#7C3AED',
-        boxShadow: '0 0 8px rgba(124, 58, 237,0.5)',
+        backgroundColor: 'var(--color-accent)',
+        boxShadow: '0 0 8px rgba(124,58,237,0.5)',
       }}
     />
   );
@@ -79,51 +102,52 @@ export default function ColumnBlock({
     };
 
     document.addEventListener('mousedown', handleOutsideClick);
-
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [showAddMenu, showBackgroundMenu]);
 
+  const layout = item.layout ?? 'vertical';
+  const gridColumns = item.gridColumns ?? 2;
+  const gap = item.gap ?? 10;
+
+  const isVertical = layout === 'vertical';
+  const isHorizontal = layout === 'horizontal';
+  const isGrid = layout === 'grid';
+
   const items = item.items ?? [];
-  const columnContentWidth =
-    item.width - 32;
+  const columnContentWidth = item.width - 32;
+  const nestedControlsWidth = 24 + 24 + 16;
 
-  const nestedControlsWidth =
-    24 + // drag
-    24 + // eject
-    16;  // dwa gap-2 po 8px
+  const getNestedItemWidth = () => {
+    if (isVertical) {
+      return Math.max(120, columnContentWidth - nestedControlsWidth);
+    }
 
-  const nestedItemWidth =
-    Math.max(
-      120,
-      columnContentWidth -
-        nestedControlsWidth,
-    );
+    const columns = isGrid ? gridColumns : Math.max(items.length, 1);
+    const totalGap = gap * Math.max(0, columns - 1);
+    const calculatedCellWidth = (columnContentWidth - totalGap) / columns;
+    const cellWidth = isHorizontal
+      ? Math.max(260, calculatedCellWidth)
+      : calculatedCellWidth;
+
+    return Math.max(140, cellWidth - nestedControlsWidth);
+  };
+
+  const nestedItemWidth = getNestedItemWidth();
+
   const columnLight = isLightColor(item.color);
-
   const headerTextColor = columnLight ? '#1e293b' : '#f1f5f9';
   const headerMutedColor = columnLight ? '#64748b' : '#94a3b8';
 
   const update = useCallback(
     (patch: Partial<ColumnItem>) => {
-      onUpdate(current => {
-        if (current.type !== 'column') return current;
-
-        return {
-          ...current,
-          ...patch,
-        };
-      });
+      onUpdate(current => current.type === 'column' ? { ...current, ...patch } : current);
     },
     [onUpdate],
   );
 
   const updateItems = useCallback(
     (updater: (items: BoardItem[]) => BoardItem[]) => {
-      update({
-        items: updater(item.items ?? []),
-      });
+      update({ items: updater(item.items ?? []) });
     },
     [item.items, update],
   );
@@ -131,7 +155,7 @@ export default function ColumnBlock({
   const updateNested = useCallback(
     (id: string, updater: (item: BoardItem) => BoardItem) => {
       updateItems(currentItems =>
-        currentItems.map(nestedItem => (nestedItem.id === id ? updater(nestedItem) : nestedItem)),
+        currentItems.map(nestedItem => nestedItem.id === id ? updater(nestedItem) : nestedItem),
       );
     },
     [updateItems],
@@ -146,6 +170,7 @@ export default function ColumnBlock({
 
   const { draggingIndex, dropIndex, handleDragStart } = useColumnDrag({
     columnId: item.id,
+    layout,
     items,
     containerRef,
     itemRefsMap,
@@ -174,91 +199,88 @@ export default function ColumnBlock({
   );
 
   const ejectNestedItem = useCallback(
-    (
-      nestedItem: BoardItem,
-      clientX?: number,
-      clientY?: number,
-    ) => {
+    (nestedItem: BoardItem, clientX?: number, clientY?: number) => {
       deleteNested(nestedItem.id);
-      onEjectItem?.(
-        nestedItem, 
-        clientX,
-        clientY,);
+      onEjectItem?.(nestedItem, clientX, clientY);
 
       if (selectedItemId === nestedItem.id) clearNestedSelection();
     },
     [deleteNested, onEjectItem, selectedItemId, clearNestedSelection],
   );
 
-  function prepareNestedItemForColumn(item: BoardItem, nestedItemWidth: number): BoardItem {
-    switch (item.type) {
+  function prepareNestedItemForColumn(nestedItem: BoardItem, width: number): BoardItem {
+    switch (nestedItem.type) {
       case 'note':
       case 'checklist':
       case 'link':
       case 'image':
       case 'text':
-        return { ...item, width: nestedItemWidth };
+        return { ...nestedItem, width };
 
       default:
-        return item;
+        return nestedItem;
     }
   }
 
+  const showDropIndicator = (index: number) =>
+    dropIndex === index &&
+    draggingIndex !== null &&
+    draggingIndex !== index &&
+    draggingIndex !== index - 1;
+
   return (
-    <div className="group/col relative" style={{ 
+    <div
+      className="group/col relative"
+      style={{
         width: item.width,
         height: item.height,
-       }}>
+      }}
+    >
       {isDragOver && (
         <div
           className="absolute pointer-events-none rounded-2xl"
           style={{
             inset: -4,
-            boxShadow: '0 0 0 3px #7C3AED, 0 0 24px rgba(124, 58, 237,0.3)',
+            boxShadow: '0 0 0 3px var(--color-accent), 0 0 24px rgba(124,58,237,0.3)',
             zIndex: 1,
           }}
         />
       )}
 
       <div
-        className="item-rounded border shadow-xl flex flex-col"
+        className="item-rounded border shadow-xl flex flex-col overflow-hidden"
         style={{
           backgroundColor: item.color,
-          borderColor:
-            isSelected || isDragOver
-              ? '#7C3AED'
-              : columnLight
-                ? 'rgba(0,0,0,0.08)'
-                : 'rgba(255,255,255,0.1)',
+          borderColor: isSelected || isDragOver
+            ? 'var(--color-accent)'
+            : columnLight
+              ? 'rgba(0,0,0,0.08)'
+              : 'rgba(255,255,255,0.1)',
           transition: 'border-color 0.15s',
           minWidth: 220,
-          height: item.height
-          ? '100%'
-          : undefined,
+          height: item.height ? '100%' : undefined,
         }}
       >
         {/* Header */}
-
         <div
-          className="flex items-center justify-between px-4 py-3 border-b cursor-grab active:cursor-grabbing rounded-t-2xl"
+          className="flex items-center justify-between px-4 py-3 border-b cursor-grab active:cursor-grabbing"
           style={{
             borderColor: columnLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.07)',
           }}
         >
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div
+              ref={backgroundMenuRef}
               className="relative flex-shrink-0"
               onMouseDown={event => event.stopPropagation()}
-              ref={backgroundMenuRef}
             >
               <button
+                type="button"
                 onClick={() => setShowBackgroundMenu(previous => !previous)}
-                className="w-4 h-4 rounded-full border-2 transition-transform hover:scale-125"
+                className="w-4 h-4 rounded-full border-2 transition-transform hover:scale-125 cursor-pointer"
                 style={{
                   backgroundColor: item.color,
-                  borderColor: columnLight
-                    ? 'rgba(0,0,0,0.2)'
-                    : 'rgba(255,255,255,0.4)',
+                  borderColor: columnLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)',
                 }}
                 title="Column background color"
               />
@@ -267,33 +289,36 @@ export default function ColumnBlock({
                 <div
                   className="absolute top-6 left-0 z-50 rounded-xl shadow-2xl border p-2.5"
                   style={{
-                    backgroundColor: '#fff',
-                    borderColor: 'rgba(0,0,0,0.1)',
+                    backgroundColor: 'var(--color-surface)',
+                    borderColor: 'var(--color-border)',
                     minWidth: 170,
                   }}
                   onMouseDown={event => event.stopPropagation()}
                 >
                   <p
                     className="text-xs font-semibold mb-2"
-                    style={{ color: '#6b7280' }}
+                    style={{ color: 'var(--color-text-muted)' }}
                   >
-                    Column background
+                    Layout background
                   </p>
 
                   <div className="flex flex-wrap gap-2">
                     {COLUMN_BG_COLORS.map(color => (
                       <button
                         key={color}
+                        type="button"
                         onClick={() => {
                           update({ color });
                           setShowBackgroundMenu(false);
                         }}
-                        className="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110"
+                        className="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 cursor-pointer"
                         style={{
                           backgroundColor: color,
-                          borderColor:
-                            item.color === color ? '#1a2530' : 'rgba(0,0,0,0.12)',
+                          borderColor: item.color === color
+                            ? 'var(--color-accent)'
+                            : 'rgba(0,0,0,0.12)',
                         }}
+                        title={color}
                       />
                     ))}
                   </div>
@@ -308,7 +333,7 @@ export default function ColumnBlock({
                 style={{
                   ...typographyStyle,
                   color: headerTextColor,
-                  borderColor: '#7C3AED',
+                  borderColor: 'var(--color-accent)',
                 }}
                 value={item.title}
                 onChange={event => update({ title: event.target.value })}
@@ -323,9 +348,10 @@ export default function ColumnBlock({
             ) : (
               <span
                 className="font-bold text-base select-none cursor-text truncate"
-                style={{ 
+                style={{
                   ...typographyStyle,
-                  color: headerTextColor }}
+                  color: headerTextColor,
+                }}
                 onDoubleClick={() => setEditingTitle(true)}
               >
                 {item.title}
@@ -340,6 +366,7 @@ export default function ColumnBlock({
                   ? 'rgba(0,0,0,0.06)'
                   : 'rgba(255,255,255,0.08)',
               }}
+              title={`${items.length} items`}
             >
               {items.length}
             </span>
@@ -350,26 +377,21 @@ export default function ColumnBlock({
             onMouseDown={event => event.stopPropagation()}
           >
             <button
+              type="button"
               onClick={onDelete}
-              className="opacity-0 group-hover/col:opacity-100 transition-all rounded-lg p-1.5"
+              className="opacity-0 group-hover/col:opacity-100 transition-all rounded-lg p-1.5 cursor-pointer"
               style={{ color: headerMutedColor }}
               onMouseEnter={event => {
-                event.currentTarget.style.color = '#ef4444';
-                event.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)';
+                event.currentTarget.style.color = 'var(--color-danger-strong)';
+                event.currentTarget.style.backgroundColor = 'rgba(255,107,138,0.1)';
               }}
               onMouseLeave={event => {
                 event.currentTarget.style.color = headerMutedColor;
                 event.currentTarget.style.backgroundColor = 'transparent';
               }}
+              title="Delete layout"
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
@@ -377,21 +399,31 @@ export default function ColumnBlock({
         </div>
 
         {/* Nested items */}
-
         <div
+          data-wheel-scroll="true"
           ref={containerRef}
-          className="px-4 pt-3 pb-1 flex flex-col gap-2.5 overflow-y-auto"
-          style={{ flex: 1 }}
+          className="px-4 pt-3 pb-1 overflow-auto"
+          style={{
+            flex: 1,
+            display: isGrid || isHorizontal ? 'grid' : 'flex',
+            flexDirection: isVertical ? 'column' : undefined,
+            gridTemplateColumns: isGrid
+              ? `repeat(${gridColumns}, minmax(0, 1fr))`
+              : isHorizontal
+                ? `repeat(${Math.max(items.length, 1)}, minmax(260px, 1fr))`
+                : undefined,
+            gap,
+            alignContent: 'start',
+          }}
           onClick={event => {
             if (event.target === event.currentTarget) clearNestedSelection();
           }}
         >
           {items.map((nestedItem, index) => (
-            <div key={nestedItem.id}>
-              {dropIndex === index &&
-                draggingIndex !== null &&
-                draggingIndex !== index &&
-                draggingIndex !== index - 1 && <DropLine />}
+            <Fragment key={nestedItem.id}>
+              {showDropIndicator(index) && (
+                <DropIndicator layout={layout} />
+              )}
 
               <div
                 ref={element => {
@@ -401,8 +433,12 @@ export default function ColumnBlock({
                     itemRefsMap.current.delete(index);
                   }
                 }}
+                style={{
+                  minWidth: 0,
+                }}
               >
                 <ColumnItemRow
+                  layout={layout}
                   isDragging={draggingIndex === index}
                   isSelected={selectedItemId === nestedItem.id}
                   onDragHandleMouseDown={event => handleDragStart(index, event)}
@@ -410,6 +446,7 @@ export default function ColumnBlock({
                   onSelect={() => selectNestedItem(nestedItem)}
                 >
                   <div
+                    className="min-w-0"
                     onMouseDown={event => {
                       const target = event.target as Element;
 
@@ -417,24 +454,19 @@ export default function ColumnBlock({
                         target instanceof HTMLInputElement ||
                         target instanceof HTMLTextAreaElement ||
                         target instanceof HTMLButtonElement ||
-                        target.closest('button') !== null;
+                        target instanceof HTMLSelectElement ||
+                        target.closest('button, input, textarea, select') !== null;
 
                       if (!interactive) event.stopPropagation();
                     }}
                   >
                     <BlockRenderer
-                      item={prepareNestedItemForColumn(
-                        nestedItem,
-                        nestedItemWidth,
-                      )}
+                      item={prepareNestedItemForColumn(nestedItem, nestedItemWidth)}
                       isInsideColumn
                       isSelected={false}
-                      onUpdate={updater =>
-                        updateNested(nestedItem.id, updater)
-                      }
+                      onUpdate={updater => updateNested(nestedItem.id, updater)}
                       onDelete={() => {
-                        const execute = () =>
-                          deleteNested(nestedItem.id);
+                        const execute = () => deleteNested(nestedItem.id);
 
                         if (onRequestDelete) {
                           onRequestDelete(execute);
@@ -448,16 +480,22 @@ export default function ColumnBlock({
                   </div>
                 </ColumnItemRow>
               </div>
-            </div>
+            </Fragment>
           ))}
 
-          {dropIndex === items.length && draggingIndex !== null && <DropLine />}
+          {dropIndex === items.length && draggingIndex !== null && (
+            <DropIndicator layout={layout} />
+          )}
 
           {items.length === 0 && (
             <div
-              className="py-8 text-center text-sm select-none rounded-xl border-2 border-dashed"
+              className="py-8 px-4 text-center text-sm select-none rounded-xl border-2 border-dashed"
               style={{
-                color: columnLight ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.2)',
+                gridColumn: isGrid ? '1 / -1' : undefined,
+                minWidth: isHorizontal ? 180 : undefined,
+                color: columnLight
+                  ? 'rgba(0,0,0,0.25)'
+                  : 'rgba(255,255,255,0.2)',
                 borderColor: columnLight
                   ? 'rgba(0,0,0,0.1)'
                   : 'rgba(255,255,255,0.1)',
@@ -469,40 +507,33 @@ export default function ColumnBlock({
         </div>
 
         {/* Add item */}
-
         <div
           className="px-4 pb-4 pt-2 relative"
           onMouseDown={event => event.stopPropagation()}
         >
           <button
+            type="button"
             onClick={() => setShowAddMenu(previous => !previous)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 item-rounded text-sm font-semibold transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 item-rounded text-sm font-semibold transition-all cursor-pointer"
             style={{
-              color: '#7C3AED',
+              color: 'var(--color-accent)',
               backgroundColor: columnLight
-                ? 'rgba(124, 58, 237,0.07)'
-                : 'rgba(124, 58, 237,0.12)',
-              border: '1.5px dashed rgba(124, 58, 237,0.35)',
+                ? 'rgba(124,58,237,0.07)'
+                : 'rgba(124,58,237,0.12)',
+              border: '1.5px dashed rgba(124,58,237,0.35)',
             }}
             onMouseEnter={event => {
-              event.currentTarget.style.backgroundColor = 'rgba(124, 58, 237,0.14)';
+              event.currentTarget.style.backgroundColor = 'rgba(124,58,237,0.14)';
               event.currentTarget.style.borderStyle = 'solid';
             }}
             onMouseLeave={event => {
               event.currentTarget.style.backgroundColor = columnLight
-                ? 'rgba(124, 58, 237,0.07)'
-                : 'rgba(124, 58, 237,0.12)';
+                ? 'rgba(124,58,237,0.07)'
+                : 'rgba(124,58,237,0.12)';
               event.currentTarget.style.borderStyle = 'dashed';
             }}
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 5v14M5 12h14" />
             </svg>
 
@@ -513,19 +544,20 @@ export default function ColumnBlock({
             <div
               className="absolute bottom-full left-4 right-4 mb-1.5 rounded-2xl border shadow-2xl z-50 overflow-hidden"
               style={{
-                backgroundColor: '#ffffff',
-                borderColor: 'rgba(0,0,0,0.08)',
+                backgroundColor: 'var(--color-surface)',
+                borderColor: 'var(--color-border)',
               }}
               onMouseDown={event => event.stopPropagation()}
             >
               {COLUMN_ADD_TYPES.map(({ kind, label, icon }) => (
                 <button
                   key={kind}
+                  type="button"
                   onClick={() => addNewItem(kind)}
-                  className="w-full px-4 py-3 text-left text-sm font-medium transition-colors flex items-center gap-3"
-                  style={{ color: '#374151' }}
+                  className="w-full px-4 py-3 text-left text-sm font-medium transition-colors flex items-center gap-3 cursor-pointer"
+                  style={{ color: 'var(--color-text-primary)' }}
                   onMouseEnter={event => {
-                    event.currentTarget.style.backgroundColor = '#f3f4f6';
+                    event.currentTarget.style.backgroundColor = 'var(--color-surface-alt)';
                   }}
                   onMouseLeave={event => {
                     event.currentTarget.style.backgroundColor = 'transparent';

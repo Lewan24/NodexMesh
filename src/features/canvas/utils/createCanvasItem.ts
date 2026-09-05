@@ -145,6 +145,9 @@ export function createCanvasItem(
         title: 'Column',
         color: '#f0f9ff',
         width: ITEM_WIDTH.column,
+        layout: 'vertical',
+        gridColumns: 2,
+        gap: 10,
         items: [],
       } as ColumnItem;
 

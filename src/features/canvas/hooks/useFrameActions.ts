@@ -4,15 +4,12 @@ import type { BoardItem } from '@/entities/board/types';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 
 import { FRAME_FIT_PADDING } from '@/features/canvas/constants';
-import {
-  getItemRect,
-  isRectInsideRect,
-} from '@/features/canvas/utils/itemGeometry';
+import { getFrameContents } from '@/features/canvas/utils/frameGeometry';
+import { getItemRect } from '@/features/canvas/utils/itemGeometry';
 
 interface UseFrameActionsOptions {
   items: BoardItem[];
   measuredSizes: SizeMap;
-
   onUpdateItem: (
     id: string,
     updater: (item: BoardItem) => BoardItem,
@@ -29,13 +26,7 @@ export function useFrameActions({
       const frame = items.find(item => item.id === frameId && item.type === 'frame');
       if (!frame || frame.type !== 'frame') return;
 
-      const frameRect = getItemRect(frame, measuredSizes);
-
-      const inside = items.filter(item => {
-        if (item.id === frameId || item.type === 'frame') return false;
-        return isRectInsideRect(getItemRect(item, measuredSizes), frameRect);
-      });
-
+      const inside = getFrameContents(frame, items, measuredSizes);
       if (inside.length === 0) return;
 
       const rects = inside.map(item => getItemRect(item, measuredSizes));

@@ -52,6 +52,15 @@ export function useCanvasZoom({
     }
 
     const handleWheel = (event: WheelEvent) => {
+      const target = event.target;
+
+      if (
+        target instanceof Element &&
+        target.closest('[data-wheel-scroll="true"]')
+      ) {
+        return;
+      }
+
       event.preventDefault();
 
       const rect = element.getBoundingClientRect();

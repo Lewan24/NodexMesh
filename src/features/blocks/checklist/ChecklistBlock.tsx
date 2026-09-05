@@ -117,13 +117,15 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
   );
 
   return (
-    <div className="group relative transition-all duration-200 hover:shadow-2xl" style={{ 
+    <div className="group relative transition-shadow duration-200 hover:shadow-2xl" style={{ 
         width: item.width ?? 220,
         height: item.height,
        }}>
-      <div ref={cardRef}
+      <div 
+        ref={cardRef}
+        data-wheel-scroll="true"
         data-checklist-id={item.id}
-        className="item-rounded shadow-xl overflow-hidden" 
+        className="item-rounded shadow-xl overflow-scroll" 
         style={{ 
           backgroundColor: item.color,
           height: item.height ? '100%' : undefined,
@@ -159,6 +161,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                     item.typography?.bold
                       ? 700
                       : 600,
+                  color: textColor,
                 }}
                 onDoubleClick={() => setEditingTitle(true)}
               >{item.title}</h3>

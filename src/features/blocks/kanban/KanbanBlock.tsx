@@ -241,6 +241,10 @@ export default function KanbanBlock({
     ]);
   }, [updateColumns]);
 
+  const resetHeight = useCallback(() => {
+    updateKanban({ height: undefined });
+  }, [updateKanban]);
+
   return (
     <div className="group relative" style={{
       width: item.width,
@@ -248,8 +252,9 @@ export default function KanbanBlock({
     }}>
       <div
         ref={boardRef}
+        data-wheel-scroll="true"
         data-kanban-id={item.id}
-        className="item-rounded border shadow-xl overflow-auto"
+        className="item-rounded border shadow-xl overflow-scroll"
         style={{
           width: item.width
             ? '100%'
@@ -350,29 +355,72 @@ export default function KanbanBlock({
             )}
           </div>
 
-          <button
+          <div
+            className="flex items-center gap-1"
             onMouseDown={event => event.stopPropagation()}
-            onClick={onDelete}
-            className="opacity-0 group-hover:opacity-100 transition-all"
-            style={{ color: mutedColor }}
-            onMouseEnter={event => {
-              event.currentTarget.style.color = '#FF6B8A';
-            }}
-            onMouseLeave={event => {
-              event.currentTarget.style.color = mutedColor;
-            }}
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
+            {item.height !== undefined && (
+              <button
+                type="button"
+                onClick={resetHeight}
+                className="w-7 h-7 flex items-center justify-center rounded-lg transition-all cursor-pointer"
+                style={{ color: mutedColor }}
+                onMouseEnter={event => {
+                  event.currentTarget.style.color = accentColor;
+                  event.currentTarget.style.backgroundColor = cardBackground;
+                }}
+                onMouseLeave={event => {
+                  event.currentTarget.style.color = mutedColor;
+                  event.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                title="Fit height to content"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                  <path d="M16 3h3a2 2 0 0 1 2 2v3" />
+                  <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
+                  <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                  <path d="M8 12h8" />
+                </svg>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onDelete}
+              className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg transition-all cursor-pointer"
+              style={{ color: mutedColor }}
+              onMouseEnter={event => {
+                event.currentTarget.style.color = 'var(--color-danger-strong)';
+                event.currentTarget.style.backgroundColor = 'rgba(255,107,138,0.1)';
+              }}
+              onMouseLeave={event => {
+                event.currentTarget.style.color = mutedColor;
+                event.currentTarget.style.backgroundColor = 'transparent';
+              }}
+              title="Delete Kanban"
             >
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Columns */}
