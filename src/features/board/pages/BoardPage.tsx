@@ -56,8 +56,10 @@ export default function BoardPage({
     restoreItems,
     deleteItem,
     deleteItems,
+    bringForward,
+    sendBackward,
     bringToFront,
-    getNextZIndex,
+    sendToBack,
   } = useProjectItems({
     activeProjectId,
     setProjects,
@@ -162,7 +164,7 @@ export default function BoardPage({
               position?.y ??
               column.y + 40,
 
-            zIndex: getNextZIndex(),
+            zIndex: Math.max(0, ...project.items.map(item => item.zIndex)) + 1,
           };
 
           const updatedColumn: ColumnItem = {
@@ -193,7 +195,6 @@ export default function BoardPage({
     [
       activeProjectId,
       setProjects,
-      getNextZIndex,
     ],
   );
 
@@ -305,7 +306,10 @@ export default function BoardPage({
           onUpdateItem={updateItem}
           onDeleteItem={deleteItem}
           onDeleteItems={deleteItems}
+          onBringForward={bringForward}
+          onSendBackward={sendBackward}
           onBringToFront={bringToFront}
+          onSendToBack={sendToBack}
           onDropOnColumn={handleDropOnColumn}
           onEjectFromColumn={handleEjectFromColumn}
           onRestoreItems={restoreItems}

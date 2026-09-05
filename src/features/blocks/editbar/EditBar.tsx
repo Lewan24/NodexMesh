@@ -6,6 +6,7 @@ import { EditBarDivider } from './components/EditBarButton';
 import { ITEM_TYPE_LABELS } from './constants';
 import TypographyControls from './components/TypographyControls';
 import ColumnLayoutControls from './components/ColumnLayoutControls';
+import LayerControls from './components/LayerControls';
 
 interface EditBarProps {
   selectedItems: BoardItem[];
@@ -17,6 +18,10 @@ interface EditBarProps {
   columnItem?: BoardItem;
   onUpdateColumnItem?: (updater: (item: BoardItem) => BoardItem) => void;
   onDeleteColumnItem?: () => void;
+  onBringForward: (id: string) => void;
+  onSendBackward: (id: string) => void;
+  onBringToFront: (id: string) => void;
+  onSendToBack: (id: string) => void;
 }
 
 export default function EditBar({
@@ -27,6 +32,10 @@ export default function EditBar({
   onFitFrame,
   onClose,
   columnItem,
+  onBringForward,
+  onSendBackward,
+  onBringToFront,
+  onSendToBack,
   onUpdateColumnItem,
   onDeleteColumnItem,
 }: EditBarProps) {
@@ -109,6 +118,17 @@ export default function EditBar({
         </span>
 
         {(isMulti || single?.type === 'frame') && <EditBarDivider />}
+
+        {single && !isColumnMode && (
+          <>
+            <LayerControls
+              onSendToBack={() => onSendToBack(single.id)}
+              onSendBackward={() => onSendBackward(single.id)}
+              onBringForward={() => onBringForward(single.id)}
+              onBringToFront={() => onBringToFront(single.id)}
+            />
+          </>
+        )}
 
         {isMulti && (
           <button

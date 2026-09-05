@@ -17,6 +17,10 @@ interface CanvasEditBarProps {
   onSelectItems: (ids: string[]) => void;
   onGroupSelected: () => void;
   onFitFrame: (frameId: string) => void;
+  onBringForward: (id: string) => void;
+  onSendBackward: (id: string) => void;
+  onBringToFront: (id: string) => void;
+  onSendToBack: (id: string) => void;
 
   onUpdateColumnItem: (
     columnId: string,
@@ -41,6 +45,10 @@ export default function CanvasEditBar({
   onSelectItems,
   onGroupSelected,
   onFitFrame,
+  onBringForward,
+  onSendBackward,
+  onBringToFront,
+  onSendToBack,
   onUpdateColumnItem,
   deleteSelectedColumnItem,
   clearColumnSelection,
@@ -68,6 +76,10 @@ export default function CanvasEditBar({
           ids.length,
         )
       }
+      onBringForward={onBringForward}
+      onSendBackward={onSendBackward}
+      onBringToFront={onBringToFront}
+      onSendToBack={onSendToBack}
       onGroupItems={() => {
         pushHistory();
         onGroupSelected();
