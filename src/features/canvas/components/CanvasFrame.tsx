@@ -32,6 +32,8 @@ interface CanvasFrameProps {
   isDragging?: boolean;
   dragTilt?: number;
 
+  isAttachTarget?: boolean;
+
   onMouseDown: (id: string, event: React.MouseEvent) => void;
   onAnimationEnd: (id: string) => void;
 
@@ -65,6 +67,7 @@ export default function CanvasFrame({
   isSettling = false,
   isDragging = false,
   dragTilt = 0,
+  isAttachTarget = false,
   zoom,
   onMouseDown,
   onAnimationEnd,
@@ -297,6 +300,16 @@ export default function CanvasFrame({
             inset: -4,
             boxShadow:
               '0 0 0 2px var(--color-accent), 0 0 12px rgba(124, 58, 237,0.25)',
+          }}
+        />
+      )}
+
+      {isAttachTarget && (
+        <div
+          className="absolute pointer-events-none rounded-2xl"
+          style={{
+            inset: -6,
+            boxShadow: '0 0 0 3px var(--color-accent), 0 0 18px rgba(124, 58, 237, 0.35)',
           }}
         />
       )}

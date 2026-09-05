@@ -10,7 +10,7 @@ export default function ColorSwatch({ color, active = false, size = 12, onClick 
     <button
       onClick={onClick}
       title={color}
-      className="rounded-full border transition-all hover:scale-125 flex-shrink-0"
+      className="rounded-full border transition-all hover:scale-125 flex-shrink-0 cursor-pointer"
       style={{
         width: active ? size + 3 : size,
         height: active ? size + 3 : size,

@@ -117,7 +117,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
   );
 
   return (
-    <div className="group relative transition-all duration-200 hover:shadow-2xl" style={{ 
+    <div className="group relative transition-shadow duration-200 hover:shadow-2xl" style={{ 
         width: item.width ?? 220,
         height: item.height,
        }}>

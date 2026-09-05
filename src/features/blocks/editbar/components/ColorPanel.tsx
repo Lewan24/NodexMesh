@@ -7,6 +7,7 @@ import {
   LIGHT_BACKGROUNDS,
   STRIP_COLORS,
 } from '../constants';
+import CustomColorInput from './CustomColorInput';
 
 interface ColorPanelProps {
   item: BoardItem;
@@ -100,6 +101,12 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
                 onClick={() => setBackgroundColor(color)}
               />
             ))}
+
+            <CustomColorInput
+              value={backgroundColor}
+              onChange={setBackgroundColor}
+              title="Custom background color"
+            />
           </div>
 
           <EditBarDivider />
@@ -127,6 +134,12 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
             onClick={() => setStripColor(stripColor === color ? undefined : color)}
           />
         ))}
+
+        <CustomColorInput
+          value={stripColor}
+          onChange={setStripColor}
+          title="Custom accent color"
+        />
 
         {stripColor && (
           <button

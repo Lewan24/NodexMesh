@@ -84,6 +84,7 @@ export function useLineDrag({
 
       const originalX = endpoint === 1 ? resolved.x : resolved.x2;
       const originalY = endpoint === 1 ? resolved.y : resolved.y2;
+      const oppositeTargetId = endpoint === 1 ? item.endItemId : item.startItemId;
 
       onUpdateItem(id, current => {
         if (current.type !== 'line') {
@@ -109,22 +110,11 @@ export function useLineDrag({
       const startY = event.clientY;
       const currentZoom = zoomRef.current;
 
-      const findTarget = (
-        x: number,
-        y: number,
-      ) =>
+      const findTarget = (x: number, y: number) =>
         projectRef.current.items.find(target => {
-          if (
-            target.id === id ||
-            target.type === 'line' ||
-            target.type === 'frame'
-          ) {
-            return false;
-          }
+          if (target.id === id || target.type === 'line' || target.id === oppositeTargetId) return false;
 
-          const size =
-            measuredSizes.get(target.id) ??
-            getApproxItemSize(target);
+          const size = measuredSizes.get(target.id) ?? getApproxItemSize(target);
 
           return (
             x >= target.x &&
@@ -168,7 +158,7 @@ export function useLineDrag({
 
         const targetId = attachHoverIdRef.current;
 
-        if (targetId) {
+        if (targetId && targetId !== oppositeTargetId) {
           const target = projectRef.current.items.find(
             current => current.id === targetId,
           );

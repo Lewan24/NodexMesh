@@ -962,6 +962,7 @@ export default function Canvas({
                 : 0
             }
             isAnimating={animatingIds.has(frame.id)}
+            isAttachTarget={attachHoverId === frame.id}
             selectedIds={safeSelectedIds}
             onMouseDown={handleItemMouseDown}
             onAnimationEnd={clearEnterAnimation}
