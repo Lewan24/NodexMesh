@@ -9,6 +9,10 @@ export const KANBAN_COLUMN_COLORS = [
   '#059669',
 ] as const;
 
+export const DEFAULT_KANBAN_COLUMN_WIDTH = 180;
+export const MIN_KANBAN_COLUMN_WIDTH = 140;
+export const MAX_KANBAN_COLUMN_WIDTH = 600;
+
 export const DEFAULT_KANBAN_BACKGROUND = '#08171d';
 
 export function createId(): string {
@@ -33,6 +37,7 @@ export function createKanbanColumn(index: number): KanbanColumn {
     title: 'New',
     color,
     cards: [],
+    width: DEFAULT_KANBAN_COLUMN_WIDTH,
   };
 }
 

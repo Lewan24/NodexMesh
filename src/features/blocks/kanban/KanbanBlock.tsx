@@ -13,6 +13,9 @@ import {
   createKanbanCard,
   createKanbanColumn,
   DEFAULT_KANBAN_BACKGROUND,
+  DEFAULT_KANBAN_COLUMN_WIDTH,
+  MIN_KANBAN_COLUMN_WIDTH,
+  MAX_KANBAN_COLUMN_WIDTH,
   isLightColor,
 } from '@/features/blocks/kanban/utils/kanbanUtils';
 
@@ -46,6 +49,7 @@ function DropLine() {
 
 export default function KanbanBlock({
   item,
+  zoom = 1,
   onUpdate,
   onDelete,
   onCardDroppedOutside,
@@ -226,6 +230,66 @@ export default function KanbanBlock({
             ? {
                 ...column,
                 title,
+              }
+            : column,
+        ),
+      );
+    },
+    [updateColumns],
+  );
+
+  const handleColumnResizeStart = useCallback(
+    (columnId: string, event: React.MouseEvent) => {
+      if (event.button !== 0) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const column = columnsRef.current.find(column => column.id === columnId);
+      if (!column) return;
+
+      const startX = event.clientX;
+      const startWidth = column.width ?? DEFAULT_KANBAN_COLUMN_WIDTH;
+
+      const handleMove = (moveEvent: MouseEvent) => {
+        const deltaX = (moveEvent.clientX - startX) / zoom;
+
+        const width = Math.max(
+          MIN_KANBAN_COLUMN_WIDTH,
+          Math.min(MAX_KANBAN_COLUMN_WIDTH, startWidth + deltaX),
+        );
+
+        updateColumns(columns =>
+          columns.map(column =>
+            column.id === columnId
+              ? {
+                  ...column,
+                  width: Math.round(width),
+                }
+              : column,
+          ),
+        );
+      };
+
+      const handleUp = () => {
+        document.removeEventListener('mousemove', handleMove);
+        document.removeEventListener('mouseup', handleUp);
+      };
+
+      document.addEventListener('mousemove', handleMove);
+      document.addEventListener('mouseup', handleUp);
+    },
+    [zoom, updateColumns],
+  );
+
+  const resetColumnWidth = useCallback(
+    (columnId: string) => {
+      updateColumns(columns =>
+        columns.map(column =>
+          column.id === columnId
+            ? {
+                ...column,
+                width: DEFAULT_KANBAN_COLUMN_WIDTH,
               }
             : column,
         ),
@@ -438,8 +502,10 @@ export default function KanbanBlock({
                   columnRefs.current.delete(column.id);
                 }
               }}
-              className="flex flex-col group/col"
-              style={{ width: 180 }}
+              className="relative flex flex-col group/col flex-shrink-0"
+              style={{
+                width: column.width ?? DEFAULT_KANBAN_COLUMN_WIDTH,
+              }}
             >
               {/* Column header */}
 
@@ -656,6 +722,24 @@ export default function KanbanBlock({
                   Add card
                 </button>
               )}
+
+              <div
+                className="absolute top-0 -right-2 w-4 h-full cursor-col-resize z-20 group/resize"
+                onMouseDown={event => handleColumnResizeStart(column.id, event)}
+                onDoubleClick={event => {
+                  event.stopPropagation();
+                  resetColumnWidth(column.id);
+                }}
+                title={`Resize column (${Math.round(column.width ?? DEFAULT_KANBAN_COLUMN_WIDTH)}px) · Double-click to reset`}
+              >
+                <div
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-8 rounded-full opacity-0 group-hover/col:opacity-50 group-hover/resize:opacity-100 transition-all"
+                  style={{
+                    backgroundColor: accentColor,
+                  }}
+                />
+              </div>
+
             </div>
           ))}
 

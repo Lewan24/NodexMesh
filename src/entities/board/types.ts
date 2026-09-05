@@ -52,6 +52,7 @@ export interface KanbanColumn {
   title: string;
   color: string;
   cards: KanbanCard[];
+  width?: number;
 }
 
 export interface KanbanCard {
