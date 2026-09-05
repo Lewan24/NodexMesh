@@ -75,7 +75,10 @@ interface CanvasProps {
   ) => void;
   onDeleteItem: (id: string) => void;
   onDeleteItems: (ids: string[]) => void;
+  onBringForward: (id: string) => void;
+  onSendBackward: (id: string) => void;
   onBringToFront: (id: string) => void;
+  onSendToBack: (id: string) => void;
   onDropOnColumn: (itemId: string, columnId: string) => void;
   onEjectFromColumn: (
     columnId: string,
@@ -103,7 +106,10 @@ export default function Canvas({
   onUpdateItem,
   onDeleteItem,
   onDeleteItems,
+  onBringForward,
+  onSendBackward,
   onBringToFront,
+  onSendToBack,
   onDropOnColumn,
   onEjectFromColumn,
   onRestoreItems,
@@ -606,7 +612,6 @@ export default function Canvas({
     pushHistory,
     onSelectItems,
     onSelectTool,
-    onBringToFront,
     onUpdateItem,
     onDropOnColumn,
     clearColumnSelection,
@@ -1084,6 +1089,10 @@ export default function Canvas({
         onDeleteItems={onDeleteItems}
         onSelectItems={onSelectItems}
         onGroupSelected={onGroupSelected}
+        onBringForward={onBringForward}
+        onSendBackward={onSendBackward}
+        onBringToFront={onBringToFront}
+        onSendToBack={onSendToBack}
         onFitFrame={handleFitFrame}
         onUpdateColumnItem={handleUpdateColumnItem}
         deleteSelectedColumnItem={deleteSelectedColumnItem}

@@ -42,7 +42,6 @@ interface UseItemDragOptions {
   pushHistory: () => void;
   onSelectItems: (ids: string[]) => void;
   onSelectTool: (tool: ToolType) => void;
-  onBringToFront: (id: string) => void;
 
   onUpdateItem: (
     id: string,
@@ -67,7 +66,6 @@ export function useItemDrag({
   pushHistory,
   onSelectItems,
   onSelectTool,
-  onBringToFront,
   onUpdateItem,
   onDropOnColumn,
   clearColumnSelection,
@@ -180,10 +178,6 @@ export function useItemDrag({
             });
           }
         }
-      }
-
-      for (const dragId of dragIds) {
-        onBringToFront(dragId);
       }
 
       const startX = event.clientX;
@@ -462,7 +456,6 @@ export function useItemDrag({
       pushHistory,
       onSelectItems,
       onSelectTool,
-      onBringToFront,
       onUpdateItem,
       onDropOnColumn,
       clearColumnSelection,
