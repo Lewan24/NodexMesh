@@ -110,19 +110,39 @@ export function useLineDrag({
       const startY = event.clientY;
       const currentZoom = zoomRef.current;
 
-      const findTarget = (x: number, y: number) =>
-        projectRef.current.items.find(target => {
-          if (target.id === id || target.type === 'line' || target.id === oppositeTargetId) return false;
+      const findTarget = (x: number, y: number) => {
+        const candidates = projectRef.current.items
+          .filter(target => {
+            if (target.id === id || target.type === 'line' || target.id === oppositeTargetId) return false;
 
-          const size = measuredSizes.get(target.id) ?? getApproxItemSize(target);
+            const size = measuredSizes.get(target.id) ?? getApproxItemSize(target);
 
-          return (
-            x >= target.x &&
-            y >= target.y &&
-            x <= target.x + size.width &&
-            y <= target.y + size.height
-          );
-        });
+            return (
+              x >= target.x &&
+              y >= target.y &&
+              x <= target.x + size.width &&
+              y <= target.y + size.height
+            );
+          })
+          .map(target => {
+            const size = measuredSizes.get(target.id) ?? getApproxItemSize(target);
+
+            return {
+              target,
+              area: size.width * size.height,
+            };
+          })
+          .sort((a, b) => {
+            if (a.target.type !== 'frame' && b.target.type === 'frame') return -1;
+            if (a.target.type === 'frame' && b.target.type !== 'frame') return 1;
+
+            if (a.area !== b.area) return a.area - b.area;
+
+            return b.target.zIndex - a.target.zIndex;
+          });
+
+        return candidates[0]?.target;
+      };
 
       const handleMove = (moveEvent: MouseEvent) => {
         const dx = (moveEvent.clientX - startX) / currentZoom;

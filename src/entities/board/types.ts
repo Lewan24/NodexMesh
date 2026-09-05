@@ -93,6 +93,7 @@ export interface FrameItem extends BaseItem {
   width: number;
   height: number;
   color: string;
+  opacity?: number;
 }
 
 export interface ChecklistItem extends BaseItem {
