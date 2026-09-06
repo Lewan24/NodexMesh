@@ -24,13 +24,13 @@ export const MIN_IMAGE_HEIGHT = 80;
 export const CANVAS_HISTORY_LIMIT = 50;
 
 export const ITEM_WIDTH = {
-  note: 224,
-  checklist: 224,
-  link: 256,
-  image: 256,
-  text: 192,
+  note: 320,
+  checklist: 320,
+  link: 320,
+  image: 320,
+  text: 320,
   column: 320,
-  frame: 352,
+  frame: 500,
   kanban: 576,
   line: 192,
 } as const;

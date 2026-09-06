@@ -2,6 +2,7 @@ import type {
   BoardItem,
   FontFamily,
   TextAlign,
+  VerticalAlign
 } from '@/entities/board/types';
 
 import {
@@ -27,6 +28,12 @@ const ALIGNMENTS: TextAlign[] = [
   'left',
   'center',
   'right',
+];
+
+const VERTICAL_ALIGNMENTS: VerticalAlign[] = [
+  'top',
+  'middle',
+  'bottom',
 ];
 
 export default function TypographyControls({
@@ -286,6 +293,72 @@ export default function TypographyControls({
           )}
         </EditBarButton>
       ))}
+
+      {(item.type === 'note' || item.type === 'text') && (
+        <>
+          <EditBarDivider />
+
+          {VERTICAL_ALIGNMENTS.map(alignment => (
+            <EditBarButton
+              key={alignment}
+              active={
+                (typography?.verticalAlign ?? 'top') === alignment
+              }
+              onClick={() =>
+                update({
+                  verticalAlign: alignment,
+                })
+              }
+              title={`Align vertically ${alignment}`}
+            >
+              {alignment === 'top' && (
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                >
+                  <path d="M4 4h16" />
+                  <path d="M7 8h10M9 12h6" />
+                </svg>
+              )}
+
+              {alignment === 'middle' && (
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                >
+                  <path d="M4 12h16" />
+                  <path d="M7 8h10M9 16h6" />
+                </svg>
+              )}
+
+              {alignment === 'bottom' && (
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                >
+                  <path d="M4 20h16" />
+                  <path d="M9 12h6M7 16h10" />
+                </svg>
+              )}
+            </EditBarButton>
+          ))}
+        </>
+      )}
     </>
   );
 }

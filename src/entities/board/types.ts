@@ -10,6 +10,8 @@ export type FontFamily =
   | 'trebuchet';
 
 export type TextAlign = 'left' | 'center' | 'right';
+export type VerticalAlign = 'top' | 'middle' | 'bottom';
+export type ColumnLayout = 'vertical' | 'horizontal' | 'grid';
 
 export interface TypographySettings {
   fontFamily?: FontFamily;
@@ -17,6 +19,7 @@ export interface TypographySettings {
   bold?: boolean;
   italic?: boolean;
   textAlign?: TextAlign;
+  verticalAlign?: VerticalAlign;
 }
 
 export interface BaseItem {
@@ -123,8 +126,6 @@ export interface LineItem extends BaseItem {
   /** If set, the end point (x2,y2) follows this item's center instead of being fixed. */
   endItemId?: string;
 }
-
-export type ColumnLayout = 'vertical' | 'horizontal' | 'grid';
 
 export interface ColumnItem extends BaseItem {
   type: 'column';

@@ -125,7 +125,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
         ref={cardRef}
         data-wheel-scroll="true"
         data-checklist-id={item.id}
-        className="item-rounded shadow-xl overflow-scroll" 
+        className="item-rounded shadow-xl overflow-auto" 
         style={{ 
           backgroundColor: item.color,
           height: item.height ? '100%' : undefined,
@@ -168,16 +168,49 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
             )}
           </div>
 
-          <button 
-            onMouseDown={(event) => event.stopPropagation()}
-            onClick={onDelete}
-            className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 rounded-full p-0.5 hover:bg-black/10 ml-2"
-            style={{ color: mutedColor }}
+          <div
+            className="flex items-center gap-1.5 ml-2"
+            onMouseDown={event =>
+              event.stopPropagation()
+            }
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
+            {item.height !== undefined && (
+              <button
+                type="button"
+                onClick={() =>
+                  update({
+                    height: undefined,
+                  })
+                }
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5"
+                style={{
+                  color: mutedColor,
+                }}
+                title="Reset to auto height"
+              >
+                Auto-fit
+              </button>
+            )}
+
+            <button
+              onClick={onDelete}
+              className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 rounded-full p-0.5 hover:bg-black/10"
+              style={{
+                color: mutedColor,
+              }}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {totalCount > 0 && 
