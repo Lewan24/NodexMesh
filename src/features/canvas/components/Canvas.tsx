@@ -48,6 +48,7 @@ import {
 import CanvasDropPreview from './CanvasDropPreview';
 import { useCanvasLostState } from '../hooks/useCanvasLostState';
 import CanvasLostPrompt from './CanvasLostPrompt';
+import CanvasAlignmentGuides from './CanvasAlignmentGuides';
 
 interface ToolDragGhostState extends ToolDragDetail {
   overCanvas: boolean;
@@ -601,6 +602,7 @@ export default function Canvas({
     settlingIds,
     dropPreview,
     dragTilt,
+    alignmentGuides,
     handleItemMouseDown,
   } = useItemDrag({
     projectRef,
@@ -1032,6 +1034,10 @@ export default function Canvas({
             />
           );
         })}
+
+        <CanvasAlignmentGuides
+          guides={alignmentGuides}
+        />
 
         {dropPreview && (
           <CanvasDropPreview

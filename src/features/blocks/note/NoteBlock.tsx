@@ -38,6 +38,15 @@ export default function NoteBlock({
 
   const fontSize: NoteFontSize = item.fontSize ?? 'base';
 
+  const verticalAlign = item.typography?.verticalAlign ?? 'top';
+
+  const verticalJustify =
+    verticalAlign === 'middle'
+      ? 'center'
+      : verticalAlign === 'bottom'
+        ? 'flex-end'
+        : 'flex-start';
+
   const update = useCallback(
     (patch: Partial<NoteItem>) => {
       onUpdate(current => {
@@ -65,12 +74,24 @@ export default function NoteBlock({
    */
 
   const resizeTextarea = useCallback(() => {
-    if (item.height) return;
-
     const textarea = textareaRef.current;
     if (!textarea) return;
 
     textarea.style.height = 'auto';
+
+    if (item.height) {
+      const availableHeight =
+        contentRef.current?.clientHeight ??
+        textarea.scrollHeight;
+
+      textarea.style.height = `${Math.min(
+        textarea.scrollHeight,
+        availableHeight,
+      )}px`;
+
+      return;
+    }
+
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, [item.height]);
 
@@ -158,11 +179,12 @@ export default function NoteBlock({
         <div
           ref={contentRef}
           data-wheel-scroll="true"
-          className="px-3 pb-3 pt-1 flex-1 min-h-0"
+          className="px-3 pb-3 pt-1 flex-1 min-h-0 flex flex-col"
           style={{
-            overflow: editing ? 'hidden' : 'scroll'
+            overflow: editing ? 'hidden' : 'auto',
+            justifyContent: verticalJustify,
           }}
-        >
+>
           {editing ? (
             <textarea
               ref={textareaRef}
@@ -186,10 +208,13 @@ export default function NoteBlock({
                   setEditing(false);
                 }
               }}
-              className={`w-full bg-transparent resize-none outline-none wrap-break-word leading-relaxed h-full ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
+              className={`w-full bg-transparent resize-none outline-none wrap-break-word leading-relaxed ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
+                marginTop: '-30px',
                 color: textColor,
                 resize: 'none',
+                maxHeight: '100%',
+                overflowY: 'auto',
                 ...typographyStyle,
               }}
               placeholder="Type your note…"
@@ -200,6 +225,7 @@ export default function NoteBlock({
               onClick={() => setEditing(true)}
               className={`leading-relaxed whitespace-pre-wrap wrap-break-word cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
+                marginTop: '-30px',
                 color: textColor,
                 ...typographyStyle,
               }}

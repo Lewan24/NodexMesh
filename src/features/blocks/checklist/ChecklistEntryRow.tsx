@@ -18,7 +18,23 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(entry.text);
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const resizeEditor = () => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = 'auto';
+    textarea.style.height =
+      `${textarea.scrollHeight}px`;
+  };
+
+  useEffect(() => {
+    if (!editing) return;
+
+    inputRef.current?.focus();
+    resizeEditor();
+  }, [editing]);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -40,7 +56,7 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
 
   return (
     <div
-      className="group/entry flex items-center gap-1 py-1"
+      className="group/entry flex items-start gap-1 py-1"
       style={{ opacity: isDragging ? 0.35 : 1 }}
     >
       <DragHandle
@@ -54,7 +70,7 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
       <button
         onMouseDown={event => event.stopPropagation()}
         onClick={onToggle}
-        className="flex-shrink-0 w-4 h-4 rounded flex items-center justify-center transition-all duration-200 border"
+        className="flex-shrink-0 w-4 h-4 mt-0.5 rounded flex items-center justify-center transition-all duration-200 border"
         style={{
           borderColor: entry.done ? accentColor : `${textColor}40`,
           backgroundColor: entry.done ? accentColor : 'transparent',
@@ -75,21 +91,36 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
 
       {/* Text */}
       {editing ? (
-        <input
+        <textarea
           ref={inputRef}
-          className="flex-1 bg-transparent outline-none text-sm min-w-0"
-          style={{ color: textColor }}
+          rows={1}
+          className="flex-1 min-w-0 bg-transparent outline-none text-sm leading-snug resize-none overflow-hidden"
+          style={{
+            color: textColor,
+          }}
           value={text}
-          onChange={event => setText(event.target.value)}
+          onChange={event => {
+            setText(event.target.value);
+            resizeEditor();
+          }}
           onBlur={commit}
           onKeyDown={event => {
-            if (event.key === 'Enter' || event.key === 'Escape') commit();
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              commit();
+            }
+
+            if (event.key === 'Escape') {
+              commit();
+            }
           }}
-          onMouseDown={event => event.stopPropagation()}
+          onMouseDown={event =>
+            event.stopPropagation()
+          }
         />
       ) : (
         <span
-          className="flex-1 min-w-0 text-sm leading-snug select-none cursor-text transition-all duration-150 truncate"
+          className="flex-1 min-w-0 text-sm leading-snug select-none cursor-text transition-all duration-150 whitespace-pre-wrap break-words"
           style={{
             color: entry.done ? `${textColor}55` : textColor,
             textDecoration: entry.done ? 'line-through' : 'none',

@@ -28,8 +28,15 @@ export default function TextBlock({
 
   const typographyStyle = getTypographyStyle(item);
 
-  if(!item.textAlign)
-    item.textAlign = 'center';
+  const verticalAlign =
+    item.typography?.verticalAlign ?? 'top';
+
+  const verticalJustify =
+    verticalAlign === 'middle'
+      ? 'center'
+      : verticalAlign === 'bottom'
+        ? 'flex-end'
+        : 'flex-start';
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -104,22 +111,18 @@ export default function TextBlock({
       }}
     >
       <div
-        className="transition-all duration-150 item-rounded"
+        className="transition-all duration-150 item-rounded flex flex-col"
         style={
           isCard
             ? {
                 backgroundColor: item.color,
                 padding: '14px 18px',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                height: item.height
-                ? '100%'
-                : undefined,
+                height: item.height ? '100%' : undefined,
               }
             : {
                 padding: 12,
-                height: item.height
-                ? '100%'
-                : undefined,
+                height: item.height ? '100%' : undefined,
               }
         }
       >
@@ -130,13 +133,17 @@ export default function TextBlock({
             style={{
               height: 5,
               backgroundColor: item.topColor,
-              margin: '-14px -18px 12px',
-              borderRadius: '16px 16px 0 0',
+              margin: '-14px -18px 8px',
             }}
           />
         )}
 
-        {/* Text */}
+        <div className='flex flex-col'
+        style={{
+          height: item.height ? '100%' : undefined,
+          justifyContent: verticalJustify,
+        }}>
+          {/* Text */}
 
         {editing ? (
           <input
@@ -193,6 +200,7 @@ export default function TextBlock({
             {item.content || 'Text'}
           </span>
         )}
+        </div>
       </div>
     </div>
   );

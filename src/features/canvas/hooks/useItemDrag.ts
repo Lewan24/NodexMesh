@@ -11,6 +11,7 @@ import { DROPPABLE_ON_COLUMN } from '@/features/canvas/constants';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import { getItemSize } from '@/features/canvas/utils/itemGeometry';
 import { isItemInsideFrame } from '../utils/frameGeometry';
+import { AlignmentGuide, findAlignmentSnap } from '../utils/alignmentGuides';
 
 export interface ItemDropPreview {
   x: number;
@@ -76,6 +77,11 @@ export function useItemDrag({
   const [draggingIds, setDraggingIds] = useState<string[]>([]);
   const [dropPreview, setDropPreview] =
     useState<ItemDropPreview | null>(null);
+
+  const [
+    alignmentGuides,
+    setAlignmentGuides,
+  ] = useState<AlignmentGuide[]>([]);
 
   const [dragTilt, setDragTilt] = useState(0);
 
@@ -180,6 +186,10 @@ export function useItemDrag({
         }
       }
 
+      const capturedIds = new Set(
+        captureMap.keys(),
+      );
+
       const startX = event.clientX;
       const startY = event.clientY;
       const currentZoom = zoomRef.current;
@@ -199,6 +209,13 @@ export function useItemDrag({
 
       let lastDx = 0;
       let lastDy = 0;
+
+      let lastPlacement:
+        | {
+            x: number;
+            y: number;
+          }
+        | null = null;
 
       let previousClientX = event.clientX;
 
@@ -254,13 +271,55 @@ export function useItemDrag({
               measuredSizes,
             );
 
+          /*
+          * Smart alignment is measured in screen-ish pixels,
+          * so compensate for canvas zoom.
+          */
+          const alignment =
+            findAlignmentSnap({
+              x: rawX,
+              y: rawY,
+              width: size.width,
+              height: size.height,
+              items:
+                projectRef.current.items,
+              excludedIds: capturedIds,
+              measuredSizes,
+              threshold:
+                8 / currentZoom,
+            });
+
+          /*
+          * Smart alignment wins over grid snapping.
+          * If there is no matching guide on an axis,
+          * fall back to the normal grid.
+          */
+          const previewX =
+            alignment.x ??
+            snapValue(rawX);
+
+          const previewY =
+            alignment.y ??
+            snapValue(rawY);
+
+          lastPlacement = {
+            x: previewX,
+            y: previewY,
+          };
+
+          setAlignmentGuides(
+            alignment.guides,
+          );
+
           setDropPreview({
-            x: snapValue(rawX),
-            y: snapValue(rawY),
+            x: previewX,
+            y: previewY,
             width: size.width,
             height: size.height,
           });
         } else {
+          lastPlacement = null;
+          setAlignmentGuides([]);
           setDropPreview(null);
         }
 
@@ -326,6 +385,7 @@ export function useItemDrag({
         setDraggingIds([]);
         setDropPreview(null);
         setDragTilt(0);
+        setAlignmentGuides([]);
 
         const columnId =
           dragOverColumnIdRef.current;
@@ -353,87 +413,105 @@ export function useItemDrag({
 
         setColumnHover(null);
 
-        /*
-        * While dragging the item follows the cursor freely.
-        * Only after mouseup do we settle it onto the grid.
-        */
-        if (hasMoved && snapEnabled) {
-          const primary = captureMap.get(id);
+       if (hasMoved) {
+        const primary =
+          captureMap.get(id);
 
-          if (primary) {
-            const rawX =
-              primary.x + lastDx;
+        if (primary) {
+          const rawX =
+            primary.x + lastDx;
 
-            const rawY =
-              primary.y + lastDy;
+          const rawY =
+            primary.y + lastDy;
 
-            const snappedX =
-              snapValue(rawX);
+          /*
+          * For normal items use exactly the position
+          * shown by CanvasDropPreview.
+          *
+          * Lines have no rectangular preview,
+          * so they keep normal grid snapping.
+          */
+          const finalX =
+            lastPlacement?.x ??
+            (
+              snapEnabled
+                ? snapValue(rawX)
+                : rawX
+            );
 
-            const snappedY =
-              snapValue(rawY);
+          const finalY =
+            lastPlacement?.y ??
+            (
+              snapEnabled
+                ? snapValue(rawY)
+                : rawY
+            );
 
-            const snapDx =
-              snappedX - rawX;
+          const settleDx =
+            finalX - rawX;
 
-            const snapDy =
-              snappedY - rawY;
+          const settleDy =
+            finalY - rawY;
 
-            if (
-              Math.abs(snapDx) > 0.01 ||
-              Math.abs(snapDy) > 0.01
-            ) {
-              const idsToSettle =
-                Array.from(captureMap.keys());
+          if (
+            Math.abs(settleDx) > 0.01 ||
+            Math.abs(settleDy) > 0.01
+          ) {
+            const idsToSettle =
+              Array.from(
+                captureMap.keys(),
+              );
 
-              setSettlingIds(idsToSettle);
+            setSettlingIds(
+              idsToSettle,
+            );
 
-              requestAnimationFrame(() => {
-                captureMap.forEach(
-                  (
-                    capture,
+            requestAnimationFrame(() => {
+              captureMap.forEach(
+                (
+                  capture,
+                  capturedId,
+                ) => {
+                  onUpdateItem(
                     capturedId,
-                  ) => {
-                    onUpdateItem(
-                      capturedId,
-                      current => ({
-                        ...current,
+                    current => ({
+                      ...current,
 
-                        x:
-                          capture.x +
-                          lastDx +
-                          snapDx,
+                      x:
+                        capture.x +
+                        lastDx +
+                        settleDx,
 
-                        y:
-                          capture.y +
-                          lastDy +
-                          snapDy,
+                      y:
+                        capture.y +
+                        lastDy +
+                        settleDy,
 
-                        ...(capture.isLine
-                          ? {
-                              x2:
-                                capture.x2! +
-                                lastDx +
-                                snapDx,
+                      ...(capture.isLine
+                        ? {
+                            x2:
+                              capture.x2! +
+                              lastDx +
+                              settleDx,
 
-                              y2:
-                                capture.y2! +
-                                lastDy +
-                                snapDy,
-                            }
-                          : {}),
-                      }),
-                    );
-                  },
-                );
+                            y2:
+                              capture.y2! +
+                              lastDy +
+                              settleDy,
+                          }
+                        : {}),
+                    }),
+                  );
+                },
+              );
 
-                window.setTimeout(() => {
-                  setSettlingIds([]);
-                }, 160);
-              });
-            }
+              window.setTimeout(() => {
+                setSettlingIds([]);
+              }, 160);
+            });
           }
         }
+      }
 
         if (
           !hasMoved &&
@@ -468,6 +546,7 @@ export function useItemDrag({
     draggingIds,
     settlingIds,
     dropPreview,
+    alignmentGuides,
     dragTilt,
     handleItemMouseDown,
   };
