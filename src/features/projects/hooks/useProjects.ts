@@ -10,6 +10,7 @@ import { createDefaultProjectFor } from '@/entities/project/projectFactory';
 import {
   loadProjects,
   saveProjects,
+  resetProjects
 } from '@/features/projects/storage/projectStorage';
 
 interface UseProjectsResult {
@@ -20,6 +21,7 @@ interface UseProjectsResult {
   addProject: (name: string) => string;
   selectProject: (id: string) => void;
   createFirstProject: () => void;
+  resetDemo: () => void;
 }
 
 export function useProjects(
@@ -39,6 +41,13 @@ export function useProjects(
   const activeProject =
     projects.find(project => project.id === activeProjectId) ??
     projects[0];
+
+  const resetDemo = useCallback(() => {
+    const freshProjects = resetProjects(userId);
+
+    setProjects(freshProjects);
+    setActiveProjectId(freshProjects[0]?.id ?? '');
+  }, [userId]);
 
   const addProject = useCallback(
     (name: string): string => {
@@ -76,5 +85,6 @@ export function useProjects(
     addProject,
     selectProject,
     createFirstProject,
+    resetDemo
   };
 }

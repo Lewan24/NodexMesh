@@ -33,3 +33,9 @@ export function saveProjects(
     JSON.stringify(projects),
   );
 }
+
+export function resetProjects(userId: string): Project[] {
+  localStorage.removeItem(getProjectsStorageKey(userId));
+
+  return seedProjectsFor(userId);
+}
