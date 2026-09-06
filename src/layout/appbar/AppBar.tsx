@@ -16,6 +16,7 @@ interface AppBarProps {
   activeProjectId: string;
   onSelectProject: (id: string) => void;
   onAddProject: (name: string) => void;
+  onResetDemo: () => void;
 }
 
 type OpenMenu = 'projects' | 'account' | null;
@@ -25,6 +26,7 @@ export default function AppBar({
   activeProjectId,
   onSelectProject,
   onAddProject,
+  onResetDemo
 }: AppBarProps) {
   const { currentUser, isAdmin, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -73,7 +75,8 @@ export default function AppBar({
           onClose={() => setOpenMenu(null)}
           onToggleTheme={toggleTheme}
           onManageUsers={openAdminPanel}
-          onLogout={logout}
+          onLogout={logout} 
+          onResetDemo={onResetDemo}
         />
       </header>
 

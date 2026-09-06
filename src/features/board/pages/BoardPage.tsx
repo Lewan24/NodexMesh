@@ -34,6 +34,7 @@ export default function BoardPage({
     addProject,
     selectProject,
     createFirstProject,
+    resetDemo
   } = useProjects(userId);
 
   const {
@@ -276,7 +277,8 @@ export default function BoardPage({
         projects={projects}
         activeProjectId={activeProjectId}
         onSelectProject={handleSelectProject}
-        onAddProject={handleAddProject}
+        onAddProject={handleAddProject} 
+        onResetDemo={resetDemo}      
       />
 
       <div
