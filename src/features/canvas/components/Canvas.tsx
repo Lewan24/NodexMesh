@@ -49,6 +49,14 @@ import CanvasDropPreview from './CanvasDropPreview';
 import { useCanvasLostState } from '../hooks/useCanvasLostState';
 import CanvasLostPrompt from './CanvasLostPrompt';
 import CanvasAlignmentGuides from './CanvasAlignmentGuides';
+import {
+  getColumnSearchResult,
+  matchesItemSearch,
+} from '@/features/search/utils/itemSearch';
+
+import { isItemInsideFrame } from '@/features/canvas/utils/frameGeometry';
+
+import ItemInspector from '@/features/inspector/ItemInspector';
 
 interface ToolDragGhostState extends ToolDragDetail {
   overCanvas: boolean;
@@ -63,6 +71,7 @@ interface CanvasProps {
   };
   zoom: number;
   selectedIds: string[];
+  searchQuery: string;
 
   onPanChange: (pan: { x: number; y: number }) => void;
   onZoomChange: (zoom: number) => void;
@@ -114,6 +123,7 @@ export default function Canvas({
   onDropOnColumn,
   onEjectFromColumn,
   onRestoreItems,
+  searchQuery
 }: CanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [snapEnabled, setSnapEnabled] = useState(true);
@@ -846,8 +856,15 @@ export default function Canvas({
 
       const clickedColumnItem = target.closest('[data-column-item="true"]');
       const clickedEditBar = target.closest('[data-edit-bar="true"]');
+      const clickedInspector = target.closest('[data-item-inspector="true"]');
 
-      if (clickedColumnItem || clickedEditBar) return;
+      if (
+        clickedColumnItem ||
+        clickedEditBar ||
+        clickedInspector
+      ) {
+        return;
+      }
 
       clearColumnSelection();
     },
@@ -859,6 +876,91 @@ export default function Canvas({
   const selectedItems = project.items.filter(item =>
     safeSelectedIds.includes(item.id),
   );
+
+  const normalizedSearch =
+    searchQuery.trim();
+
+  const searchActive =
+    normalizedSearch.length > 0;
+
+  const matchingIds =
+    new Set<string>();
+
+  const nestedColumnMatches =
+    new Map<
+      string,
+      Set<string>
+    >();
+
+  for (const item of project.items) {
+    if (
+      item.type === 'column'
+    ) {
+      const result =
+        getColumnSearchResult(
+          item,
+          normalizedSearch,
+        );
+
+      if (result.matches) {
+        matchingIds.add(
+          item.id,
+        );
+      }
+
+      nestedColumnMatches.set(
+        item.id,
+        result.nestedMatchIds,
+      );
+
+      continue;
+    }
+
+    if (
+      matchesItemSearch(
+        item,
+        normalizedSearch,
+      )
+    ) {
+      matchingIds.add(item.id);
+    }
+  }
+
+  const contextFrameIds =
+    new Set<string>();
+
+  if (searchActive) {
+    const matchedItems =
+      project.items.filter(item =>
+        matchingIds.has(item.id),
+      );
+
+    for (const frame of project.items) {
+      if (
+        frame.type !== 'frame'
+      ) {
+        continue;
+      }
+
+      const containsMatch =
+        matchedItems.some(
+          matchedItem =>
+            matchedItem.id !==
+              frame.id &&
+            isItemInsideFrame(
+              matchedItem,
+              frame,
+              measuredSizes,
+            ),
+        );
+
+      if (containsMatch) {
+        contextFrameIds.add(
+          frame.id,
+        );
+      }
+    }
+  }
 
   const frames = project.items.filter(
     item => item.type === 'frame',
@@ -898,6 +1000,14 @@ export default function Canvas({
     selectedTool !== 'select'
       ? 'cursor-crosshair'
       : 'cursor-default';
+
+  const inspectorItem =
+    selectedColumnItem?.item ??
+    (
+      selectedItems.length === 1
+        ? selectedItems[0]
+        : null
+    );
 
   return (
     <div
@@ -979,6 +1089,17 @@ export default function Canvas({
             onSelectItems={onSelectItems}
             onRequestDelete={requestDelete}
             onFitFrame={handleFitFrame}
+
+            searchActive={searchActive}
+            isSearchMatch={
+              !searchActive ||
+              matchingIds.has(frame.id)
+            }
+            isSearchContext={
+              contextFrameIds.has(
+                frame.id,
+              )
+            }
           />
         ))}
 
@@ -1031,6 +1152,19 @@ export default function Canvas({
               onChecklistDropOutside={handleChecklistDropOutside}
               onKanbanCardDropOutside={handleKanbanCardDropOutside}
               pushHistory={pushHistory}
+
+              searchActive={searchActive}
+              isSearchMatch={
+                !searchActive ||
+                matchingIds.has(item.id)
+              }
+              nestedSearchMatchIds={
+                item.type === 'column'
+                  ? nestedColumnMatches.get(
+                      item.id,
+                    )
+                  : undefined
+              }
             />
           );
         })}
@@ -1045,7 +1179,11 @@ export default function Canvas({
             y={dropPreview.y}
             width={dropPreview.width}
             height={dropPreview.height}
-            label="Grid snap"
+            label={
+              alignmentGuides.length > 0
+                ? 'Aligned'
+                : 'Grid snap'
+            }
           />
         )}
 
@@ -1087,6 +1225,35 @@ export default function Canvas({
           }
         />
       )}
+
+      <ItemInspector
+        item={inspectorItem ?? null}
+        onUpdate={updater => {
+          if (
+            selectedColumnItem
+          ) {
+            handleUpdateColumnItem(
+              selectedColumnItem.columnId,
+              updater,
+            );
+
+            return;
+          }
+
+          if (
+            selectedItems.length === 1
+          ) {
+            onUpdateItem(
+              selectedItems[0]!.id,
+              updater,
+            );
+          }
+        }}
+        onClose={() => {
+          onSelectItems([]);
+          clearColumnSelection();
+        }}
+      />
 
       <CanvasEditBar
         selectedItems={selectedItems}

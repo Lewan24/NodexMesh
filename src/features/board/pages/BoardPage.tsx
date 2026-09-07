@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import type {
   BoardItem,
@@ -65,6 +65,11 @@ export default function BoardPage({
     activeProjectId,
     setProjects,
   });
+
+  const [
+    searchQuery,
+    setSearchQuery,
+  ] = useState('');
 
   const handleAddProject = useCallback(
     (name: string) => {
@@ -279,6 +284,8 @@ export default function BoardPage({
         onSelectProject={handleSelectProject}
         onAddProject={handleAddProject} 
         onResetDemo={resetDemo}      
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
       />
 
       <div
@@ -315,6 +322,7 @@ export default function BoardPage({
           onDropOnColumn={handleDropOnColumn}
           onEjectFromColumn={handleEjectFromColumn}
           onRestoreItems={restoreItems}
+          searchQuery={searchQuery}
         />
       </div>
     </div>
