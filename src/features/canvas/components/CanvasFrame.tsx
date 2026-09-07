@@ -30,6 +30,10 @@ interface CanvasFrameProps {
   dragTilt?: number;
   isAttachTarget?: boolean;
 
+  searchActive?: boolean;
+  isSearchMatch?: boolean;
+  isSearchContext?: boolean;
+
   onMouseDown: (id: string, event: React.MouseEvent) => void;
   onAnimationEnd: (id: string) => void;
 
@@ -65,6 +69,11 @@ export default function CanvasFrame({
   dragTilt = 0,
   isAttachTarget = false,
   zoom,
+
+  searchActive = false,
+  isSearchMatch = false,
+  isSearchContext = false,
+
   onMouseDown,
   onAnimationEnd,
   onUpdateItem,
@@ -105,6 +114,25 @@ export default function CanvasFrame({
             `
           : undefined,
         transformOrigin: 'center center',
+
+        opacity:
+          !searchActive
+            ? 1
+            : isSearchMatch
+              ? 1
+              : isSearchContext
+                ? 0.65
+                : 0.12,
+
+        transition:
+          'opacity 0.18s ease, filter 0.18s ease',
+
+        filter:
+          searchActive &&
+          !isSearchMatch &&
+          !isSearchContext
+            ? 'saturate(0.45)'
+          : undefined,
       }}
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
@@ -223,6 +251,20 @@ export default function CanvasFrame({
               '0 0 0 2px var(--color-accent), 0 0 12px rgba(124,58,237,0.25)',
           }}
         />
+      )}
+
+      {searchActive &&
+        isSearchMatch &&
+        !isSelected && (
+          <div
+            className="absolute pointer-events-none rounded-2xl"
+            style={{
+              inset: -5,
+              boxShadow:
+                '0 0 0 3px var(--color-accent), 0 0 22px rgba(124,58,237,0.28)',
+              zIndex: 40,
+            }}
+          />
       )}
 
       {/* Line attach target */}

@@ -38,6 +38,8 @@ export interface BlockRendererProps {
   onRequestDelete?: RequestDeleteHandler;
   onEntryDroppedOutside?: EntryDroppedOutsideHandler;
   onCardDroppedOutside?: CardDroppedOutsideHandler;
+  searchActive?: boolean;
+  nestedSearchMatchIds?: Set<string>;
 }
 
 export default function BlockRenderer({
@@ -55,6 +57,8 @@ export default function BlockRenderer({
   onRequestDelete,
   onEntryDroppedOutside,
   onCardDroppedOutside,
+  searchActive = false,
+  nestedSearchMatchIds,
 }: BlockRendererProps) {
   switch (item.type) {
     case 'note':
@@ -126,6 +130,8 @@ export default function BlockRenderer({
           onEjectItem={onEjectItem}
           onSelectColumnItem={onSelectColumnItem}
           onRequestDelete={onRequestDelete}
+          searchActive={searchActive}
+          searchMatchIds={nestedSearchMatchIds}
         />
       );
 

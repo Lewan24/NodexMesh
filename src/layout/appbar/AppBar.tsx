@@ -17,6 +17,10 @@ interface AppBarProps {
   onSelectProject: (id: string) => void;
   onAddProject: (name: string) => void;
   onResetDemo: () => void;
+  searchQuery: string;
+  onSearchQueryChange: (
+    value: string,
+  ) => void;
 }
 
 type OpenMenu = 'projects' | 'account' | null;
@@ -26,7 +30,9 @@ export default function AppBar({
   activeProjectId,
   onSelectProject,
   onAddProject,
-  onResetDemo
+  onResetDemo,
+  searchQuery,
+  onSearchQueryChange,
 }: AppBarProps) {
   const { currentUser, isAdmin, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -64,7 +70,94 @@ export default function AppBar({
           onAddProject={onAddProject}
         />
 
-        <div className="flex-1" />
+        <div className="flex-1 flex justify-center px-4">
+          <div
+            className="relative w-full max-w-md"
+          >
+            <div
+              className="h-9 flex items-center gap-2 rounded-xl border px-3 transition-colors"
+              style={{
+                backgroundColor:
+                  'var(--color-chrome-bg-alt)',
+                borderColor:
+                  searchQuery
+                    ? 'var(--color-accent)'
+                    : 'var(--color-chrome-border-soft)',
+              }}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                style={{
+                  color:
+                    searchQuery
+                      ? 'var(--color-accent)'
+                      : 'var(--color-chrome-text-faint)',
+                }}
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="8"
+                />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+
+              <input
+                value={searchQuery}
+                onChange={event =>
+                  onSearchQueryChange(
+                    event.target.value,
+                  )
+                }
+                onKeyDown={event => {
+                  if (
+                    event.key === 'Escape'
+                  ) {
+                    onSearchQueryChange('');
+                    event.currentTarget.blur();
+                  }
+                }}
+                placeholder="Search text or #tag..."
+                className="flex-1 min-w-0 bg-transparent outline-none text-xs"
+                style={{
+                  color:
+                    'var(--color-chrome-text)',
+                }}
+              />
+
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onSearchQueryChange('')
+                  }
+                  className="w-5 h-5 flex items-center justify-center rounded-md"
+                  style={{
+                    color:
+                      'var(--color-chrome-text-faint)',
+                  }}
+                  title="Clear search"
+                >
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
         <AccountMenu
           user={currentUser}

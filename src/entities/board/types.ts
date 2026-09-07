@@ -31,6 +31,7 @@ export interface BaseItem {
   width?: number;
   height?: number;
   topColor?: string;
+  tags?: string[];
 }
 
 export interface NoteItem extends BaseItem {

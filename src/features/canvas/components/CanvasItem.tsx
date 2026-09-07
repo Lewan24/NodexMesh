@@ -29,6 +29,10 @@ interface CanvasItemProps {
 
   isFrameCapturePreview?: boolean;
 
+  searchActive?: boolean;
+  isSearchMatch?: boolean;
+  nestedSearchMatchIds?: Set<string>;
+
   onMouseDown: (id: string, event: React.MouseEvent) => void;
   onAnimationEnd: (id: string) => void;
   onResize: (id: string, width: number, height: number) => void;
@@ -100,6 +104,11 @@ export default function CanvasItem({
   isSettling = false,
   isDragging = false,
   dragTilt = 0,
+
+  searchActive = false,
+  isSearchMatch = false,
+  nestedSearchMatchIds,
+
   onMouseDown,
   onAnimationEnd,
   onResize,
@@ -146,6 +155,21 @@ export default function CanvasItem({
           : undefined,
 
         transformOrigin: 'center center',
+
+        opacity:
+          searchActive &&
+          !isSearchMatch
+            ? 0.18
+            : 1,
+
+        filter:
+          searchActive &&
+          !isSearchMatch
+            ? 'saturate(0.55)'
+            : undefined,
+
+        transition:
+          'opacity 0.18s ease, filter 0.18s ease, transform 0.16s ease',
       }}
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
@@ -159,6 +183,20 @@ export default function CanvasItem({
               '0 0 0 2px var(--color-accent), 0 0 12px rgba(124, 58, 237,0.25)',
           }}
         />
+      )}
+
+      {searchActive &&
+        isSearchMatch &&
+        !isSelected && (
+          <div
+            className="absolute pointer-events-none rounded-2xl"
+            style={{
+              inset: -5,
+              boxShadow:
+                '0 0 0 3px var(--color-accent), 0 0 22px rgba(124,58,237,0.32)',
+              zIndex: 40,
+            }}
+          />
       )}
 
       {isFrameCapturePreview && !isSelected && (
@@ -262,6 +300,12 @@ export default function CanvasItem({
                     clientX,
                     clientY,
                   )
+              : undefined
+          }
+          searchActive={searchActive}
+          nestedSearchMatchIds={
+            item.type === 'column'
+              ? nestedSearchMatchIds
               : undefined
           }
         />

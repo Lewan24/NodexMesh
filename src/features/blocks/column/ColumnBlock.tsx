@@ -26,6 +26,8 @@ interface ColumnBlockProps {
   onEjectItem?: (ejectedItem: BoardItem, clientX?: number, clientY?: number) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
   onRequestDelete?: (execute: () => void) => void;
+  searchActive?: boolean;
+  searchMatchIds?: Set<string>;
 }
 
 function DropIndicator({ layout }: { layout: 'vertical' | 'horizontal' | 'grid' }) {
@@ -78,6 +80,8 @@ export default function ColumnBlock({
   onEjectItem,
   onSelectColumnItem,
   onRequestDelete,
+  searchActive = false,
+  searchMatchIds,
 }: ColumnBlockProps) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -552,8 +556,42 @@ export default function ColumnBlock({
                     ? nestedItem.width ?? 260
                     : '100%',
                   minWidth: 0,
+
+                  opacity:
+                    searchActive &&
+                    !searchMatchIds?.has(
+                      nestedItem.id,
+                    )
+                      ? 0.18
+                      : 1,
+
+                  filter:
+                    searchActive &&
+                    !searchMatchIds?.has(
+                      nestedItem.id,
+                    )
+                      ? 'saturate(0.55)'
+                      : undefined,
+
+                  transition:
+                    'opacity 0.18s ease, filter 0.18s ease',
                 }}
               >
+                {searchActive &&
+                  searchMatchIds?.has(
+                    nestedItem.id,
+                  ) && (
+                    <div
+                      className="absolute pointer-events-none rounded-xl"
+                      style={{
+                        inset: -3,
+                        boxShadow:
+                          '0 0 0 2px var(--color-accent), 0 0 14px rgba(124,58,237,0.25)',
+                        zIndex: 20,
+                      }}
+                    />
+                )}
+
                 <ColumnItemRow
                   isDragging={draggingIndex === index}
                   isSelected={selectedItemId === nestedItem.id}
