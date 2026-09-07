@@ -9,8 +9,8 @@ export const nodexMeshDemoProject: Project = {
   "items": [
     {
       "id": "jhoo2wm3",
-      "x": 2060,
-      "y": 1212,
+      "x": 2188,
+      "y": 1360,
       "zIndex": 1,
       "type": "frame",
       "title": "Preview DEMO",
@@ -37,7 +37,7 @@ export const nodexMeshDemoProject: Project = {
       "zIndex": 3,
       "title": "Plany na najbliższe prace",
       "width": 2008,
-      "height": 673.5,
+      "height": 664,
       "color": "#FF6B8A"
     },
     {
@@ -79,23 +79,8 @@ export const nodexMeshDemoProject: Project = {
               "done": false
             },
             {
-              "id": "yt3uz0x",
-              "text": "Sprawdzić i dodać gdzie trzeba odpowiednie kursory (Do przycisków itd)",
-              "done": false
-            },
-            {
-              "id": "xa2w1pl",
-              "text": "Dodać rozszerzenie kolumn do szerokości kanban",
-              "done": false
-            },
-            {
               "id": "mzg9w9m",
               "text": "Zaimplementować śmietnik dla projektów oraz usuwanie i przywracanie projektów",
-              "done": false
-            },
-            {
-              "id": "j989dq3",
-              "text": "Dodać możliwość zmiany nazwy projektu",
               "done": false
             },
             {
@@ -107,14 +92,9 @@ export const nodexMeshDemoProject: Project = {
               "id": "lc89o0h",
               "text": "Czasem się buguje appbar i znika",
               "done": false
-            },
-            {
-              "id": "dtkgah5",
-              "text": "Zmienić dark mode background na bardziej szary",
-              "done": false
             }
           ],
-          "width": 349
+          "width": 362
         },
         {
           "id": "z008qcwm",
@@ -122,38 +102,23 @@ export const nodexMeshDemoProject: Project = {
           "color": "#FFBD65",
           "cards": [
             {
-              "id": "uxtrljz",
-              "text": "Do allign itemow dodac allign tekstu na srodku kartki ale z wertylaknej strony",
+              "id": "xa2w1pl",
+              "text": "Dodać rozszerzenie kolumn do szerokości kanban",
               "done": false
             },
             {
-              "id": "0fleed0",
-              "text": "Naprawić przenoszenie i spodziewanie się gdzie wyląduje item, aby pokazywało bieżący rozmiar, a nie ten domyślny",
+              "id": "yt3uz0x",
+              "text": "Sprawdzić i dodać gdzie trzeba odpowiednie kursory (Do przycisków itd)",
               "done": false
             },
             {
-              "id": "a91280v",
-              "text": "Dodać długie kreski przy przenoszeniu na bokach, aby móc dostosować pion i poziom względem odległych innych itemów",
+              "id": "j989dq3",
+              "text": "Dodać możliwość zmiany nazwy projektu",
               "done": false
             },
             {
-              "id": "5g5xe83",
-              "text": "Dodać do checklist auto fit",
-              "done": false
-            },
-            {
-              "id": "2s6ddz0",
-              "text": "Naprawić wysokość taska w checklisćie",
-              "done": false
-            },
-            {
-              "id": "yiw3ydt",
-              "text": "Zwiększyć domyślną szerokość itemów na większą",
-              "done": false
-            },
-            {
-              "id": "3dpm65t",
-              "text": "Podgląd środka itemu podczas przenoszenia dla wygodniejszego ustawienia względem reszty itemów na planszy",
+              "id": "dtkgah5",
+              "text": "Zmienić dark mode background na bardziej szary",
               "done": false
             }
           ],
@@ -163,12 +128,52 @@ export const nodexMeshDemoProject: Project = {
           "id": "zgnt2ozl",
           "title": "Done",
           "color": "#7C3AED",
-          "cards": [],
+          "cards": [
+            {
+              "id": "uxtrljz",
+              "text": "Do allign itemow dodac allign tekstu na srodku kartki ale z wertylaknej strony",
+              "done": true
+            },
+            {
+              "id": "0fleed0",
+              "text": "Naprawić przenoszenie i spodziewanie się gdzie wyląduje item, aby pokazywało bieżący rozmiar, a nie ten domyślny",
+              "done": true
+            },
+            {
+              "id": "a91280v",
+              "text": "Dodać długie kreski przy przenoszeniu na bokach, aby móc dostosować pion i poziom względem odległych innych itemów",
+              "done": true
+            },
+            {
+              "id": "3dpm65t",
+              "text": "Podgląd środka itemu podczas przenoszenia dla wygodniejszego ustawienia względem reszty itemów na planszy",
+              "done": true
+            },
+            {
+              "id": "5g5xe83",
+              "text": "Dodać do checklist auto fit",
+              "done": true
+            },
+            {
+              "id": "2s6ddz0",
+              "text": "Naprawić wysokość taska w checklisćie",
+              "done": true
+            },
+            {
+              "id": "yiw3ydt",
+              "text": "Zwiększyć domyślną szerokość itemów na większą",
+              "done": true
+            }
+          ],
           "width": 351
         }
       ],
       "color": "#292929",
-      "topColor": "#FF6B8A"
+      "topColor": "#FF6B8A",
+      "height": 592,
+      "tags": [
+        "todo"
+      ]
     },
     {
       "id": "c7hevjx8",
@@ -305,8 +310,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "zk08gdfv",
-      "x": 2096,
-      "y": 1248,
+      "x": 2224,
+      "y": 1396,
       "zIndex": 15,
       "typography": {
         "textAlign": "center"
@@ -381,7 +386,10 @@ export const nodexMeshDemoProject: Project = {
         }
       ],
       "height": 400,
-      "topColor": "#7C3AED"
+      "topColor": "#7C3AED",
+      "tags": [
+        "todo"
+      ]
     },
     {
       "id": "92oyuwgd",
@@ -409,7 +417,10 @@ export const nodexMeshDemoProject: Project = {
       "type": "note",
       "content": "API stworzone będzie w\nC# .NET 10\n\nAPI przewiduje implementację bezpiecznego systemu, wykorzystującego listę\nOWASP Top 10\n\nAPI stworzone będzie jako osobny kontener, będzie wszystko zawarte w jednym pliku\ndocker-compose.yml\naby w łatwy sposób uruchomić cały system, bez problemu aktualizować kontenery itd.\n\nCała potrzebna instrukcja, zalecenia, ważne informacje itd. są zawarte w projekcie w odpowiednich miejscach na stronie github.",
       "color": "#fdf4ff",
-      "width": 448
+      "width": 448,
+      "tags": [
+        "todo"
+      ]
     },
     {
       "id": "uiusigoi",
@@ -440,6 +451,16 @@ export const nodexMeshDemoProject: Project = {
       "width": 688,
       "entries": [
         {
+          "id": "pvgvj3s",
+          "text": "Tagi do przypisywania do itemów oraz podświetlanie itemów gdy zaznaczymy dany tag",
+          "done": true
+        },
+        {
+          "id": "c56kuez",
+          "text": "Filtr i szukanie na planszy konkretnych napisów, tagów itd",
+          "done": true
+        },
+        {
           "id": "bpsxu1m",
           "text": "Divider",
           "done": false
@@ -455,18 +476,13 @@ export const nodexMeshDemoProject: Project = {
           "done": false
         },
         {
+          "id": "so2i57x",
+          "text": "Auto strzalki do utworzenia przy danym itemie",
+          "done": false
+        },
+        {
           "id": "amauumq",
           "text": "Mind Map coś z połączeniami, auto układem itd",
-          "done": false
-        },
-        {
-          "id": "pvgvj3s",
-          "text": "Tagi do przypisywania do itemów oraz podświetlanie itemów gdy zaznaczymy dany tag",
-          "done": false
-        },
-        {
-          "id": "c56kuez",
-          "text": "Filtr i szukanie na planszy konkretnych napisów, tagów itd",
           "done": false
         },
         {
@@ -490,11 +506,6 @@ export const nodexMeshDemoProject: Project = {
           "done": false
         },
         {
-          "id": "598ijs7",
-          "text": "Menu z wyborem typu kopiuj, wklej, duplikuj, usun itd",
-          "done": false
-        },
-        {
           "id": "72063ld",
           "text": "Blokowanie itemu, żeby przypadkiem go nie przesunąć",
           "done": false
@@ -510,15 +521,35 @@ export const nodexMeshDemoProject: Project = {
           "done": false
         },
         {
-          "id": "so2i57x",
-          "text": "Auto strzalki do utworzenia przy danym itemie",
+          "id": "598ijs7",
+          "text": "Menu z wyborem typu kopiuj, wklej, duplikuj, usun itd",
           "done": false
         }
       ],
       "topColor": "#059669",
-      "height": 592
+      "height": 592,
+      "tags": [
+        "todo"
+      ]
+    },
+    {
+      "id": "kpmbh2p6",
+      "x": 2160,
+      "y": 1070,
+      "zIndex": 21,
+      "typography": {
+        "fontSize": 32,
+        "textAlign": "center",
+        "verticalAlign": "middle"
+      },
+      "type": "text",
+      "content": "Poszukaj #todo na appbarze żeby wyświetlić wszystkie elementy oznaczone do zrobienia",
+      "size": "lg",
+      "width": 1328,
+      "height": 98,
+      "color": "#0d2a35"
     }
   ]
 };
 
-export const demoProjects: Project[] = [ nodexMeshDemoProject ]
+export const demoProjects: Project[] = [ nodexMeshDemoProject ];
