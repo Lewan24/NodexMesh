@@ -178,7 +178,7 @@ export default function NoteBlock({
 
         <div
           ref={contentRef}
-          data-wheel-scroll="true"
+          data-wheel-scroll={item.height ? "true" : "false"}
           className="px-3 pb-3 pt-1 flex-1 min-h-0 flex flex-col"
           style={{
             overflow: editing ? 'hidden' : 'auto',

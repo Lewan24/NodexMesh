@@ -316,7 +316,7 @@ export default function KanbanBlock({
     }}>
       <div
         ref={boardRef}
-        data-wheel-scroll="true"
+        data-wheel-scroll={item.height ? "true" : "false"}
         data-kanban-id={item.id}
         className="item-rounded border shadow-xl overflow-scroll"
         style={{

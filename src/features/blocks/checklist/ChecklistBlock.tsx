@@ -123,7 +123,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
        }}>
       <div 
         ref={cardRef}
-        data-wheel-scroll="true"
+        data-wheel-scroll={item.height ? "true" : "false"}
         data-checklist-id={item.id}
         className="item-rounded shadow-xl overflow-auto" 
         style={{ 
