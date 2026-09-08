@@ -136,6 +136,9 @@ export function createCanvasItem(
         arrowEnd: true,
         color: '#7C3AED',
         strokeWidth: 2,
+        label: '',
+        labelMode: 'horizontal',
+        labelOffset: 14,
       } as LineItem;
 
     case 'column':

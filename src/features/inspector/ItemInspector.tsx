@@ -160,6 +160,54 @@ export default function ItemInspector({
         </button>
       </div>
 
+      <section
+        className="px-4 py-3"
+        style={{
+          borderBottom:
+            '1px solid var(--color-border-soft)',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() =>
+            onUpdate(current => ({
+              ...current,
+              locked:
+                !current.locked,
+            }))
+          }
+          className="w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition-colors"
+          style={{
+            backgroundColor:
+              item.locked
+                ? 'var(--color-accent-soft)'
+                : 'var(--color-surface)',
+            color:
+              item.locked
+                ? 'var(--color-accent)'
+                : 'var(--color-text-secondary)',
+          }}
+        >
+          <span className="flex items-center gap-2 text-xs font-semibold">
+            {item.locked ? '🔒' : '🔓'}
+
+            Lock position
+          </span>
+
+          <span
+            className="text-[10px]"
+            style={{
+              color:
+                'var(--color-text-faint)',
+            }}
+          >
+            {item.locked
+              ? 'Locked'
+              : 'Unlocked'}
+          </span>
+        </button>
+      </section>
+
       {/* Tags */}
 
       <section className="p-4">

@@ -9,6 +9,7 @@ import ItemWatcher from '@/features/canvas/components/ItemWatcher';
 
 import type { ResizeDirection } from '@/features/canvas/types';
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
+import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
 
 interface CanvasItemProps {
   item: BoardItem;
@@ -89,6 +90,12 @@ interface CanvasItemProps {
   ) => boolean;
 
   pushHistory: () => void;
+
+  onQuickConnectStart: (
+    id: string,
+    event: React.MouseEvent,
+    side: ConnectionSide,
+  ) => void;
 }
 
 export default function CanvasItem({
@@ -121,7 +128,8 @@ export default function CanvasItem({
   onEjectFromColumn,
   onSelectColumnItem,
   onChecklistDropOutside,
-  onKanbanCardDropOutside
+  onKanbanCardDropOutside,
+  onQuickConnectStart
 }: CanvasItemProps) {
   return (
     <div
@@ -143,7 +151,10 @@ export default function CanvasItem({
         left: renderedItem.x,
         top: renderedItem.y,
         zIndex: item.zIndex,
-        cursor: 'grab',
+        cursor:
+          item.locked
+            ? 'default'
+            : 'grab',
         transform: isDragging
           ? `
               perspective(900px)
@@ -215,8 +226,24 @@ export default function CanvasItem({
 
       {item.type !== 'line' && (
         <ResizeHandles
-          visible={isSelected}
+          visible={isSelected && !item.locked}
           onResizeStart={(event, direction) => onItemResize(item.id, event, direction)}
+        />
+      )}
+
+      {item.type !== 'line' && (
+        <ConnectionHandles
+          visible={isSelected}
+          onStart={(
+            event,
+            side,
+          ) =>
+            onQuickConnectStart(
+              item.id,
+              event,
+              side,
+            )
+          }
         />
       )}
 

@@ -61,7 +61,7 @@ export function getSearchableText(
       ].join(' ');
 
     case 'line':
-      return '';
+      return item.label ?? '';
 
     default:
       return '';
@@ -77,6 +77,34 @@ export function matchesItemSearch(
 
   if (!normalized) {
     return true;
+  }
+
+  if (
+    normalized.startsWith(
+      'status:',
+    )
+  ) {
+    const statusQuery =
+      normalized
+        .slice(
+          'status:'.length,
+        )
+        .trim();
+
+    if (!statusQuery) {
+      return true;
+    }
+
+    return (
+      item.comments?.some(
+        comment =>
+          comment.status
+            ?.toLowerCase()
+            .includes(
+              statusQuery,
+            ),
+      ) ?? false
+    );
   }
 
   /*

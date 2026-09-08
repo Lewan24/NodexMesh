@@ -65,6 +65,104 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
       >
         E →
       </EditBarButton>
+
+      <EditBarDivider />
+
+      <div
+        className="flex items-center gap-1.5"
+        onMouseDown={event =>
+          event.stopPropagation()
+        }
+      >
+        <input
+          type="text"
+          value={item.label ?? ''}
+          onChange={event =>
+            update({
+              label:
+                event.target.value,
+            })
+          }
+          placeholder="Label..."
+          className="h-8 w-32 px-2 rounded-lg border bg-transparent outline-none text-xs"
+          style={{
+            color:
+              'var(--color-text-primary)',
+            backgroundColor:
+              'var(--color-surface)',
+            borderColor:
+              'var(--color-border)',
+          }}
+          title="Line label"
+        />
+
+        <EditBarButton
+          active={
+            (item.labelMode ??
+              'horizontal') ===
+            'horizontal'
+          }
+          onClick={() =>
+            update({
+              labelMode:
+                'horizontal',
+            })
+          }
+          title="Keep label horizontal"
+        >
+          Aa
+        </EditBarButton>
+
+        <EditBarButton
+          active={
+            item.labelMode ===
+            'follow-line'
+          }
+          onClick={() =>
+            update({
+              labelMode:
+                'follow-line',
+            })
+          }
+          title="Rotate label with line"
+        >
+          ↗Aa
+        </EditBarButton>
+      </div>
+
+      <div
+        className="flex items-center gap-1.5 px-1"
+        title="Label distance from line"
+      >
+        <input
+          type="range"
+          min="0"
+          max="40"
+          step="1"
+          value={
+            item.labelOffset ?? 14
+          }
+          onChange={event =>
+            update({
+              labelOffset:
+                Number(
+                  event.target.value,
+                ),
+            })
+          }
+          className="w-20"
+        />
+
+        <span
+          className="text-[9px] w-6"
+          style={{
+            color:
+              'var(--color-text-faint)',
+          }}
+        >
+          {item.labelOffset ?? 14}
+        </span>
+      </div>
     </>
   );
 }

@@ -222,13 +222,19 @@ export default function Canvas({
   const {
     attachHoverId,
     handleLineEndpointDrag,
+    handleQuickConnectStart,
   } = useLineDrag({
     projectRef,
     zoomRef,
     measuredSizes,
     pushHistory,
+
+    onAddItem,
+    onDeleteItem,
+    onSelectItems,
+
     onUpdateItem,
-  });
+});
 
   const { screenToCanvas } = useCanvasZoom({
     containerRef,
@@ -1079,6 +1085,9 @@ export default function Canvas({
                 ? dragTilt
                 : 0
             }
+            onQuickConnectStart={
+              handleQuickConnectStart
+            }
             isAnimating={animatingIds.has(frame.id)}
             isAttachTarget={attachHoverId === frame.id}
             selectedIds={safeSelectedIds}
@@ -1131,6 +1140,9 @@ export default function Canvas({
                 draggingIds.includes(item.id)
                   ? dragTilt
                   : 0
+              }
+              onQuickConnectStart={
+                handleQuickConnectStart
               }
               zoom={zoom}
               isSelected={safeSelectedIds.includes(item.id)}
