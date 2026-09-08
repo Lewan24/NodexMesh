@@ -122,7 +122,7 @@ export default function AppBar({
                     event.currentTarget.blur();
                   }
                 }}
-                placeholder="Search text or #tag..."
+                placeholder="Search text or #tag or status:xxxx..."
                 className="flex-1 min-w-0 bg-transparent outline-none text-xs"
                 style={{
                   color:

@@ -177,7 +177,6 @@ export function getColumnSearchResult(
     nestedMatchIds,
   };
 }
-
 function matchesOwnColumnSearch(
   column: ColumnItem,
   query: string,
@@ -187,6 +186,34 @@ function matchesOwnColumnSearch(
 
   if (!normalized) {
     return true;
+  }
+
+  if (
+    normalized.startsWith(
+      'status:',
+    )
+  ) {
+    const statusQuery =
+      normalized
+        .slice(
+          'status:'.length,
+        )
+        .trim();
+
+    if (!statusQuery) {
+      return true;
+    }
+
+    return (
+      column.comments?.some(
+        comment =>
+          comment.status!
+            .toLowerCase()
+            .includes(
+              statusQuery,
+            ),
+      ) ?? false
+    );
   }
 
   if (
@@ -201,7 +228,9 @@ function matchesOwnColumnSearch(
       column.tags?.some(tag =>
         tag
           .toLowerCase()
-          .includes(tagQuery),
+          .includes(
+            tagQuery,
+          ),
       ) ?? false
     );
   }

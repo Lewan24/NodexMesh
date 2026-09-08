@@ -10,6 +10,7 @@ import ItemWatcher from '@/features/canvas/components/ItemWatcher';
 import type { ResizeDirection } from '@/features/canvas/types';
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
+import ItemCommentBadge from '@/features/comments/ItemCommentBadge';
 
 interface CanvasItemProps {
   item: BoardItem;
@@ -185,6 +186,10 @@ export default function CanvasItem({
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
     >
+      <ItemCommentBadge
+        comments={item.comments}
+      />
+
       {isSelected && (
         <div
           className="absolute pointer-events-none rounded-sm"

@@ -5,7 +5,7 @@ import type {
 
 export function createComment(
   text: string,
-  status?: CommentStatus,
+  status: CommentStatus,
 ): ItemComment {
   return {
     id: Math.random()
@@ -13,52 +13,61 @@ export function createComment(
       .slice(2, 10),
 
     text: text.trim(),
-
     status,
-
-    createdAt:
-      new Date().toISOString(),
+    createdAt: new Date().toISOString(),
   };
 }
 
 export function getActiveCommentStatus(
-  comments:
-    | ItemComment[]
-    | undefined,
+  comments?: ItemComment[],
 ): CommentStatus | undefined {
-  const statuses =
-    comments?.map(
+  if (!comments?.length) {
+    return undefined;
+  }
+
+  const unresolved =
+    comments.filter(
       comment =>
-        comment.status,
-    ) ?? [];
+        comment.status !== 'resolved',
+    );
 
   if (
-    statuses.includes('todo')
+    unresolved.some(
+      comment =>
+        comment.status === 'todo',
+    )
   ) {
     return 'todo';
   }
 
   if (
-    statuses.includes(
-      'in-progress',
+    unresolved.some(
+      comment =>
+        comment.status === 'in-progress',
     )
   ) {
     return 'in-progress';
   }
 
   if (
-    statuses.includes('open')
+    unresolved.some(
+      comment =>
+        comment.status === 'open',
+    )
   ) {
     return 'open';
   }
 
-  if (
-    statuses.includes(
-      'resolved',
-    )
-  ) {
-    return 'resolved';
-  }
+  return 'resolved';
+}
 
-  return undefined;
+export function getUnresolvedCommentCount(
+  comments?: ItemComment[],
+): number {
+  return (
+    comments?.filter(
+      comment =>
+        comment.status !== 'resolved',
+    ).length ?? 0
+  );
 }

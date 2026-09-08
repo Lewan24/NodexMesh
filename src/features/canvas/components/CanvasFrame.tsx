@@ -7,6 +7,7 @@ import { getTypographyStyle } from '@/features/blocks/typography/typographyUtils
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 import type { ResizeDirection } from '@/features/canvas/types';
 import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
+import ItemCommentBadge from '@/features/comments/ItemCommentBadge';
 
 function getFrameLabelScale(zoom: number): number {
   if (zoom >= 1) return 1;
@@ -144,6 +145,10 @@ export default function CanvasFrame({
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
     >
+      <ItemCommentBadge
+        comments={item.comments}
+      />
+      
       {/* Semantic frame label */}
       <div
         className="absolute pointer-events-auto"

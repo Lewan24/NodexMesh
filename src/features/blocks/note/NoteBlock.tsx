@@ -210,7 +210,6 @@ export default function NoteBlock({
               }}
               className={`w-full bg-transparent resize-none outline-none wrap-break-word leading-relaxed ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
-                marginTop: '-30px',
                 color: textColor,
                 resize: 'none',
                 maxHeight: '100%',
@@ -225,7 +224,6 @@ export default function NoteBlock({
               onClick={() => setEditing(true)}
               className={`leading-relaxed whitespace-pre-wrap wrap-break-word cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{
-                marginTop: '-30px',
                 color: textColor,
                 ...typographyStyle,
               }}

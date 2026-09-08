@@ -1007,13 +1007,10 @@ export default function Canvas({
       ? 'cursor-crosshair'
       : 'cursor-default';
 
-  const inspectorItem =
-    selectedColumnItem?.item ??
-    (
-      selectedItems.length === 1
-        ? selectedItems[0]
-        : null
-    );
+  const inspectorItems =
+  selectedColumnItem
+    ? [selectedColumnItem.item]
+    : selectedItems;
 
   return (
     <div
@@ -1239,11 +1236,9 @@ export default function Canvas({
       )}
 
       <ItemInspector
-        item={inspectorItem ?? null}
-        onUpdate={updater => {
-          if (
-            selectedColumnItem
-          ) {
+        items={inspectorItems}
+        onUpdateAll={updater => {
+          if (selectedColumnItem) {
             handleUpdateColumnItem(
               selectedColumnItem.columnId,
               updater,
@@ -1252,11 +1247,15 @@ export default function Canvas({
             return;
           }
 
-          if (
-            selectedItems.length === 1
+          /*
+          * Canvas multi-selection.
+          */
+          for (
+            const selectedItem of
+              selectedItems
           ) {
             onUpdateItem(
-              selectedItems[0]!.id,
+              selectedItem.id,
               updater,
             );
           }
