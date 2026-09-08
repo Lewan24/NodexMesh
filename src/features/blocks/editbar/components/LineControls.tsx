@@ -163,6 +163,48 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
           {item.labelOffset ?? 14}
         </span>
       </div>
+
+      <div
+        className="h-8 flex items-center rounded-lg border overflow-hidden flex-shrink-0"
+        style={{
+          backgroundColor: 'var(--color-surface)',
+          borderColor: 'var(--color-border)',
+        }}
+        onMouseDown={event => event.stopPropagation()}
+      >
+        <input
+          type="number"
+          min={8}
+          max={48}
+          value={item.labelFontSize ?? 11}
+          onChange={event => {
+            const value = Number(event.target.value);
+
+            if (!Number.isFinite(value)) return;
+
+            update({
+              labelFontSize: Math.max(
+                8,
+                Math.min(48, value),
+              ),
+            });
+          }}
+          className="w-11 h-full px-1.5 text-xs text-right bg-transparent outline-none"
+          style={{
+            color: 'var(--color-text-primary)',
+          }}
+          title="Label font size"
+        />
+
+        <span
+          className="text-[9px] pr-2"
+          style={{
+            color: 'var(--color-text-faint)',
+          }}
+        >
+          px
+        </span>
+      </div>
     </>
   );
 }

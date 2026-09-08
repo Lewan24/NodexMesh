@@ -145,6 +145,7 @@ export interface LineItem extends BaseItem {
    * 0 = directly in the middle of the line.
    */
   labelOffset?: number;
+  labelFontSize?: number;
 }
 
 export interface ColumnItem extends BaseItem {

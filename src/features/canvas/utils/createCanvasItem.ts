@@ -139,6 +139,7 @@ export function createCanvasItem(
         label: '',
         labelMode: 'horizontal',
         labelOffset: 14,
+        labelFontSize: 11,
       } as LineItem;
 
     case 'column':

@@ -257,9 +257,7 @@ export default function LineBlock({
               'center center',
 
             fontSize:
-              item.typography?.fontSize
-                ? `${item.typography.fontSize}px`
-                : 11,
+              `${item.labelFontSize ?? 11}px`,
 
             fontFamily:
               item.typography?.fontFamily,
