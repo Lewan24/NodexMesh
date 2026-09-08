@@ -69,7 +69,13 @@ export function useItemResize({
       if (event.button !== 0) return;
 
       const item = projectRef.current.items.find(current => current.id === id);
-      if (!item || item.type === 'line') return;
+      if (
+        !item ||
+        item.type === 'line' ||
+        item.locked
+      ) {
+        return;
+      }
 
       event.preventDefault();
       event.stopPropagation();

@@ -73,6 +73,40 @@ export default function LineBlock({
   const showHandles = hovered || isSelected;
   const lineColor = isSelected ? '#7C3AED' : item.color;
 
+  const labelOffset =
+    item.labelOffset ?? 14;
+
+  const labelMode =
+    item.labelMode ?? 'horizontal';
+
+  const angleDegrees =
+    angle * (180 / Math.PI);
+
+  const normalizedAngle =
+    angleDegrees > 90 ||
+    angleDegrees < -90
+      ? angleDegrees + 180
+      : angleDegrees;
+
+  /*
+  * Perpendicular direction from the line.
+  * Negative Y means visually "above" the line.
+  */
+  const labelX =
+    centerX +
+    Math.sin(angle) *
+      labelOffset;
+
+  const labelY =
+    centerY -
+    Math.cos(angle) *
+      labelOffset;
+
+  const labelRotation =
+    labelMode === 'follow-line'
+      ? normalizedAngle
+      : 0;
+
   return (
     <div
       className="absolute"
@@ -206,6 +240,61 @@ export default function LineBlock({
           </g>
         )}
       </svg>
+
+      {item.label?.trim() && (
+        <div
+          className="absolute pointer-events-none whitespace-nowrap"
+          style={{
+            left: labelX,
+            top: labelY,
+
+            transform: `
+              translate(-50%, -50%)
+              rotate(${labelRotation}deg)
+            `,
+
+            transformOrigin:
+              'center center',
+
+            fontSize:
+              `${item.labelFontSize ?? 11}px`,
+
+            fontFamily:
+              item.typography?.fontFamily,
+
+            fontWeight:
+              item.typography?.bold
+                ? 700
+                : 600,
+
+            fontStyle:
+              item.typography?.italic
+                ? 'italic'
+                : undefined,
+
+            color: lineColor,
+
+            backgroundColor:
+              'var(--color-surface-translucent)',
+
+            border:
+              '1px solid var(--color-border-soft)',
+
+            borderRadius: 7,
+
+            padding: '2px 6px',
+
+            backdropFilter: 'blur(5px)',
+
+            boxShadow:
+              '0 2px 6px rgba(0,0,0,0.08)',
+
+            zIndex: 10,
+          }}
+        >
+          {item.label}
+        </div>
+      )}
     </div>
   );
 }

@@ -16,6 +16,7 @@ import {
 } from '@/features/canvas/utils/lineGeometry';
 
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
+import { ConnectionSide } from '../components/ConnectionHandles';
 
 interface ProjectLike {
   items: BoardItem[];
@@ -32,6 +33,24 @@ interface UseLineDragOptions {
     id: string,
     updater: (item: BoardItem) => BoardItem,
   ) => void;
+
+  onAddItem: (
+    item: BoardItem,
+  ) => void;
+
+  onDeleteItem: (
+    id: string,
+  ) => void;
+
+  onSelectItems: (
+    ids: string[],
+  ) => void;
+}
+
+function createId(): string {
+  return Math.random()
+    .toString(36)
+    .slice(2, 10);
 }
 
 export function useLineDrag({
@@ -40,6 +59,9 @@ export function useLineDrag({
   measuredSizes,
   pushHistory,
   onUpdateItem,
+  onAddItem,
+  onDeleteItem,
+  onSelectItems
 }: UseLineDragOptions) {
   const [attachHoverId, setAttachHoverId] =
     useState<string | null>(null);
@@ -50,6 +72,106 @@ export function useLineDrag({
     attachHoverIdRef.current = id;
     setAttachHoverId(id);
   }, []);
+
+  const findAttachTarget =
+  useCallback(
+    (
+      x: number,
+      y: number,
+      excludedIds:
+        Set<string>,
+    ) => {
+      const candidates =
+        projectRef.current.items
+          .filter(target => {
+            if (
+              excludedIds.has(
+                target.id,
+              ) ||
+              target.type === 'line'
+            ) {
+              return false;
+            }
+
+            const size =
+              measuredSizes.get(
+                target.id,
+              ) ??
+              getApproxItemSize(
+                target,
+              );
+
+            return (
+              x >= target.x &&
+              y >= target.y &&
+              x <=
+                target.x +
+                  size.width &&
+              y <=
+                target.y +
+                  size.height
+            );
+          })
+          .map(target => {
+            const size =
+              measuredSizes.get(
+                target.id,
+              ) ??
+              getApproxItemSize(
+                target,
+              );
+
+            return {
+              target,
+              area:
+                size.width *
+                size.height,
+            };
+          })
+          .sort((a, b) => {
+            /*
+             * Prefer concrete items
+             * inside frames.
+             */
+            if (
+              a.target.type !==
+                'frame' &&
+              b.target.type ===
+                'frame'
+            ) {
+              return -1;
+            }
+
+            if (
+              a.target.type ===
+                'frame' &&
+              b.target.type !==
+                'frame'
+            ) {
+              return 1;
+            }
+
+            if (
+              a.area !== b.area
+            ) {
+              return (
+                a.area - b.area
+              );
+            }
+
+            return (
+              b.target.zIndex -
+              a.target.zIndex
+            );
+          });
+
+      return candidates[0]?.target;
+    },
+    [
+      projectRef,
+      measuredSizes,
+    ],
+  );
 
   const handleLineEndpointDrag = useCallback(
     (
@@ -110,40 +232,6 @@ export function useLineDrag({
       const startY = event.clientY;
       const currentZoom = zoomRef.current;
 
-      const findTarget = (x: number, y: number) => {
-        const candidates = projectRef.current.items
-          .filter(target => {
-            if (target.id === id || target.type === 'line' || target.id === oppositeTargetId) return false;
-
-            const size = measuredSizes.get(target.id) ?? getApproxItemSize(target);
-
-            return (
-              x >= target.x &&
-              y >= target.y &&
-              x <= target.x + size.width &&
-              y <= target.y + size.height
-            );
-          })
-          .map(target => {
-            const size = measuredSizes.get(target.id) ?? getApproxItemSize(target);
-
-            return {
-              target,
-              area: size.width * size.height,
-            };
-          })
-          .sort((a, b) => {
-            if (a.target.type !== 'frame' && b.target.type === 'frame') return -1;
-            if (a.target.type === 'frame' && b.target.type !== 'frame') return 1;
-
-            if (a.area !== b.area) return a.area - b.area;
-
-            return b.target.zIndex - a.target.zIndex;
-          });
-
-        return candidates[0]?.target;
-      };
-
       const handleMove = (moveEvent: MouseEvent) => {
         const dx = (moveEvent.clientX - startX) / currentZoom;
         const dy = (moveEvent.clientY - startY) / currentZoom;
@@ -169,7 +257,24 @@ export function useLineDrag({
               };
         });
 
-        setAttachHover(findTarget(x, y)?.id ?? null);
+        const excludedIds =
+          new Set<string>([
+            id,
+          ]);
+
+        if (oppositeTargetId) {
+          excludedIds.add(
+            oppositeTargetId,
+          );
+        }
+
+        setAttachHover(
+          findAttachTarget(
+            x,
+            y,
+            excludedIds,
+          )?.id ?? null,
+        );
       };
 
       const handleUp = (mouseEvent: MouseEvent) => {
@@ -228,11 +333,317 @@ export function useLineDrag({
       pushHistory,
       onUpdateItem,
       setAttachHover,
+      findAttachTarget
+    ],
+  );
+
+  const handleQuickConnectStart =
+  useCallback(
+    (
+      sourceId: string,
+      event: React.MouseEvent,
+      side: ConnectionSide,
+    ) => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const source =
+        projectRef.current.items.find(
+          item =>
+            item.id ===
+            sourceId,
+        );
+
+      if (
+        !source ||
+        source.type === 'line'
+      ) {
+        return;
+      }
+
+      const rect =
+        getItemRect(
+          source,
+          measuredSizes,
+        );
+
+      const centerX =
+        rect.x +
+        rect.width / 2;
+
+      const centerY =
+        rect.y +
+        rect.height / 2;
+
+      const initialOffset = 70;
+
+      const initialEnd = {
+        top: {
+          x: centerX,
+          y:
+            rect.y -
+            initialOffset,
+        },
+
+        right: {
+          x:
+            rect.x +
+            rect.width +
+            initialOffset,
+          y: centerY,
+        },
+
+        bottom: {
+          x: centerX,
+          y:
+            rect.y +
+            rect.height +
+            initialOffset,
+        },
+
+        left: {
+          x:
+            rect.x -
+            initialOffset,
+          y: centerY,
+        },
+      }[side];
+
+      const startPoint =
+        getRectBorderPoint(
+          rect,
+          initialEnd.x,
+          initialEnd.y,
+        );
+
+      const lineId =
+        createId();
+
+      const line: LineItem = {
+        id: lineId,
+        type: 'line',
+
+        x: startPoint.x,
+        y: startPoint.y,
+
+        x2: initialEnd.x,
+        y2: initialEnd.y,
+
+        zIndex: 1,
+
+        arrowStart: false,
+        arrowEnd: true,
+
+        color: '#7C3AED',
+        strokeWidth: 2,
+
+        startItemId:
+          sourceId,
+
+        label: '',
+        labelMode:
+          'horizontal',
+        labelOffset: 14,
+      };
+
+      pushHistory();
+      onAddItem(line);
+
+      const startClientX =
+        event.clientX;
+
+      const startClientY =
+        event.clientY;
+
+      const zoom =
+        zoomRef.current;
+
+      let moved = false;
+
+      const handleMove = (
+        moveEvent: MouseEvent,
+      ) => {
+        moved = true;
+
+        const dx =
+          (
+            moveEvent.clientX -
+            startClientX
+          ) / zoom;
+
+        const dy =
+          (
+            moveEvent.clientY -
+            startClientY
+          ) / zoom;
+
+        const x =
+          initialEnd.x + dx;
+
+        const y =
+          initialEnd.y + dy;
+
+        onUpdateItem(
+          lineId,
+          current => {
+            if (
+              current.type !==
+              'line'
+            ) {
+              return current;
+            }
+
+            return {
+              ...current,
+              x2: x,
+              y2: y,
+            };
+          },
+        );
+
+        const target =
+          findAttachTarget(
+            x,
+            y,
+            new Set([
+              sourceId,
+              lineId,
+            ]),
+          );
+
+        setAttachHover(
+          target?.id ?? null,
+        );
+      };
+
+      const handleUp = (
+        mouseEvent: MouseEvent,
+      ) => {
+        document.removeEventListener(
+          'mousemove',
+          handleMove,
+        );
+
+        document.removeEventListener(
+          'mouseup',
+          handleUp,
+        );
+
+        const targetId =
+          attachHoverIdRef.current;
+
+        /*
+         * Simple click without dragging:
+         * remove the temporary line.
+         */
+        if (!moved) {
+          onDeleteItem(
+            lineId,
+          );
+
+          setAttachHover(null);
+          return;
+        }
+
+        if (targetId) {
+          const target =
+            projectRef.current.items.find(
+              item =>
+                item.id ===
+                targetId,
+            );
+
+          if (target) {
+            const dx =
+              (
+                mouseEvent.clientX -
+                startClientX
+              ) / zoom;
+
+            const dy =
+              (
+                mouseEvent.clientY -
+                startClientY
+              ) / zoom;
+
+            const x =
+              initialEnd.x + dx;
+
+            const y =
+              initialEnd.y + dy;
+
+            const point =
+              getRectBorderPoint(
+                getItemRect(
+                  target,
+                  measuredSizes,
+                ),
+                x,
+                y,
+              );
+
+            onUpdateItem(
+              lineId,
+              current => {
+                if (
+                  current.type !==
+                  'line'
+                ) {
+                  return current;
+                }
+
+                return {
+                  ...current,
+
+                  endItemId:
+                    target.id,
+
+                  x2: point.x,
+                  y2: point.y,
+                };
+              },
+            );
+          }
+        }
+
+        setAttachHover(null);
+
+        onSelectItems([
+          lineId,
+        ]);
+      };
+
+      document.addEventListener(
+        'mousemove',
+        handleMove,
+      );
+
+      document.addEventListener(
+        'mouseup',
+        handleUp,
+      );
+    },
+    [
+      projectRef,
+      measuredSizes,
+      zoomRef,
+      pushHistory,
+      onAddItem,
+      onDeleteItem,
+      onUpdateItem,
+      onSelectItems,
+      findAttachTarget,
+      setAttachHover,
     ],
   );
 
   return {
     attachHoverId,
     handleLineEndpointDrag,
+    handleQuickConnectStart,
   };
 }

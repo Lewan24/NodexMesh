@@ -518,7 +518,7 @@ export default function ColumnBlock({
 
         {/* Nested items */}
         <div
-          data-wheel-scroll="true"
+          data-wheel-scroll={item.height ? "true" : "false"}
           ref={containerRef}
           className="px-4 pt-3 pb-1 overflow-auto"
           style={{

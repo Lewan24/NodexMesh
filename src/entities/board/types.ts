@@ -12,6 +12,15 @@ export type FontFamily =
 export type TextAlign = 'left' | 'center' | 'right';
 export type VerticalAlign = 'top' | 'middle' | 'bottom';
 export type ColumnLayout = 'vertical' | 'horizontal' | 'grid';
+export type LineLabelMode = 'horizontal' | 'follow-line';
+export type CommentStatus = 'open' | 'todo' | 'in-progress' | 'resolved';
+
+export interface ItemComment {
+  id: string;
+  text: string;
+  status?: CommentStatus;
+  createdAt: string;
+}
 
 export interface TypographySettings {
   fontFamily?: FontFamily;
@@ -32,6 +41,8 @@ export interface BaseItem {
   height?: number;
   topColor?: string;
   tags?: string[];
+  locked?: boolean;
+  comments?: ItemComment[];
 }
 
 export interface NoteItem extends BaseItem {
@@ -126,6 +137,15 @@ export interface LineItem extends BaseItem {
   startItemId?: string;
   /** If set, the end point (x2,y2) follows this item's center instead of being fixed. */
   endItemId?: string;
+
+  label?: string;
+  labelMode?: LineLabelMode;
+  /**
+   * Distance from the actual line.
+   * 0 = directly in the middle of the line.
+   */
+  labelOffset?: number;
+  labelFontSize?: number;
 }
 
 export interface ColumnItem extends BaseItem {

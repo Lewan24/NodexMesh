@@ -6,6 +6,8 @@ import BlockRenderer from '@/features/blocks/BlockRenderer';
 import { getTypographyStyle } from '@/features/blocks/typography/typographyUtils';
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 import type { ResizeDirection } from '@/features/canvas/types';
+import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
+import ItemCommentBadge from '@/features/comments/ItemCommentBadge';
 
 function getFrameLabelScale(zoom: number): number {
   if (zoom >= 1) return 1;
@@ -57,6 +59,11 @@ interface CanvasFrameProps {
   ) => void;
 
   onFitFrame: (id: string) => void;
+  onQuickConnectStart: (
+    id: string,
+    event: React.MouseEvent,
+    side: ConnectionSide,
+  ) => void;
 }
 
 export default function CanvasFrame({
@@ -82,6 +89,7 @@ export default function CanvasFrame({
   onRequestDelete,
   onItemResize,
   onFitFrame,
+  onQuickConnectStart
 }: CanvasFrameProps) {
   const [editingTitle, setEditingTitle] = useState(false);
 
@@ -137,6 +145,10 @@ export default function CanvasFrame({
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
     >
+      <ItemCommentBadge
+        comments={item.comments}
+      />
+      
       {/* Semantic frame label */}
       <div
         className="absolute pointer-events-auto"
@@ -280,7 +292,7 @@ export default function CanvasFrame({
       )}
 
       {/* Resize */}
-      {isSelected && (
+      {isSelected && !item.locked && (
         <ResizeHandles
           visible
           onResizeStart={(event, direction) =>
@@ -288,6 +300,20 @@ export default function CanvasFrame({
           }
         />
       )}
+
+      <ConnectionHandles
+        visible={isSelected}
+        onStart={(
+          event,
+          side,
+        ) =>
+          onQuickConnectStart(
+            item.id,
+            event,
+            side,
+          )
+        }
+      />
 
       <BlockRenderer
         item={item}

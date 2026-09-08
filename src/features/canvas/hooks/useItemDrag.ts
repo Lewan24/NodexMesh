@@ -141,6 +141,18 @@ export function useItemDrag({
         : [id];
 
       const items = projectRef.current.items;
+      const clickedItem =
+        items.find(
+          item => item.id === id,
+        );
+
+      if (clickedItem?.locked) {
+        /*
+        * Selection already happened above,
+        * but locked item cannot start drag.
+        */
+        return;
+      }
       const captureMap = new Map<string, DragCapture>();
 
       for (const dragId of dragIds) {
@@ -149,6 +161,10 @@ export function useItemDrag({
         );
 
         if (!item) {
+          continue;
+        }
+
+        if (item.locked) {
           continue;
         }
 
@@ -166,6 +182,9 @@ export function useItemDrag({
           const frame = item as FrameItem;
 
           const children = items.filter(child => {
+            if (child.locked) {
+              return false;
+            }
             if (dragIds.includes(child.id)) return false;
             if (captureMap.has(child.id)) return false;
 

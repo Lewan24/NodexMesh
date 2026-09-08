@@ -222,13 +222,19 @@ export default function Canvas({
   const {
     attachHoverId,
     handleLineEndpointDrag,
+    handleQuickConnectStart,
   } = useLineDrag({
     projectRef,
     zoomRef,
     measuredSizes,
     pushHistory,
+
+    onAddItem,
+    onDeleteItem,
+    onSelectItems,
+
     onUpdateItem,
-  });
+});
 
   const { screenToCanvas } = useCanvasZoom({
     containerRef,
@@ -1001,13 +1007,10 @@ export default function Canvas({
       ? 'cursor-crosshair'
       : 'cursor-default';
 
-  const inspectorItem =
-    selectedColumnItem?.item ??
-    (
-      selectedItems.length === 1
-        ? selectedItems[0]
-        : null
-    );
+  const inspectorItems =
+  selectedColumnItem
+    ? [selectedColumnItem.item]
+    : selectedItems;
 
   return (
     <div
@@ -1079,6 +1082,9 @@ export default function Canvas({
                 ? dragTilt
                 : 0
             }
+            onQuickConnectStart={
+              handleQuickConnectStart
+            }
             isAnimating={animatingIds.has(frame.id)}
             isAttachTarget={attachHoverId === frame.id}
             selectedIds={safeSelectedIds}
@@ -1131,6 +1137,9 @@ export default function Canvas({
                 draggingIds.includes(item.id)
                   ? dragTilt
                   : 0
+              }
+              onQuickConnectStart={
+                handleQuickConnectStart
               }
               zoom={zoom}
               isSelected={safeSelectedIds.includes(item.id)}
@@ -1227,11 +1236,9 @@ export default function Canvas({
       )}
 
       <ItemInspector
-        item={inspectorItem ?? null}
-        onUpdate={updater => {
-          if (
-            selectedColumnItem
-          ) {
+        items={inspectorItems}
+        onUpdateAll={updater => {
+          if (selectedColumnItem) {
             handleUpdateColumnItem(
               selectedColumnItem.columnId,
               updater,
@@ -1240,11 +1247,15 @@ export default function Canvas({
             return;
           }
 
-          if (
-            selectedItems.length === 1
+          /*
+          * Canvas multi-selection.
+          */
+          for (
+            const selectedItem of
+              selectedItems
           ) {
             onUpdateItem(
-              selectedItems[0]!.id,
+              selectedItem.id,
               updater,
             );
           }

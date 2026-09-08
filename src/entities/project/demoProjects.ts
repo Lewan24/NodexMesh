@@ -16,7 +16,8 @@ export const nodexMeshDemoProject: Project = {
       "title": "Preview DEMO",
       "width": 1272,
       "height": 692,
-      "color": "#059669"
+      "color": "#059669",
+      "locked": true
     },
     {
       "id": "8n9j475u",
@@ -24,10 +25,12 @@ export const nodexMeshDemoProject: Project = {
       "y": 1436,
       "zIndex": 2,
       "type": "frame",
-      "title": "Większe plany na przyszłość",
+      "title": "Larger Future Plans",
       "width": 792,
-      "height": 472,
-      "color": "#FFBD65"
+      "height": 435.25,
+      "color": "#FFBD65",
+      "locked": true,
+      "tags": []
     },
     {
       "id": "i1ic5c0b",
@@ -35,9 +38,9 @@ export const nodexMeshDemoProject: Project = {
       "x": 1820,
       "y": 252,
       "zIndex": 3,
-      "title": "Plany na najbliższe prace",
-      "width": 2008,
-      "height": 664,
+      "title": "Plans for Upcoming Work",
+      "width": 1992,
+      "height": 672.5,
       "color": "#FF6B8A"
     },
     {
@@ -46,15 +49,16 @@ export const nodexMeshDemoProject: Project = {
       "x": 444,
       "y": 252,
       "zIndex": 4,
-      "title": "Opis Aplikacji NodexMesh",
+      "title": "NodexMesh Application Overview",
       "width": 1336,
-      "height": 1076,
+      "height": 1075,
       "color": "#97B6E7",
       "typography": {
         "fontSize": 14,
         "textAlign": "left"
       },
-      "opacity": 0.3
+      "opacity": 0.3,
+      "locked": false
     },
     {
       "id": "fz0c7s26",
@@ -75,22 +79,22 @@ export const nodexMeshDemoProject: Project = {
           "cards": [
             {
               "id": "ag14xie",
-              "text": "Sprawdzić czy wszędzie są odpowiednie animacje i je w razie potrzeby dodać",
+              "text": "Check that appropriate animations are used everywhere and add them where needed",
               "done": false
             },
             {
               "id": "mzg9w9m",
-              "text": "Zaimplementować śmietnik dla projektów oraz usuwanie i przywracanie projektów",
+              "text": "Implement a project trash bin with project deletion and restoration",
               "done": false
             },
             {
               "id": "jcwk1cz",
-              "text": "Dodać nowy item Divider",
+              "text": "Add a new Divider item",
               "done": false
             },
             {
               "id": "lc89o0h",
-              "text": "Czasem się buguje appbar i znika",
+              "text": "Fix the app bar occasionally bugging out and disappearing",
               "done": false
             }
           ],
@@ -103,22 +107,17 @@ export const nodexMeshDemoProject: Project = {
           "cards": [
             {
               "id": "xa2w1pl",
-              "text": "Dodać rozszerzenie kolumn do szerokości kanban",
+              "text": "Add column expansion to match the Kanban width",
               "done": false
             },
             {
               "id": "yt3uz0x",
-              "text": "Sprawdzić i dodać gdzie trzeba odpowiednie kursory (Do przycisków itd)",
+              "text": "Check and add appropriate cursors where needed (buttons, etc.)",
               "done": false
             },
             {
               "id": "j989dq3",
-              "text": "Dodać możliwość zmiany nazwy projektu",
-              "done": false
-            },
-            {
-              "id": "dtkgah5",
-              "text": "Zmienić dark mode background na bardziej szary",
+              "text": "Add the ability to rename a project",
               "done": false
             }
           ],
@@ -131,37 +130,42 @@ export const nodexMeshDemoProject: Project = {
           "cards": [
             {
               "id": "uxtrljz",
-              "text": "Do allign itemow dodac allign tekstu na srodku kartki ale z wertylaknej strony",
+              "text": "Add vertical text alignment to item alignment options",
               "done": true
             },
             {
               "id": "0fleed0",
-              "text": "Naprawić przenoszenie i spodziewanie się gdzie wyląduje item, aby pokazywało bieżący rozmiar, a nie ten domyślny",
+              "text": "Fix the drag preview so it shows the item’s current size instead of its default size",
+              "done": true
+            },
+            {
+              "id": "dtkgah5",
+              "text": "Change the dark mode background to a grayer shade",
               "done": true
             },
             {
               "id": "a91280v",
-              "text": "Dodać długie kreski przy przenoszeniu na bokach, aby móc dostosować pion i poziom względem odległych innych itemów",
+              "text": "Add long alignment guides while dragging so items can be aligned vertically and horizontally with distant items",
               "done": true
             },
             {
               "id": "3dpm65t",
-              "text": "Podgląd środka itemu podczas przenoszenia dla wygodniejszego ustawienia względem reszty itemów na planszy",
+              "text": "Show the item center while dragging for easier positioning relative to other items on the board",
               "done": true
             },
             {
               "id": "5g5xe83",
-              "text": "Dodać do checklist auto fit",
+              "text": "Add auto-fit to checklists",
               "done": true
             },
             {
               "id": "2s6ddz0",
-              "text": "Naprawić wysokość taska w checklisćie",
+              "text": "Fix task height in checklists",
               "done": true
             },
             {
               "id": "yiw3ydt",
-              "text": "Zwiększyć domyślną szerokość itemów na większą",
+              "text": "Increase the default item width",
               "done": true
             }
           ],
@@ -186,7 +190,7 @@ export const nodexMeshDemoProject: Project = {
         "italic": true
       },
       "type": "text",
-      "content": "Aplikacja jako darmowa alternatywa dla Milanote",
+      "content": "A free alternative to Milanote",
       "size": "lg",
       "width": 720,
       "textAlign": "center",
@@ -220,9 +224,12 @@ export const nodexMeshDemoProject: Project = {
         "textAlign": "center"
       },
       "type": "note",
-      "content": "Aplikacja jest przede wszystkim ciekawą alternatywą dla znanego systemu\nMilanote\n\nDocelowo ma to być dostępne dla każdego i łatwe do uruchomienia w lokalnym środowisku przy pomocy\nDocker Compose",
+      "content": "The application is primarily a free and interesting alternative to the well-known Milanote platform.\n\nThe goal is to make it available to everyone and easy to run locally using\nDocker Compose",
       "color": "#fdf4ff",
-      "width": 320
+      "width": 320,
+      "locked": false,
+      "tags": [],
+      "comments": []
     },
     {
       "id": "7linteq0",
@@ -235,9 +242,11 @@ export const nodexMeshDemoProject: Project = {
         "textAlign": "center"
       },
       "type": "note",
-      "content": "NodexMesh\nposiadać będzie bardzo podobne funkcjonalności, tak aby przyjemnie i wygodnie używało się systemu.\nNatomiast będą tu zaimplementowane dodatkowe narzędzia i QoL funkcjonalności takie jak:\n\n- Rozszerzalny Kanban\n- Ładne animacje i status tasków i innych\n- Grupowanie\n- Edit bar z wieloma możliwościami\n\nAplikacja będzie cały czas rozwijana i wspierana oraz darmowa, co oznacza, że można zgłaszać błędy i spodziewać się aktualizacji z poprawkami.\nMożna również dołączyć do współtworzenia systemu i na stronie projektu",
+      "content": "NodexMesh\nThe application will offer many familiar features to make the system pleasant and convenient to use.\nIt will also include additional tools and quality-of-life features such as:\n\n- Expandable Kanban boards\n- Smooth animations and task/item statuses\n- Grouping\n- An edit bar with extensive customization options\n- And much more\n\nThe application will remain free, actively developed, and supported, so you can report bugs and expect updates with fixes.\nYou can also contribute to the project using the project page below:",
       "color": "#fce7f3",
-      "width": 320
+      "width": 320,
+      "locked": false,
+      "tags": []
     },
     {
       "id": "t2kf54un",
@@ -247,25 +256,27 @@ export const nodexMeshDemoProject: Project = {
       "type": "link",
       "url": "https://github.com/Lewan24/NodexMesh",
       "title": "Nodex Mesh",
-      "description": "Github project",
+      "description": "GitHub project",
       "width": 320,
       "height": 144,
       "color": "#F7CAE3",
-      "topColor": "#7C3AED"
+      "topColor": "#7C3AED",
+      "locked": false
     },
     {
       "id": "k2i1bpy4",
       "x": 1424,
-      "y": 960,
+      "y": 985.002500250025,
       "zIndex": 11,
       "typography": {
         "textAlign": "center"
       },
       "type": "note",
-      "content": "można ściągnąć swój FORK, ulepszyć kod, dodać potrzebne funkcjonalności, czy poprawki i poprosić o\nPull Request",
+      "content": "Feel free to fork the project, improve the code, add useful features or fixes, and submit a Pull Request. Contributions and collaboration are welcome.",
       "color": "#fce7f3",
       "width": 320,
-      "topColor": "#7C3AED"
+      "topColor": "#7C3AED",
+      "locked": false
     },
     {
       "id": "5zgnx7u7",
@@ -276,9 +287,10 @@ export const nodexMeshDemoProject: Project = {
         "textAlign": "center"
       },
       "type": "note",
-      "content": "Wszystkie potrzebne informacje, komendy i zalecenia do i podczas uruchomienia są na stronie projektu",
+      "content": "All required information, commands, and setup recommendations are available on the project page",
       "color": "#FDF4FF",
-      "width": 320
+      "width": 320,
+      "locked": false
     },
     {
       "id": "wnlimxmh",
@@ -293,7 +305,8 @@ export const nodexMeshDemoProject: Project = {
       "color": "#7C3AED",
       "strokeWidth": 3,
       "startItemId": "5zgnx7u7",
-      "endItemId": "t2kf54un"
+      "endItemId": "t2kf54un",
+      "locked": false
     },
     {
       "id": "ma7sbdlx",
@@ -304,9 +317,10 @@ export const nodexMeshDemoProject: Project = {
         "textAlign": "center"
       },
       "type": "note",
-      "content": "Aplikacja nie jest idealna, jest cały czas w trakcie tworzenia i ulepszania, ale ma potencjał, jest aktualnie działające demo, które może uruchomić każdy na swojej przeglądarce.\n\nWszystkie dane w demo są trzymane tylko i wyłącznie w pamięci przeglądarki, więc jest możliwość, że przy którejś aktualizacji wprowadzone zmiany i dane w wersji DEMO, znikną.\n\nJeżeli chcemy zresetować dane wystarczy wyczyścić pamięć lokalną w narzędziach dewelopera lub pod przyciskiem F12\nEwentualnie w menu użytkownika w \nPrawym górnym rogu jest przycisk\nResetuj DEMO",
+      "content": "NodexMesh is still under active development and continuous improvement. A working demo is currently available to everyone for free and can be opened directly in a browser using the link in the project’s GitHub repository.\n\nAll demo data is stored exclusively in the browser’s local storage, so changes and data created in the DEMO version may disappear after some updates.\n\nTo reset the data, clear local storage in your browser’s developer tools (F12).\nAlternatively, open the user menu in the top-right corner and use the\nReset DEMO\nbutton.",
       "color": "#fff7ed",
-      "width": 320
+      "width": 320,
+      "locked": false
     },
     {
       "id": "zk08gdfv",
@@ -323,7 +337,8 @@ export const nodexMeshDemoProject: Project = {
       "imgHeight": 592,
       "color": "#ffffff",
       "variant": "card",
-      "height": 592
+      "height": 592,
+      "locked": true
     },
     {
       "id": "u9oshol5",
@@ -335,61 +350,57 @@ export const nodexMeshDemoProject: Project = {
         "textAlign": "left"
       },
       "type": "checklist",
-      "title": "Plany na przyszłość",
+      "title": "Future Plans",
       "color": "#f0fdf4",
       "width": 720,
       "entries": [
         {
           "id": "ocr2hdf",
-          "text": "Kolaboracja (SignalR czy coś w tym rodzaju)",
+          "text": "Real-time collaboration (SignalR or something similar)",
           "done": false
         },
         {
           "id": "l5nz2sg",
-          "text": "API w C# dotnet 10",
+          "text": "API in C# .NET 10",
           "done": false
         },
         {
           "id": "v6yxm1r",
-          "text": "OWASP top 10 przy implementacji API",
-          "done": false
-        },
-        {
-          "id": "orzndok",
-          "text": "Zarządzanie projektami",
+          "text": "Follow the OWASP Top 10 when implementing the API",
           "done": false
         },
         {
           "id": "iu56k6t",
-          "text": "Własne motywy kolorów aplikacji",
+          "text": "Custom application color themes",
           "done": false
         },
         {
           "id": "d7lzmx1",
-          "text": "Dodanie ogólnego śmietnika na itemy, z którego można przywrócić wcześniej usunięte elementy",
+          "text": "Add a global trash bin for items so previously deleted elements can be restored",
           "done": false
         },
         {
           "id": "oulcpo7",
-          "text": "Implementacja exportu i importu projektów między instancjami NodexMesh",
+          "text": "Implement project export and import between NodexMesh instances",
           "done": false
         },
         {
           "id": "djyv3l0",
-          "text": "Udostępnianie projektu tylko do odczytu",
+          "text": "Read-only project sharing",
           "done": false
         },
         {
           "id": "9dbhmvw",
-          "text": "Wyświetlanie zdjęć z swojej biblioteki, zamiast linka (link opcjonalnie)",
+          "text": "Display images from the user’s library instead of requiring a link (link optional)",
           "done": false
         }
       ],
-      "height": 400,
       "topColor": "#7C3AED",
       "tags": [
         "todo"
-      ]
+      ],
+      "locked": true,
+      "comments": []
     },
     {
       "id": "92oyuwgd",
@@ -401,10 +412,15 @@ export const nodexMeshDemoProject: Project = {
       "y2": 838.5,
       "arrowStart": true,
       "arrowEnd": true,
-      "color": "#7C3AED",
+      "color": "#02A0A0",
       "strokeWidth": 3,
       "startItemId": "u9oshol5",
-      "endItemId": "fz0c7s26"
+      "endItemId": "fz0c7s26",
+      "locked": false,
+      "label": "TODO Lists",
+      "labelOffset": 21,
+      "labelFontSize": 21,
+      "labelMode": "follow-line"
     },
     {
       "id": "8hmoxq25",
@@ -415,12 +431,13 @@ export const nodexMeshDemoProject: Project = {
         "textAlign": "center"
       },
       "type": "note",
-      "content": "API stworzone będzie w\nC# .NET 10\n\nAPI przewiduje implementację bezpiecznego systemu, wykorzystującego listę\nOWASP Top 10\n\nAPI stworzone będzie jako osobny kontener, będzie wszystko zawarte w jednym pliku\ndocker-compose.yml\naby w łatwy sposób uruchomić cały system, bez problemu aktualizować kontenery itd.\n\nCała potrzebna instrukcja, zalecenia, ważne informacje itd. są zawarte w projekcie w odpowiednich miejscach na stronie github.",
+      "content": "The API will be built with\nC# .NET 10\n\nThe API is planned as a secure system designed with the\nOWASP Top 10\nin mind.\n\nThe API will run in a separate container, with the whole system defined in a single\ndocker-compose.yml\nfile so the application can be started easily and containers can be updated without hassle.\n\nAll required instructions, recommendations, and important information are available in the relevant sections of the project’s GitHub page.",
       "color": "#fdf4ff",
       "width": 448,
       "tags": [
         "todo"
-      ]
+      ],
+      "locked": false
     },
     {
       "id": "uiusigoi",
@@ -438,27 +455,33 @@ export const nodexMeshDemoProject: Project = {
       "width": 192,
       "textAlign": "center",
       "topColor": "#7C3AED",
-      "color": "#eff6ff"
+      "color": "#eff6ff",
+      "locked": false
     },
     {
       "id": "ltbomker",
-      "x": 3104,
+      "x": 3088,
       "y": 288,
       "zIndex": 20,
       "type": "checklist",
-      "title": "Nowe narzędzia",
+      "title": "New Tools",
       "color": "#eff6ff",
       "width": 688,
       "entries": [
         {
-          "id": "pvgvj3s",
-          "text": "Tagi do przypisywania do itemów oraz podświetlanie itemów gdy zaznaczymy dany tag",
-          "done": true
+          "id": "orzndok",
+          "text": "Project management",
+          "done": false
         },
         {
-          "id": "c56kuez",
-          "text": "Filtr i szukanie na planszy konkretnych napisów, tagów itd",
-          "done": true
+          "id": "598ijs7",
+          "text": "Context menu with actions such as copy, paste, duplicate, delete, etc.",
+          "done": false
+        },
+        {
+          "id": "amauumq",
+          "text": "Mind Map with connections, automatic layout, etc.",
+          "done": false
         },
         {
           "id": "bpsxu1m",
@@ -466,71 +489,71 @@ export const nodexMeshDemoProject: Project = {
           "done": false
         },
         {
-          "id": "3t7tqwo",
-          "text": "Komentarze ogólne oraz takie do konkretnych itemów",
-          "done": false
-        },
-        {
-          "id": "o60omj0",
-          "text": "Napisy na strzałkach",
-          "done": false
-        },
-        {
-          "id": "so2i57x",
-          "text": "Auto strzalki do utworzenia przy danym itemie",
-          "done": false
-        },
-        {
-          "id": "amauumq",
-          "text": "Mind Map coś z połączeniami, auto układem itd",
-          "done": false
-        },
-        {
           "id": "zy10hcl",
-          "text": "Zakładki, do zapisania istotnego miejsca na później, które jest na liście gdzieś obok",
+          "text": "Bookmarks for saving important board locations for quick access later",
           "done": false
         },
         {
           "id": "nei5eao",
-          "text": "IconBlock - jak nazwa mówi, własne ikonki do wyboru lub z linka",
+          "text": "IconBlock - selectable custom icons or icons loaded from a link",
           "done": false
         },
         {
           "id": "gyivr8p",
-          "text": "CodeBlock - do ładnego wyświetlenia kodu z wyborem języka i jego domy,slnymi kolorami",
+          "text": "CodeBlock - nicely formatted code display with language selection and default syntax highlighting",
           "done": false
         },
         {
           "id": "c66tsis",
-          "text": "EmbedBlock - do wyświetlnenia np filmu z yt, obrazu czy strony internetowej",
-          "done": false
-        },
-        {
-          "id": "72063ld",
-          "text": "Blokowanie itemu, żeby przypadkiem go nie przesunąć",
+          "text": "EmbedBlock - display content such as a YouTube video, image, or website",
           "done": false
         },
         {
           "id": "qr6jjla",
-          "text": "Ulepszenie Note dodając source dla linku i auto otwarcie",
+          "text": "Improve Note by adding a source link with automatic opening",
           "done": false
         },
         {
           "id": "m6h1l06",
-          "text": "Sub Board node / portal do otworzenia nowego canvasu, lub przejscie do innego projektu",
+          "text": "Sub-board node / portal for opening a new canvas or navigating to another project",
           "done": false
         },
         {
-          "id": "598ijs7",
-          "text": "Menu z wyborem typu kopiuj, wklej, duplikuj, usun itd",
-          "done": false
+          "id": "72063ld",
+          "text": "Lock items to prevent accidental movement",
+          "done": true
+        },
+        {
+          "id": "pvgvj3s",
+          "text": "Assign tags to items and highlight items when a tag is selected",
+          "done": true
+        },
+        {
+          "id": "c56kuez",
+          "text": "Filter and search the board for specific text, tags, etc.",
+          "done": true
+        },
+        {
+          "id": "o60omj0",
+          "text": "Labels on arrows",
+          "done": true
+        },
+        {
+          "id": "so2i57x",
+          "text": "Automatically create arrows from a selected item",
+          "done": true
+        },
+        {
+          "id": "3t7tqwo",
+          "text": "General comments and comments attached to specific items",
+          "done": true
         }
       ],
       "topColor": "#059669",
-      "height": 592,
       "tags": [
         "todo"
-      ]
+      ],
+      "locked": false
     },
     {
       "id": "kpmbh2p6",
@@ -543,13 +566,14 @@ export const nodexMeshDemoProject: Project = {
         "verticalAlign": "middle"
       },
       "type": "text",
-      "content": "Poszukaj #todo na appbarze żeby wyświetlić wszystkie elementy oznaczone do zrobienia",
+      "content": "Search for #todo in the app bar to display all items marked as tasks",
       "size": "lg",
       "width": 1328,
       "height": 98,
-      "color": "#0d2a35"
+      "color": "#0d2a35",
+      "locked": true
     }
   ]
 };
 
-export const demoProjects: Project[] = [ nodexMeshDemoProject ];
+export const demoProjects: Project[] = [nodexMeshDemoProject];
