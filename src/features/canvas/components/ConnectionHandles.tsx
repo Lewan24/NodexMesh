@@ -115,7 +115,8 @@ function ConnectionHandle({
       onMouseDown={event =>
         onStart(event, side)
       }
-      title="Drag to connect"
+      aria-label={`Connect ${side}`}
+      title="Drag to connect · Click to create a connected empty block (content blocks)"
     >
       <svg
         width="11"

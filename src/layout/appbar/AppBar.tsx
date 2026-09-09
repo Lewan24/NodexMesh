@@ -52,7 +52,8 @@ export default function AppBar({
   return (
     <>
       <header
-        className="h-14 flex items-center flex-shrink-0 relative z-40"
+        data-app-bar="true"
+        className="h-14 min-h-14 flex items-center shrink-0 relative z-50"
         style={{
           backgroundColor: 'var(--color-chrome-bg)',
           borderBottom: '1px solid var(--color-chrome-border)',

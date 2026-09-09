@@ -36,6 +36,10 @@ export const BACKGROUND_ITEM_TYPES = new Set<BoardItem['type']>([
 ]);
 
 export const ITEM_TYPE_LABELS: Partial<Record<BoardItem['type'], string>> = {
+  document: 'Document',
+  code: 'Code',
+  embed: 'Embed',
+  dispenser: 'Note dispenser',
   note: 'Note',
   kanban: 'Kanban',
   image: 'Image',

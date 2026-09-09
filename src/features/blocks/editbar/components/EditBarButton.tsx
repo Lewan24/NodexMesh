@@ -1,19 +1,23 @@
 import type { ReactNode } from 'react';
 
 interface EditBarButtonProps {
+  disabled?: boolean;
   active?: boolean;
   title?: string;
   onClick: () => void;
   children: ReactNode;
 }
 
-export default function EditBarButton({ active = false, title, onClick, children }: EditBarButtonProps) {
+export default function EditBarButton({ active = false, disabled = false, title, onClick, children }: EditBarButtonProps) {
   return (
     <button
+      disabled={disabled}
+      aria-pressed={active}
       title={title}
       onClick={onClick}
       className="h-8 min-w-8 px-2 flex items-center justify-center rounded-lg text-sm font-medium transition-colors flex-shrink-0"
       style={{
+        opacity: disabled ? 0.35 : 1,
         backgroundColor: active ? 'rgba(124, 58, 237,0.15)' : 'transparent',
         color: active ? '#7C3AED' : '#4a6070',
       }}

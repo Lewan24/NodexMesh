@@ -36,6 +36,10 @@ interface MinSize {
 
 function getMinSize(item: BoardItem): MinSize {
   switch (item.type) {
+    case 'document': return { width: 320, height: 240 };
+    case 'embed': return { width: 320, height: 200 };
+    case 'code': return { width: 280, height: 160 };
+    case 'dispenser': return { width: 180, height: 160 };
     case 'frame':
       return { width: MIN_FRAME_WIDTH, height: MIN_FRAME_HEIGHT };
 
@@ -177,6 +181,7 @@ export function useItemResize({
 
           return {
             ...current,
+            ...(current.type === 'document' || current.type === 'code' ? { autoHeight: false } : {}),
             x: left,
             y: top,
             width,

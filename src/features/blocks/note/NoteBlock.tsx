@@ -24,7 +24,10 @@ export default function NoteBlock({
   onDelete,
 }: NoteBlockProps) {
   const [editing, setEditing] = useState(!item.content);
-  const typographyStyle = getTypographyStyle(item);
+  const typographyStyle = {
+    ...getTypographyStyle(item),
+    ...(item.dispenserId && !item.typography?.textAlign ? { textAlign: 'center' as const } : {}),
+  };
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -38,7 +41,7 @@ export default function NoteBlock({
 
   const fontSize: NoteFontSize = item.fontSize ?? 'base';
 
-  const verticalAlign = item.typography?.verticalAlign ?? 'top';
+  const verticalAlign = item.typography?.verticalAlign ?? (item.dispenserId ? 'middle' : 'top');
 
   const verticalJustify =
     verticalAlign === 'middle'

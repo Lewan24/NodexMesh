@@ -32,7 +32,9 @@ export function useCanvasKeyboard({
     const handleKeyDown = (event: KeyboardEvent) => {
       const inField =
         event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement;
+        event.target instanceof HTMLTextAreaElement ||
+        event.target instanceof HTMLSelectElement ||
+        (event.target instanceof HTMLElement && event.target.isContentEditable);
 
       if (event.key === 'Escape') {
         onSelectItems([]);

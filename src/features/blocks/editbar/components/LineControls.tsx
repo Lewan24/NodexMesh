@@ -3,6 +3,7 @@ import ColorSwatch from './ColorSwatch';
 import EditBarButton, { EditBarDivider } from './EditBarButton';
 import { LINE_COLORS } from '../constants';
 import CustomColorInput from './CustomColorInput';
+import { snapToGrid } from '@/features/canvas/utils/gridSnap';
 
 interface LineControlsProps {
   item: LineItem;
@@ -16,6 +17,10 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
 
   return (
     <>
+      <EditBarButton active={!!item.divider} title="Divider: snap to grid, no connections" onClick={() => update(item.divider ? { divider: false } : {
+        divider: true, arrowStart: false, arrowEnd: false, startItemId: undefined, endItemId: undefined,
+        x: snapToGrid(item.x), y: snapToGrid(item.y), x2: snapToGrid(item.x2), y2: snapToGrid(item.y2),
+      })}>Divider</EditBarButton>
       <div className="flex items-center gap-1 px-1">
         {LINE_COLORS.map(color => (
           <ColorSwatch
@@ -52,7 +57,8 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
 
       <EditBarButton
         active={!!item.arrowStart}
-        onClick={() => update({ arrowStart: !item.arrowStart })}
+        disabled={!!item.divider}
+        onClick={() => { if (!item.divider) update({ arrowStart: !item.arrowStart }); }}
         title="Arrow at start"
       >
         ← S
@@ -60,7 +66,8 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
 
       <EditBarButton
         active={!!item.arrowEnd}
-        onClick={() => update({ arrowEnd: !item.arrowEnd })}
+        disabled={!!item.divider}
+        onClick={() => { if (!item.divider) update({ arrowEnd: !item.arrowEnd }); }}
         title="Arrow at end"
       >
         E →

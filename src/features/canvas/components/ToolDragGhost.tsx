@@ -1,6 +1,7 @@
 import type { ToolType } from '@/entities/board/toolTypes';
 
 interface ToolDragGhostProps {
+  color?: string;
   tool: ToolType;
   clientX: number;
   clientY: number;
@@ -14,6 +15,11 @@ interface GhostConfig {
 }
 
 const GHOST_CONFIG: Partial<Record<ToolType, GhostConfig>> = {
+  document: { label: 'Document', width: 240, height: 170 },
+  embed: { label: 'Embed', width: 240, height: 140 },
+  code: { label: 'Code', width: 220, height: 140 },
+  dispenser: { label: 'Note dispenser', width: 180, height: 130 },
+  divider: { label: 'Divider', width: 180, height: 36 },
   note: { label: 'Note', width: 180, height: 110 },
   kanban: { label: 'Kanban', width: 260, height: 150 },
   image: { label: 'Image', width: 200, height: 125 },
@@ -26,6 +32,7 @@ const GHOST_CONFIG: Partial<Record<ToolType, GhostConfig>> = {
 };
 
 export default function ToolDragGhost({
+  color,
   tool,
   clientX,
   clientY,
@@ -35,7 +42,7 @@ export default function ToolDragGhost({
 
   if (!config || tool === 'select') return null;
 
-  if (tool === 'line') {
+  if (tool === 'line' || tool === 'divider') {
     return (
       <div
         className="fixed pointer-events-none"
@@ -60,7 +67,7 @@ export default function ToolDragGhost({
           }}
         />
 
-        <div
+        {tool === 'line' && <div
           className="absolute right-0 top-1/2"
           style={{
             width: 8,
@@ -69,7 +76,7 @@ export default function ToolDragGhost({
             borderRight: '2px solid var(--color-accent)',
             transform: 'translateY(-50%) rotate(45deg)',
           }}
-        />
+        />}
       </div>
     );
   }
@@ -90,7 +97,7 @@ export default function ToolDragGhost({
         border: overCanvas
           ? '2px solid var(--color-accent)'
           : '2px dashed var(--color-border)',
-        backgroundColor: 'var(--color-surface-translucent)',
+        backgroundColor: color ?? 'var(--color-surface-translucent)',
         boxShadow: overCanvas
           ? '0 12px 36px rgba(0,0,0,0.18), 0 0 0 3px rgba(124,58,237,0.08)'
           : '0 8px 20px rgba(0,0,0,0.1)',

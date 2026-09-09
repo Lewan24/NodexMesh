@@ -277,7 +277,7 @@ export default function BoardPage({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="board-shell flex flex-col h-dvh w-full overflow-clip">
       <AppBar
         projects={projects}
         activeProjectId={activeProjectId}
@@ -289,7 +289,7 @@ export default function BoardPage({
       />
 
       <div
-        className="relative flex h-screen w-screen overflow-hidden"
+        className="relative isolate z-0 flex flex-1 min-h-0 min-w-0 w-full overflow-hidden"
         style={{
           backgroundColor: 'var(--color-app-bg)',
         }}

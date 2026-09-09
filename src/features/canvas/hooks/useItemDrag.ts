@@ -12,6 +12,7 @@ import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import { getItemSize } from '@/features/canvas/utils/itemGeometry';
 import { isItemInsideFrame } from '../utils/frameGeometry';
 import { AlignmentGuide, findAlignmentSnap } from '../utils/alignmentGuides';
+import { snapToGrid } from '../utils/gridSnap';
 
 export interface ItemDropPreview {
   x: number;
@@ -345,12 +346,12 @@ export function useItemDrag({
         captureMap.forEach((capture, capturedId) => {
           onUpdateItem(capturedId, item => ({
             ...item,
-            x: capture.x + dx,
-            y: capture.y + dy,
+            x: item.type === 'line' && item.divider ? snapToGrid(capture.x + dx) : capture.x + dx,
+            y: item.type === 'line' && item.divider ? snapToGrid(capture.y + dy) : capture.y + dy,
             ...(capture.isLine
               ? {
-                  x2: capture.x2! + dx,
-                  y2: capture.y2! + dy,
+                  x2: item.type === 'line' && item.divider ? snapToGrid(capture.x2! + dx) : capture.x2! + dx,
+                  y2: item.type === 'line' && item.divider ? snapToGrid(capture.y2! + dy) : capture.y2! + dy,
                 }
               : {}),
           }));
@@ -451,6 +452,7 @@ export function useItemDrag({
           * so they keep normal grid snapping.
           */
           const finalX =
+            clickedItem?.type === 'line' && clickedItem.divider ? snapToGrid(rawX) :
             lastPlacement?.x ??
             (
               snapEnabled
@@ -459,6 +461,7 @@ export function useItemDrag({
             );
 
           const finalY =
+            clickedItem?.type === 'line' && clickedItem.divider ? snapToGrid(rawY) :
             lastPlacement?.y ??
             (
               snapEnabled
@@ -496,27 +499,15 @@ export function useItemDrag({
                     current => ({
                       ...current,
 
-                      x:
-                        capture.x +
-                        lastDx +
-                        settleDx,
+                      x: current.type === 'line' && current.divider ? snapToGrid(capture.x + lastDx + settleDx) : capture.x + lastDx + settleDx,
 
-                      y:
-                        capture.y +
-                        lastDy +
-                        settleDy,
+                      y: current.type === 'line' && current.divider ? snapToGrid(capture.y + lastDy + settleDy) : capture.y + lastDy + settleDy,
 
                       ...(capture.isLine
                         ? {
-                            x2:
-                              capture.x2! +
-                              lastDx +
-                              settleDx,
+                            x2: current.type === 'line' && current.divider ? snapToGrid(capture.x2! + lastDx + settleDx) : capture.x2! + lastDx + settleDx,
 
-                            y2:
-                              capture.y2! +
-                              lastDy +
-                              settleDy,
+                            y2: current.type === 'line' && current.divider ? snapToGrid(capture.y2! + lastDy + settleDy) : capture.y2! + lastDy + settleDy,
                           }
                         : {}),
                     }),

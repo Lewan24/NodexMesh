@@ -17,6 +17,10 @@ export interface ItemRect extends ItemSize {
 
 export function getApproxItemSize(item: BoardItem): ItemSize {
   switch (item.type) {
+    case 'document': return { width: item.width ?? ITEM_WIDTH.document, height: item.height ?? 600 };
+    case 'embed': return { width: item.width ?? ITEM_WIDTH.embed, height: item.height ?? 320 };
+    case 'code': return { width: item.width ?? ITEM_WIDTH.code, height: item.height ?? 280 };
+    case 'dispenser': return { width: item.width ?? ITEM_WIDTH.dispenser, height: item.height ?? 200 };
     case 'note':
       return {
         width: item.width ?? 220,
@@ -118,6 +122,11 @@ export function getContainedItemIds(
 
 export function getToolDefaultSize(type: ToolType): ItemSize {
   switch (type) {
+    case 'document': return { width: ITEM_WIDTH.document, height: 600 };
+    case 'embed': return { width: ITEM_WIDTH.embed, height: 320 };
+    case 'code': return { width: ITEM_WIDTH.code, height: 280 };
+    case 'dispenser': return { width: ITEM_WIDTH.dispenser, height: 200 };
+    case 'divider': return { width: ITEM_WIDTH.line, height: 24 };
     case 'note':
       return {
         width: ITEM_WIDTH.note,

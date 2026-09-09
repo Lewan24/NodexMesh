@@ -1,5 +1,10 @@
 export type ToolType =
   | 'select'
+  | 'document'
+  | 'embed'
+  | 'code'
+  | 'dispenser'
+  | 'divider'
   | 'note'
   | 'kanban'
   | 'image'

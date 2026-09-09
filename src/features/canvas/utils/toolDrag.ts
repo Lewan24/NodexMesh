@@ -4,6 +4,7 @@ export const TOOL_DRAG_MOVE_EVENT = 'nodexmesh:tool-drag-move';
 export const TOOL_DRAG_END_EVENT = 'nodexmesh:tool-drag-end';
 
 export interface ToolDragDetail {
+  extra?: { color: string; dispenserId: string };
   tool: ToolType;
   clientX: number;
   clientY: number;
@@ -16,6 +17,7 @@ let suppressNextToolClick = false;
 export function startToolDrag(
   tool: ToolType,
   event: React.MouseEvent,
+  extra?: ToolDragDetail['extra'],
 ) {
   if (event.button !== 0 || tool === 'select') return;
 
@@ -44,6 +46,7 @@ export function startToolDrag(
       tool,
       moveEvent.clientX,
       moveEvent.clientY,
+      extra,
     );
   };
 
@@ -62,6 +65,7 @@ export function startToolDrag(
       tool,
       upEvent.clientX,
       upEvent.clientY,
+      extra,
     );
 
     window.setTimeout(() => {
@@ -85,11 +89,13 @@ function dispatchToolDragEvent(
   tool: ToolType,
   clientX: number,
   clientY: number,
+  extra?: ToolDragDetail['extra'],
 ) {
   window.dispatchEvent(
     new CustomEvent<ToolDragDetail>(eventName, {
       detail: {
         tool,
+        extra,
         clientX,
         clientY,
       },

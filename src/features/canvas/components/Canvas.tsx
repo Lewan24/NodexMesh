@@ -423,8 +423,9 @@ export default function Canvas({
         detail.clientY - rect.top,
       );
 
-      const canvasX = point.x;
-      const canvasY = point.y;
+      const placement = { x: snapValue(point.x), y: snapValue(point.y) };
+      const canvasX = placement.x;
+      const canvasY = placement.y;
 
       /*
       * Convert the snapped canvas position back to screen coordinates.
@@ -459,6 +460,7 @@ export default function Canvas({
       if (!position) return;
 
       setToolDragGhost({
+        extra: detail.extra,
         tool: detail.tool,
         clientX: position.ghostClientX,
         clientY: position.ghostClientY,
@@ -502,6 +504,7 @@ export default function Canvas({
         detail.tool,
         finalX,
         finalY,
+        detail.extra,
       );
 
       if (!item) return;
@@ -1016,7 +1019,7 @@ export default function Canvas({
     <div
       data-canvas-root="true"
       ref={containerRef}
-      className={`flex-1 relative overflow-hidden select-none ${cursorClass}`}
+      className={`flex-1 min-w-0 min-h-0 relative overflow-clip select-none ${cursorClass}`}
       style={{
         backgroundColor: 'var(--color-app-bg)',
 
@@ -1214,6 +1217,7 @@ export default function Canvas({
 
       {toolDragGhost && (
         <ToolDragGhost
+          color={toolDragGhost.extra?.color}
           tool={toolDragGhost.tool}
           clientX={toolDragGhost.clientX}
           clientY={toolDragGhost.clientY}
@@ -1267,7 +1271,7 @@ export default function Canvas({
       />
 
       <CanvasEditBar
-        selectedItems={selectedItems}
+        selectedItems={selectedItems.map(item => item.type === 'line' ? resolveLineItem(item, project.items, measuredSizes) : item)}
         selectedColumnItem={selectedColumnItem}
         onUpdateItem={onUpdateItem}
         onDeleteItems={onDeleteItems}

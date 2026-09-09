@@ -1,4 +1,31 @@
-export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem;
+export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem | DocumentItem | EmbedItem | CodeItem | DispenserItem;
+
+export interface DocumentItem extends BaseItem {
+  autoHeight?: boolean;
+  type: 'document';
+  title: string;
+  content: string;
+}
+
+export interface EmbedItem extends BaseItem {
+  type: 'embed';
+  url: string;
+  title: string;
+  showLabel: boolean;
+}
+
+export interface CodeItem extends BaseItem {
+  autoHeight?: boolean;
+  type: 'code';
+  content: string;
+  language: string;
+}
+
+export interface DispenserItem extends BaseItem {
+  type: 'dispenser';
+  title: string;
+  color: string;
+}
 
 export type FontFamily =
   | 'sans'
@@ -46,6 +73,7 @@ export interface BaseItem {
 }
 
 export interface NoteItem extends BaseItem {
+  dispenserId?: string;
   type: 'note';
   content: string;
   color: string;
@@ -146,6 +174,8 @@ export interface LineItem extends BaseItem {
    */
   labelOffset?: number;
   labelFontSize?: number;
+
+  divider?: boolean;
 }
 
 export interface ColumnItem extends BaseItem {

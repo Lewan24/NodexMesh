@@ -21,7 +21,7 @@ export default function CanvasDropPreview({
         top: y,
         width,
         height,
-        zIndex: 999,
+        zIndex: 100001,
       }}
     >
       {/* Actual landing area */}

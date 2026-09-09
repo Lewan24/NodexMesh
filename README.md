@@ -775,6 +775,21 @@ npm run dev
 
 Vite will display the local development URL in the terminal.
 
+Open that URL (by default `http://localhost:8443`) for live updates. Production
+builds and `npm run preview` do not provide hot module replacement. The dev
+server fails if its port is occupied instead of silently switching ports.
+
+If edits in a shared folder or WSL do not trigger updates, enable polling before
+starting Vite. In PowerShell:
+
+```powershell
+$env:VITE_USE_POLLING = 'true'
+npm run dev
+```
+
+Polling uses more CPU, so it is disabled by default. If using a reverse proxy,
+make sure it forwards WebSocket connections for Vite HMR as well as HTTP requests.
+
 ### Production build
 
 ```bash
