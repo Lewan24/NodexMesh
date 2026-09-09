@@ -6,6 +6,7 @@ import { consumeToolDragClickSuppression, startToolDrag } from '@/features/canva
 import './sidebar.css';
 
 const groups = [
+  { id: 'planning', label: 'Planning', icon: ListTree, tools: ['timeline', 'diagram'] },
   { id: 'common', label: 'Common', icon: LayoutGrid, tools: ['note', 'dispenser', 'text', 'document', 'code'] },
   { id: 'organize', label: 'Organize', icon: ListTree, tools: ['checklist', 'kanban', 'column', 'frame', 'line', 'divider'] },
   { id: 'media', label: 'Media', icon: Play, tools: ['image', 'link', 'embed'] },

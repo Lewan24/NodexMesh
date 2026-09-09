@@ -34,7 +34,10 @@ export default function BoardPage({
     addProject,
     selectProject,
     createFirstProject,
-    resetDemo
+    resetDemo,
+    renameProject,
+    trashProject,
+    restoreProject,
   } = useProjects(userId);
 
   const {
@@ -258,35 +261,38 @@ export default function BoardPage({
     setSelectedIds,
   ]);
 
+  const appBar = <AppBar projects={projects} activeProjectId={activeProjectId}
+    onSelectProject={handleSelectProject} onAddProject={handleAddProject}
+    onRenameProject={renameProject}
+    onTrashProject={id => { trashProject(id); resetBoardView(); }}
+    onRestoreProject={id => { restoreProject(id); resetBoardView(); }}
+    onResetDemo={resetDemo} searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />;
+
   if (!activeProject) {
     return (
       <div
-        className="flex h-screen w-screen items-center justify-center"
+        className="flex flex-col h-dvh w-full"
         style={{
           backgroundColor: 'var(--color-app-bg)',
         }}
       >
+        {appBar}
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-theme-muted">
+        <p>No active projects. Create a board or restore one from the project trash.</p>
         <button
           className="btn-accent rounded-xl px-4 py-2.5 text-sm font-semibold"
           onClick={createFirstProject}
         >
           Create your first board
         </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="board-shell flex flex-col h-dvh w-full overflow-clip">
-      <AppBar
-        projects={projects}
-        activeProjectId={activeProjectId}
-        onSelectProject={handleSelectProject}
-        onAddProject={handleAddProject} 
-        onResetDemo={resetDemo}      
-        searchQuery={searchQuery}
-        onSearchQueryChange={setSearchQuery}
-      />
+      {appBar}
 
       <div
         className="relative isolate z-0 flex flex-1 min-h-0 min-w-0 w-full overflow-hidden"

@@ -34,6 +34,10 @@ export function createCanvasItem(
   };
 
   switch (type) {
+    case 'timeline':
+      return { ...base, type, title: 'Project timeline', mode: 'simple', tasks: [], width: ITEM_WIDTH.timeline, height: 520 };
+    case 'diagram':
+      return { ...base, type, title: 'System diagram', nodes: [], edges: [], width: ITEM_WIDTH.diagram, height: 560 };
     case 'document':
       return { ...base, type, title: 'Untitled document', content: '', width: ITEM_WIDTH.document, height: 600, autoHeight: true };
     case 'embed':

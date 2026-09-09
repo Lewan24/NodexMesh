@@ -17,6 +17,9 @@ interface AppBarProps {
   onSelectProject: (id: string) => void;
   onAddProject: (name: string) => void;
   onResetDemo: () => void;
+  onRenameProject: (id: string, name: string) => void;
+  onTrashProject: (id: string) => void;
+  onRestoreProject: (id: string) => void;
   searchQuery: string;
   onSearchQueryChange: (
     value: string,
@@ -31,6 +34,9 @@ export default function AppBar({
   onSelectProject,
   onAddProject,
   onResetDemo,
+  onRenameProject,
+  onTrashProject,
+  onRestoreProject,
   searchQuery,
   onSearchQueryChange,
 }: AppBarProps) {
@@ -69,6 +75,9 @@ export default function AppBar({
           onClose={() => setOpenMenu(null)}
           onSelectProject={onSelectProject}
           onAddProject={onAddProject}
+          onRenameProject={onRenameProject}
+          onTrashProject={onTrashProject}
+          onRestoreProject={onRestoreProject}
         />
 
         <div className="flex-1 flex justify-center px-4">

@@ -24,6 +24,8 @@ export const MIN_IMAGE_HEIGHT = 80;
 export const CANVAS_HISTORY_LIMIT = 50;
 
 export const ITEM_WIDTH = {
+  timeline: 760,
+  diagram: 800,
   document: 480,
   embed: 480,
   code: 480,

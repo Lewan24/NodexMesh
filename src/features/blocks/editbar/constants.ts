@@ -36,6 +36,8 @@ export const BACKGROUND_ITEM_TYPES = new Set<BoardItem['type']>([
 ]);
 
 export const ITEM_TYPE_LABELS: Partial<Record<BoardItem['type'], string>> = {
+  timeline: 'Timeline',
+  diagram: 'Diagram',
   document: 'Document',
   code: 'Code',
   embed: 'Embed',

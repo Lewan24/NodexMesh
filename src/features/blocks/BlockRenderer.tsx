@@ -15,6 +15,8 @@ import DispenserBlock from './dispenser/DispenserBlock';
 
 const DocumentBlock = lazy(() => import('./document/DocumentBlock'));
 const CodeBlock = lazy(() => import('./code/CodeBlock'));
+const TimelineBlock = lazy(() => import('./timeline/TimelineBlock'));
+const DiagramBlock = lazy(() => import('./diagram/DiagramBlock'));
 
 function LoadingBlock({ item }: { item: BoardItem }) {
   return (
@@ -77,6 +79,8 @@ export default function BlockRenderer({
   nestedSearchMatchIds,
 }: BlockRendererProps) {
   switch (item.type) {
+    case 'timeline': return <Suspense fallback={<LoadingBlock item={item} />}><TimelineBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
+    case 'diagram': return <Suspense fallback={<LoadingBlock item={item} />}><DiagramBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
     case 'document': return <Suspense fallback={<LoadingBlock item={item} />}><DocumentBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
     case 'embed': return <EmbedBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;
     case 'code': return <Suspense fallback={<LoadingBlock item={item} />}><CodeBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;

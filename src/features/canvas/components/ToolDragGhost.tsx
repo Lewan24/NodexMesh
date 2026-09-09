@@ -15,6 +15,8 @@ interface GhostConfig {
 }
 
 const GHOST_CONFIG: Partial<Record<ToolType, GhostConfig>> = {
+  timeline: { label: 'Timeline', width: 260, height: 160 },
+  diagram: { label: 'Diagram', width: 260, height: 180 },
   document: { label: 'Document', width: 240, height: 170 },
   embed: { label: 'Embed', width: 240, height: 140 },
   code: { label: 'Code', width: 220, height: 140 },
