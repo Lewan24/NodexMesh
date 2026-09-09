@@ -13,7 +13,7 @@ export function loadProjects(userId: string): Project[] {
     if (raw) {
       const projects = JSON.parse(raw) as Project[];
 
-      if (Array.isArray(projects) && projects.length > 0) {
+      if (Array.isArray(projects)) {
         return projects;
       }
     }

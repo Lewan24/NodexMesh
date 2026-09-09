@@ -10,6 +10,8 @@ export function createEmptySibling(source: BoardItem): BoardItem | null {
     locked: false,
   }
   switch (base.type) {
+    case 'timeline': return { ...base, title: 'Project timeline', tasks: [] };
+    case 'diagram': return { ...base, title: 'System diagram', nodes: [], edges: [] };
     case "note":
       return { ...base, content: "", dispenserId: undefined, typography: base.dispenserId ? { textAlign: 'center', verticalAlign: 'middle', ...base.typography } : base.typography }
     case "text":

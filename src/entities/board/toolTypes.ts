@@ -1,5 +1,7 @@
 export type ToolType =
   | 'select'
+  | 'timeline'
+  | 'diagram'
   | 'document'
   | 'embed'
   | 'code'

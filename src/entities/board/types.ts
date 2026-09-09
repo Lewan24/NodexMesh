@@ -1,4 +1,41 @@
-export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem | DocumentItem | EmbedItem | CodeItem | DispenserItem;
+export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem | DocumentItem | EmbedItem | CodeItem | DispenserItem | TimelineItem | DiagramItem;
+
+export interface TimelineTask {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  done: boolean;
+  color: string;
+  checklist: ChecklistEntry[];
+}
+export interface TimelineItem extends BaseItem {
+  type: 'timeline';
+  title: string;
+  mode: 'simple' | 'schedule';
+  tasks: TimelineTask[];
+}
+export type DiagramShape = 'process' | 'decision' | 'terminal' | 'database';
+export interface DiagramNode {
+  id: string;
+  position: { x: number; y: number };
+  data: { label: string; shape: DiagramShape; color: string };
+  type: 'shape';
+}
+export interface DiagramEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
+  label?: string;
+}
+export interface DiagramItem extends BaseItem {
+  type: 'diagram';
+  title: string;
+  nodes: DiagramNode[];
+  edges: DiagramEdge[];
+}
 
 export interface DocumentItem extends BaseItem {
   autoHeight?: boolean;

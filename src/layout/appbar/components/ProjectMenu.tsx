@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
+import { ChevronDown, Plus, Pencil, Trash2, RotateCcw, Check, X, Folder } from 'lucide-react';
 import type { Project } from '@/entities/project/types';
 import { useOutsideClick } from '../hooks/useOutsideClick';
+import './projectMenu.css';
 
 interface ProjectMenuProps {
   projects: Project[];
@@ -10,200 +12,59 @@ interface ProjectMenuProps {
   onClose: () => void;
   onSelectProject: (id: string) => void;
   onAddProject: (name: string) => void;
+  onRenameProject: (id: string, name: string) => void;
+  onTrashProject: (id: string) => void;
+  onRestoreProject: (id: string) => void;
 }
-
-export default function ProjectMenu({
-  projects,
-  activeProjectId,
-  open,
-  onToggle,
-  onClose,
-  onSelectProject,
-  onAddProject,
-}: ProjectMenuProps) {
-  const [addingProject, setAddingProject] = useState(false);
-  const [newName, setNewName] = useState('');
-
+export default function ProjectMenu(props: ProjectMenuProps) {
+  const { projects, activeProjectId, open, onToggle, onClose } = props;
+  const [trash, setTrash] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [message, setMessage] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-
-  const activeProject = projects.find(project => project.id === activeProjectId);
-
-  const closeMenu = () => {
-    setAddingProject(false);
-    onClose();
+  const close = () => { setEditing(null); onClose(); };
+  useOutsideClick(open, [panelRef, buttonRef], close);
+  const active = projects.find(project => project.id === activeProjectId);
+  const visible = projects.filter(project => Boolean(project.deletedAt) === trash);
+  const save = () => {
+    if (!name.trim()) return;
+    if (editing === 'new') props.onAddProject(name.trim());
+    else if (editing) props.onRenameProject(editing, name.trim());
+    setEditing(null);
   };
-
-  useOutsideClick(open, [panelRef, buttonRef], closeMenu);
-
-  const handleAddProject = () => {
-    const name = newName.trim();
-    if (!name) return;
-
-    onAddProject(name);
-    setNewName('');
-    setAddingProject(false);
-    onClose();
-  };
-
-  const handleSelectProject = (id: string) => {
-    onSelectProject(id);
-    onClose();
-  };
-
-  return (
-    <div className="relative ml-3">
-      <button
-        ref={buttonRef}
-        onClick={onToggle}
-        className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors"
-        style={{ backgroundColor: open ? 'var(--color-accent-soft)' : 'transparent' }}
-        onMouseEnter={e => {
-          if (!open) e.currentTarget.style.backgroundColor = 'var(--color-chrome-hover)';
-        }}
-        onMouseLeave={e => {
-          if (!open) e.currentTarget.style.backgroundColor = 'transparent';
-        }}
-      >
-        {activeProject && (
-          <>
-            <span
-              className="w-2.5 h-2.5 rounded-full"
-              style={{
-                backgroundColor: activeProject.color,
-                boxShadow: open ? `0 0 8px ${activeProject.color}` : 'none',
-              }}
-            />
-
-            <span
-              className="text-sm font-medium max-w-48 truncate"
-              style={{ color: 'var(--color-chrome-text-strong)' }}
-            >
-              {activeProject.name}
-            </span>
-          </>
-        )}
-
-        <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-          <path
-            d={open ? 'M1 5l4-4 4 4' : 'M1 1l4 4 4-4'}
-            stroke="var(--color-chrome-text-dim)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-
-      {open && (
-        <div
-          ref={panelRef}
-          className="absolute top-[calc(100%+8px)] left-0 w-64 rounded-2xl shadow-2xl overflow-hidden"
-          style={{
-            backgroundColor: 'var(--color-chrome-bg-alt)',
-            border: '1px solid var(--color-chrome-border-soft)',
-            animation: 'slide-up 0.15s ease forwards',
-          }}
-        >
-          <div
-            className="flex items-center justify-between px-4 py-3"
-            style={{ borderBottom: '1px solid var(--color-chrome-border-soft)' }}
-          >
-            <span
-              className="text-[11px] font-bold uppercase tracking-widest"
-              style={{ color: 'var(--color-chrome-text-faint)' }}
-            >
-              Projects
-            </span>
-
-            <button
-              onClick={() => setAddingProject(value => !value)}
-              className="w-6 h-6 flex items-center justify-center rounded-md"
-              style={{ color: 'var(--color-chrome-text-faint)' }}
-              title="Add project"
-            >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-            </button>
-          </div>
-
-          {addingProject && (
-            <div
-              className="px-3 py-2.5"
-              style={{ borderBottom: '1px solid var(--color-chrome-border-soft)' }}
-            >
-              <input
-                autoFocus
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') handleAddProject();
-
-                  if (e.key === 'Escape') {
-                    setAddingProject(false);
-                    setNewName('');
-                  }
-                }}
-                placeholder="Project name…"
-                className="w-full text-sm px-3 py-2 rounded-xl outline-none"
-                style={{
-                  backgroundColor: 'var(--color-chrome-panel)',
-                  color: 'var(--color-chrome-text)',
-                  border: '1px solid rgba(124, 58, 237, 0.4)',
-                }}
-              />
-            </div>
-          )}
-
-          <div className="py-1.5 max-h-72 overflow-y-auto">
-            {projects.map(project => {
-              const active = project.id === activeProjectId;
-
-              return (
-                <button
-                  key={project.id}
-                  onClick={() => handleSelectProject(project.id)}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors"
-                  style={{ backgroundColor: active ? 'var(--color-chrome-panel)' : 'transparent' }}
-                  onMouseEnter={e => {
-                    if (!active) e.currentTarget.style.backgroundColor = 'var(--color-chrome-hover)';
-                  }}
-                  onMouseLeave={e => {
-                    if (!active) e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                    style={{
-                      backgroundColor: project.color,
-                      boxShadow: active ? `0 0 6px ${project.color}` : 'none',
-                    }}
-                  />
-
-                  <span
-                    className="text-sm font-medium flex-1 truncate"
-                    style={{
-                      color: active
-                        ? 'var(--color-chrome-text-strong)'
-                        : 'var(--color-chrome-text)',
-                    }}
-                  >
-                    {project.name}
-                  </span>
-
-                  <span
-                    className="text-[10px] font-mono"
-                    style={{ color: 'var(--color-chrome-text-faint)' }}
-                  >
-                    {project.items.length}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <div className="relative ml-3">
+    <button ref={buttonRef} onClick={onToggle} aria-expanded={open} className="project-trigger">
+      <Folder size={16} style={{ color: active?.color }} /><span className="truncate max-w-48">{active?.name ?? 'Projects'}</span><ChevronDown size={14} />
+    </button>
+    {open && <div ref={panelRef} className="project-panel" onKeyDown={event => {
+      if (event.key === 'Escape') { event.stopPropagation(); editing ? setEditing(null) : close(); }
+    }}>
+      <div className="flex items-center gap-2 p-3 border-b border-white/10">
+        <button className="project-tab" aria-pressed={!trash} onClick={() => { setTrash(false); setEditing(null); }}>Projects</button>
+        <button className="project-tab" aria-pressed={trash} onClick={() => { setTrash(true); setEditing(null); }}>Trash · {projects.filter(p => p.deletedAt).length}</button>
+        <button title="Add project" aria-label="Add project" className="project-action ml-auto" onClick={() => { setTrash(false); setEditing('new'); setName(''); }}><Plus size={18} /></button>
+      </div>
+      {editing && <form className="flex gap-2 p-3" onSubmit={event => { event.preventDefault(); save(); }}>
+        <input autoFocus aria-label="Project name" placeholder="Project name" maxLength={120} value={name} onChange={event => setName(event.target.value)} className="min-w-0 flex-1 rounded-lg bg-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-violet-400" />
+        <button className="project-action" aria-label="Save project name" disabled={!name.trim()}><Check size={17} /></button>
+        <button type="button" className="project-action" aria-label="Cancel rename" onClick={() => setEditing(null)}><X size={17} /></button>
+      </form>}
+      <div className="max-h-80 overflow-y-auto p-2">
+        {visible.map(project => <div key={project.id} className="project-row" data-active={project.id === activeProjectId}>
+          <button className="flex min-w-0 flex-1 items-center gap-3 text-left p-2" disabled={trash} onClick={() => { props.onSelectProject(project.id); close(); }}>
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: project.color }} />
+            <span className="min-w-0"><span className="block truncate font-medium">{project.name}</span><span className="block text-xs opacity-60">{project.items.length} items{project.deletedAt ? ` · Deleted ${new Date(project.deletedAt).toLocaleDateString()}` : ''}</span></span>
+          </button>
+          {trash ? <button className="project-action" aria-label={`Restore ${project.name}`} title="Restore project" onClick={() => { props.onRestoreProject(project.id); setMessage(`${project.name} restored`); setTrash(false); }}><RotateCcw size={16} /></button> : <>
+            <button className="project-action" aria-label={`Rename ${project.name}`} title="Rename project" onClick={() => { setEditing(project.id); setName(project.name); }}><Pencil size={15} /></button>
+            <button className="project-action" aria-label={`Move ${project.name} to trash`} title="Move to trash" onClick={() => { props.onTrashProject(project.id); setMessage(`${project.name} moved to trash. You can restore it in the Trash tab.`); setEditing(null); }}><Trash2 size={15} /></button>
+          </>}
+        </div>)}
+        {!visible.length && <p className="py-8 text-center text-sm opacity-65">{trash ? 'Your project trash is empty.' : 'No projects yet. Create your first board.'}</p>}
+      </div>
+      <p className="px-4 pb-3 text-xs opacity-65" role="status">{message || (trash ? 'Projects stay here until you restore them. No automatic deletion.' : 'All changes are saved automatically.')}</p>
+    </div>}
+  </div>;
 }

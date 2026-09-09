@@ -12,6 +12,8 @@ export function getSearchableText(
   item: BoardItem,
 ): string {
   switch (item.type) {
+    case 'timeline': return [item.title, ...item.tasks.flatMap(task => [task.title, task.start, task.end, ...task.checklist.map(entry => entry.text)])].join(' ');
+    case 'diagram': return [item.title, ...item.nodes.map(node => node.data.label), ...item.edges.map(edge => edge.label ?? '')].join(' ');
     case 'document': return `${item.title} ${item.content.replace(/<[^>]*>/g, ' ')}`;
     case 'code': return `${item.language} ${item.content}`;
     case 'embed': return `${item.title} ${item.url}`;

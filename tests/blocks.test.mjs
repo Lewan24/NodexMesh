@@ -27,10 +27,13 @@ const { getEmbedUrl } = await server.ssrLoadModule(
 const { getSearchableText } = await server.ssrLoadModule(
   "/src/features/search/utils/itemSearch.ts",
 )
+const { dateDay, taskRange, shiftTask, scheduleRange } = await server.ssrLoadModule('/src/features/blocks/timeline/timelineUtils.ts')
+const { diagramTemplate, layoutDiagram, removeDiagramNodes } = await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts')
+const { loadProjects, saveProjects } = await server.ssrLoadModule('/src/features/projects/storage/projectStorage.ts')
 await server.close()
 
 test("new blocks survive JSON persistence and have usable default dimensions", () => {
-  for (const type of ["document", "embed", "code", "dispenser"]) {
+  for (const type of ["document", "embed", "code", "dispenser", "timeline", "diagram"]) {
     const item = createCanvasItem(type, -32, 64)
     assert.equal(item.type, type)
     const restored = JSON.parse(JSON.stringify(item))
@@ -166,4 +169,58 @@ test("new block content participates in board search", () => {
     }),
     /example.com/,
   )
+})
+
+test('timeline dates reject invalid days and remain stable across DST and year boundaries', () => {
+  assert.equal(dateDay('2026-02-30'), null)
+  const task = { start: '2026-03-28', end: '2026-03-30' }
+  assert.equal(taskRange(task).end - taskRange(task).start, 2)
+  assert.deepEqual(shiftTask(task, -3), { start: '2026-03-25', end: '2026-03-27' })
+  assert.deepEqual(shiftTask(task, -10, true), { start: '2026-03-28', end: '2026-03-28' })
+  assert.deepEqual(shiftTask({ start: '2026-12-31', end: '2026-12-31' }, 1), { start: '2027-01-01', end: '2027-01-01' })
+  const range = scheduleRange([task])
+  assert.equal(new Date(range.start * 86400000).getUTCDay(), 1)
+  assert.ok(range.start <= taskRange(task).start && range.start + range.days > taskRange(task).end)
+})
+
+test('diagram removal clears incident edges and layout handles cycles without losing nodes', () => {
+  const graph = diagramTemplate()
+  const removed = graph.nodes[1].id
+  const next = removeDiagramNodes(graph.nodes, graph.edges, new Set([removed]))
+  assert.equal(next.nodes.length, graph.nodes.length - 1)
+  assert.ok(next.edges.every(edge => edge.source !== removed && edge.target !== removed))
+  const cyclic = [...graph.edges, { id: 'cycle', source: graph.nodes[4].id, target: graph.nodes[0].id }]
+  const laidOut = layoutDiagram(graph.nodes, cyclic)
+  assert.equal(laidOut.length, graph.nodes.length)
+  assert.equal(new Set(laidOut.map(node => JSON.stringify(node.position))).size, graph.nodes.length)
+  assert.deepEqual(laidOut.map(node => node.id), graph.nodes.map(node => node.id))
+})
+
+test('project storage retains trashed content and an intentionally empty project list', () => {
+  const values = new Map()
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
+    getItem: key => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+  } })
+  try {
+    const project = { id: 'p', name: 'Archived plan', ownerId: 'qa', color: '#7c3aed', deletedAt: '2026-09-09T00:00:00Z', items: [createCanvasItem('timeline', 0, 0)] }
+    saveProjects('qa', [project])
+    assert.deepEqual(loadProjects('qa'), JSON.parse(JSON.stringify([project])))
+    saveProjects('qa', [])
+    assert.deepEqual(loadProjects('qa'), [])
+  } finally {
+    if (previous) Object.defineProperty(globalThis, 'localStorage', previous)
+    else delete globalThis.localStorage
+  }
+})
+
+test('planning block quick copies are empty and search includes nested content', () => {
+  const timeline = { ...createCanvasItem('timeline', 0, 0), tasks: [{ id: 't', title: 'Release', start: '2026-10-01', end: '2026-10-02', done: false, color: '#7c3aed', checklist: [{ id: 'c', text: 'Deploy API', done: false }] }] }
+  assert.match(getSearchableText(timeline), /Deploy API/)
+  assert.deepEqual(createEmptySibling(timeline).tasks, [])
+  const diagram = { ...createCanvasItem('diagram', 0, 0), ...diagramTemplate() }
+  assert.match(getSearchableText(diagram), /Valid request/)
+  assert.deepEqual(createEmptySibling(diagram).nodes, [])
+  assert.deepEqual(createEmptySibling(diagram).edges, [])
 })
