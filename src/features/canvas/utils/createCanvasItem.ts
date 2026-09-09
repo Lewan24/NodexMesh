@@ -34,12 +34,23 @@ export function createCanvasItem(
   };
 
   switch (type) {
+    case 'document':
+      return { ...base, type, title: 'Untitled document', content: '', width: ITEM_WIDTH.document, height: 600, autoHeight: true };
+    case 'embed':
+      return { ...base, type, title: '', url: '', showLabel: false, width: ITEM_WIDTH.embed, height: 320 };
+    case 'code':
+      return { ...base, type, content: '', language: 'javascript', width: ITEM_WIDTH.code, height: 280 };
+    case 'dispenser':
+      return { ...base, type, title: 'Quick thoughts', color: '#fde68a', width: ITEM_WIDTH.dispenser, height: 200 };
     case 'note':
       return {
         ...base,
         type: 'note',
         content: '',
-        color: '#0d2a35',
+        color: typeof extra?.color === 'string' ? extra.color : '#0d2a35',
+        dispenserId: typeof extra?.dispenserId === 'string' ? extra.dispenserId : undefined,
+        height: extra?.dispenserId ? 160 : undefined,
+        typography: extra?.dispenserId ? { textAlign: 'center', verticalAlign: 'middle' } : undefined,
         width: ITEM_WIDTH.note,
       } as NoteItem;
 
@@ -126,14 +137,18 @@ export function createCanvasItem(
         entries: [],
       } as ChecklistItem;
 
+    case 'divider':
     case 'line':
       return {
         ...base,
         type: 'line',
-        x2: x + ITEM_WIDTH.line,
-        y2: y,
+        divider: type === 'divider',
+        x: type === 'divider' ? Math.round(x / 16) * 16 : x,
+        y: type === 'divider' ? Math.round(y / 16) * 16 : y,
+        x2: (type === 'divider' ? Math.round(x / 16) * 16 : x) + ITEM_WIDTH.line,
+        y2: type === 'divider' ? Math.round(y / 16) * 16 : y,
         arrowStart: false,
-        arrowEnd: true,
+        arrowEnd: type !== 'divider',
         color: '#7C3AED',
         strokeWidth: 2,
         label: '',

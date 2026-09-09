@@ -132,6 +132,8 @@ export default function CanvasItem({
   onKanbanCardDropOutside,
   onQuickConnectStart
 }: CanvasItemProps) {
+  const showDragEffect = isDragging && item.type !== 'line';
+
   return (
     <div
       data-board-item="true"
@@ -140,7 +142,7 @@ export default function CanvasItem({
           ? 'board-item-enter'
           : ''
       } ${
-        isDragging
+        showDragEffect
           ? 'board-item-dragging'
           : ''
       } ${
@@ -151,18 +153,19 @@ export default function CanvasItem({
       style={{
         left: renderedItem.x,
         top: renderedItem.y,
-        zIndex: item.zIndex,
+        // Keep connection handles accessible above already attached lines.
+        zIndex: isSelected && item.type !== 'line' ? 100000 : item.zIndex,
         cursor:
           item.locked
             ? 'default'
             : 'grab',
-        transform: isDragging
+        transform: showDragEffect
           ? `
               perspective(900px)
               rotateY(${dragTilt}deg)
               rotateZ(${dragTilt * 0.18}deg)
-              translateZ(8px)
-              scale(1.012)
+              translateY(-12px)
+              scale(0.9)
             `
           : undefined,
 
@@ -238,7 +241,7 @@ export default function CanvasItem({
 
       {item.type !== 'line' && (
         <ConnectionHandles
-          visible={isSelected}
+          visible={isSelected && !item.locked}
           onStart={(
             event,
             side,

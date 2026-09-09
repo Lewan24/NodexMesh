@@ -12,6 +12,10 @@ export function getSearchableText(
   item: BoardItem,
 ): string {
   switch (item.type) {
+    case 'document': return `${item.title} ${item.content.replace(/<[^>]*>/g, ' ')}`;
+    case 'code': return `${item.language} ${item.content}`;
+    case 'embed': return `${item.title} ${item.url}`;
+    case 'dispenser': return item.title;
     case 'note':
       return item.content;
 

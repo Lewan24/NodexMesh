@@ -11,12 +11,17 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
 
   server: {
     host: '0.0.0.0',
     port: Number(process.env.PORT ?? 8443),
+    strictPort: true,
+    // Enable for shared folders / WSL where filesystem events may be unavailable.
+    watch: process.env.VITE_USE_POLLING === 'true'
+      ? { usePolling: true, interval: 200 }
+      : undefined,
   }
 })

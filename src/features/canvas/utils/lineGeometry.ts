@@ -96,6 +96,7 @@ export function resolveLineItem(
   items: BoardItem[],
   sizes?: SizeMap,
 ): LineItem {
+  if (line.divider) return { ...line, startItemId: undefined, endItemId: undefined, arrowStart: false, arrowEnd: false };
   const startTarget = line.startItemId
     ? items.find(item => item.id === line.startItemId)
     : undefined;

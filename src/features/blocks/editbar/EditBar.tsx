@@ -74,7 +74,7 @@ export default function EditBar({
         ? ITEM_TYPE_LABELS[single.type] ?? single.type
         : '';
 
-  const hasStyleControls = !!single && !isMulti;
+  const hasStyleControls = !!single && !isMulti && !['document', 'embed', 'code', 'dispenser'].includes(single.type);
 
   return (
     <div
@@ -85,7 +85,7 @@ export default function EditBar({
         border: '1px solid var(--color-border)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.14)',
         backdropFilter: 'blur(10px)',
-        maxWidth: 'calc(100vw - 120px)',
+        maxWidth: 'calc(100% - 24px)',
       }}
       onMouseDown={e => e.stopPropagation()}
     >

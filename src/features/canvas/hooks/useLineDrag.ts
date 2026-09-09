@@ -17,6 +17,8 @@ import {
 
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
 import { ConnectionSide } from '../components/ConnectionHandles';
+import { createEmptySibling } from '../utils/quickCreate';
+import { snapToGrid } from '../utils/gridSnap';
 
 interface ProjectLike {
   items: BoardItem[];
@@ -192,7 +194,7 @@ export function useLineDrag({
           current.type === 'line',
       ) as LineItem | undefined;
 
-      if (!item) {
+      if (!item || item.locked) {
         return;
       }
 
@@ -236,8 +238,8 @@ export function useLineDrag({
         const dx = (moveEvent.clientX - startX) / currentZoom;
         const dy = (moveEvent.clientY - startY) / currentZoom;
 
-        const x = originalX + dx;
-        const y = originalY + dy;
+        const x = item.divider ? snapToGrid(originalX + dx) : originalX + dx;
+        const y = item.divider ? snapToGrid(originalY + dy) : originalY + dy;
 
         onUpdateItem(id, current => {
           if (current.type !== 'line') {
@@ -269,7 +271,7 @@ export function useLineDrag({
         }
 
         setAttachHover(
-          findAttachTarget(
+          item.divider ? null : findAttachTarget(
             x,
             y,
             excludedIds,
@@ -283,7 +285,7 @@ export function useLineDrag({
 
         const targetId = attachHoverIdRef.current;
 
-        if (targetId && targetId !== oppositeTargetId) {
+        if (!item.divider && targetId && targetId !== oppositeTargetId) {
           const target = projectRef.current.items.find(
             current => current.id === targetId,
           );
@@ -360,7 +362,7 @@ export function useLineDrag({
 
       if (
         !source ||
-        source.type === 'line'
+        source.type === 'line' || source.locked
       ) {
         return;
       }
@@ -467,6 +469,7 @@ export function useLineDrag({
       const handleMove = (
         moveEvent: MouseEvent,
       ) => {
+        if (!moved && Math.hypot(moveEvent.clientX - startClientX, moveEvent.clientY - startClientY) < 6) return;
         moved = true;
 
         const dx =
@@ -482,10 +485,10 @@ export function useLineDrag({
           ) / zoom;
 
         const x =
-          initialEnd.x + dx;
+          startPoint.x + dx;
 
         const y =
-          initialEnd.y + dy;
+          startPoint.y + dy;
 
         onUpdateItem(
           lineId,
@@ -536,15 +539,38 @@ export function useLineDrag({
         const targetId =
           attachHoverIdRef.current;
 
-        /*
-         * Simple click without dragging:
-         * remove the temporary line.
-         */
+        // A short click creates a connected blank sibling.
         if (!moved) {
-          onDeleteItem(
-            lineId,
-          );
-
+          const sibling = createEmptySibling(source);
+          if (!sibling) { onDeleteItem(lineId); setAttachHover(null); return; }
+          const size = getApproxItemSize(sibling);
+          const width = sibling.width ?? rect.width;
+          const height = sibling.height ?? Math.max(size.height, rect.height);
+          sibling.width = width;
+          sibling.height = height;
+          const offset = {
+            top: { x: rect.x, y: rect.y - height - 64 },
+            right: { x: rect.x + rect.width + 64, y: rect.y },
+            bottom: { x: rect.x, y: rect.y + rect.height + 64 },
+            left: { x: rect.x - width - 64, y: rect.y },
+          }[side];
+          sibling.x = offset.x;
+          sibling.y = offset.y;
+          // Repeated clicks advance in the chosen direction instead of stacking cards.
+          const overlaps = () => projectRef.current.items.some(other => {
+            if (other.type === 'line' || other.type === 'frame') return false;
+            const bounds = getItemRect(other, measuredSizes);
+            return sibling.x < bounds.x + bounds.width && sibling.x + width > bounds.x && sibling.y < bounds.y + bounds.height && sibling.y + height > bounds.y;
+          });
+          while (overlaps()) {
+            if (side === 'left') sibling.x -= width + 64;
+            if (side === 'right') sibling.x += width + 64;
+            if (side === 'top') sibling.y -= height + 64;
+            if (side === 'bottom') sibling.y += height + 64;
+          }
+          onAddItem(sibling);
+          onUpdateItem(lineId, current => current.type === 'line' ? { ...current, endItemId: sibling.id, x2: sibling.x + width / 2, y2: sibling.y + height / 2 } : current);
+          onSelectItems([sibling.id]);
           setAttachHover(null);
           return;
         }
@@ -571,10 +597,10 @@ export function useLineDrag({
               ) / zoom;
 
             const x =
-              initialEnd.x + dx;
+              startPoint.x + dx;
 
             const y =
-              initialEnd.y + dy;
+              startPoint.y + dy;
 
             const point =
               getRectBorderPoint(

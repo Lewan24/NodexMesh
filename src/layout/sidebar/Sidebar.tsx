@@ -1,69 +1,55 @@
+import { useState } from 'react';
+import { ChevronDown, LayoutGrid, ListTree, Play, MousePointer2 } from 'lucide-react';
 import type { ToolType } from '@/entities/board/toolTypes';
 import { SIDEBAR_TOOLS } from './sidebarTools';
+import { consumeToolDragClickSuppression, startToolDrag } from '@/features/canvas/utils/toolDrag';
+import './sidebar.css';
 
-import {
-  consumeToolDragClickSuppression,
-  startToolDrag,
-} from '@/features/canvas/utils/toolDrag';
+const groups = [
+  { id: 'common', label: 'Common', icon: LayoutGrid, tools: ['note', 'dispenser', 'text', 'document', 'code'] },
+  { id: 'organize', label: 'Organize', icon: ListTree, tools: ['checklist', 'kanban', 'column', 'frame', 'line', 'divider'] },
+  { id: 'media', label: 'Media', icon: Play, tools: ['image', 'link', 'embed'] },
+] satisfies { id: string; label: string; icon: typeof LayoutGrid; tools: ToolType[] }[];
 
-interface SidebarProps {
+export default function Sidebar({ selectedTool, onSelectTool }: {
   selectedTool: ToolType;
   onSelectTool: (tool: ToolType) => void;
-}
-
-export default function Sidebar({ selectedTool, onSelectTool }: SidebarProps) {
-  return (
-    <aside
-      className="w-[88px] h-full flex flex-col flex-shrink-0 relative z-30"
-      style={{
-        backgroundColor: 'var(--color-chrome-bg)',
-        borderRight: '1px solid var(--color-chrome-border)',
-      }}
-    >
-      <div className="flex-1 flex flex-col items-center py-3 gap-2 overflow-y-auto">
-        {SIDEBAR_TOOLS.map(tool => {
-          const active = selectedTool === tool.id;
-
-          return (
-            <button
-              key={tool.id}
-              aria-label={tool.label}
-              title={tool.label}
-              onClick={() => {
-                if (consumeToolDragClickSuppression()) return;
-
-                onSelectTool(tool.id);
-              }}
-              onMouseDown={event => {
-                startToolDrag(tool.id, event);
-              }}
-              className="flex flex-col items-center justify-center gap-0.5 rounded-2xl transition-all duration-100 flex-shrink-0 cursor-grab active:cursor-grabbing"
-              style={{
-                width: 76,
-                height: 76,
-                backgroundColor: active ? 'var(--color-accent-soft-strong)' : 'transparent',
-                color: active ? 'var(--color-accent)' : 'var(--color-chrome-text-dim)',
-                boxShadow: active ? 'inset 0 0 0 1.5px rgba(124, 58, 237, 0.45)' : 'none',
-              }}
-              onMouseEnter={e => {
-                if (active) return;
-
-                e.currentTarget.style.backgroundColor = 'var(--color-chrome-hover)';
-                e.currentTarget.style.color = 'var(--color-chrome-text)';
-              }}
-              onMouseLeave={e => {
-                if (active) return;
-
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = 'var(--color-chrome-text-dim)';
-              }}
-            >
-              {tool.icon}
-              <span className="text-sm font-medium">{tool.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </aside>
-  );
+}) {
+  const [openGroup, setOpenGroup] = useState<string | null>('common');
+  return <aside className="tool-sidebar" aria-label="Board tools">
+    <div className="tool-sidebar-heading">CREATE & CONNECT</div>
+    <button type="button" className="tool-select" aria-label="Select" aria-pressed={selectedTool === 'select'} onClick={() => onSelectTool('select')}>
+      <MousePointer2 size={21} /><span>Select & move</span>
+    </button>
+    <nav className="tool-groups" aria-label="Tool categories">
+      {groups.map(group => {
+        const open = openGroup === group.id;
+        const Icon = group.icon;
+        const containsActive = (group.tools as ToolType[]).includes(selectedTool);
+        return <section className="tool-group" key={group.id} data-open={open}>
+          <button type="button" className="tool-group-trigger" aria-expanded={open} aria-controls={`tools-${group.id}`} onClick={() => setOpenGroup(open ? null : group.id)}>
+            <Icon size={18} /><span>{group.label}</span>
+            {containsActive && <span className="tool-group-dot" aria-label="Active tool in this category" />}
+            <ChevronDown size={16} className="tool-group-chevron" />
+          </button>
+          <div className="tool-group-collapse" inert={!open}>
+            <div className="tool-group-clip">
+              <div className="tool-grid" id={`tools-${group.id}`} aria-label={`${group.label} tools`}>
+                {group.tools.map(id => {
+                  const tool = SIDEBAR_TOOLS.find(tool => tool.id === id)!;
+                  return <button key={id} type="button" className="tool-tile" aria-label={tool.label} aria-pressed={selectedTool === id} title={`${tool.label} · Click or drag to canvas`} onMouseDown={event => startToolDrag(id, event)} onClick={() => {
+                    if (!consumeToolDragClickSuppression()) onSelectTool(id);
+                  }}>
+                    <span className="tool-tile-icon">{tool.icon}</span>
+                    <span>{tool.label}</span>
+                  </button>;
+                })}
+              </div>
+            </div>
+          </div>
+        </section>;
+      })}
+    </nav>
+    <div className="tool-sidebar-hint">Click to add · Drag to place</div>
+  </aside>;
 }

@@ -24,6 +24,10 @@ export const MIN_IMAGE_HEIGHT = 80;
 export const CANVAS_HISTORY_LIMIT = 50;
 
 export const ITEM_WIDTH = {
+  document: 480,
+  embed: 480,
+  code: 480,
+  dispenser: 240,
   note: 320,
   checklist: 320,
   link: 320,

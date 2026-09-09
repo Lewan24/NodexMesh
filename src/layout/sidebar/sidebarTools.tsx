@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ToolType } from '@/entities/board/toolTypes';
+import { FileText, Code, PanelsTopLeft, Layers, Minus } from 'lucide-react';
 
 const TOOL_ICON_SIZE = 26;
 
@@ -10,6 +11,11 @@ export interface SidebarTool {
 }
 
 export const SIDEBAR_TOOLS: SidebarTool[] = [
+  { id: 'document', label: 'Document', icon: <FileText size={TOOL_ICON_SIZE} /> },
+  { id: 'code', label: 'Code', icon: <Code size={TOOL_ICON_SIZE} /> },
+  { id: 'embed', label: 'Embed', icon: <PanelsTopLeft size={TOOL_ICON_SIZE} /> },
+  { id: 'dispenser', label: 'Note dispenser', icon: <Layers size={TOOL_ICON_SIZE} /> },
+  { id: 'divider', label: 'Divider', icon: <Minus size={TOOL_ICON_SIZE} /> },
   {
     id: 'select',
     label: 'Select',

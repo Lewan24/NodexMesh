@@ -243,6 +243,7 @@ export function useCanvasMouse({
           pushHistory();
           onAddItem(item);
           triggerEnterAnimation(item.id);
+          onSelectItems([item.id]);
           onSelectTool('select');
         };
 
