@@ -1,3 +1,4 @@
+import { drawingStrokes } from '@/features/blocks/drawing/drawingUtils';
 import ColorSwatch from './ColorSwatch';
 import { LINE_COLORS } from '../constants';
 import CustomColorInput from './CustomColorInput';
@@ -9,9 +10,9 @@ export default function DrawingControls({ items, onUpdate }: {
 }) {
   const first = items[0];
   if (!first) return null;
-  const mixedColor = items.some(item => item.color !== first.color);
-  const mixedWidth = items.some(item => item.strokeWidth !== first.strokeWidth);
-  const update = (patch: Partial<Pick<DrawingItem, 'color' | 'strokeWidth'>>) => items.forEach(item => onUpdate(item.id, current => current.type === 'drawing' ? { ...current, ...patch } : current));
+  const mixedColor = items.some(item => drawingStrokes(item).some(stroke => stroke.color !== first.color));
+  const mixedWidth = items.some(item => drawingStrokes(item).some(stroke => stroke.strokeWidth !== first.strokeWidth));
+  const update = (patch: Partial<Pick<DrawingItem, 'color' | 'strokeWidth'>>) => items.forEach(item => onUpdate(item.id, current => current.type === 'drawing' ? { ...current, ...patch, strokes: current.strokes?.map(stroke => ({ ...stroke, ...patch })) } : current));
   return <>
     <span className="text-xs whitespace-nowrap">{items.length > 1 ? `${items.length} drawings` : 'Ink'}</span>
     {LINE_COLORS.map(color => <ColorSwatch key={color} color={color} active={!mixedColor && first.color === color} onClick={() => update({ color })} />)}

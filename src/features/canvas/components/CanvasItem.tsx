@@ -10,6 +10,7 @@ import ItemWatcher from '@/features/canvas/components/ItemWatcher';
 import type { ResizeDirection } from '@/features/canvas/types';
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
+import ItemLockBadge from './ItemLockBadge';
 import ItemCommentBadge from '@/features/comments/ItemCommentBadge';
 
 interface CanvasItemProps {
@@ -190,6 +191,7 @@ export default function CanvasItem({
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
     >
+      {item.locked && <ItemLockBadge />}
       <ItemCommentBadge
         comments={item.comments}
       />

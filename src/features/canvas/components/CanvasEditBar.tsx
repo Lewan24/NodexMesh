@@ -6,6 +6,7 @@ import type { SelectedColumnItem } from '@/features/canvas/hooks/useColumnSelect
 
 interface CanvasEditBarProps {
   selectedItems: BoardItem[];
+  onJoinDrawings?: () => void;
   selectedColumnItem: SelectedColumnItem | null;
 
   onUpdateItem: (
@@ -39,6 +40,7 @@ interface CanvasEditBarProps {
 
 export default function CanvasEditBar({
   selectedItems,
+  onJoinDrawings,
   selectedColumnItem,
   onUpdateItem,
   onDeleteItems,
@@ -66,6 +68,7 @@ export default function CanvasEditBar({
   return (
     <EditBar
       selectedItems={selectedItems}
+      onJoinDrawings={onJoinDrawings}
       onUpdateItem={onUpdateItem}
       onDeleteItems={ids =>
         requestDelete(

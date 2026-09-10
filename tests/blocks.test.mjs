@@ -35,6 +35,7 @@ const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure }
 const { insertTask } = await server.ssrLoadModule('/src/features/canvas/hooks/useCrossItemDrop.ts')
 const { changeItemLayer } = await server.ssrLoadModule('/src/features/projects/hooks/useProjectItems.ts')
 const { getArrowHeadPoints } = await server.ssrLoadModule('/src/features/blocks/line/utils/lineRenderGeometry.ts')
+const { isFrameMovementLocked } = await server.ssrLoadModule('/src/features/canvas/utils/frameGeometry.ts')
 await server.close()
 
 test("new blocks survive JSON persistence and have usable default dimensions", () => {
@@ -367,4 +368,18 @@ test("filled arrowhead geometry scales with line thickness in both directions", 
     assert.ok(span(thick) > span(thin) * 2);
     assert.equal(thick.tipX, 50); assert.equal(thick.tipY, 50);
   }
+});
+
+
+test("frame movement follows current locks in its contents, including nested items", () => {
+  const frame = createCanvasItem('frame', 0, 0, { width: 800, height: 600 });
+  const child = { ...createCanvasItem('note', 40, 50), height: 120, locked: true };
+  const outside = { ...child, id: 'outside', x: 1000 };
+  assert.equal(isFrameMovementLocked(frame, [frame, child]), true);
+  assert.equal(isFrameMovementLocked(frame, [frame, { ...child, locked: false }]), false);
+  assert.equal(isFrameMovementLocked(frame, [frame, outside]), false);
+  const column = { ...createCanvasItem('column', 40, 40), height: 300, items: [child] };
+  assert.equal(isFrameMovementLocked(frame, [frame, column]), true);
+  assert.equal(isFrameMovementLocked({ ...frame, locked: true }, []), true);
+  assert.equal(isFrameMovementLocked(frame, [frame]), false);
 });

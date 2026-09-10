@@ -8,7 +8,7 @@ import ConfirmDialog from '@/shared/components/dialogs/ConfirmDialog';
 import CanvasFrame from '@/features/canvas/components/CanvasFrame';
 import CanvasItem from '@/features/canvas/components/CanvasItem';
 import CanvasControls from '@/features/canvas/components/CanvasControls';
-import { drawingOutline } from '@/features/blocks/drawing/drawingUtils';
+import { drawingOutline, joinDrawings } from '@/features/blocks/drawing/drawingUtils';
 import CanvasOverlays from '@/features/canvas/components/CanvasOverlays';
 import CanvasEditBar from '@/features/canvas/components/CanvasEditBar';
 import CanvasHints from './CanvasHints';
@@ -55,7 +55,7 @@ import {
   matchesItemSearch,
 } from '@/features/search/utils/itemSearch';
 
-import { isItemInsideFrame } from '@/features/canvas/utils/frameGeometry';
+import { isItemInsideFrame, isFrameMovementLocked } from '@/features/canvas/utils/frameGeometry';
 
 import ItemInspector from '@/features/inspector/ItemInspector';
 import { useCanvasClipboard } from '../hooks/useCanvasClipboard';
@@ -901,6 +901,21 @@ export default function Canvas({
   );
 
   const safeSelectedIds = selectedIds ?? [];
+  const joinableDrawings = project.items.filter(item => selectedIds.includes(item.id));
+  const canJoinDrawings = !selectedColumnItem && joinableDrawings.length > 1 && joinableDrawings.every(item => item.type === 'drawing' && !item.locked);
+  const handleJoinDrawings = () => {
+    if (!canJoinDrawings) return;
+    const joined = joinDrawings(joinableDrawings.filter(item => item.type === 'drawing'));
+    if (!joined) return;
+    pushHistory();
+    onRestoreItems([...project.items.filter(item => !selectedIds.includes(item.id)).map(item => item.type === 'line' ? {
+      ...item,
+      startItemId: item.startItemId && selectedIds.includes(item.startItemId) ? joined.id : item.startItemId,
+      endItemId: item.endItemId && selectedIds.includes(item.endItemId) ? joined.id : item.endItemId,
+    } : item), joined]);
+    onSelectItems([joined.id]);
+  };
+
 
   const selectedItems = project.items.filter(item =>
     safeSelectedIds.includes(item.id),
@@ -1091,7 +1106,7 @@ export default function Canvas({
         setContextMenu({ x: event.clientX, y: event.clientY, canvasX: snapValue((event.clientX - rect.left - pan.x) / zoom), canvasY: snapValue((event.clientY - rect.top - pan.y) / zoom), hasSelection: Boolean(id) });
       }}
     >
-      {contextMenu && <CanvasContextMenu menu={contextMenu} count={selectedColumnItem ? 1 : selectedIds.length} canPaste={clipboard.canPaste}
+      {contextMenu && <CanvasContextMenu onJoinDrawings={canJoinDrawings ? handleJoinDrawings : undefined} menu={contextMenu} count={selectedColumnItem ? 1 : selectedIds.length} canPaste={clipboard.canPaste}
         allLocked={selectedColumnItem ? Boolean(selectedColumnItem.item.locked) : selectedItems.length > 0 && selectedItems.every(item => item.locked)} onClose={closeContextMenu}
         onCopy={clipboard.copy} onDuplicate={clipboard.duplicate} onPaste={() => clipboard.paste({ x: contextMenu.canvasX, y: contextMenu.canvasY })}
         onDelete={() => { if (selectedColumnItem) { requestDelete(deleteSelectedColumnItem); return; } const ids = [...selectedIdsRef.current]; requestDelete(() => { onDeleteItems(ids); onSelectItems([]); }, ids.length); }}
@@ -1123,6 +1138,7 @@ export default function Canvas({
           <CanvasFrame
             key={frame.id}
             item={frame}
+            movementLocked={isFrameMovementLocked(frame, project.items, measuredSizes)}
             onItemResize={handleItemResize}
             isSettling={settlingIds.includes(frame.id)}
             zoom={zoom}
@@ -1321,6 +1337,7 @@ export default function Canvas({
       />
 
       <CanvasEditBar
+        onJoinDrawings={canJoinDrawings ? handleJoinDrawings : undefined}
         selectedItems={selectedItems.map(item => item.type === 'line' ? resolveLineItem(item, project.items, measuredSizes) : item)}
         selectedColumnItem={selectedColumnItem}
         onUpdateItem={onUpdateItem}

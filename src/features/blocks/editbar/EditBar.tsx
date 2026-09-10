@@ -11,6 +11,7 @@ import LayerControls from './components/LayerControls';
 
 interface EditBarProps {
   selectedItems: BoardItem[];
+  onJoinDrawings?: () => void;
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
   onDeleteItems: (ids: string[]) => void;
   onGroupItems: () => void;
@@ -27,6 +28,7 @@ interface EditBarProps {
 
 export default function EditBar({
   selectedItems,
+  onJoinDrawings,
   onUpdateItem,
   onDeleteItems,
   onGroupItems,
@@ -130,6 +132,8 @@ export default function EditBar({
             />
           </>
         )}
+
+        {isMulti && onJoinDrawings && <button onClick={onJoinDrawings} className="h-8 px-2.5 rounded-lg text-sm font-medium whitespace-nowrap cursor-pointer hover:bg-violet-500/20" style={{ color: 'var(--color-text-primary)' }}>Join drawings</button>}
 
         {isMulti && (
           <button

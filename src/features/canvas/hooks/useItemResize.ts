@@ -1,3 +1,4 @@
+import { isFrameMovementLocked } from '../utils/frameGeometry';
 import { useCallback } from 'react';
 
 import type { RefObject } from 'react';
@@ -79,7 +80,8 @@ export function useItemResize({
       if (
         !item ||
         item.type === 'line' ||
-        item.locked
+        item.locked ||
+        (item.type === 'frame' && isFrameMovementLocked(item, projectRef.current.items, measuredSizes))
       ) {
         return;
       }
