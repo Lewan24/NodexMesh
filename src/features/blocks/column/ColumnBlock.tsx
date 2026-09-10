@@ -593,6 +593,7 @@ export default function ColumnBlock({
                 )}
 
                 <ColumnItemRow
+                  itemId={nestedItem.id}
                   isDragging={draggingIndex === index}
                   isSelected={selectedItemId === nestedItem.id}
                   onDragHandleMouseDown={event => handleDragStart(index, event)}

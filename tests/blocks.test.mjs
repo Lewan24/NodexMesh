@@ -27,7 +27,8 @@ const { getEmbedUrl } = await server.ssrLoadModule(
 const { getSearchableText } = await server.ssrLoadModule(
   "/src/features/search/utils/itemSearch.ts",
 )
-const { dateDay, taskRange, shiftTask, scheduleRange } = await server.ssrLoadModule('/src/features/blocks/timeline/timelineUtils.ts')
+const { dateDay, taskRange, shiftTask, scheduleRange, reorderTasks } = await server.ssrLoadModule('/src/features/blocks/timeline/timelineUtils.ts')
+const { cloneItems, copyOrigin } = await server.ssrLoadModule('/src/features/canvas/utils/cloneItems.ts')
 const { diagramTemplate, layoutDiagram, removeDiagramNodes } = await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts')
 const { loadProjects, saveProjects } = await server.ssrLoadModule('/src/features/projects/storage/projectStorage.ts')
 await server.close()
@@ -223,4 +224,45 @@ test('planning block quick copies are empty and search includes nested content',
   assert.match(getSearchableText(diagram), /Valid request/)
   assert.deepEqual(createEmptySibling(diagram).nodes, [])
   assert.deepEqual(createEmptySibling(diagram).edges, [])
+})
+
+test('copying a connected selection remaps identities and detaches external connections', () => {
+  const note = { ...createCanvasItem('note', 32, 48), id: 'a', content: 'Keep content' }
+  const other = { ...createCanvasItem('note', 320, 48), id: 'b' }
+  const internal = { ...createCanvasItem('line', 32, 48), id: 'edge', startItemId: 'a', endItemId: 'b', x2: 320, y2: 48 }
+  const external = { ...internal, id: 'external', endItemId: 'outside' }
+  const original = structuredClone([note, other, internal, external])
+  const clones = cloneItems(original, 64, 80, 10)
+  assert.equal(clones[0].content, 'Keep content')
+  assert.equal(clones[0].x, 96)
+  assert.equal(clones[0].y, 128)
+  assert.equal(clones[2].startItemId, clones[0].id)
+  assert.equal(clones[2].endItemId, clones[1].id)
+  assert.equal(clones[3].endItemId, undefined)
+  assert.equal(clones[2].x2, 384)
+  assert.equal(new Set(clones.map(item => item.id)).size, 4)
+  assert.deepEqual(clones.map(item => item.zIndex), [10, 11, 12, 13])
+  assert.deepEqual(original, [note, other, internal, external])
+  assert.deepEqual(copyOrigin([{ ...internal, x: 200, x2: -10, y: 30, y2: -40 }]), { x: -10, y: -40 })
+})
+
+test('duplicating nested content retains local positions and remaps graph and checklist IDs', () => {
+  const graph = { ...createCanvasItem('diagram', 0, 0), ...diagramTemplate() }
+  const column = { ...createCanvasItem('column', 100, 200), items: [graph, { ...createCanvasItem('checklist', 0, 0), entries: [{ id: 'check', text: 'Ship', done: true }] }] }
+  const [copy] = cloneItems([column], 32, 32, 1)
+  assert.equal(copy.items[0].x, 0)
+  assert.notEqual(copy.items[0].nodes[0].id, graph.nodes[0].id)
+  assert.equal(copy.items[0].edges[0].source, copy.items[0].nodes[0].id)
+  assert.notEqual(copy.items[1].entries[0].id, 'check')
+  copy.items[1].entries[0].text = 'Changed'
+  assert.equal(column.items[1].entries[0].text, 'Ship')
+})
+
+test('timeline reordering preserves dates, checklists and task identities', () => {
+  const tasks = [{ id: 'a', start: '2026-09-10', checklist: [{ id: 'c', done: true }] }, { id: 'b' }, { id: 'c' }]
+  const reordered = reorderTasks(tasks, 'c', 'a')
+  assert.deepEqual(reordered.map(task => task.id), ['c', 'a', 'b'])
+  assert.equal(reordered[1], tasks[0])
+  assert.equal(reorderTasks(tasks, 'missing', 'a'), tasks)
+  assert.deepEqual(tasks.map(task => task.id), ['a', 'b', 'c'])
 })

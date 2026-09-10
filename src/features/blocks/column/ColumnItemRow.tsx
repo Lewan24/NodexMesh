@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import DragHandle from '@/features/blocks/shared/DragHandle';
 
 interface ColumnItemRowProps {
+  itemId: string;
   children: ReactNode;
 
   isDragging?: boolean;
@@ -17,6 +18,7 @@ interface ColumnItemRowProps {
 }
 
 export default function ColumnItemRow({
+  itemId,
   children,
   isDragging = false,
   isSelected = false,
@@ -27,6 +29,7 @@ export default function ColumnItemRow({
   return (
     <div
       data-column-item="true"
+      data-nested-item-id={itemId}
       className="group/row relative grid grid-cols-[24px_minmax(0,1fr)_24px] gap-2 items-start w-full min-w-0 rounded-xl transition-all"
       style={{
         width: '100%',

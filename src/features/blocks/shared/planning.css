@@ -15,6 +15,9 @@
 .timeline-bar:focus-visible { outline:2px solid var(--color-text-primary); outline-offset:2px; }
 .diagram-shape { width:160px; min-height:72px; display:flex; align-items:center; justify-content:center; text-align:center; color:white; padding:16px; border:2px solid #ffffff80; border-radius:10px; box-shadow:0 3px 10px #0002; white-space:pre-wrap; overflow-wrap:anywhere; font-size:13px; }
 .diagram-shape[data-shape=terminal] { border-radius:40px; }
+.diagram-shape[data-shape=input] { clip-path:polygon(12% 0,100% 0,88% 100%,0 100%); border-radius:0; padding:16px 26px; }
+.diagram-shape[data-shape=document] { clip-path:polygon(0 0,100% 0,100% 85%,75% 95%,50% 85%,25% 100%,0 90%); border-radius:0; padding-bottom:24px; }
+.diagram-shape[data-shape=service] { border-left:8px double #fff9; border-right:8px double #fff9; }
 .diagram-shape[data-shape=database] { border-radius:50% / 18%; border-top-width:6px; border-bottom-width:6px; }
 .diagram-shape[data-shape=decision] { clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); min-height:110px; padding:24px 32px; border:0; }
 .diagram-node[data-selected=true] { filter:drop-shadow(0 0 4px var(--color-accent)); }

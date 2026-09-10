@@ -17,6 +17,11 @@ function ShapeNode({ data, selected }: NodeProps<FlowNode>) {
   </div>;
 }
 const nodeTypes = { shape: ShapeNode };
+const shapes: { value: DiagramShape; label: string }[] = [
+  { value: 'process', label: 'Process' }, { value: 'decision', label: 'Decision' },
+  { value: 'terminal', label: 'Start / End' }, { value: 'database', label: 'Database' },
+  { value: 'input', label: 'Input / Output' }, { value: 'document', label: 'Document' }, { value: 'service', label: 'Service' },
+];
 const edgeOptions = { type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed }, style: { stroke: '#8b7daa', strokeWidth: 2 } };
 const toNodes = (nodes: FlowNode[]): DiagramNode[] => nodes.map(({ id, position, data }) => ({ id, position, data, type: 'shape' }));
 const toEdges = (edges: Edge[]): DiagramEdge[] => edges.map(({ id, source, target, sourceHandle, targetHandle, label }) => ({ id, source, target, sourceHandle, targetHandle, label: typeof label === 'string' ? label : '' }));
@@ -45,7 +50,7 @@ export default function DiagramBlock({ item, onUpdate, onDelete }: { item: Diagr
   const addNode = (shape: DiagramShape) => {
     const id = crypto.randomUUID();
     const viewport = flow.current?.getViewport() ?? { x: 0, y: 0, zoom: 1 };
-    save([...nodes, { id, type: 'shape', position: { x: (120 - viewport.x) / viewport.zoom, y: (100 - viewport.y) / viewport.zoom }, data: { label: shape === 'decision' ? 'Condition?' : shape === 'database' ? 'Database' : shape === 'terminal' ? 'Start / End' : 'Process', shape, color: '#7c3aed' } }], edges);
+    save([...nodes, { id, type: 'shape', position: { x: (120 - viewport.x) / viewport.zoom, y: (100 - viewport.y) / viewport.zoom }, data: { label: shapes.find(option => option.value === shape)!.label, shape, color: '#7c3aed' } }], edges);
     setSelection({ node: id });
   };
   const deleteSelection = () => {
@@ -60,7 +65,7 @@ export default function DiagramBlock({ item, onUpdate, onDelete }: { item: Diagr
       <button className="planning-button" aria-pressed={editing} onClick={() => { setEditing(!editing); setSelection({}); }}>{editing ? 'Done editing' : 'Edit diagram'}</button>
     </div>
     {editing && <div className="planning-toolbar" onMouseDown={event => event.stopPropagation()}>
-      {(['process', 'decision', 'terminal', 'database'] as const).map(shape => <button className="planning-button capitalize" key={shape} onClick={() => addNode(shape)}>+ {shape}</button>)}
+      {shapes.map(shape => <button className="planning-button" key={shape.value} onClick={() => addNode(shape.value)}>+ {shape.label}</button>)}
       <button className="planning-button ml-auto" disabled={!nodes.length} onClick={() => { save(layoutDiagram(toNodes(nodes), toEdges(edges)), edges); requestAnimationFrame(() => flow.current?.fitView({ padding: .2, duration: 200 })); }}>Auto layout</button>
     </div>}
     <div className="relative flex-1 min-h-0" data-wheel-scroll={editing ? 'true' : undefined} onDoubleClick={() => setEditing(true)} onMouseDown={event => { if (editing) event.stopPropagation(); }} onKeyDown={event => {
@@ -97,10 +102,18 @@ export default function DiagramBlock({ item, onUpdate, onDelete }: { item: Diagr
     {editing && <div className="planning-toolbar" onMouseDown={event => event.stopPropagation()}>
       {selectedNode ? <>
         <input className="planning-input flex-1" aria-label="Node label" value={selectedNode.data.label} onChange={event => save(nodes.map(node => node.id === selectedNode.id ? { ...node, data: { ...node.data, label: event.target.value } } : node), edges)} />
-        <select className="planning-input" aria-label="Node shape" value={selectedNode.data.shape} onChange={event => save(nodes.map(node => node.id === selectedNode.id ? { ...node, data: { ...node.data, shape: event.target.value as DiagramShape } } : node), edges)}>{['process', 'decision', 'terminal', 'database'].map(shape => <option key={shape}>{shape}</option>)}</select>
+        <select className="planning-input" aria-label="Node shape" value={selectedNode.data.shape} onChange={event => save(nodes.map(node => node.id === selectedNode.id ? { ...node, data: { ...node.data, shape: event.target.value as DiagramShape } } : node), edges)}>{shapes.map(shape => <option key={shape.value} value={shape.value}>{shape.label}</option>)}</select>
         <input type="color" aria-label="Node color" value={selectedNode.data.color} className="h-8 w-8" onChange={event => save(nodes.map(node => node.id === selectedNode.id ? { ...node, data: { ...node.data, color: event.target.value } } : node), edges)} />
       </> : selectedEdge ? <input className="planning-input flex-1" aria-label="Connection label" placeholder="e.g. Yes / No / Success" value={typeof selectedEdge.label === 'string' ? selectedEdge.label : ''} onChange={event => save(nodes, edges.map(edge => edge.id === selectedEdge.id ? { ...edge, label: event.target.value } : edge))} /> : <input className="planning-input flex-1" aria-label="Diagram title" value={item.title} onChange={event => onUpdate(current => current.type === 'diagram' ? { ...current, title: event.target.value } : current)} />}
       {(selectedNode || selectedEdge) && <button className="planning-button text-rose-500" onClick={deleteSelection}>Delete selected</button>}
+    </div>}
+    {editing && selectedNode && <div className="planning-toolbar max-h-28 overflow-auto" data-wheel-scroll="true" onMouseDown={event => event.stopPropagation()}>
+      <span className="text-xs text-theme-muted">Connections</span>
+      {edges.filter(edge => edge.source === selectedNode.id || edge.target === selectedNode.id).map(edge => <div key={edge.id} className="flex items-center rounded-lg border" style={{ borderColor: 'var(--color-border)' }}>
+        <button className="planning-button" onClick={() => setSelection({ edge: edge.id })}>{edge.source === selectedNode.id ? '→ ' : '← '}{nodes.find(node => node.id === (edge.source === selectedNode.id ? edge.target : edge.source))?.data.label || 'Node'}{edge.label ? ` · ${edge.label}` : ''}</button>
+        <button className="planning-button text-rose-500" aria-label={`Delete connection ${edge.label || edge.id}`} onClick={() => save(nodes, edges.filter(current => current.id !== edge.id))}>×</button>
+      </div>)}
+      <button className="planning-button ml-auto" disabled={!edges.some(edge => edge.source === selectedNode.id || edge.target === selectedNode.id)} onClick={() => save(nodes, edges.filter(edge => edge.source !== selectedNode.id && edge.target !== selectedNode.id))}>Disconnect node</button>
     </div>}
   </>;
   return <ContentBlockShell item={item} onDelete={onDelete} title={<span className="flex justify-between gap-2"><span className="truncate">{item.title}</span><span className="text-xs opacity-50">{nodes.length} nodes · {edges.length} connections</span></span>}>
