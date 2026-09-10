@@ -87,7 +87,16 @@ export type FontFamily =
   | 'patrick-hand'
   | 'comic-neue'
   | 'architects-daughter'
-  | 'trebuchet';
+  | 'trebuchet'
+  | 'short-stack'
+  | 'shantell-sans'
+  | 'mynerve'
+  | 'schoolbell'
+  | 'mansalva'
+  | 'walter-turncoat'
+  | 'patrick-hand-sc'
+  | 'indie-flower'
+  | 'gloria-hallelujah';
 
 export type TextAlign = 'left' | 'center' | 'right';
 export type VerticalAlign = 'top' | 'middle' | 'bottom';
