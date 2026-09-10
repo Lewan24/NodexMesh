@@ -74,7 +74,7 @@ export default function EditBar({
         ? ITEM_TYPE_LABELS[single.type] ?? single.type
         : '';
 
-  const hasStyleControls = !!single && !isMulti && !['document', 'embed', 'code', 'dispenser', 'timeline', 'diagram'].includes(single.type);
+  const hasStyleControls = !!single && !isMulti && !['code', 'dispenser'].includes(single.type);
 
   return (
     <div
@@ -206,7 +206,7 @@ export default function EditBar({
           className="flex items-center gap-1 px-2 py-1.5 overflow-x-auto"
           style={{ borderTop: '1px solid var(--color-border-soft)' }}
         >
-          {single.type !== 'line' && single.type !== 'frame' && (
+          {single.type !== 'drawing' && single.type !== 'line' && single.type !== 'frame' && (
             <ColorPanel item={single} onUpdate={handleUpdate} />
           )}
           
@@ -217,7 +217,7 @@ export default function EditBar({
             />
           )}
 
-          {single.type !== 'line' && (
+          {single.type !== 'drawing' && single.type !== 'line' && (
             <TypographyControls item={single} onUpdate={handleUpdate} />
           )}
 
@@ -225,6 +225,13 @@ export default function EditBar({
             <LineControls item={single} onUpdate={handleUpdate} />
           )}
 
+          {single.type === 'drawing' && <>
+            <label className="flex items-center gap-2 text-xs">Ink <input aria-label="Drawing color" type="color" value={single.color} onChange={event => handleUpdate(current => current.type === 'drawing' ? { ...current, color: event.target.value } : current)} /></label>
+            <label className="flex items-center gap-2 text-xs">Width <input aria-label="Drawing stroke width" type="range" min="1" max="12" value={single.strokeWidth} onChange={event => handleUpdate(current => current.type === 'drawing' ? { ...current, strokeWidth: Number(event.target.value) } : current)} />{single.strokeWidth}</label>
+          </>}
+          {(single.type === 'document') && <button className="px-2 text-xs whitespace-nowrap" onClick={() => handleUpdate(current => current.type === 'document' ? { ...current, autoHeight: true, height: undefined } : current)}>Auto-fit height</button>}
+          {single.type === 'embed' && <label className="flex gap-2 text-xs whitespace-nowrap"><input type="checkbox" checked={single.showLabel} onChange={event => handleUpdate(current => current.type === 'embed' ? { ...current, showLabel: event.target.checked } : current)} />Show label</label>}
+          {single.type === 'timeline' && <select aria-label="Timeline view" value={single.mode} className="text-xs bg-transparent" onChange={event => handleUpdate(current => current.type === 'timeline' ? { ...current, mode: event.target.value as 'simple' | 'schedule' } : current)}><option value="simple">Milestones</option><option value="schedule">Schedule</option></select>}
           {!isColumnMode && single.type === 'frame' && (
             <FrameControls item={single} onUpdate={handleUpdate} />
           )}

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ToolType } from '@/entities/board/toolTypes';
-import { FileText, Code, PanelsTopLeft, Layers, Minus, GanttChart, Workflow } from 'lucide-react';
+import { FileText, Code, PanelsTopLeft, Layers, Minus, GanttChart, Workflow, Pencil } from 'lucide-react';
 
 const TOOL_ICON_SIZE = 26;
 
@@ -11,6 +11,7 @@ export interface SidebarTool {
 }
 
 export const SIDEBAR_TOOLS: SidebarTool[] = [
+  { id: 'drawing', label: 'Pencil', icon: <Pencil size={TOOL_ICON_SIZE} /> },
   { id: 'timeline', label: 'Timeline', icon: <GanttChart size={TOOL_ICON_SIZE} /> },
   { id: 'diagram', label: 'Diagram', icon: <Workflow size={TOOL_ICON_SIZE} /> },
   { id: 'document', label: 'Document', icon: <FileText size={TOOL_ICON_SIZE} /> },

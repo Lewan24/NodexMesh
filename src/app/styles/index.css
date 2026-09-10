@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;700&family=Comic+Neue:ital,wght@0,400;0,700;1,400&family=Kalam:wght@400;700&family=Patrick+Hand&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&family=Indie+Flower&family=Mansalva&family=Mynerve&family=Patrick+Hand+SC&family=Schoolbell&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&family=Short+Stack&family=Walter+Turncoat&display=swap');
 @import 'tailwindcss';
 
 @theme {
@@ -188,3 +189,13 @@ body {
   border-radius: var(--radius-xs);
 }
 
+/* Content typography; editing controls keep compact sizing. */
+.content-block-shell header { font-size: var(--block-font-size, 14px); }
+.content-block-shell .timeline-card h3 { font-size: var(--block-font-size, 14px); }
+.content-block-shell .timeline-card label { font-size: var(--block-font-size, 12px); }
+.content-block-shell .timeline-grid { font-size: var(--block-font-size, 12px); }
+.content-block-shell .timeline-bar { font-size: var(--block-font-size, 11px); }
+.content-block-shell .timeline-track { height: max(48px, calc(var(--block-font-size, 12px) + 30px)); }
+.content-block-shell .timeline-bar { height: max(28px, calc(var(--block-font-size, 12px) + 10px)); }
+.content-block-shell .diagram-shape, .diagram-editor .diagram-shape { font-size: var(--block-font-size, 13px); }
+.content-block-shell .text-theme-muted { color: inherit; opacity: .65; }

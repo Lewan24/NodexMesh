@@ -14,6 +14,17 @@ export const FONT_FAMILIES: {
   { value: 'patrick-hand', label: 'Patrick Hand · Notes', css: '"Patrick Hand", cursive' },
   { value: 'comic-neue', label: 'Comic Neue · Playful', css: '"Comic Neue", cursive' },
   { value: 'architects-daughter', label: 'Architects Daughter · Draft', css: '"Architects Daughter", cursive' },
+
+  { value: 'short-stack', label: 'Short Stack · Playful', css: '"Short Stack", cursive' },
+  { value: 'shantell-sans', label: 'Shantell Sans · Handwritten', css: '"Shantell Sans", sans-serif' },
+  { value: 'mynerve', label: 'Mynerve · Casual', css: '"Mynerve", cursive' },
+  { value: 'schoolbell', label: 'Schoolbell · Notes', css: '"Schoolbell", cursive' },
+  { value: 'mansalva', label: 'Mansalva · Sketch', css: '"Mansalva", cursive' },
+  { value: 'walter-turncoat', label: 'Walter Turncoat · Rough', css: '"Walter Turncoat", cursive' },
+  { value: 'patrick-hand-sc', label: 'Patrick Hand SC · Small Caps', css: '"Patrick Hand SC", cursive' },
+  { value: 'indie-flower', label: 'Indie Flower · Handwriting', css: '"Indie Flower", cursive' },
+  { value: 'gloria-hallelujah', label: 'Gloria Hallelujah · Handwriting', css: '"Gloria Hallelujah", cursive' },
+
   {
     value: 'sans',
     label: 'Sans',
@@ -64,7 +75,7 @@ export const MIN_FONT_SIZE = 8;
 export const MAX_FONT_SIZE = 96;
 
 export const DEFAULT_FONT_FAMILY: FontFamily =
-  'comic-neue';
+  'short-stack';
 
 export function getFontFamilyCss(
   family?: FontFamily,

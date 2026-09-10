@@ -31,6 +31,7 @@ const { dateDay, taskRange, shiftTask, scheduleRange, reorderTasks } = await ser
 const { cloneItems, copyOrigin } = await server.ssrLoadModule('/src/features/canvas/utils/cloneItems.ts')
 const { diagramTemplate, layoutDiagram, removeDiagramNodes } = await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts')
 const { loadProjects, saveProjects } = await server.ssrLoadModule('/src/features/projects/storage/projectStorage.ts')
+const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure } = await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts')
 await server.close()
 
 test("new blocks survive JSON persistence and have usable default dimensions", () => {
@@ -266,3 +267,61 @@ test('timeline reordering preserves dates, checklists and task identities', () =
   assert.equal(reorderTasks(tasks, 'missing', 'a'), tasks)
   assert.deepEqual(tasks.map(task => task.id), ['a', 'b', 'c'])
 })
+
+
+test("freehand strokes preserve geometry across negative positions, persistence and copies", () => {
+  const points = [{ x: -80, y: 35 }, { x: -20, y: -10 }, { x: 30, y: 90 }];
+  const drawing = createDrawing(points, 9);
+  assert.equal(drawing.type, 'drawing');
+  assert.equal(drawing.zIndex, 9);
+  drawing.points.forEach((point, index) => {
+    assert.equal(point.x + drawing.x, points[index].x);
+    assert.equal(point.y + drawing.y, points[index].y);
+    assert.ok(point.x >= 0 && point.x <= drawing.viewWidth);
+    assert.ok(point.y >= 0 && point.y <= drawing.viewHeight);
+  });
+  const resized = JSON.parse(JSON.stringify({ ...drawing, width: 600, height: 400 }));
+  assert.equal(drawingPath(resized.points), drawingPath(drawing.points));
+  const [copy] = cloneItems([resized], 32, 48, 10);
+  assert.notEqual(copy.id, drawing.id);
+  assert.equal(copy.x, drawing.x + 32);
+  assert.deepEqual(copy.points, drawing.points);
+  copy.points[0].x = 999;
+  assert.notEqual(copy.points[0].x, drawing.points[0].x);
+});
+
+test("freehand click and horizontal strokes have nonzero resize bounds", () => {
+  assert.equal(createDrawing([], 1), null);
+  assert.equal(createDrawing([{ x: NaN, y: 0 }], 1), null);
+  for (const points of [[{ x: 4, y: 4 }], [{ x: 2, y: 10 }, { x: 120, y: 10 }]]) {
+    const item = createDrawing(points, 1);
+    assert.ok(item.width >= 12 && item.height >= 12);
+    assert.ok(drawingPath(item.points).length > 0);
+    assert.equal(createEmptySibling(item), null);
+  }
+});
+
+
+test("pen speed produces bounded gradual width and pressure survives copying", () => {
+  assert.ok(penPressure(2, 30) > penPressure(80, 10));
+  assert.ok(penPressure(1000, 0) >= .45);
+  assert.ok(penPressure(0, 100) <= 1.6);
+  const drawing = createDrawing([{ x: 0, y: 0, pressure: 1.5 }, { x: 40, y: 20, pressure: .5 }], 1);
+  const [copy] = cloneItems([JSON.parse(JSON.stringify(drawing))], 20, 20, 2);
+  assert.deepEqual(copy.points.map(point => point.pressure), [1.5, .5]);
+  assert.equal(drawingOutline(copy.points, 3), drawingOutline(drawing.points, 3));
+});
+
+test("smoothing damps jitter without overshoot and renders dots and reversals", () => {
+  const points = [{ x: 0, y: 0 }, { x: 10, y: 4 }, { x: 20, y: -4 }, { x: 30, y: 0 }];
+  const smooth = smoothDrawing(points);
+  assert.equal(smooth[0].x, 0);
+  assert.equal(smooth.at(-1).x, 30);
+  assert.ok(Math.max(...smooth.map(point => Math.abs(point.y))) < 4);
+  assert.ok(smooth.every(point => point.x >= 0 && point.x <= 30));
+  for (const pathPoints of [points, [{ x: 0, y: 0 }], [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 0, y: 0 }]]) {
+    const outline = drawingOutline(pathPoints, 3);
+    assert.ok(outline.endsWith('Z'));
+    assert.ok(!/NaN|Infinity/.test(outline));
+  }
+});

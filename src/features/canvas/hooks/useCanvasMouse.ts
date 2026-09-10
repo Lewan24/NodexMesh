@@ -1,4 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createDrawing, penPressure } from '@/features/blocks/drawing/drawingUtils';
+import type { DrawingPoint } from '@/features/blocks/drawing/drawingUtils';
 
 import type { RefObject } from 'react';
 
@@ -67,6 +69,12 @@ export function useCanvasMouse({
   );
 
   const [lasso, setLasso] = useState<SelectionBox | null>(null);
+  const [drawingDraft, setDrawingDraft] = useState<DrawingPoint[] | null>(null);
+  const drawingCleanup = useRef<(() => void) | null>(null);
+  useEffect(() => () => drawingCleanup.current?.(), []);
+  useEffect(() => {
+    if (selectedTool !== 'drawing') { drawingCleanup.current?.(); setDrawingDraft(null); }
+  }, [selectedTool]);
 
   const handleCanvasMouseDown = useCallback(
     (event: React.MouseEvent) => {
@@ -124,6 +132,50 @@ export function useCanvasMouse({
       );
 
       const panAtDown = { ...pan };
+
+      if (selectedTool === 'drawing') {
+        drawingCleanup.current?.();
+        const points: DrawingPoint[] = [{ ...startCanvas, pressure: 1 }];
+        let previous = { x: event.clientX, y: event.clientY, time: event.timeStamp };
+        let frame: number | null = null;
+        onSelectItems([]);
+        setDrawingDraft([...points]);
+        const move = (moveEvent: MouseEvent) => {
+          const point = screenToCanvas(moveEvent.clientX - rect.left, moveEvent.clientY - rect.top);
+          const last = points[points.length - 1]!;
+          if (Math.hypot(point.x - last.x, point.y - last.y) < .5) return;
+          const distance = Math.hypot(moveEvent.clientX - previous.x, moveEvent.clientY - previous.y);
+          const elapsed = Math.max(1, moveEvent.timeStamp - previous.time);
+          const pressure = penPressure(distance, elapsed);
+          // A small, adaptive stabilizer damps slow hand jitter, but follows fast gestures.
+          const follow = Math.min(.85, .35 + distance / elapsed * .25);
+          points.push({ x: last.x + (point.x - last.x) * follow, y: last.y + (point.y - last.y) * follow,
+            pressure: (last.pressure ?? 1) * .7 + pressure * .3 });
+          previous = { x: moveEvent.clientX, y: moveEvent.clientY, time: moveEvent.timeStamp };
+          if (frame === null) frame = requestAnimationFrame(() => { frame = null; setDrawingDraft([...points]); });
+        };
+        const cleanup = () => {
+          if (frame !== null) cancelAnimationFrame(frame);
+          document.removeEventListener('mousemove', move);
+          document.removeEventListener('mouseup', finish);
+          window.removeEventListener('blur', cancel);
+          drawingCleanup.current = null;
+        };
+        const cancel = () => { cleanup(); setDrawingDraft(null); };
+        const finish = (upEvent: MouseEvent) => {
+          const end = screenToCanvas(upEvent.clientX - rect.left, upEvent.clientY - rect.top);
+          const last = points[points.length - 1]!;
+          if (Math.hypot(end.x - last.x, end.y - last.y) > .5) points.push({ ...end, pressure: last.pressure });
+          cleanup(); setDrawingDraft(null);
+          const drawing = createDrawing(points, Math.max(0, ...projectRef.current.items.map(item => item.zIndex)) + 1);
+          if (drawing) { pushHistory(); onAddItem(drawing); }
+        };
+        drawingCleanup.current = cleanup;
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', finish);
+        window.addEventListener('blur', cancel);
+        return;
+      }
 
       if (selectedTool === 'frame') {
         const handleMove = (moveEvent: MouseEvent) => {
@@ -343,6 +395,7 @@ export function useCanvasMouse({
   );
 
   return {
+    drawingDraft,
     frameDraft,
     lasso,
     handleCanvasMouseDown,

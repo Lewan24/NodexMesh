@@ -1,5 +1,6 @@
 export type ToolType =
   | 'select'
+  | 'drawing'
   | 'timeline'
   | 'diagram'
   | 'document'

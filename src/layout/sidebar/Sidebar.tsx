@@ -7,7 +7,7 @@ import './sidebar.css';
 
 const groups = [
   { id: 'planning', label: 'Planning', icon: ListTree, tools: ['timeline', 'diagram'] },
-  { id: 'common', label: 'Common', icon: LayoutGrid, tools: ['note', 'dispenser', 'text', 'document', 'code'] },
+  { id: 'common', label: 'Common', icon: LayoutGrid, tools: ['drawing', 'note', 'dispenser', 'text', 'document', 'code'] },
   { id: 'organize', label: 'Organize', icon: ListTree, tools: ['checklist', 'kanban', 'column', 'frame', 'line', 'divider'] },
   { id: 'media', label: 'Media', icon: Play, tools: ['image', 'link', 'embed'] },
 ] satisfies { id: string; label: string; icon: typeof LayoutGrid; tools: ToolType[] }[];
@@ -38,7 +38,7 @@ export default function Sidebar({ selectedTool, onSelectTool }: {
               <div className="tool-grid" id={`tools-${group.id}`} aria-label={`${group.label} tools`}>
                 {group.tools.map(id => {
                   const tool = SIDEBAR_TOOLS.find(tool => tool.id === id)!;
-                  return <button key={id} type="button" className="tool-tile" aria-label={tool.label} aria-pressed={selectedTool === id} title={`${tool.label} · Click or drag to canvas`} onMouseDown={event => startToolDrag(id, event)} onClick={() => {
+                  return <button key={id} type="button" className="tool-tile" aria-label={tool.label} aria-pressed={selectedTool === id} title={id === 'drawing' ? 'Pencil · Draw on canvas · Esc to cancel' : `${tool.label} · Click or drag to canvas`} onMouseDown={event => { if (id !== 'drawing') startToolDrag(id, event); }} onClick={() => {
                     if (!consumeToolDragClickSuppression()) onSelectTool(id);
                   }}>
                     <span className="tool-tile-icon">{tool.icon}</span>

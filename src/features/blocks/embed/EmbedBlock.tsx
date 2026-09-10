@@ -3,6 +3,8 @@ import type { EmbedItem } from "@/entities/board/types"
 import type { BlockUpdateHandler } from "../types"
 import ContentBlockShell from "../shared/ContentBlockShell"
 import { getEmbedUrl } from "./embedUrl"
+import { getTypographyStyle } from '../typography/typographyUtils';
+import { isLightColor } from '../kanban/utils/kanbanUtils';
 import YouTubeVideo from './YouTubeVideo';
 
 export default function EmbedBlock({
@@ -24,8 +26,9 @@ export default function EmbedBlock({
     onUpdate((current) =>
       current.type === "embed" ? { ...current, ...patch } : current,
     )
-  if (videoId && !editing) return <section className="group relative rounded-xl shadow-xl overflow-hidden flex flex-col" style={{ width: item.width, height: item.height, background: 'var(--color-surface)', color: 'var(--color-text-primary)' }}>
-    {item.showLabel && <header className="px-4 py-2 text-sm font-medium cursor-grab">{item.title || 'YouTube video'}</header>}
+  if (videoId && !editing) return <section className="group relative item-rounded shadow-xl overflow-hidden flex flex-col" style={{ width: item.width, height: item.height, background: item.color ?? 'var(--color-surface)', color: item.color ? (isLightColor(item.color) ? '#1e293b' : '#f8fafc') : 'var(--color-text-primary)', ...getTypographyStyle(item) }}>
+    {item.topColor && <div className="h-[5px] shrink-0" style={{ background: item.topColor }} />}
+    {item.showLabel && <header className="px-4 py-2 font-medium cursor-grab">{item.title || 'YouTube video'}</header>}
     <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity" onMouseDown={event => event.stopPropagation()}>
       <button className="rounded bg-black/75 text-white text-xs px-2 py-1" onClick={() => { setDraft(item.url); setEditing(true); }}>Settings</button>
       <button className="rounded bg-black/75 text-white text-xs px-2 py-1" aria-label="Delete block" onClick={onDelete}>×</button>

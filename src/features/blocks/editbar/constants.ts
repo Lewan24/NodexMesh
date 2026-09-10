@@ -26,6 +26,7 @@ export const FRAME_COLORS = [
 ];
 
 export const BACKGROUND_ITEM_TYPES = new Set<BoardItem['type']>([
+  'document', 'embed', 'timeline', 'diagram',
   'note',
   'checklist',
   'link',
@@ -36,6 +37,7 @@ export const BACKGROUND_ITEM_TYPES = new Set<BoardItem['type']>([
 ]);
 
 export const ITEM_TYPE_LABELS: Partial<Record<BoardItem['type'], string>> = {
+  drawing: 'Drawing',
   timeline: 'Timeline',
   diagram: 'Diagram',
   document: 'Document',

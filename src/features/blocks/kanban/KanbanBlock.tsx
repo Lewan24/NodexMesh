@@ -54,6 +54,9 @@ export default function KanbanBlock({
   onDelete,
   onCardDroppedOutside,
 }: KanbanBlockProps) {
+  const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
+  const [dropColumn, setDropColumn] = useState<string | null>(null);
+  const [addAtTop, setAddAtTop] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
   const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(null);
@@ -116,7 +119,7 @@ export default function KanbanBlock({
           column.id === columnId
             ? {
                 ...column,
-                cards: [...column.cards, createKanbanCard(text)],
+                cards: addAtTop ? [createKanbanCard(text), ...column.cards] : [...column.cards, createKanbanCard(text)],
               }
             : column,
         ),
@@ -125,7 +128,7 @@ export default function KanbanBlock({
       setNewCardText('');
       setAddingCardColumnId(null);
     },
-    [newCardText, updateColumns],
+    [newCardText, updateColumns, addAtTop],
   );
 
   const {
@@ -297,6 +300,13 @@ export default function KanbanBlock({
     },
     [updateColumns],
   );
+
+  const reorderColumn = (source: string, target: string) => updateColumns(columns => {
+    const from = columns.findIndex(column => column.id === source);
+    const to = columns.findIndex(column => column.id === target);
+    if (from < 0 || to < 0 || from === to) return columns;
+    const next = [...columns]; next.splice(to, 0, next.splice(from, 1)[0]!); return next;
+  });
 
   const addColumn = useCallback(() => {
     updateColumns(columns => [
@@ -490,11 +500,13 @@ export default function KanbanBlock({
         {/* Columns */}
 
         <div className="flex p-3 gap-2">
-          {item.columns.map(column => (
+          {item.columns.map((column, columnIndex) => (
             <div
               key={column.id}
               data-kanban-id={item.id}
               data-kanban-column-id={column.id}
+              onDragOver={event => { if (draggedColumn) { event.preventDefault(); event.stopPropagation(); setDropColumn(column.id); } }}
+              onDrop={event => { if (draggedColumn) { event.preventDefault(); event.stopPropagation(); reorderColumn(draggedColumn, column.id); setDraggedColumn(null); setDropColumn(null); } }}
               ref={element => {
                 if (element) {
                   columnRefs.current.set(column.id, element);
@@ -505,11 +517,18 @@ export default function KanbanBlock({
               className="relative flex flex-col group/col flex-shrink-0"
               style={{
                 width: column.width ?? DEFAULT_KANBAN_COLUMN_WIDTH,
+                outline: dropColumn === column.id ? `2px solid ${accentColor}` : undefined,
+                opacity: draggedColumn === column.id ? .5 : 1,
               }}
             >
               {/* Column header */}
 
-              <div className="flex items-center gap-1.5 mb-2.5 group/colhdr">
+              <div className="flex items-center gap-1.5 mb-2.5 group/colhdr" style={{ order: -3 }}>
+                <button draggable aria-label={`Reorder column ${column.title}`} title="Drag column · Alt+← / Alt+→" className="cursor-grab" style={{ color: mutedColor }} onMouseDown={event => event.stopPropagation()}
+                  onDragStart={event => { event.stopPropagation(); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', column.id); setDraggedColumn(column.id); }}
+                  onDragEnd={() => { setDraggedColumn(null); setDropColumn(null); }}
+                  onKeyDown={event => { if (event.altKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); const target = item.columns[columnIndex + (event.key === 'ArrowLeft' ? -1 : 1)]; if (target) reorderColumn(column.id, target.id); } }}>⠿</button>
+                {([-1, 1] as const).map(direction => <button key={direction} aria-label={`Move ${column.title} ${direction === -1 ? 'left' : 'right'}`} className="text-xs disabled:opacity-20" style={{ color: mutedColor }} disabled={!item.columns[columnIndex + direction]} onMouseDown={event => event.stopPropagation()} onClick={() => reorderColumn(column.id, item.columns[columnIndex + direction]!.id)}>{direction === -1 ? '‹' : '›'}</button>)}
                 <div
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ backgroundColor: column.color }}
@@ -589,10 +608,11 @@ export default function KanbanBlock({
                 )}
               </div>
 
+              <button className="text-xs text-left py-1.5 px-2 mb-1 hover:bg-violet-500/10" style={{ color: mutedColor, order: -2 }} aria-label={`Add card at top of ${column.title}`} onMouseDown={event => event.stopPropagation()} onClick={() => { setAddAtTop(true); setAddingCardColumnId(column.id); }}>+ Add card</button>
               {/* Cards */}
 
               <div
-                className="flex-1 rounded-lg transition-colors"
+                className="rounded-sm transition-colors"
                 style={{
                   minHeight: 40,
                   backgroundColor:
@@ -662,6 +682,7 @@ export default function KanbanBlock({
               {addingCardColumnId === column.id ? (
                 <div
                   className="mt-1"
+                  style={{ order: addAtTop ? -1 : undefined }}
                   onMouseDown={event => event.stopPropagation()}
                 >
                   <input
@@ -696,7 +717,7 @@ export default function KanbanBlock({
               ) : (
                 <button
                   onMouseDown={event => event.stopPropagation()}
-                  onClick={() => setAddingCardColumnId(column.id)}
+                  onClick={() => { setAddAtTop(false); setAddingCardColumnId(column.id); }}
                   className="mt-1 flex items-center gap-1.5 text-xs py-1.5 px-2 rounded-lg transition-colors"
                   style={{ color: mutedColor }}
                   onMouseEnter={event => {

@@ -8,6 +8,7 @@ import ConfirmDialog from '@/shared/components/dialogs/ConfirmDialog';
 import CanvasFrame from '@/features/canvas/components/CanvasFrame';
 import CanvasItem from '@/features/canvas/components/CanvasItem';
 import CanvasControls from '@/features/canvas/components/CanvasControls';
+import { drawingOutline } from '@/features/blocks/drawing/drawingUtils';
 import CanvasOverlays from '@/features/canvas/components/CanvasOverlays';
 import CanvasEditBar from '@/features/canvas/components/CanvasEditBar';
 import CanvasHints from './CanvasHints';
@@ -556,6 +557,7 @@ export default function Canvas({
   ]);
 
   const {
+    drawingDraft,
     frameDraft,
     lasso,
     handleCanvasMouseDown,
@@ -1254,12 +1256,14 @@ export default function Canvas({
           />
         )}
 
+        {drawingDraft && <svg className="absolute top-0 left-0 overflow-visible pointer-events-none" width="1" height="1" style={{ zIndex: 100000 }}><path d={drawingOutline(drawingDraft, 3)} fill="#7C3AED" /></svg>}
         <CanvasOverlays
           frameDraft={frameDraft}
           lasso={lasso}
         />
       </div>
 
+      {selectedTool === 'drawing' && <div className="absolute inset-0 z-40 cursor-crosshair" aria-label="Drawing surface" />}
       {toolDragGhost && (
         <ToolDragGhost
           color={toolDragGhost.extra?.color}
