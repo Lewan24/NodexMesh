@@ -188,3 +188,13 @@ body {
   border-radius: var(--radius-xs);
 }
 
+/* Content typography; editing controls keep compact sizing. */
+.content-block-shell header { font-size: var(--block-font-size, 14px); }
+.content-block-shell .timeline-card h3 { font-size: var(--block-font-size, 14px); }
+.content-block-shell .timeline-card label { font-size: var(--block-font-size, 12px); }
+.content-block-shell .timeline-grid { font-size: var(--block-font-size, 12px); }
+.content-block-shell .timeline-bar { font-size: var(--block-font-size, 11px); }
+.content-block-shell .timeline-track { height: max(48px, calc(var(--block-font-size, 12px) + 30px)); }
+.content-block-shell .timeline-bar { height: max(28px, calc(var(--block-font-size, 12px) + 10px)); }
+.content-block-shell .diagram-shape, .diagram-editor .diagram-shape { font-size: var(--block-font-size, 13px); }
+.content-block-shell .text-theme-muted { color: inherit; opacity: .65; }

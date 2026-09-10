@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+import { getTypographyStyle } from '../typography/typographyUtils';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ReactFlow, Background, Controls, Handle, Position, ConnectionMode, MarkerType, applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
@@ -120,7 +122,7 @@ export default function DiagramBlock({ item, onUpdate, onDelete }: { item: Diagr
     {editing ? <>
       <div className="planning-empty">Diagram is open in the editor.</div>
       {createPortal(<div className="fixed inset-0 flex items-center justify-center bg-black/45 p-4" style={{ zIndex: 200000 }} onMouseDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}>
-        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={`Edit ${item.title}`} tabIndex={-1} className="diagram-editor" data-wheel-scroll="true" onKeyDown={event => {
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={`Edit ${item.title}`} tabIndex={-1} className="diagram-editor" style={{ ...getTypographyStyle(item), '--block-font-size': item.typography?.fontSize ? `${item.typography.fontSize}px` : undefined } as CSSProperties} data-wheel-scroll="true" onKeyDown={event => {
           event.stopPropagation();
           if (event.key === 'Escape') { event.preventDefault(); setEditing(false); }
           if (event.key === 'Tab') {

@@ -36,6 +36,7 @@ interface MinSize {
 
 function getMinSize(item: BoardItem): MinSize {
   switch (item.type) {
+    case 'drawing': return { width: 12, height: 12 };
     case 'timeline': return { width: 520, height: 340 };
     case 'diagram': return { width: 520, height: 360 };
     case 'document': return { width: 320, height: 240 };

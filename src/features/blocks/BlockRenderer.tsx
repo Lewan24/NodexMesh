@@ -12,6 +12,7 @@ import NoteBlock from '@/features/blocks/note/NoteBlock';
 import TextBlock from '@/features/blocks/text/TextBlock';
 import EmbedBlock from './embed/EmbedBlock';
 import DispenserBlock from './dispenser/DispenserBlock';
+import DrawingBlock from './drawing/DrawingBlock';
 
 const DocumentBlock = lazy(() => import('./document/DocumentBlock'));
 const CodeBlock = lazy(() => import('./code/CodeBlock'));
@@ -20,7 +21,7 @@ const DiagramBlock = lazy(() => import('./diagram/DiagramBlock'));
 
 function LoadingBlock({ item }: { item: BoardItem }) {
   return (
-    <div role="status" className="rounded-xl border p-4 text-sm"
+    <div role="status" className="item-rounded border p-4 text-sm"
       style={{ width: item.width, height: item.height ?? (item.type === 'document' ? 600 : 280),
         borderColor: 'var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text-muted)' }}>
       Loading…
@@ -79,6 +80,7 @@ export default function BlockRenderer({
   nestedSearchMatchIds,
 }: BlockRendererProps) {
   switch (item.type) {
+    case 'drawing': return <DrawingBlock item={item} />;
     case 'timeline': return <Suspense fallback={<LoadingBlock item={item} />}><TimelineBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
     case 'diagram': return <Suspense fallback={<LoadingBlock item={item} />}><DiagramBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
     case 'document': return <Suspense fallback={<LoadingBlock item={item} />}><DocumentBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;

@@ -16,6 +16,10 @@ interface ColorPanelProps {
 
 function getBackgroundColor(item: BoardItem): string | undefined {
   switch (item.type) {
+    case 'document':
+    case 'embed':
+    case 'timeline':
+    case 'diagram':
     case 'note':
     case 'checklist':
     case 'link':
@@ -35,6 +39,10 @@ function updateBackgroundColor(item: BoardItem, color: string | undefined): Boar
     case 'text':
       return { ...item, color };
 
+    case 'document':
+    case 'embed':
+    case 'timeline':
+    case 'diagram':
     case 'note':
     case 'checklist':
     case 'link':

@@ -56,7 +56,10 @@ export default function TimelineBlock({ item, onUpdate, onDelete }: { item: Time
         <p className="text-xs text-theme-muted mt-2">Select a task to edit. In Schedule, drag a bar to move it or its right edge to resize.</p>
       </div>}
       {!item.tasks.length && <div className="planning-empty"><p className="font-medium mb-2">Turn your plan into milestones</p><p>Add a date, an outcome and a checklist. Switch to Schedule to plan durations.</p><button className="planning-button mt-4" onMouseDown={event => event.stopPropagation()} onClick={addTask}>+ First milestone</button></div>}
-      {item.mode === 'simple' ? <div className="p-5">{[...item.tasks].sort((a, b) => (a.start || '9999').localeCompare(b.start || '9999')).map(task => <article key={task.id} className="timeline-card">
+      {item.mode === 'simple' ? <div className="p-5">{item.tasks.map((task, index) => <article key={task.id} className="timeline-card pr-20">
+        <div className="absolute right-0 top-0 z-10 flex gap-1" onMouseDown={event => event.stopPropagation()}>
+          {([-1, 1] as const).map(direction => <button key={direction} className="planning-button" aria-label={`${direction === -1 ? 'Move up' : 'Move down'} ${task.title}`} disabled={!item.tasks[index + direction]} onClick={() => update(current => ({ ...current, tasks: reorderTasks(current.tasks, task.id, item.tasks[index + direction]!.id) }))}>{direction === -1 ? '↑' : '↓'}</button>)}
+        </div>
         <span className="timeline-dot" style={{ background: task.done ? '#059669' : task.color }} />
         <div className="text-xs font-medium text-theme-muted mb-1">{task.start || 'Unscheduled'}{task.end && task.end !== task.start ? ` → ${task.end}` : ''}</div>
         <div className="flex gap-2 items-center"><input type="checkbox" aria-label={`Complete ${task.title}`} checked={task.done} onMouseDown={event => event.stopPropagation()} onChange={() => updateTask(task.id, current => ({ ...current, done: !current.done }))} /><h3 className={`font-semibold text-sm ${task.done ? 'line-through opacity-50' : ''}`}>{task.title || 'Untitled task'}</h3>{editing && <button className="planning-button ml-auto" onMouseDown={event => event.stopPropagation()} onClick={() => setSelected(task.id)}>Edit task</button>}</div>

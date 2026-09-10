@@ -1,4 +1,15 @@
-export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem | DocumentItem | EmbedItem | CodeItem | DispenserItem | TimelineItem | DiagramItem;
+export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem | DocumentItem | EmbedItem | CodeItem | DispenserItem | TimelineItem | DiagramItem | DrawingItem;
+
+export interface DrawingItem extends BaseItem {
+  type: 'drawing';
+  points: { x: number; y: number; pressure?: number }[];
+  viewWidth: number;
+  viewHeight: number;
+  width: number;
+  height: number;
+  color: string;
+  strokeWidth: number;
+}
 
 export interface TimelineTask {
   id: string;
@@ -101,6 +112,7 @@ export interface TypographySettings {
 }
 
 export interface BaseItem {
+  color?: string;
   id: string;
   typography?: TypographySettings;
   x: number;

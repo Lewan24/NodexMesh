@@ -41,6 +41,7 @@ export function createEmptySibling(source: BoardItem): BoardItem | null {
     case "column":
       return { ...base, title: "Column", items: [] }
     case "frame":
+    case "drawing":
     case "dispenser":
     case "line":
       return null

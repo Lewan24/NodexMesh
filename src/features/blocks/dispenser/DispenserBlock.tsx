@@ -60,7 +60,7 @@ export default function DispenserBlock({
         <button
           type="button"
           aria-label="Drag a new note"
-          className="relative flex-1 min-h-12 rounded-md text-xs font-medium cursor-grab active:cursor-grabbing"
+          className="relative flex-1 min-h-12 item-rounded text-xs font-medium cursor-grab active:cursor-grabbing"
           style={{
             background: item.color,
             color: isLightColor(item.color) ? "#1e293b" : "#e8f4f4",
