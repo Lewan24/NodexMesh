@@ -11,6 +11,12 @@ export default function TimelineBlock({ item, onUpdate, onDelete }: { item: Time
   const [draggedRow, setDraggedRow] = useState<string | null>(null);
   const [dropRow, setDropRow] = useState<string | null>(null);
   const update = (fn: (current: TimelineItem) => TimelineItem) => onUpdate(current => current.type === 'timeline' ? fn(current) : current);
+  const resetHeight = () => {
+    update(current => ({
+      ...current,
+      height: undefined,
+    }));
+  };
   const updateTask = (id: string, fn: (task: TimelineTask) => TimelineTask) => update(current => ({ ...current, tasks: current.tasks.map(task => task.id === id ? fn(task) : task) }));
   const task = item.tasks.find(task => task.id === selected);
   const range = scheduleRange(item.tasks);
@@ -44,13 +50,81 @@ export default function TimelineBlock({ item, onUpdate, onDelete }: { item: Time
     element.addEventListener('pointermove', onMove); element.addEventListener('pointerup', finish); element.addEventListener('pointercancel', cancel);
   };
   return <ContentBlockShell item={item} onDelete={onDelete} title={<span className="flex items-center justify-between gap-2"><span className="truncate">{item.title}</span><span className="text-xs opacity-50">{item.tasks.filter(task => task.done).length}/{item.tasks.length} done</span></span>}>
-    <div className="planning-toolbar" onMouseDown={event => event.stopPropagation()}>
-      <button className="planning-button" aria-pressed={item.mode === 'simple'} onClick={() => update(current => ({ ...current, mode: 'simple' }))}>Milestones</button>
-      <button className="planning-button" aria-pressed={item.mode === 'schedule'} onClick={() => update(current => ({ ...current, mode: 'schedule' }))}>Schedule</button>
-      <button className="planning-button ml-auto" onClick={addTask}>+ Add task</button>
-      <button className="planning-button" aria-pressed={editing} onClick={() => setEditing(!editing)}>{editing ? 'Done editing' : 'Edit timeline'}</button>
+    <div
+      className="planning-toolbar"
+      onMouseDown={event =>
+        event.stopPropagation()
+      }
+    >
+      <button
+        className="planning-button"
+        aria-pressed={
+          item.mode === 'simple'
+        }
+        onClick={() =>
+          update(current => ({
+            ...current,
+            mode: 'simple',
+          }))
+        }
+      >
+        Milestones
+      </button>
+
+      <button
+        className="planning-button"
+        aria-pressed={
+          item.mode === 'schedule'
+        }
+        onClick={() =>
+          update(current => ({
+            ...current,
+            mode: 'schedule',
+          }))
+        }
+      >
+        Schedule
+      </button>
+
+      <div className="ml-auto flex items-center gap-2">
+        {item.height && (
+          <button
+            className="planning-button"
+            onClick={resetHeight}
+            title="Reset timeline to automatic height"
+          >
+            Auto-fit
+          </button>
+        )}
+
+        <button
+          className="planning-button"
+          onClick={addTask}
+        >
+          + Add task
+        </button>
+
+        <button
+          className="planning-button"
+          aria-pressed={editing}
+          onClick={() =>
+            setEditing(
+              !editing,
+            )
+          }
+        >
+          {editing
+            ? 'Done editing'
+            : 'Edit timeline'}
+        </button>
+      </div>
     </div>
-    <div data-wheel-scroll="true" className="flex-1 min-h-0 overflow-auto">
+    <div data-wheel-scroll={item.height ? "true" : "false"} 
+    className={`flex-1 min-h-0 ${
+      item.height
+        ? 'overflow-auto'
+        : 'overflow-visible'
+    }`}>
       {editing && <div className="p-3 border-b" style={{ borderColor: 'var(--color-border)' }} onMouseDown={event => event.stopPropagation()}>
         <input className="planning-input w-full" aria-label="Timeline title" value={item.title} onChange={event => update(current => ({ ...current, title: event.target.value }))} />
         <p className="text-xs text-theme-muted mt-2">Select a task to edit. In Schedule, drag a bar to move it or its right edge to resize.</p>
