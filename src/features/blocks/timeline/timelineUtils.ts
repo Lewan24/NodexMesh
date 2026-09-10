@@ -1,6 +1,15 @@
 import type { TimelineTask } from '@/entities/board/types';
 
 const DAY = 86400000;
+export function reorderTasks(tasks: TimelineTask[], sourceId: string, targetId: string): TimelineTask[] {
+  const from = tasks.findIndex(task => task.id === sourceId);
+  const to = tasks.findIndex(task => task.id === targetId);
+  if (from < 0 || to < 0 || from === to) return tasks;
+  const result = [...tasks];
+  const [task] = result.splice(from, 1);
+  result.splice(to, 0, task!);
+  return result;
+}
 export function dateDay(value: string): number | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const time = Date.parse(`${value}T00:00:00Z`);

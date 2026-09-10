@@ -57,6 +57,10 @@ import {
 import { isItemInsideFrame } from '@/features/canvas/utils/frameGeometry';
 
 import ItemInspector from '@/features/inspector/ItemInspector';
+import { useCanvasClipboard } from '../hooks/useCanvasClipboard';
+import CanvasContextMenu from './CanvasContextMenu';
+import type { CanvasMenuState } from './CanvasContextMenu';
+import './contextMenu.css';
 
 interface ToolDragGhostState extends ToolDragDetail {
   overCanvas: boolean;
@@ -127,6 +131,9 @@ export default function Canvas({
 }: CanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [snapEnabled, setSnapEnabled] = useState(true);
+  const [contextMenu, setContextMenu] = useState<CanvasMenuState | null>(null);
+  const pointerPosition = useRef<{ x: number; y: number } | null>(null);
+  const closeContextMenu = useCallback(() => setContextMenu(null), []);
   const [frameCapturePreviewIds, setFrameCapturePreviewIds] = useState<string[]>([]);
 
   const [toolDragGhost, setToolDragGhost] = useState<ToolDragGhostState | null>(null);
@@ -605,6 +612,12 @@ export default function Canvas({
     [selectColumnItem, onSelectTool],
   );
 
+  const pastePoint = useCallback(() => pointerPosition.current ?? {
+    x: snapValue(((containerRef.current?.clientWidth ?? 800) / 2 - panRef.current.x) / zoomRef.current),
+    y: snapValue(((containerRef.current?.clientHeight ?? 600) / 2 - panRef.current.y) / zoomRef.current),
+  }, [snapValue]);
+  const clipboard = useCanvasClipboard({ projectRef, selectedIdsRef, measuredSizes, pushHistory, onRestoreItems, onSelectItems, pastePoint, nestedSelection: selectedColumnItem, clearColumnSelection });
+
   useCanvasKeyboard({
     selectedIdsRef,
     onSelectItems,
@@ -613,6 +626,10 @@ export default function Canvas({
     requestDelete,
     clearColumnSelection,
     undo,
+    copy: clipboard.copy,
+    paste: clipboard.paste,
+    duplicate: clipboard.duplicate,
+    deleteNested: selectedColumnItem ? () => requestDelete(deleteSelectedColumnItem) : undefined,
   });
 
   const {
@@ -1048,7 +1065,35 @@ export default function Canvas({
       }}
       onMouseDownCapture={handleCanvasMouseDownCapture}
       onMouseDown={handleCanvasMouseDown}
+      onMouseMove={event => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        pointerPosition.current = { x: snapValue((event.clientX - rect.left - panRef.current.x) / zoomRef.current), y: snapValue((event.clientY - rect.top - panRef.current.y) / zoomRef.current) };
+      }}
+      onContextMenu={event => {
+        const target = event.target;
+        if (!(target instanceof Element) || target.closest('input,textarea,select,[contenteditable="true"],[role="dialog"],[role="menu"],[data-edit-bar],[data-item-inspector]')) return;
+        event.preventDefault(); event.stopPropagation();
+        const id = target.closest('[data-board-item-id]')?.getAttribute('data-board-item-id');
+        const childId = target.closest('[data-nested-item-id]')?.getAttribute('data-nested-item-id');
+        const column = project.items.find(item => item.id === id);
+        const child = column?.type === 'column' ? column.items.find(item => item.id === childId) : undefined;
+        if (child && id) { selectedIdsRef.current = []; handleSelectColumnItem(id, child); }
+        else {
+          if (id && !selectedIdsRef.current.includes(id)) { selectedIdsRef.current = [id]; onSelectItems([id]); }
+          if (!id) { selectedIdsRef.current = []; onSelectItems([]); }
+          clearColumnSelection();
+        }
+        onSelectTool('select');
+        const rect = event.currentTarget.getBoundingClientRect();
+        setContextMenu({ x: event.clientX, y: event.clientY, canvasX: snapValue((event.clientX - rect.left - pan.x) / zoom), canvasY: snapValue((event.clientY - rect.top - pan.y) / zoom), hasSelection: Boolean(id) });
+      }}
     >
+      {contextMenu && <CanvasContextMenu menu={contextMenu} count={selectedColumnItem ? 1 : selectedIds.length} canPaste={clipboard.canPaste}
+        allLocked={selectedColumnItem ? Boolean(selectedColumnItem.item.locked) : selectedItems.length > 0 && selectedItems.every(item => item.locked)} onClose={closeContextMenu}
+        onCopy={clipboard.copy} onDuplicate={clipboard.duplicate} onPaste={() => clipboard.paste({ x: contextMenu.canvasX, y: contextMenu.canvasY })}
+        onDelete={() => { if (selectedColumnItem) { requestDelete(deleteSelectedColumnItem); return; } const ids = [...selectedIdsRef.current]; requestDelete(() => { onDeleteItems(ids); onSelectItems([]); }, ids.length); }}
+        onLock={() => { pushHistory(); if (selectedColumnItem) { handleUpdateColumnItem(selectedColumnItem.columnId, item => ({ ...item, locked: !item.locked })); return; } const locked = !selectedItems.every(item => item.locked); onRestoreItems(project.items.map(item => selectedIds.includes(item.id) ? { ...item, locked } : item)); }}
+        onGroup={onGroupSelected} />}
       <CanvasLostPrompt
         visible={
           isLost &&

@@ -100,6 +100,7 @@ export default function CanvasFrame({
   return (
     <div
       data-board-item="true"
+      data-board-item-id={item.id}
       data-frame-id={item.id}
       className={`absolute ${
         isAnimating ? 'board-item-enter' : ''

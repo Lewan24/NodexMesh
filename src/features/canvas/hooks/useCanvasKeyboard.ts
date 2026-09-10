@@ -17,6 +17,10 @@ interface UseCanvasKeyboardOptions {
 
   clearColumnSelection: () => void;
   undo: () => void;
+  copy: () => void;
+  paste: () => void;
+  duplicate: () => void;
+  deleteNested?: () => void;
 }
 
 export function useCanvasKeyboard({
@@ -27,14 +31,24 @@ export function useCanvasKeyboard({
   requestDelete,
   clearColumnSelection,
   undo,
+  copy,
+  paste,
+  duplicate,
+  deleteNested,
 }: UseCanvasKeyboardOptions) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || (event.target instanceof Element && event.target.closest('[role="dialog"], [role="menu"]'))) return;
       const inField =
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement ||
         event.target instanceof HTMLSelectElement ||
         (event.target instanceof HTMLElement && event.target.isContentEditable);
+
+      if (!inField && (event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey) {
+        const action = { c: copy, v: paste, d: duplicate }[event.key.toLowerCase()];
+        if (action) { event.preventDefault(); action(); return; }
+      }
 
       if (event.key === 'Escape') {
         onSelectItems([]);
@@ -47,6 +61,8 @@ export function useCanvasKeyboard({
         event.key === 'Backspace';
 
       if (deletePressed && !inField) {
+        event.preventDefault();
+        if (deleteNested) { deleteNested(); return; }
         const ids = selectedIdsRef.current;
 
         if (ids && ids.length > 0) {
@@ -84,5 +100,9 @@ export function useCanvasKeyboard({
     requestDelete,
     clearColumnSelection,
     undo,
+    copy,
+    paste,
+    duplicate,
+    deleteNested,
   ]);
 }

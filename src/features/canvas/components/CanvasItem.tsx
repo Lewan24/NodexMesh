@@ -137,6 +137,7 @@ export default function CanvasItem({
   return (
     <div
       data-board-item="true"
+      data-board-item-id={item.id}
       className={`absolute ${
         isAnimating
           ? 'board-item-enter'

@@ -2,12 +2,14 @@ import { useState } from 'react';
 import type { TimelineItem, TimelineTask } from '@/entities/board/types';
 import type { BlockDeleteHandler, BlockUpdateHandler } from '../types';
 import ContentBlockShell from '../shared/ContentBlockShell';
-import { dateDay, dayDate, scheduleRange, shiftTask, taskRange, todayDate } from './timelineUtils';
+import { dateDay, dayDate, scheduleRange, shiftTask, taskRange, todayDate, reorderTasks } from './timelineUtils';
 import '../shared/planning.css';
 
 export default function TimelineBlock({ item, onUpdate, onDelete }: { item: TimelineItem; onUpdate: BlockUpdateHandler; onDelete: BlockDeleteHandler }) {
   const [editing, setEditing] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [draggedRow, setDraggedRow] = useState<string | null>(null);
+  const [dropRow, setDropRow] = useState<string | null>(null);
   const update = (fn: (current: TimelineItem) => TimelineItem) => onUpdate(current => current.type === 'timeline' ? fn(current) : current);
   const updateTask = (id: string, fn: (task: TimelineTask) => TimelineTask) => update(current => ({ ...current, tasks: current.tasks.map(task => task.id === id ? fn(task) : task) }));
   const task = item.tasks.find(task => task.id === selected);
@@ -63,7 +65,21 @@ export default function TimelineBlock({ item, onUpdate, onDelete }: { item: Time
         <div className="timeline-label font-semibold">Task / outcome</div>
         <div className="flex">{Array.from({ length: Math.ceil(range.days / 7) }, (_, index) => <div key={index} className="py-3 px-2 border-b border-r text-theme-muted shrink-0 overflow-hidden" style={{ width: dayWidth * 7, borderColor: 'var(--color-border)' }}>{dayDate(range.start + index * 7)}</div>)}</div>
         {item.tasks.map(task => { const dates = taskRange(task); return <div className="contents" key={task.id}>
-          <button className="timeline-label text-left" onMouseDown={event => event.stopPropagation()} onClick={() => { setSelected(task.id); setEditing(true); }}>{task.done ? '✓ ' : ''}{task.title}</button>
+          <div className="timeline-label flex items-center gap-1 !p-1" style={{ boxShadow: dropRow === task.id ? 'inset 0 2px var(--color-accent)' : undefined }} onMouseDown={event => event.stopPropagation()}
+            onDragOver={event => { if (draggedRow) { event.preventDefault(); setDropRow(task.id); } }}
+            onDrop={event => { if (draggedRow) { event.preventDefault(); event.stopPropagation(); update(current => ({ ...current, tasks: reorderTasks(current.tasks, draggedRow, task.id) })); setDraggedRow(null); setDropRow(null); } }}>
+            <button className="cursor-grab px-1" draggable aria-label={`Reorder ${task.title}`} title="Drag to reorder · Alt+↑ / Alt+↓" onDragStart={event => { event.stopPropagation(); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', task.id); setDraggedRow(task.id); }} onDragEnd={() => { setDraggedRow(null); setDropRow(null); }} onKeyDown={event => {
+              if (event.altKey && ['ArrowUp', 'ArrowDown'].includes(event.key)) {
+                event.preventDefault(); event.stopPropagation();
+                const target = item.tasks[item.tasks.findIndex(current => current.id === task.id) + (event.key === 'ArrowUp' ? -1 : 1)];
+                if (target) update(current => ({ ...current, tasks: reorderTasks(current.tasks, task.id, target.id) }));
+              }
+            }}>⠿</button>
+            <button className="truncate flex-1 text-left py-2" onClick={() => { setSelected(task.id); setEditing(true); }}>{task.done ? '✓ ' : ''}{task.title}</button>
+            <div className="flex flex-col text-[10px]">
+              {([-1, 1] as const).map(direction => <button key={direction} className="px-1 disabled:opacity-20 cursor-pointer" aria-label={`${direction === -1 ? 'Move up' : 'Move down'} ${task.title}`} disabled={!item.tasks[item.tasks.findIndex(current => current.id === task.id) + direction]} onClick={() => { const target = item.tasks[item.tasks.findIndex(current => current.id === task.id) + direction]; if (target) update(current => ({ ...current, tasks: reorderTasks(current.tasks, task.id, target.id) })); }}>{direction === -1 ? '↑' : '↓'}</button>)}
+            </div>
+          </div>
           <div className="timeline-track" style={{ backgroundSize: `${dayWidth * 7}px 100%` }}>
             {dates ? <div role="button" tabIndex={0} aria-label={`Move ${task.title}`} title={`${task.start} → ${task.end || task.start} · ${dates.end - dates.start + 1} days`} className="timeline-bar" style={{ left: (dates.start - range.start) * dayWidth, width: (dates.end - dates.start + 1) * dayWidth, background: task.color, opacity: task.done ? .5 : 1 }} onMouseDown={event => event.stopPropagation()} onPointerDown={event => moveBar(event, task, false)} onClick={() => { if (editing) setSelected(task.id); }} onKeyDown={event => { if (editing && ['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); updateTask(task.id, current => shiftTask(current, event.key === 'ArrowLeft' ? -1 : 1, event.shiftKey)); } }}>
               <span className="block truncate px-2 leading-7 pointer-events-none">{task.title}</span>

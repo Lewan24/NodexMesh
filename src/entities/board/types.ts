@@ -15,7 +15,7 @@ export interface TimelineItem extends BaseItem {
   mode: 'simple' | 'schedule';
   tasks: TimelineTask[];
 }
-export type DiagramShape = 'process' | 'decision' | 'terminal' | 'database';
+export type DiagramShape = 'process' | 'decision' | 'terminal' | 'database' | 'input' | 'document' | 'service';
 export interface DiagramNode {
   id: string;
   position: { x: number; y: number };
@@ -71,6 +71,11 @@ export type FontFamily =
   | 'arial'
   | 'georgia'
   | 'verdana'
+  | 'caveat'
+  | 'kalam'
+  | 'patrick-hand'
+  | 'comic-neue'
+  | 'architects-daughter'
   | 'trebuchet';
 
 export type TextAlign = 'left' | 'center' | 'right';

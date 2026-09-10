@@ -3,6 +3,7 @@ import type { EmbedItem } from "@/entities/board/types"
 import type { BlockUpdateHandler } from "../types"
 import ContentBlockShell from "../shared/ContentBlockShell"
 import { getEmbedUrl } from "./embedUrl"
+import YouTubeVideo from './YouTubeVideo';
 
 export default function EmbedBlock({
   item,
@@ -18,10 +19,19 @@ export default function EmbedBlock({
   const [draft, setDraft] = useState(item.url)
   const [error, setError] = useState("")
   const src = getEmbedUrl(item.url)
+  const videoId = src?.match(/^https:\/\/www\.youtube-nocookie\.com\/embed\/([\w-]{11})$/)?.[1];
   const update = (patch: Partial<EmbedItem>) =>
     onUpdate((current) =>
       current.type === "embed" ? { ...current, ...patch } : current,
     )
+  if (videoId && !editing) return <section className="group relative rounded-xl shadow-xl overflow-hidden flex flex-col" style={{ width: item.width, height: item.height, background: 'var(--color-surface)', color: 'var(--color-text-primary)' }}>
+    {item.showLabel && <header className="px-4 py-2 text-sm font-medium cursor-grab">{item.title || 'YouTube video'}</header>}
+    <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity" onMouseDown={event => event.stopPropagation()}>
+      <button className="rounded bg-black/75 text-white text-xs px-2 py-1" onClick={() => { setDraft(item.url); setEditing(true); }}>Settings</button>
+      <button className="rounded bg-black/75 text-white text-xs px-2 py-1" aria-label="Delete block" onClick={onDelete}>×</button>
+    </div>
+    <div className="flex-1 min-h-0"><YouTubeVideo videoId={videoId} title={item.title} /></div>
+  </section>;
   return (
     <ContentBlockShell
       item={item}

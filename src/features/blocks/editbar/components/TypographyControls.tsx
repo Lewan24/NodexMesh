@@ -6,6 +6,7 @@ import type {
 } from '@/entities/board/types';
 
 import {
+  DEFAULT_FONT_FAMILY,
   FONT_FAMILIES,
   FONT_SIZE_PRESETS,
   MAX_FONT_SIZE,
@@ -79,8 +80,7 @@ export default function TypographyControls({
 
       <select
         value={
-          typography?.fontFamily ??
-          'sans'
+          typography?.fontFamily ?? DEFAULT_FONT_FAMILY
         }
         onChange={event =>
           update({

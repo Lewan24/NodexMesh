@@ -9,6 +9,11 @@ export const FONT_FAMILIES: {
   label: string;
   css: string;
 }[] = [
+  { value: 'caveat', label: 'Caveat · Handwriting', css: '"Caveat", cursive' },
+  { value: 'kalam', label: 'Kalam · Sketch', css: '"Kalam", cursive' },
+  { value: 'patrick-hand', label: 'Patrick Hand · Notes', css: '"Patrick Hand", cursive' },
+  { value: 'comic-neue', label: 'Comic Neue · Playful', css: '"Comic Neue", cursive' },
+  { value: 'architects-daughter', label: 'Architects Daughter · Draft', css: '"Architects Daughter", cursive' },
   {
     value: 'sans',
     label: 'Sans',
@@ -58,14 +63,23 @@ export const FONT_SIZE_PRESETS = [
 export const MIN_FONT_SIZE = 8;
 export const MAX_FONT_SIZE = 96;
 
+export const DEFAULT_FONT_FAMILY: FontFamily =
+  'comic-neue';
+
 export function getFontFamilyCss(
   family?: FontFamily,
 ): string {
+  const resolvedFamily =
+    family ??
+    DEFAULT_FONT_FAMILY;
+
   return (
     FONT_FAMILIES.find(
-      option => option.value === family,
+      option =>
+        option.value ===
+        resolvedFamily,
     )?.css ??
-    FONT_FAMILIES[0]!.css
+    'Inter, ui-sans-serif, system-ui, sans-serif'
   );
 }
 

@@ -18,27 +18,33 @@ export default function DocumentBlock({
   const [editing, setEditing] = useState(false)
   const autoHeight = item.autoHeight ?? false
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [StarterKit.configure({ link: { openOnClick: false } })],
     content: item.content,
     editable: editing,
     shouldRerenderOnTransaction: true,
-    onUpdate: ({ editor }) =>
+    onUpdate: ({ editor }) => {
+      if (editor.isDestroyed || !editor.schema) return;
+      // Capture HTML now: React may execute the updater after this editor is destroyed.
+      const content = editor.getHTML();
       onUpdate((current) =>
         current.type === "document"
-          ? { ...current, content: editor.getHTML() }
+          ? { ...current, content }
           : current,
-      ),
+      );
+    },
   })
   useEffect(() => {
-    if (editor && editor.getHTML() !== item.content)
+    if (editor && !editor.isDestroyed && editor.schema && editor.getHTML() !== item.content)
       editor.commands.setContent(item.content, { emitUpdate: false })
   }, [editor, item.content])
   useEffect(() => {
-    editor?.setEditable(editing, false)
-    if (editing) editor?.commands.focus()
+    if (!editor || editor.isDestroyed || !editor.schema) return;
+    editor.setEditable(editing, false)
+    if (editing) editor.commands.focus()
   }, [editor, editing])
 
-  const commands = editor
+  const commands = editor && !editor.isDestroyed && editor.schema
     ? [
         {
           label: "B",
