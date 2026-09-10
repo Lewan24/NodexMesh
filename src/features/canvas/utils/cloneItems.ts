@@ -22,7 +22,7 @@ export function cloneItems(items: BoardItem[], dx: number, dy: number, firstZInd
   };
   return [...items].sort((a, b) => a.zIndex - b.zIndex).map((item, index) => {
     const cloned = copy(item) as BoardItem;
-    const positioned = { ...cloned, x: cloned.x + dx, y: cloned.y + dy, zIndex: firstZIndex + index, locked: false };
+    const positioned = { ...cloned, x: cloned.x + dx, y: cloned.y + dy, zIndex: cloned.type === 'frame' ? 0 : firstZIndex + index, locked: false };
     return positioned.type === 'line' ? { ...positioned, x2: positioned.x2 + dx, y2: positioned.y2 + dy } : positioned;
   });
 }

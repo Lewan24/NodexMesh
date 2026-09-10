@@ -112,7 +112,7 @@ export default function CanvasFrame({
       style={{
         left: item.x,
         top: item.y,
-        zIndex: item.zIndex,
+        zIndex: 0,
         transform: isDragging
           ? `
               perspective(900px)

@@ -120,13 +120,7 @@ export function useKanbanDrag({
           moveEvent.clientX,
           moveEvent.clientY,
         );
-        const rect = board.getBoundingClientRect();
-
-        const inside =
-          moveEvent.clientX >= rect.left - 24 &&
-          moveEvent.clientX <= rect.right + 24 &&
-          moveEvent.clientY >= rect.top - 24 &&
-          moveEvent.clientY <= rect.bottom + 24;
+        const inside = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest('[data-kanban-id]')?.getAttribute('data-kanban-id') === board.dataset.kanbanId;
 
         if (!inside) {
           dropTargetRef.current = null;
@@ -156,13 +150,7 @@ export function useKanbanDrag({
           upEvent.clientY,
         );
 
-        const rect = board.getBoundingClientRect();
-
-        const inside =
-          upEvent.clientX >= rect.left - 24 &&
-          upEvent.clientX <= rect.right + 24 &&
-          upEvent.clientY >= rect.top - 24 &&
-          upEvent.clientY <= rect.bottom + 24;
+        const inside = document.elementFromPoint(upEvent.clientX, upEvent.clientY)?.closest('[data-kanban-id]')?.getAttribute('data-kanban-id') === board.dataset.kanbanId;
 
         const sourceColumn = columnsRef.current.find(
           column => column.id === sourceColumnId,

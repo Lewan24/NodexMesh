@@ -33,7 +33,7 @@ function detachLines(items: BoardItem[], removedIds: string[]): BoardItem[] {
 }
 
 function getNextZIndex(items: BoardItem[]): number {
-  return Math.max(0, ...items.map(item => item.zIndex)) + 1;
+  return Math.max(0, ...items.filter(item => item.type !== 'frame').map(item => item.zIndex)) + 1;
 }
 
 function normalizeLayers(items: BoardItem[]): BoardItem[] {
@@ -49,20 +49,21 @@ function normalizeLayers(items: BoardItem[]): BoardItem[] {
     }));
 }
 
-function changeItemLayer(
+export function changeItemLayer(
   items: BoardItem[],
   id: string,
   action: LayerAction,
 ): BoardItem[] {
-  const normalized = normalizeLayers(items);
+  const frames = items.filter(item => item.type === 'frame').map(item => ({ ...item, zIndex: 0 }));
+  const normalized = normalizeLayers(items.filter(item => item.type !== 'frame'));
   const currentIndex = normalized.findIndex(item => item.id === id);
 
-  if (currentIndex === -1) return items;
+  if (currentIndex === -1) return [...frames, ...normalized];
 
   const next = [...normalized];
 
   if (action === 'forward') {
-    if (currentIndex === next.length - 1) return normalized;
+    if (currentIndex === next.length - 1) return [...frames, ...normalized];
 
     [next[currentIndex], next[currentIndex + 1]] = [
       next[currentIndex + 1]!,
@@ -71,7 +72,7 @@ function changeItemLayer(
   }
 
   if (action === 'backward') {
-    if (currentIndex === 0) return normalized;
+    if (currentIndex === 0) return [...frames, ...normalized];
 
     [next[currentIndex], next[currentIndex - 1]] = [
       next[currentIndex - 1]!,
@@ -80,23 +81,23 @@ function changeItemLayer(
   }
 
   if (action === 'front') {
-    if (currentIndex === next.length - 1) return normalized;
+    if (currentIndex === next.length - 1) return [...frames, ...normalized];
 
     const [target] = next.splice(currentIndex, 1);
     if (target) next.push(target);
   }
 
   if (action === 'back') {
-    if (currentIndex === 0) return normalized;
+    if (currentIndex === 0) return [...frames, ...normalized];
 
     const [target] = next.splice(currentIndex, 1);
     if (target) next.unshift(target);
   }
 
-  return next.map((item, index) => ({
+  return [...frames, ...next.map((item, index) => ({
     ...item,
     zIndex: index + 1,
-  }));
+  }))];
 }
 
 export function useProjectItems({
@@ -108,7 +109,7 @@ export function useProjectItems({
       setProjects(previous =>
         previous.map(project =>
           project.id === activeProjectId
-            ? { ...project, items: update(project.items) }
+            ? { ...project, items: update(project.items).map(item => item.type === 'frame' ? { ...item, zIndex: 0 } : item) }
             : project,
         ),
       );
@@ -122,7 +123,7 @@ export function useProjectItems({
         ...items,
         {
           ...item,
-          zIndex: getNextZIndex(items),
+          zIndex: item.type === 'frame' ? 0 : getNextZIndex(items),
         },
       ]);
     },

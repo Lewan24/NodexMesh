@@ -155,7 +155,7 @@ export default function CanvasItem({
         left: renderedItem.x,
         top: renderedItem.y,
         // Keep connection handles accessible above already attached lines.
-        zIndex: isSelected && item.type !== 'line' ? 100000 : item.zIndex,
+        zIndex: isSelected && item.type !== 'line' ? 100000 : Math.max(1, item.zIndex),
         cursor:
           item.locked
             ? 'default'
@@ -273,6 +273,7 @@ export default function CanvasItem({
       >
         <BlockRenderer
           item={renderedItem}
+          onTaskDroppedOutside={onChecklistDropOutside}
           isSelected={isSelected}
           isDragOver={isDragOver}
           selectedColumnItemId={selectedColumnItemId}

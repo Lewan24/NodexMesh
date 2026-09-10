@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BoardItem, ColumnItem } from '@/entities/board/types';
 
+import type { TaskDroppedOutsideHandler } from '../types';
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import ColumnItemRow from '@/features/blocks/column/ColumnItemRow';
 
@@ -23,6 +24,7 @@ interface ColumnBlockProps {
   zoom?: number;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
+  onTaskDroppedOutside?: TaskDroppedOutsideHandler;
   onEjectItem?: (ejectedItem: BoardItem, clientX?: number, clientY?: number) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
   onRequestDelete?: (execute: () => void) => void;
@@ -78,6 +80,7 @@ export default function ColumnBlock({
   onUpdate,
   onDelete,
   onEjectItem,
+  onTaskDroppedOutside,
   onSelectColumnItem,
   onRequestDelete,
   searchActive = false,
@@ -617,6 +620,9 @@ export default function ColumnBlock({
                   >
                     <BlockRenderer
                       item={prepareNestedItemForColumn(nestedItem, getNestedItemWidth(nestedItem))}
+                      onTaskDroppedOutside={onTaskDroppedOutside}
+                      onEntryDroppedOutside={onTaskDroppedOutside ? (task, x, y) => onTaskDroppedOutside(nestedItem.id, task, x, y) : undefined}
+                      onCardDroppedOutside={onTaskDroppedOutside ? (task, x, y) => onTaskDroppedOutside(nestedItem.id, task, x, y) : undefined}
                       isInsideColumn
                       isSelected={false}
                       onUpdate={updater => updateNested(nestedItem.id, updater)}

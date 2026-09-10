@@ -32,6 +32,9 @@ const { cloneItems, copyOrigin } = await server.ssrLoadModule('/src/features/can
 const { diagramTemplate, layoutDiagram, removeDiagramNodes } = await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts')
 const { loadProjects, saveProjects } = await server.ssrLoadModule('/src/features/projects/storage/projectStorage.ts')
 const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure } = await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts')
+const { insertTask } = await server.ssrLoadModule('/src/features/canvas/hooks/useCrossItemDrop.ts')
+const { changeItemLayer } = await server.ssrLoadModule('/src/features/projects/hooks/useProjectItems.ts')
+const { getArrowHeadPoints } = await server.ssrLoadModule('/src/features/blocks/line/utils/lineRenderGeometry.ts')
 await server.close()
 
 test("new blocks survive JSON persistence and have usable default dimensions", () => {
@@ -323,5 +326,45 @@ test("smoothing damps jitter without overshoot and renders dots and reversals", 
     const outline = drawingOutline(pathPoints, 3);
     assert.ok(outline.endsWith('Z'));
     assert.ok(!/NaN|Infinity/.test(outline));
+  }
+});
+
+
+test("tasks transfer between checklist and Kanban without losing completion or identity", () => {
+  const task = { id: 'task', text: 'Ship feature', done: true };
+  const board = createCanvasItem('kanban', 0, 0);
+  const next = insertTask(board, task, 0, board.columns[1].id);
+  assert.deepEqual(next.columns[1].cards, [task]);
+  assert.equal(board.columns[1].cards.length, 0);
+  const checklist = createCanvasItem('checklist', 0, 0);
+  const restored = insertTask(checklist, next.columns[1].cards[0], 99);
+  assert.deepEqual(restored.entries, [task]);
+  assert.equal(insertTask(restored, task, 0).entries.length, 1);
+  const locked = { ...checklist, locked: true };
+  assert.equal(insertTask(locked, task, 0), locked);
+});
+
+test("frames remain at layer zero through all layer operations and copies", () => {
+  const frame = { ...createCanvasItem('frame', 0, 0), zIndex: 99 };
+  const note = createCanvasItem('note', 0, 0);
+  const text = { ...createCanvasItem('text', 0, 0), zIndex: 2 };
+  for (const action of ['front', 'back', 'forward', 'backward']) {
+    for (const id of [frame.id, note.id]) {
+      const items = changeItemLayer([note, frame, text], id, action);
+      assert.equal(items.find(item => item.type === 'frame').zIndex, 0);
+      assert.ok(items.filter(item => item.type !== 'frame').every(item => item.zIndex > 0));
+    }
+  }
+  assert.equal(createCanvasItem('frame', 0, 0).zIndex, 0);
+  assert.equal(cloneItems([frame], 20, 20, 100)[0].zIndex, 0);
+});
+
+test("filled arrowhead geometry scales with line thickness in both directions", () => {
+  for (const angle of [0, Math.PI, Math.PI / 3]) {
+    const thin = getArrowHeadPoints(50, 50, angle, 1);
+    const thick = getArrowHeadPoints(50, 50, angle, 8);
+    const span = head => Math.hypot(head.firstX - head.secondX, head.firstY - head.secondY);
+    assert.ok(span(thick) > span(thin) * 2);
+    assert.equal(thick.tipX, 50); assert.equal(thick.tipY, 50);
   }
 });

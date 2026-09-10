@@ -584,6 +584,7 @@ export default function Canvas({
     handleChecklistDropOutside,
     handleKanbanCardDropOutside,
   } = useCrossItemDrop({
+    pushHistory,
     projectRef,
     onUpdateItem,
   });

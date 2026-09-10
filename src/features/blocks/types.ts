@@ -30,3 +30,4 @@ export type CardDroppedOutsideHandler = (
   clientX: number,
   clientY: number,
 ) => boolean;
+export type TaskDroppedOutsideHandler = (sourceId: string, task: import('@/entities/board/types').ChecklistEntry, clientX: number, clientY: number) => boolean;

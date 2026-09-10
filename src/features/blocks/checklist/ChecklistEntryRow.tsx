@@ -62,7 +62,7 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
       <DragHandle
         compact
         color={`${textColor}90`}
-        title="Drag to reorder or move to another checklist"
+        title="Drag to reorder or move to Checklist / Kanban"
         onMouseDown={onDragHandleMouseDown}
       />
 

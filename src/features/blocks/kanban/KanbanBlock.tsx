@@ -7,6 +7,7 @@ import type {
   KanbanItem,
 } from '@/entities/board/types';
 
+import CustomColorInput from '../editbar/components/CustomColorInput';
 import KanbanCardItem from '@/features/blocks/kanban/KanbanCardItem';
 
 import {
@@ -54,6 +55,7 @@ export default function KanbanBlock({
   onDelete,
   onCardDroppedOutside,
 }: KanbanBlockProps) {
+  const [columnSettings, setColumnSettings] = useState<string | null>(null);
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [dropColumn, setDropColumn] = useState<string | null>(null);
   const [addAtTop, setAddAtTop] = useState(false);
@@ -529,10 +531,7 @@ export default function KanbanBlock({
                   onDragEnd={() => { setDraggedColumn(null); setDropColumn(null); }}
                   onKeyDown={event => { if (event.altKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); const target = item.columns[columnIndex + (event.key === 'ArrowLeft' ? -1 : 1)]; if (target) reorderColumn(column.id, target.id); } }}>⠿</button>
                 {([-1, 1] as const).map(direction => <button key={direction} aria-label={`Move ${column.title} ${direction === -1 ? 'left' : 'right'}`} className="text-xs disabled:opacity-20" style={{ color: mutedColor }} disabled={!item.columns[columnIndex + direction]} onMouseDown={event => event.stopPropagation()} onClick={() => reorderColumn(column.id, item.columns[columnIndex + direction]!.id)}>{direction === -1 ? '‹' : '›'}</button>)}
-                <div
-                  className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: column.color }}
-                />
+                <button aria-label={`Settings for ${column.title}`} title="Column settings" aria-expanded={columnSettings === column.id} className="w-5 h-5 shrink-0 cursor-pointer border border-current rounded-sm" style={{ color: column.color, background: `${column.color}22` }} onMouseDown={event => event.stopPropagation()} onClick={() => setColumnSettings(columnSettings === column.id ? null : column.id)}>⚙</button>
 
                 {editingColumnId === column.id ? (
                   <input
@@ -608,6 +607,12 @@ export default function KanbanBlock({
                 )}
               </div>
 
+              {columnSettings === column.id && <div className="p-2 mb-2 border rounded-sm space-y-2 text-xs" style={{ order: -2, background: 'var(--color-surface)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border)' }} onMouseDown={event => event.stopPropagation()}>
+                <label className="block">Column name<input aria-label="Column name" className="w-full bg-transparent border-b outline-none py-1" value={column.title} onChange={event => renameColumn(column.id, event.target.value)} /></label>
+                <span className="block">Title color</span>
+                <CustomColorInput title="Column title color" value={column.color} onChange={color => updateColumns(columns => columns.map(current => current.id === column.id ? { ...current, color } : current))} />
+                <button className="px-2 py-1 hover:bg-violet-500/10" onClick={() => setColumnSettings(null)}>Done</button>
+              </div>}
               <button className="text-xs text-left py-1.5 px-2 mb-1 hover:bg-violet-500/10" style={{ color: mutedColor, order: -2 }} aria-label={`Add card at top of ${column.title}`} onMouseDown={event => event.stopPropagation()} onClick={() => { setAddAtTop(true); setAddingCardColumnId(column.id); }}>+ Add card</button>
               {/* Cards */}
 

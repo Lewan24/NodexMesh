@@ -119,6 +119,7 @@ export function createCanvasItem(
       return {
         ...base,
         type: 'frame',
+        zIndex: 0,
         title: 'Group',
         width:
           typeof extra?.width === 'number'
