@@ -1,8 +1,9 @@
+import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BoardItem, ChecklistEntry, ChecklistItem } from '@/entities/board/types';
 import ChecklistEntryRow from '@/features/blocks/checklist/ChecklistEntryRow';
-import { createChecklistEntry, isLightColor } from '@/features/blocks/checklist/utils/checklistUtils';
+import { createChecklistEntry } from '@/features/blocks/checklist/utils/checklistUtils';
 import { useChecklistDrag } from '@/features/blocks/checklist/hooks/useChecklistDrag';
 import { getTypographyStyle } from '../typography/typographyUtils';
 
@@ -41,7 +42,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
     if (addingEntry) addInputRef.current?.focus();
   }, [addingEntry]);
 
-  const light = isLightColor(item.color);
+  const { background, light } = useCardAppearance(item.color);
   const textColor = light ? '#1e293b' : '#e8f4f4';
   const mutedColor = light ? 'rgba(30,41,59,0.45)' : 'rgba(232,244,244,0.4)';
   const accentColor = light ? 'var(--color-accent)' : '#e8f4f4';
@@ -127,7 +128,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
         data-checklist-id={item.id}
         className="item-rounded shadow-xl overflow-auto" 
         style={{ 
-          backgroundColor: item.color,
+          backgroundColor: background,
           height: item.height ? '100%' : undefined,
         }}>
         {item.topColor && 
@@ -142,7 +143,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
               <input 
                 autoFocus
                 className="w-full bg-transparent outline-none font-bold text-base" 
-                style={{ color: textColor }} 
+                style={{ ...typographyStyle, color: textColor }}
                 value={item.title} 
                 onChange={(event) => update({ title: event.target.value })} 
                 onBlur={() => setEditingTitle(false)} 
@@ -259,7 +260,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                     rowRefs.current.delete(index);
                   }
                 }}
-                style={{ ...typographyStyle }}>
+                style={{ fontSize: 14, ...typographyStyle }}>
                   <ChecklistEntryRow
                     entry={entry}
                     isDragging={draggingIndex === index}
@@ -302,7 +303,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                 onBlur={commitNewEntry}
                 placeholder="New item…" 
                 className="flex-1 bg-transparent outline-none text-sm" 
-                style={{ color: textColor }} 
+                style={{ ...typographyStyle, color: textColor }}
               />
             </div>
           ) : (

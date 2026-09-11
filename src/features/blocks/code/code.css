@@ -1,0 +1,8 @@
+.code-content .hljs { color: inherit; }
+.code-content[data-light=true] .hljs-keyword, .code-content[data-light=true] .hljs-selector-tag { color: #a626a4; }
+.code-content[data-light=true] .hljs-string, .code-content[data-light=true] .hljs-regexp { color: #287a35; }
+.code-content[data-light=true] .hljs-number, .code-content[data-light=true] .hljs-literal { color: #986801; }
+.code-content[data-light=true] .hljs-title, .code-content[data-light=true] .hljs-title.function_ { color: #005cc5; }
+.code-content[data-light=true] .hljs-comment { color: #687783; }
+.code-content[data-light=true] .hljs-attr, .code-content[data-light=true] .hljs-variable { color: #9a3b1b; }
+.code-content[data-light=true] .hljs-built_in, .code-content[data-light=true] .hljs-type { color: #865900; }

@@ -1,3 +1,4 @@
+import { getFontFamilyCss } from '../typography/typographyUtils';
 import { useState } from 'react';
 
 import type { LineItem } from '@/entities/board/types';
@@ -261,10 +262,10 @@ export default function LineBlock({
               'center center',
 
             fontSize:
-              `${item.labelFontSize ?? 11}px`,
+              `${item.typography?.fontSize ?? item.labelFontSize ?? 11}px`,
 
             fontFamily:
-              item.typography?.fontFamily,
+              getFontFamilyCss(item.typography?.fontFamily),
 
             fontWeight:
               item.typography?.bold
@@ -284,7 +285,7 @@ export default function LineBlock({
             border:
               '1px solid var(--color-border-soft)',
 
-            borderRadius: 7,
+            borderRadius: 2,
 
             padding: '2px 6px',
 

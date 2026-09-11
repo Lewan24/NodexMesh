@@ -191,6 +191,7 @@ export default function Canvas({
   );
 
   const { pushHistory, undo } = useCanvasHistory({
+    projectId: project.id,
     getItems: getCurrentItems,
     restoreItems: onRestoreItems,
   });

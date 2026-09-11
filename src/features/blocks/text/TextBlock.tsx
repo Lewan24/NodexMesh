@@ -1,10 +1,10 @@
+import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BoardItem, TextItem } from '@/entities/board/types';
 
 import {
   DEFAULT_TEXT_CARD_WIDTH,
-  isLightColor,
   TEXT_SIZE_STYLES,
 } from '@/features/blocks/text/utils/textUtils';
 import { getTypographyStyle } from '../typography/typographyUtils';
@@ -71,10 +71,7 @@ export default function TextBlock({
 
   const isCard = Boolean(item.color);
 
-  const light =
-    isCard && item.color
-      ? isLightColor(item.color)
-      : true;
+  const { background, light } = useCardAppearance(item.color);
 
   const textColor = isCard
     ? light
@@ -122,7 +119,7 @@ export default function TextBlock({
         style={
           isCard
             ? {
-                backgroundColor: item.color,
+                backgroundColor: background,
                 padding: '14px 18px',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                 height: item.height ? '100%' : undefined,

@@ -77,7 +77,7 @@ export default function EditBar({
         ? ITEM_TYPE_LABELS[single.type] ?? single.type
         : '';
 
-  const hasStyleControls = !!single && !isMulti && !['code', 'dispenser'].includes(single.type);
+  const hasStyleControls = !!single && !isMulti && single.type !== 'dispenser';
 
   return (
     <div

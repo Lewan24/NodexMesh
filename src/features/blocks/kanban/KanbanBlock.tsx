@@ -1,3 +1,4 @@
+import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useRef, useState } from 'react';
 
 import type {
@@ -13,11 +14,9 @@ import KanbanCardItem from '@/features/blocks/kanban/KanbanCardItem';
 import {
   createKanbanCard,
   createKanbanColumn,
-  DEFAULT_KANBAN_BACKGROUND,
   DEFAULT_KANBAN_COLUMN_WIDTH,
   MIN_KANBAN_COLUMN_WIDTH,
   MAX_KANBAN_COLUMN_WIDTH,
-  isLightColor,
 } from '@/features/blocks/kanban/utils/kanbanUtils';
 
 import { useKanbanDrag } from '@/features/blocks/kanban/hooks/useKanbanDrag';
@@ -74,13 +73,11 @@ export default function KanbanBlock({
   const columnsRef = useRef(item.columns);
   columnsRef.current = item.columns;
 
-  const background = item.color ?? DEFAULT_KANBAN_BACKGROUND;
-
-  const isLight = isLightColor(background);
+  const { background, light: isLight } = useCardAppearance(item.color);
 
   const textColor = isLight ? '#1e293b' : '#ffffff';
-  const mutedColor = isLight ? '#64748b' : '#5a8a94';
-  const doneColor = isLight ? 'rgba(30,41,59,0.4)' : '#3a6070';
+  const mutedColor = isLight ? '#64748b' : '#b9aec9';
+  const doneColor = isLight ? 'rgba(30,41,59,0.4)' : '#9f92b0';
   const cardBackground = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(7,19,23,0.5)';
   const cardBorder = isLight ? 'rgba(0,0,0,0.08)' : '#1a3040';
   const cardBorderHover = 'rgba(124,58,237,0.35)';
@@ -330,7 +327,7 @@ export default function KanbanBlock({
         ref={boardRef}
         data-wheel-scroll={item.height ? "true" : "false"}
         data-kanban-id={item.id}
-        className="item-rounded border shadow-xl overflow-scroll"
+        className="item-rounded shadow-xl overflow-scroll"
         style={{
           width: item.width
             ? '100%'
@@ -355,7 +352,7 @@ export default function KanbanBlock({
         {/* Header */}
 
         <div
-          className="flex items-center justify-between px-4 py-3 border-b cursor-grab active:cursor-grabbing rounded-t-2xl"
+          className="flex items-center justify-between px-4 py-3 border-b cursor-grab active:cursor-grabbing rounded-t-sm"
           style={{
             backgroundColor: background,
             borderColor,
@@ -713,6 +710,7 @@ export default function KanbanBlock({
                     placeholder="Card title…"
                     className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border transition-colors"
                     style={{
+                      ...typographyStyle,
                       backgroundColor: cardBackground,
                       borderColor: accentColor,
                       color: textColor,

@@ -81,7 +81,7 @@ export default function DiagramBlock({ item, onUpdate, onDelete }: { item: Diagr
           onInit={instance => { flow.current = instance; }}
           onNodesChange={changes => {
             const next = applyNodeChanges(changes, nodes); setNodes(next);
-            if (changes.some(change => change.type === 'position' && change.dragging === false)) save(next, edges);
+            if (changes.some(change => change.type === 'position' && change.dragging !== true)) save(next, edges);
           }}
           onEdgesChange={changes => setEdges(applyEdgeChanges(changes, edges))}
           onConnect={connection => {
@@ -122,9 +122,8 @@ export default function DiagramBlock({ item, onUpdate, onDelete }: { item: Diagr
     {editing ? <>
       <div className="planning-empty">Diagram is open in the editor.</div>
       {createPortal(<div className="fixed inset-0 flex items-center justify-center bg-black/45 p-4" style={{ zIndex: 200000 }} onMouseDown={event => event.stopPropagation()} onClick={event => event.stopPropagation()}>
-        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={`Edit ${item.title}`} tabIndex={-1} className="diagram-editor" style={{ ...getTypographyStyle(item), '--block-font-size': item.typography?.fontSize ? `${item.typography.fontSize}px` : undefined } as CSSProperties} data-wheel-scroll="true" onKeyDown={event => {
-          event.stopPropagation();
-          if (event.key === 'Escape') { event.preventDefault(); setEditing(false); }
+        <div ref={dialogRef} role="dialog" data-board-history="true" aria-modal="true" aria-label={`Edit ${item.title}`} tabIndex={-1} className="diagram-editor" style={{ ...getTypographyStyle(item), '--block-font-size': item.typography?.fontSize ? `${item.typography.fontSize}px` : undefined } as CSSProperties} data-wheel-scroll="true" onKeyDownCapture={event => {
+          if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); setEditing(false); }
           if (event.key === 'Tab') {
             const fields = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled),input,select,[tabindex="0"]'));
             const first = fields[0]; const last = fields[fields.length - 1];

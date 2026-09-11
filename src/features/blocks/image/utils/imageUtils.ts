@@ -1,6 +1,6 @@
 export const DEFAULT_IMAGE_WIDTH = 220;
 export const DEFAULT_IMAGE_HEIGHT = 178;
-export const DEFAULT_IMAGE_BACKGROUND = '#08171d';
+export const DEFAULT_IMAGE_BACKGROUND = '#ffffff';
 
 export function isLightColor(hex: string): boolean {
   const red = parseInt(hex.slice(1, 3), 16);

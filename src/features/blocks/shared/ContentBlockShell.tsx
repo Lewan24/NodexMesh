@@ -1,7 +1,7 @@
 import type { ReactNode, CSSProperties } from "react"
 import type { BaseItem } from "@/entities/board/types"
 import { getFontFamilyCss } from '../typography/typographyUtils';
-import { isLightColor } from '../kanban/utils/kanbanUtils';
+import { useCardAppearance } from './cardAppearance';
 
 export default function ContentBlockShell({
   item,
@@ -18,9 +18,10 @@ export default function ContentBlockShell({
   autoHeight?: boolean
   minHeight?: number
 }) {
+  const { background, textColor } = useCardAppearance(item.color);
   return (
     <section
-      className="content-block-shell item-rounded shadow-xl border flex flex-col overflow-hidden"
+      className="content-block-shell item-rounded shadow-xl flex flex-col overflow-hidden"
       style={{
         width: item.width,
 
@@ -31,21 +32,8 @@ export default function ContentBlockShell({
 
         minHeight,
 
-        background:
-          item.color ??
-          "var(--color-surface)",
-
-        borderColor:
-          "var(--color-border)",
-
-        color:
-          item.color
-            ? (
-                isLightColor(item.color)
-                  ? '#1e293b'
-                  : '#f8fafc'
-              )
-            : "var(--color-text-primary)",
+        background,
+        color: textColor,
 
         fontFamily:
           getFontFamilyCss(
@@ -53,16 +41,16 @@ export default function ContentBlockShell({
           ),
 
         fontSize:
-          item.typography?.fontSize,
+          item.typography?.fontSize ?? 14,
 
+        '--block-font-weight': item.typography?.bold === undefined ? undefined : item.typography.bold ? 700 : 400,
         '--block-font-size':
           item.typography?.fontSize
             ? `${item.typography.fontSize}px`
             : undefined,
 
         '--block-background':
-          item.color ??
-          'var(--color-surface)',
+          background,
 
         fontWeight:
           item.typography?.bold

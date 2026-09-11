@@ -183,13 +183,14 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
           type="number"
           min={8}
           max={48}
-          value={item.labelFontSize ?? 11}
+          value={item.typography?.fontSize ?? item.labelFontSize ?? 11}
           onChange={event => {
             const value = Number(event.target.value);
 
             if (!Number.isFinite(value)) return;
 
             update({
+              typography: { ...item.typography, fontSize: Math.max(8, Math.min(48, value)) },
               labelFontSize: Math.max(
                 8,
                 Math.min(48, value),
