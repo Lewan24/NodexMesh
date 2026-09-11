@@ -1,3 +1,4 @@
+import { createCanvasItem } from '../utils/createCanvasItem';
 import { useCallback } from 'react';
 import type { RefObject } from 'react';
 import type { BoardItem, ChecklistEntry } from '@/entities/board/types';
@@ -25,17 +26,40 @@ function updateNested(item: BoardItem, id: string, update: (item: BoardItem) => 
   return item.type === 'column' ? { ...item, items: item.items.map(child => updateNested(child, id, update)) } : item;
 }
 
-export function useCrossItemDrop({ projectRef, onUpdateItem, pushHistory }: {
+export function createTaskChecklist(task: ChecklistEntry, x: number, y: number) {
+  const item = createCanvasItem('checklist', x, y);
+  return item?.type === 'checklist' ? { ...item, entries: [{ ...task }] } : null;
+}
+
+export function useCrossItemDrop({ projectRef, onUpdateItem, pushHistory, canvasRef, panRef, zoomRef, snapValue, onAddItem }: {
   projectRef: RefObject<Project>;
+  canvasRef: RefObject<HTMLDivElement | null>;
+  panRef: RefObject<{ x: number; y: number }>;
+  zoomRef: RefObject<number>;
+  snapValue: (value: number) => number;
+  onAddItem: (item: BoardItem) => void;
   pushHistory: () => void;
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
 }) {
   // Both task types share id, text and done, so transfers preserve identity and completion.
   const dropTask = useCallback((sourceId: string, task: ChecklistEntry, clientX: number, clientY: number): boolean => {
+    if (!projectRef.current.items.some(item => findItem(item, sourceId))) return false;
     const hit = document.elementFromPoint(clientX, clientY);
     const container = hit?.closest<HTMLElement>('[data-checklist-id], [data-kanban-id]');
     const targetId = container?.dataset.checklistId ?? container?.dataset.kanbanId;
-    if (!container || !targetId || targetId === sourceId) return false;
+    if (!container || !targetId) {
+      const canvas = canvasRef.current;
+      if (!canvas || !hit || !canvas.contains(hit) || hit.closest('[data-board-item-id], [data-edit-bar], [data-item-inspector], [role="dialog"], [role="menu"], button, input, textarea, select')) return false;
+      const rect = canvas.getBoundingClientRect();
+      const x = snapValue((clientX - rect.left - panRef.current.x) / zoomRef.current);
+      const y = snapValue((clientY - rect.top - panRef.current.y) / zoomRef.current);
+      const checklist = createTaskChecklist(task, x, y);
+      if (!checklist) return false;
+      pushHistory();
+      onAddItem(checklist);
+      return true;
+    }
+    if (targetId === sourceId) return false;
     const root = projectRef.current.items.find(item => findItem(item, targetId));
     const target = root && findItem(root, targetId);
     if (!root || !target || !['checklist', 'kanban'].includes(target.type)) return false;
@@ -49,6 +73,6 @@ export function useCrossItemDrop({ projectRef, onUpdateItem, pushHistory }: {
     pushHistory();
     onUpdateItem(root.id, current => updateNested(current, targetId, item => insertTask(item, task, index, column?.id)));
     return true;
-  }, [projectRef, onUpdateItem, pushHistory]);
+  }, [projectRef, onUpdateItem, pushHistory, canvasRef, panRef, zoomRef, snapValue, onAddItem]);
   return { handleChecklistDropOutside: dropTask, handleKanbanCardDropOutside: dropTask };
 }

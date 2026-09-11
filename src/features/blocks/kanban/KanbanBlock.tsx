@@ -748,7 +748,8 @@ export default function KanbanBlock({
               )}
 
               <div
-                className="absolute top-0 -right-2 w-4 h-full cursor-col-resize z-20 group/resize"
+                data-manual-resize="true"
+                    className="absolute top-0 -right-2 w-4 h-full cursor-col-resize z-20 group/resize"
                 onMouseDown={event => handleColumnResizeStart(column.id, event)}
                 onDoubleClick={event => {
                   event.stopPropagation();

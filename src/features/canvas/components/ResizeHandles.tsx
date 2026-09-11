@@ -24,24 +24,28 @@ export default function ResizeHandles({ visible, onResizeStart }: ResizeHandlesP
       {/* Edges */}
 
       <div
+        data-manual-resize="true"
         className="absolute z-40 cursor-ns-resize"
         style={{ top: -EDGE_SIZE / 2, left: CORNER_SIZE, right: CORNER_SIZE, height: EDGE_SIZE }}
         onMouseDown={start('n')}
       />
 
       <div
+        data-manual-resize="true"
         className="absolute z-40 cursor-ew-resize"
         style={{ top: CORNER_SIZE, bottom: CORNER_SIZE, right: -EDGE_SIZE / 2, width: EDGE_SIZE }}
         onMouseDown={start('e')}
       />
 
       <div
+        data-manual-resize="true"
         className="absolute z-40 cursor-ns-resize"
         style={{ bottom: -EDGE_SIZE / 2, left: CORNER_SIZE, right: CORNER_SIZE, height: EDGE_SIZE }}
         onMouseDown={start('s')}
       />
 
       <div
+        data-manual-resize="true"
         className="absolute z-40 cursor-ew-resize"
         style={{ top: CORNER_SIZE, bottom: CORNER_SIZE, left: -EDGE_SIZE / 2, width: EDGE_SIZE }}
         onMouseDown={start('w')}
@@ -99,6 +103,7 @@ function ResizeCorner({
 }: ResizeCornerProps) {
   return (
     <div
+      data-manual-resize="true"
       className="absolute z-50 flex items-center justify-center"
       style={{ top, right, bottom, left, width: CORNER_SIZE, height: CORNER_SIZE, cursor }}
       onMouseDown={onMouseDown}

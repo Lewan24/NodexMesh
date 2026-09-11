@@ -25,6 +25,7 @@ interface UseItemResizeOptions {
   snapValue: (value: number) => number;
   pushHistory: () => void;
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
+  onResizeStart?: (itemId: string) => void;
   onResizeEnd?: (itemId: string) => void;
   onFramePreviewChange?: (ids: string[]) => void;
   onFrameResizeEnd?: (frameId: string, containedIds: string[]) => void;
@@ -38,20 +39,20 @@ interface MinSize {
 function getMinSize(item: BoardItem): MinSize {
   switch (item.type) {
     case 'drawing': return { width: 12, height: 12 };
-    case 'timeline': return { width: 520, height: 340 };
-    case 'diagram': return { width: 520, height: 360 };
+    case 'timeline': return { width: 528, height: 340 };
+    case 'diagram': return { width: 528, height: 360 };
     case 'document': return { width: 320, height: 240 };
     case 'embed': return { width: 320, height: 200 };
-    case 'code': return { width: 280, height: 160 };
-    case 'dispenser': return { width: 180, height: 160 };
+    case 'code': return { width: 288, height: 160 };
+    case 'dispenser': return { width: 192, height: 160 };
     case 'frame':
       return { width: MIN_FRAME_WIDTH, height: MIN_FRAME_HEIGHT };
 
     case 'column':
-      return { width: 220, height: 120 };
+      return { width: 224, height: 120 };
 
     case 'kanban':
-      return { width: 280, height: 180 };
+      return { width: 288, height: 180 };
 
     case 'image':
       return { width: MIN_BLOCK_WIDTH, height: MIN_IMAGE_HEIGHT };
@@ -68,6 +69,7 @@ export function useItemResize({
   snapValue,
   pushHistory,
   onUpdateItem,
+  onResizeStart,
   onResizeEnd,
   onFramePreviewChange,
   onFrameResizeEnd,
@@ -89,6 +91,7 @@ export function useItemResize({
       event.preventDefault();
       event.stopPropagation();
 
+      onResizeStart?.(id);
       const measured = measuredSizes.get(id);
       const startWidth = item.width ?? measured?.width ?? 220;
       const startHeight = item.height ?? measured?.height ?? 120;
@@ -199,8 +202,8 @@ export function useItemResize({
         document.removeEventListener('mousemove', handleMove);
         document.removeEventListener('mouseup', handleUp);
 
+        onResizeEnd?.(id);
         if (moved) {
-          onResizeEnd?.(id);
 
           if (item.type === 'frame') {
             onFrameResizeEnd?.(id, framePreviewIds);
@@ -219,6 +222,7 @@ export function useItemResize({
       snapValue,
       pushHistory,
       onUpdateItem,
+      onResizeStart,
       onResizeEnd,
       onFramePreviewChange,
       onFrameResizeEnd,

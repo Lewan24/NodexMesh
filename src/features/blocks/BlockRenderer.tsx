@@ -5,7 +5,7 @@ import ChecklistBlock from '@/features/blocks/checklist/ChecklistBlock';
 import ColumnBlock from '@/features/blocks/column/ColumnBlock';
 import FrameBlock from '@/features/blocks/frame/FrameBlock';
 import ImageBlock from '@/features/blocks/image/ImageBlock';
-import KanbanBlock from '@/features/blocks/kanban/KanbanBlock';
+const KanbanBlock = lazy(() => import('./kanban/KanbanBlock'));
 import LineBlock from '@/features/blocks/line/LineBlock';
 import LinkBlock from '@/features/blocks/link/LinkBlock';
 import NoteBlock from '@/features/blocks/note/NoteBlock';
@@ -21,7 +21,7 @@ const DiagramBlock = lazy(() => import('./diagram/DiagramBlock'));
 
 function LoadingBlock({ item }: { item: BoardItem }) {
   return (
-    <div role="status" className="item-rounded border p-4 text-sm"
+    <div data-block-loading="true" role="status" className="item-rounded border p-4 text-sm"
       style={{ width: item.width, height: item.height ?? (item.type === 'document' ? 600 : 280),
         borderColor: 'var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text-muted)' }}>
       Loading…
@@ -102,12 +102,14 @@ export default function BlockRenderer({
 
     case 'kanban':
       return (
+        <Suspense fallback={<LoadingBlock item={item} />}>
         <KanbanBlock
           item={item}
           onUpdate={onUpdate}
           onDelete={onDelete}
           onCardDroppedOutside={onCardDroppedOutside}
         />
+        </Suspense>
       );
 
     case 'image':

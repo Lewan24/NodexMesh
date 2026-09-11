@@ -121,9 +121,6 @@ export default function ImageBlock({
                 draggable={false}
               />
 
-              {!isSticker && (
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-              )}
             </>
           ) : (
             <div
