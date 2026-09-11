@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { autoGrowthLayout } from '../utils/autoGrowthLayout';
+import { useCallback, useRef, useState } from 'react';
 
 import type { RefObject } from 'react';
 
@@ -13,6 +14,7 @@ interface ProjectLike {
 
 interface UseCanvasMeasurementsOptions {
   projectRef: RefObject<ProjectLike>;
+  suppressAutoLayout: RefObject<boolean>;
 
   onUpdateItem: (
     id: string,
@@ -22,38 +24,34 @@ interface UseCanvasMeasurementsOptions {
 
 export function useCanvasMeasurements({
   projectRef,
+  suppressAutoLayout,
   onUpdateItem,
 }: UseCanvasMeasurementsOptions) {
   const [measuredSizes, setMeasuredSizes] = useState<SizeMap>(
     () => new Map(),
   );
 
+  const sizesRef = useRef<SizeMap>(new Map());
+  const geometryRef = useRef(new Map<string, { width?: number; height?: number; x: number; y: number }>());
   const handleItemResize = useCallback(
-    (
-      itemId: string,
-      width: number,
-      height: number,
-    ) => {
-      setMeasuredSizes(previous => {
-        const current = previous.get(itemId);
-
-        if (
-          current &&
-          current.width === width &&
-          current.height === height
-        ) {
-          return previous;
-        }
-
-        const next = new Map(previous);
-
-        next.set(itemId, {
-          width,
-          height,
+    (itemId: string, width: number, height: number) => {
+      const before = sizesRef.current;
+      const prior = before.get(itemId);
+      const changed = projectRef.current.items.find(item => item.id === itemId);
+      const previousGeometry = geometryRef.current.get(itemId);
+      if (changed) geometryRef.current.set(itemId, { width: changed.width, height: changed.height, x: changed.x, y: changed.y });
+      if (prior && prior.width === width && prior.height === height) return;
+      const after = new Map(before).set(itemId, { width, height });
+      sizesRef.current = after;
+      setMeasuredSizes(after);
+      const explicitResize = !changed || !previousGeometry || changed.width !== previousGeometry.width || changed.height !== previousGeometry.height;
+      if (!suppressAutoLayout.current && !explicitResize) {
+        const patches = autoGrowthLayout(projectRef.current.items, itemId, before, after);
+        for (const [id, patch] of patches) onUpdateItem(id, current => {
+          if (patch.y !== undefined && current.y >= patch.y) return current;
+          return { ...current, ...patch, ...(patch.height !== undefined ? { height: Math.max(current.height ?? 0, patch.height) } : {}) } as BoardItem;
         });
-
-        return next;
-      });
+      }
 
       const items = projectRef.current.items;
 
@@ -66,7 +64,7 @@ export function useCanvasMeasurements({
       }
 
       for (const item of items) {
-        if (item.type !== 'frame') {
+        if (item.type !== 'frame' || item.locked) {
           continue;
         }
 
@@ -123,7 +121,7 @@ export function useCanvasMeasurements({
         });
       }
     },
-    [onUpdateItem, projectRef],
+    [onUpdateItem, projectRef, suppressAutoLayout],
   );
 
   return {

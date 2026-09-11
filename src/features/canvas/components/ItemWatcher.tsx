@@ -31,7 +31,7 @@ export default function ItemWatcher({
     const observer = new ResizeObserver(entries => {
       const entry = entries[0];
 
-      if (!entry) {
+      if (!entry || element.querySelector('[data-block-loading="true"]')) {
         return;
       }
 

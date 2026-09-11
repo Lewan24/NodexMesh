@@ -644,6 +644,7 @@ export default function ColumnBlock({
 
                 {isHorizontal && (
                   <div
+                    data-manual-resize="true"
                     className="absolute top-0 -right-2 w-4 h-full cursor-col-resize z-30 group/resize"
                     onMouseDown={event =>
                       handleNestedWidthResizeStart(

@@ -17,6 +17,8 @@ export interface ItemRect extends ItemSize {
 
 export function getApproxItemSize(item: BoardItem): ItemSize {
   switch (item.type) {
+    case 'drawing': return { width: item.width, height: item.height };
+    case 'line': return { width: Math.abs(item.x2 - item.x), height: Math.abs(item.y2 - item.y) };
     case 'timeline': return { width: item.width ?? ITEM_WIDTH.timeline, height: item.height ?? 520 };
     case 'diagram': return { width: item.width ?? ITEM_WIDTH.diagram, height: item.height ?? 560 };
     case 'document': return { width: item.width ?? ITEM_WIDTH.document, height: item.height ?? 600 };
@@ -25,44 +27,44 @@ export function getApproxItemSize(item: BoardItem): ItemSize {
     case 'dispenser': return { width: item.width ?? ITEM_WIDTH.dispenser, height: item.height ?? 200 };
     case 'note':
       return {
-        width: item.width ?? 220,
+        width: item.width ?? ITEM_WIDTH.note,
         height: item.height ?? 170,
       };
 
     case 'kanban':
       return {
-        width: item.columns.length * 184 + 24,
-        height: 340,
+        width: item.width ?? ITEM_WIDTH.kanban,
+        height: item.height ?? 340,
       };
 
     case 'image':
       return {
-        width: item.width ?? 260,
+        width: item.width ?? ITEM_WIDTH.image,
         height: (item.imgHeight ?? 178) + 56,
       };
 
     case 'link':
       return {
-        width: item.width ?? 240,
+        width: item.width ?? ITEM_WIDTH.link,
         height: 150,
       };
 
     case 'text':
       return {
-        width: item.width ?? 200,
+        width: item.width ?? ITEM_WIDTH.text,
         height: 60,
       };
 
     case 'checklist':
       return {
-        width: item.width ?? 230,
-        height: 200,
+        width: item.width ?? ITEM_WIDTH.checklist,
+        height: item.height ?? 200,
       };
 
     case 'column':
       return {
         width: item.width,
-        height: 260,
+        height: item.height ?? 260,
       };
 
     case 'frame':

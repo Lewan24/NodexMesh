@@ -32,12 +32,14 @@ const { cloneItems, copyOrigin } = await server.ssrLoadModule('/src/features/can
 const { diagramTemplate, layoutDiagram, removeDiagramNodes } = await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts')
 const { loadProjects, saveProjects } = await server.ssrLoadModule('/src/features/projects/storage/projectStorage.ts')
 const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure, joinDrawings, drawingStrokes } = await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts')
-const { insertTask } = await server.ssrLoadModule('/src/features/canvas/hooks/useCrossItemDrop.ts')
+const { insertTask, createTaskChecklist } = await server.ssrLoadModule('/src/features/canvas/hooks/useCrossItemDrop.ts')
 const { changeItemLayer } = await server.ssrLoadModule('/src/features/projects/hooks/useProjectItems.ts')
 const { getArrowHeadPoints } = await server.ssrLoadModule('/src/features/blocks/line/utils/lineRenderGeometry.ts')
 const { isFrameMovementLocked } = await server.ssrLoadModule('/src/features/canvas/utils/frameGeometry.ts')
 const { ItemHistory } = await server.ssrLoadModule('/src/features/canvas/utils/itemHistory.ts')
 const { resolveCardColor } = await server.ssrLoadModule('/src/features/blocks/shared/cardAppearance.ts')
+const { autoGrowthLayout, growsAutomatically } = await server.ssrLoadModule('/src/features/canvas/utils/autoGrowthLayout.ts')
+const { ITEM_WIDTH, CANVAS_GRID_SIZE } = await server.ssrLoadModule('/src/features/canvas/constants.ts')
 await server.close()
 
 test("new blocks survive JSON persistence and have usable default dimensions", () => {
@@ -483,4 +485,53 @@ test('native text undo does not leave an empty board undo step', () => {
   const typed = [{ ...moved[0], content: 'Text' }]; history.observe(typed);
   history.observe(moved);
   assert.deepEqual(history.undo(moved), initial);
+});
+
+
+test('default item widths span complete grid cells', () => {
+  for (const [type, width] of Object.entries(ITEM_WIDTH)) assert.equal(width % CANVAS_GRID_SIZE, 0, type);
+  assert.equal(ITEM_WIDTH.document / ITEM_WIDTH.note, 1.5);
+});
+
+test('automatic growth pushes a vertical chain while preserving other columns and overlaps', () => {
+  const source = createCanvasItem('checklist', 0, 0);
+  const first = { ...createCanvasItem('note', 0, 128), height: 80 };
+  const second = { ...createCanvasItem('note', 0, 224), height: 80 };
+  const side = createCanvasItem('note', 400, 128);
+  const overlapping = createCanvasItem('note', 0, 48);
+  const before = new Map([[source.id, { width: 320, height: 100 }], [first.id, { width: 320, height: 80 }], [second.id, { width: 320, height: 80 }]]);
+  const after = new Map(before).set(source.id, { width: 320, height: 180 });
+  const patches = autoGrowthLayout([source, first, second, side, overlapping], source.id, before, after);
+  assert.equal(patches.get(first.id).y, 196);
+  assert.equal(patches.get(second.id).y, 292);
+  assert.equal(patches.has(side.id), false);
+  assert.equal(patches.has(overlapping.id), false);
+  assert.equal(autoGrowthLayout([source, first], source.id, before, before).size, 0);
+  assert.equal(autoGrowthLayout([source, first], source.id, new Map(), after).size, 0);
+  assert.equal(autoGrowthLayout([{ ...source, height: 180 }, first], source.id, before, after).size, 0);
+  assert.equal(autoGrowthLayout([source, { ...first, locked: true }], source.id, before, after).size, 0);
+  assert.equal(growsAutomatically({ ...createCanvasItem('document', 0, 0), autoHeight: true }), true);
+  assert.equal(growsAutomatically({ ...createCanvasItem('document', 0, 0), autoHeight: false }), false);
+});
+
+test('automatic growth expands containing frames and preserves standalone line geometry', () => {
+  const source = createCanvasItem('checklist', 0, 0);
+  const line = { ...createCanvasItem('line', 50, 150), x2: 20, y2: 130 };
+  const frame = { ...createCanvasItem('frame', -16, -16), width: 400, height: 200 };
+  const before = new Map([[source.id, { width: 320, height: 100 }]]);
+  const after = new Map(before).set(source.id, { width: 320, height: 180 });
+  const patches = autoGrowthLayout([source, line, frame], source.id, before, after);
+  assert.equal(patches.get(line.id).y, 216);
+  assert.equal(patches.get(line.id).y2, 196);
+  assert.ok(patches.get(frame.id).height > frame.height);
+});
+
+test('dropping a task on canvas creates an independent checklist with its completion', () => {
+  const task = { id: 'kept-id', text: 'Ship release', done: true };
+  const checklist = createTaskChecklist(task, -32, 160);
+  assert.equal(checklist.type, 'checklist');
+  assert.equal(checklist.x, -32); assert.equal(checklist.y, 160);
+  assert.deepEqual(checklist.entries, [task]);
+  assert.notEqual(checklist.entries[0], task);
+  assert.equal(checklist.color, '#ffffff');
 });

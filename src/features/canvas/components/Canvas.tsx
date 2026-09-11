@@ -190,10 +190,33 @@ export default function Canvas({
     [],
   );
 
+  const suppressAutoLayout = useRef(false);
+  const resumeAutoLayout = useCallback(() => {
+    requestAnimationFrame(() => requestAnimationFrame(() => { suppressAutoLayout.current = false; }));
+  }, []);
+  useEffect(() => {
+    let resizing = false;
+    const start = (event: MouseEvent) => {
+      if (event.button === 0 && event.target instanceof Element && event.target.closest('[data-manual-resize]') && containerRef.current?.contains(event.target)) {
+        resizing = true;
+        suppressAutoLayout.current = true;
+      }
+    };
+    const end = () => { if (resizing) { resizing = false; resumeAutoLayout(); } };
+    window.addEventListener('mousedown', start, true);
+    window.addEventListener('mouseup', end);
+    window.addEventListener('blur', end);
+    return () => { window.removeEventListener('mousedown', start, true); window.removeEventListener('mouseup', end); window.removeEventListener('blur', end); };
+  }, [resumeAutoLayout]);
+  const restoreHistoryItems = useCallback((items: BoardItem[]) => {
+    suppressAutoLayout.current = true;
+    onRestoreItems(items);
+    resumeAutoLayout();
+  }, [onRestoreItems, resumeAutoLayout]);
   const { pushHistory, undo } = useCanvasHistory({
     projectId: project.id,
     getItems: getCurrentItems,
-    restoreItems: onRestoreItems,
+    restoreItems: restoreHistoryItems,
   });
 
   const {
@@ -210,10 +233,13 @@ export default function Canvas({
     handleItemResize: handleMeasuredItemResize,
   } = useCanvasMeasurements({
     projectRef,
+    suppressAutoLayout,
     onUpdateItem,
   });
 
   const { handleItemResize } = useItemResize({
+    onResizeStart: () => { suppressAutoLayout.current = true; },
+    onResizeEnd: resumeAutoLayout,
     projectRef,
     zoomRef,
     measuredSizes,
@@ -585,6 +611,11 @@ export default function Canvas({
     handleChecklistDropOutside,
     handleKanbanCardDropOutside,
   } = useCrossItemDrop({
+    canvasRef: containerRef,
+    panRef,
+    zoomRef,
+    snapValue,
+    onAddItem,
     pushHistory,
     projectRef,
     onUpdateItem,
@@ -1078,8 +1109,8 @@ export default function Canvas({
         `,
 
         backgroundPosition: `
-          ${majorBackgroundX}px ${majorBackgroundY}px,
-          ${minorBackgroundX}px ${minorBackgroundY}px
+          ${majorBackgroundX - majorGridInterval / 2}px ${majorBackgroundY - majorGridInterval / 2}px,
+          ${minorBackgroundX - minorGridInterval / 2}px ${minorBackgroundY - minorGridInterval / 2}px
         `,
       }}
       onMouseDownCapture={handleCanvasMouseDownCapture}
