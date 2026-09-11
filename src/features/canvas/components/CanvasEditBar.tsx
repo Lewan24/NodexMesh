@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { BoardItem } from '@/entities/board/types';
 
 import EditBar from '@/features/blocks/editbar/EditBar';
@@ -6,6 +7,7 @@ import type { SelectedColumnItem } from '@/features/canvas/hooks/useColumnSelect
 
 interface CanvasEditBarProps {
   selectedItems: BoardItem[];
+  frameControls?: ReactNode;
   onJoinDrawings?: () => void;
   selectedColumnItem: SelectedColumnItem | null;
 
@@ -40,6 +42,7 @@ interface CanvasEditBarProps {
 
 export default function CanvasEditBar({
   selectedItems,
+  frameControls,
   onJoinDrawings,
   selectedColumnItem,
   onUpdateItem,
@@ -68,6 +71,7 @@ export default function CanvasEditBar({
   return (
     <EditBar
       selectedItems={selectedItems}
+      frameControls={selectedColumnItem ? undefined : frameControls}
       onJoinDrawings={onJoinDrawings}
       onUpdateItem={onUpdateItem}
       onDeleteItems={ids =>

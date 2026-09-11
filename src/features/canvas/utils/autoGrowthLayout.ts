@@ -28,7 +28,7 @@ export function autoGrowthLayout(items: BoardItem[], sourceId: string, before: S
     const old = original.get(growing.id)!;
     const current = rect(growing);
     for (const item of items) {
-      if (item.id === growing.id || item.type === 'frame' || item.locked || (item.type === 'line' && (item.startItemId || item.endItemId))) continue;
+      if ((item.frameId ?? null) !== (growing.frameId ?? null) || item.id === growing.id || item.type === 'frame' || item.locked || (item.type === 'line' && (item.startItemId || item.endItemId))) continue;
       const targetBefore = original.get(item.id)!;
       const target = rect(item);
       if (targetBefore.y <= old.y + .5 || targetBefore.y < old.bottom - .5 || target.x >= current.x + current.width || target.x + target.width <= current.x) continue;
@@ -40,15 +40,13 @@ export function autoGrowthLayout(items: BoardItem[], sourceId: string, before: S
       queue.push(item);
     }
   }
-  // Expand frames that originally contained affected cards, without moving their other contents.
+  // Expand only the owning frames, without moving their other contents.
   const affected = new Set([sourceId, ...patches.keys()]);
   for (const frame of items) {
     if (frame.type !== 'frame' || frame.locked) continue;
     let height = frame.height;
     for (const item of items) {
-      if (!affected.has(item.id)) continue;
-      const old = original.get(item.id)!;
-      if (old.x < frame.x || old.right > frame.x + frame.width || old.y < frame.y || old.bottom > frame.y + frame.height) continue;
+      if (!affected.has(item.id) || item.frameId !== frame.id) continue;
       const next = rect(item);
       height = Math.max(height, next.y + next.height - frame.y + FRAME_AUTO_EXPAND_PADDING);
     }

@@ -64,7 +64,7 @@ export function useCanvasMeasurements({
       }
 
       for (const item of items) {
-        if (item.type !== 'frame' || item.locked) {
+        if (item.type !== 'frame' || item.locked || changedItem.frameId !== item.id) {
           continue;
         }
 

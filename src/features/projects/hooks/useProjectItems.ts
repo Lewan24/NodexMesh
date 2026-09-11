@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { normalizeFrameMembership, isItemInsideFrame } from '@/features/canvas/utils/frameGeometry';
 
 import type { Dispatch, SetStateAction } from 'react';
 
@@ -109,7 +110,7 @@ export function useProjectItems({
       setProjects(previous =>
         previous.map(project =>
           project.id === activeProjectId
-            ? { ...project, items: update(project.items).map(item => item.type === 'frame' ? { ...item, zIndex: 0 } : item) }
+            ? { ...project, items: normalizeFrameMembership(update(project.items)).map(item => item.type === 'frame' ? { ...item, zIndex: 0 } : item) }
             : project,
         ),
       );
@@ -120,7 +121,8 @@ export function useProjectItems({
   const addItem = useCallback(
     (item: BoardItem) => {
       updateItems(items => [
-        ...items,
+        ...items.map(existing => item.type === 'frame' && existing.type !== 'frame' && !existing.frameId && !existing.locked && isItemInsideFrame(existing, item)
+          ? { ...existing, frameId: item.id } : existing),
         {
           ...item,
           zIndex: item.type === 'frame' ? 0 : getNextZIndex(items),

@@ -10,7 +10,7 @@ import type { ToolType } from '@/entities/board/toolTypes';
 import { DROPPABLE_ON_COLUMN } from '@/features/canvas/constants';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import { getItemSize } from '@/features/canvas/utils/itemGeometry';
-import { isItemInsideFrame, isFrameMovementLocked } from '../utils/frameGeometry';
+import { isFrameMovementLocked } from '../utils/frameGeometry';
 import { AlignmentGuide, findAlignmentSnap } from '../utils/alignmentGuides';
 import { snapToGrid } from '../utils/gridSnap';
 
@@ -190,7 +190,7 @@ export function useItemDrag({
             if (dragIds.includes(child.id)) return false;
             if (captureMap.has(child.id)) return false;
 
-            return isItemInsideFrame(child, frame, measuredSizes);
+            return child.type !== 'frame' && child.frameId === frame.id;
           });
 
           for (const child of children) {

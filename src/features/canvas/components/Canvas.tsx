@@ -117,7 +117,7 @@ export default function Canvas({
   onSelectTool,
   onSelectItems,
   onGroupSelected,
-  onAddItem,
+  onAddItem: addItemRaw,
   onUpdateItem,
   onDeleteItem,
   onDeleteItems,
@@ -236,6 +236,13 @@ export default function Canvas({
     suppressAutoLayout,
     onUpdateItem,
   });
+
+  const onAddItem = useCallback((item: BoardItem) => {
+    if (item.type !== 'frame') { addItemRaw(item); return; }
+    onRestoreItems([...projectRef.current.items.map(child =>
+      child.type !== 'frame' && !child.frameId && !child.locked && isItemInsideFrame(child, item, measuredSizes)
+        ? { ...child, frameId: item.id } : child), { ...item, frameId: null, zIndex: 0 }]);
+  }, [addItemRaw, onRestoreItems, measuredSizes]);
 
   const { handleItemResize } = useItemResize({
     onResizeStart: () => { suppressAutoLayout.current = true; },
@@ -1023,11 +1030,7 @@ export default function Canvas({
           matchedItem =>
             matchedItem.id !==
               frame.id &&
-            isItemInsideFrame(
-              matchedItem,
-              frame,
-              measuredSizes,
-            ),
+            (matchedItem.frameId === frame.id),
         );
 
       if (containsMatch) {
@@ -1369,6 +1372,32 @@ export default function Canvas({
       />
 
       <CanvasEditBar
+        frameControls={selectedItems.length > 0 && selectedItems.every(item => item.type !== 'frame') ? (
+          <label className="flex items-center gap-2 text-sm whitespace-nowrap">
+            Frame
+            <select aria-label="Assign to frame" className="h-8 max-w-40 rounded-sm px-2" style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}
+              disabled={selectedItems.some(item => item.locked)}
+              value={selectedItems.every(item => item.frameId === selectedItems[0]!.frameId) ? selectedItems[0]!.frameId ?? '' : '__mixed'}
+              onChange={event => {
+                const frameId = event.target.value || null;
+                pushHistory();
+                onRestoreItems(project.items.map(item => safeSelectedIds.includes(item.id) && !item.locked ? { ...item, frameId } : item));
+              }}>
+              <option value="__mixed" disabled>Mixed frames</option>
+              <option value="">No frame</option>
+              {project.items.filter(item => item.type === 'frame').map(frame => <option key={frame.id} value={frame.id}>{frame.title || 'Frame'} · {frame.id.slice(0, 4)}</option>)}
+            </select>
+          </label>
+        ) : selectedItems.length === 1 && selectedItems[0]!.type === 'frame' ? (
+          <button className="h-8 px-2 text-sm hover:bg-violet-500/20" disabled={selectedItems[0]!.locked}
+            title="Assign enclosed unlocked items to this frame, including items owned by another frame"
+            onClick={() => {
+              const frame = selectedItems[0]!;
+              if (frame.type !== 'frame') return;
+              pushHistory();
+              onRestoreItems(project.items.map(item => item.type !== 'frame' && !item.locked && isItemInsideFrame(item, frame, measuredSizes) ? { ...item, frameId: frame.id } : item));
+            }}>Take over enclosed items</button>
+        ) : undefined}
         onJoinDrawings={canJoinDrawings ? handleJoinDrawings : undefined}
         selectedItems={selectedItems.map(item => item.type === 'line' ? resolveLineItem(item, project.items, measuredSizes) : item)}
         selectedColumnItem={selectedColumnItem}

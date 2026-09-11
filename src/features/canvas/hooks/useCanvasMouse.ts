@@ -197,7 +197,7 @@ export function useCanvasMouse({
           });
 
           const previewIds = getContainedItemIds(
-            projectRef.current.items,
+            projectRef.current.items.filter(child => child.type !== 'frame' && !child.frameId && !child.locked),
             {
               x: left,
               y: top,
@@ -246,7 +246,7 @@ export function useCanvasMouse({
           }
 
           const containedIds = getContainedItemIds(
-            projectRef.current.items,
+            projectRef.current.items.filter(child => child.type !== 'frame' && !child.frameId && !child.locked),
             {
               x: item.x,
               y: item.y,

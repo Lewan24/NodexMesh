@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { BoardItem } from '@/entities/board/types';
 import DrawingControls from './components/DrawingControls';
 import ColorPanel from './components/ColorPanel';
@@ -11,6 +12,7 @@ import LayerControls from './components/LayerControls';
 
 interface EditBarProps {
   selectedItems: BoardItem[];
+  frameControls?: ReactNode;
   onJoinDrawings?: () => void;
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
   onDeleteItems: (ids: string[]) => void;
@@ -28,6 +30,7 @@ interface EditBarProps {
 
 export default function EditBar({
   selectedItems,
+  frameControls,
   onJoinDrawings,
   onUpdateItem,
   onDeleteItems,
@@ -133,6 +136,7 @@ export default function EditBar({
           </>
         )}
 
+        {frameControls}
         {isMulti && onJoinDrawings && <button onClick={onJoinDrawings} className="h-8 px-2.5 rounded-lg text-sm font-medium whitespace-nowrap cursor-pointer hover:bg-violet-500/20" style={{ color: 'var(--color-text-primary)' }}>Join drawings</button>}
 
         {isMulti && (

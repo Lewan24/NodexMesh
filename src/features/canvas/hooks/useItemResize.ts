@@ -5,7 +5,7 @@ import type { RefObject } from 'react';
 import type { BoardItem } from '@/entities/board/types';
 import type { ResizeDirection } from '@/features/canvas/types';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
-import { getContainedItemIds } from '@/features/canvas/utils/itemGeometry';
+
 
 import {
   MIN_BLOCK_WIDTH,
@@ -148,19 +148,7 @@ export function useItemResize({
         const height = bottom - top;
 
         if (item.type === 'frame') {
-          framePreviewIds = getContainedItemIds(
-            projectRef.current.items,
-            {
-              x: left,
-              y: top,
-              width,
-              height,
-              right,
-              bottom,
-            },
-            measuredSizes,
-            item.id,
-          );
+          framePreviewIds = projectRef.current.items.filter(child => child.type !== 'frame' && child.frameId === item.id).map(child => child.id);
 
           onFramePreviewChange?.(framePreviewIds);
         }

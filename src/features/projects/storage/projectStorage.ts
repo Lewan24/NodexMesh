@@ -1,3 +1,7 @@
+import { normalizeFrameMembership } from '@/features/canvas/utils/frameGeometry';
+
+const migrate = (projects: Project[]) => projects.map(project => ({ ...project, items: normalizeFrameMembership(project.items) }));
+
 import type { Project } from '@/entities/project/types';
 import { seedProjectsFor } from '@/entities/project/projectSeeder';
 
@@ -14,14 +18,14 @@ export function loadProjects(userId: string): Project[] {
       const projects = JSON.parse(raw) as Project[];
 
       if (Array.isArray(projects)) {
-        return projects;
+        return migrate(projects);
       }
     }
   } catch {
     // fallback below
   }
 
-  return seedProjectsFor(userId);
+  return migrate(seedProjectsFor(userId));
 }
 
 export function saveProjects(
@@ -37,5 +41,5 @@ export function saveProjects(
 export function resetProjects(userId: string): Project[] {
   localStorage.removeItem(getProjectsStorageKey(userId));
 
-  return seedProjectsFor(userId);
+  return migrate(seedProjectsFor(userId));
 }

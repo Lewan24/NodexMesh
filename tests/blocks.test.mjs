@@ -35,7 +35,7 @@ const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure, 
 const { insertTask, createTaskChecklist } = await server.ssrLoadModule('/src/features/canvas/hooks/useCrossItemDrop.ts')
 const { changeItemLayer } = await server.ssrLoadModule('/src/features/projects/hooks/useProjectItems.ts')
 const { getArrowHeadPoints } = await server.ssrLoadModule('/src/features/blocks/line/utils/lineRenderGeometry.ts')
-const { isFrameMovementLocked } = await server.ssrLoadModule('/src/features/canvas/utils/frameGeometry.ts')
+const { isFrameMovementLocked, normalizeFrameMembership, getFrameContents } = await server.ssrLoadModule('/src/features/canvas/utils/frameGeometry.ts')
 const { ItemHistory } = await server.ssrLoadModule('/src/features/canvas/utils/itemHistory.ts')
 const { resolveCardColor } = await server.ssrLoadModule('/src/features/blocks/shared/cardAppearance.ts')
 const { autoGrowthLayout, growsAutomatically } = await server.ssrLoadModule('/src/features/canvas/utils/autoGrowthLayout.ts')
@@ -216,7 +216,7 @@ test('project storage retains trashed content and an intentionally empty project
   try {
     const project = { id: 'p', name: 'Archived plan', ownerId: 'qa', color: '#7c3aed', deletedAt: '2026-09-09T00:00:00Z', items: [createCanvasItem('timeline', 0, 0)] }
     saveProjects('qa', [project])
-    assert.deepEqual(loadProjects('qa'), JSON.parse(JSON.stringify([project])))
+    assert.deepEqual(loadProjects('qa'), JSON.parse(JSON.stringify([{ ...project, items: normalizeFrameMembership(project.items) }])))
     saveProjects('qa', [])
     assert.deepEqual(loadProjects('qa'), [])
   } finally {
@@ -377,12 +377,12 @@ test("filled arrowhead geometry scales with line thickness in both directions", 
 
 test("frame movement follows current locks in its contents, including nested items", () => {
   const frame = createCanvasItem('frame', 0, 0, { width: 800, height: 600 });
-  const child = { ...createCanvasItem('note', 40, 50), height: 120, locked: true };
-  const outside = { ...child, id: 'outside', x: 1000 };
+  const child = { ...createCanvasItem('note', 40, 50), height: 120, locked: true, frameId: frame.id };
+  const outside = { ...child, id: 'outside', x: 1000, frameId: null };
   assert.equal(isFrameMovementLocked(frame, [frame, child]), true);
   assert.equal(isFrameMovementLocked(frame, [frame, { ...child, locked: false }]), false);
   assert.equal(isFrameMovementLocked(frame, [frame, outside]), false);
-  const column = { ...createCanvasItem('column', 40, 40), height: 300, items: [child] };
+  const column = { ...createCanvasItem('column', 40, 40), height: 300, items: [child], frameId: frame.id };
   assert.equal(isFrameMovementLocked(frame, [frame, column]), true);
   assert.equal(isFrameMovementLocked({ ...frame, locked: true }, []), true);
   assert.equal(isFrameMovementLocked(frame, [frame]), false);
@@ -518,6 +518,8 @@ test('automatic growth expands containing frames and preserves standalone line g
   const source = createCanvasItem('checklist', 0, 0);
   const line = { ...createCanvasItem('line', 50, 150), x2: 20, y2: 130 };
   const frame = { ...createCanvasItem('frame', -16, -16), width: 400, height: 200 };
+  source.frameId = frame.id;
+  line.frameId = frame.id;
   const before = new Map([[source.id, { width: 320, height: 100 }]]);
   const after = new Map(before).set(source.id, { width: 320, height: 180 });
   const patches = autoGrowthLayout([source, line, frame], source.id, before, after);
@@ -534,4 +536,27 @@ test('dropping a task on canvas creates an independent checklist with its comple
   assert.deepEqual(checklist.entries, [task]);
   assert.notEqual(checklist.entries[0], task);
   assert.equal(checklist.color, '#ffffff');
+});
+
+test('overlapping frames preserve ownership through movement, transfer, deletion and copying', () => {
+  const a = { ...createCanvasItem('frame', 0, 0), id: 'a', width: 800, height: 800 };
+  const b = { ...a, id: 'b', width: 700 };
+  const note = { ...createCanvasItem('note', 30, 30), height: 100 };
+  const migrated = normalizeFrameMembership([a, b, note]);
+  const owned = migrated[2];
+  assert.equal(owned.frameId, b.id);
+  assert.deepEqual(getFrameContents(a, migrated), []);
+  assert.deepEqual(getFrameContents(b, migrated), [owned]);
+  assert.equal(normalizeFrameMembership([{ ...a, width: 400 }, b, owned])[2].frameId, b.id);
+  const transferred = { ...owned, frameId: a.id };
+  const history = new ItemHistory();
+  history.observe(migrated); history.boundary(); history.observe([a, b, transferred]);
+  assert.equal(history.undo([a, b, transferred])[2].frameId, b.id);
+  assert.equal(normalizeFrameMembership([b, transferred])[1].frameId, null);
+  const copies = cloneItems([b, owned], 20, 20, 1);
+  assert.equal(copies.find(item => item.type === 'note').frameId, copies.find(item => item.type === 'frame').id);
+  assert.equal(cloneItems([owned], 20, 20, 1)[0].frameId, null);
+  assert.equal(isFrameMovementLocked(a, [a, b, { ...owned, locked: true }]), false);
+  assert.equal(isFrameMovementLocked(b, [a, b, { ...owned, x: 2000, locked: true }]), true);
+  assert.equal(normalizeFrameMembership([a, { ...note, frameId: null }])[1].frameId, null);
 });
