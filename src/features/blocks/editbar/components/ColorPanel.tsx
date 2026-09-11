@@ -16,6 +16,7 @@ interface ColorPanelProps {
 
 function getBackgroundColor(item: BoardItem): string | undefined {
   switch (item.type) {
+    case 'code':
     case 'document':
     case 'embed':
     case 'timeline':
@@ -39,6 +40,7 @@ function updateBackgroundColor(item: BoardItem, color: string | undefined): Boar
     case 'text':
       return { ...item, color };
 
+    case 'code':
     case 'document':
     case 'embed':
     case 'timeline':
@@ -57,7 +59,7 @@ function updateBackgroundColor(item: BoardItem, color: string | undefined): Boar
 }
 
 export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
-  const backgroundColor = getBackgroundColor(item);
+  const backgroundColor = getBackgroundColor(item) ?? (item.type === 'text' ? undefined : '#ffffff');
   const stripColor = item.topColor;
   const showBackground = BACKGROUND_ITEM_TYPES.has(item.type);
   const canClearBackground = item.type === 'text';

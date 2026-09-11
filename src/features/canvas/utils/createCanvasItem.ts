@@ -30,6 +30,7 @@ export function createCanvasItem(
     x,
     y,
     zIndex: 1,
+    color: '#ffffff',
     typography: undefined
   };
 
@@ -45,13 +46,13 @@ export function createCanvasItem(
     case 'code':
       return { ...base, type, content: '', language: 'javascript', width: ITEM_WIDTH.code, height: 280 };
     case 'dispenser':
-      return { ...base, type, title: 'Quick thoughts', color: '#fde68a', width: ITEM_WIDTH.dispenser, height: 200 };
+      return { ...base, type, title: 'Quick thoughts', color: '#ffffff', width: ITEM_WIDTH.dispenser, height: 200 };
     case 'note':
       return {
         ...base,
         type: 'note',
         content: '',
-        color: typeof extra?.color === 'string' ? extra.color : '#0d2a35',
+        color: typeof extra?.color === 'string' ? extra.color : '#ffffff',
         dispenserId: typeof extra?.dispenserId === 'string' ? extra.dispenserId : undefined,
         height: extra?.dispenserId ? 160 : undefined,
         typography: extra?.dispenserId ? { textAlign: 'center', verticalAlign: 'middle' } : undefined,
@@ -110,6 +111,7 @@ export function createCanvasItem(
       return {
         ...base,
         type: 'text',
+        color: undefined,
         content: 'Heading',
         size: 'lg',
         width: ITEM_WIDTH.text
@@ -119,6 +121,7 @@ export function createCanvasItem(
       return {
         ...base,
         type: 'frame',
+        zIndex: 0,
         title: 'Group',
         width:
           typeof extra?.width === 'number'
@@ -136,7 +139,7 @@ export function createCanvasItem(
         ...base,
         type: 'checklist',
         title: 'Checklist',
-        color: '#0d2a35',
+        color: '#ffffff',
         width: ITEM_WIDTH.checklist,
         entries: [],
       } as ChecklistItem;
@@ -166,7 +169,7 @@ export function createCanvasItem(
         ...base,
         type: 'column',
         title: 'Column',
-        color: '#f0f9ff',
+        color: '#ffffff',
         width: ITEM_WIDTH.column,
         layout: 'vertical',
         gridColumns: 2,

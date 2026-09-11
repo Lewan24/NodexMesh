@@ -63,7 +63,7 @@ export default function KanbanCardItem({
 
   return (
     <div
-      className="group/card flex items-center gap-1.5 item-rounded px-2 py-2 mb-1.5 border transition-all duration-150"
+      className="group/card flex items-center gap-1.5 item-rounded px-2 py-2 mb-1.5 shadow-sm transition-all duration-150"
       style={{
         backgroundColor: cardBackground,
         borderColor: cardBorder,

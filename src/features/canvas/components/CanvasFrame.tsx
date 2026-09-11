@@ -7,6 +7,7 @@ import { getTypographyStyle } from '@/features/blocks/typography/typographyUtils
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 import type { ResizeDirection } from '@/features/canvas/types';
 import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
+import ItemLockBadge from './ItemLockBadge';
 import ItemCommentBadge from '@/features/comments/ItemCommentBadge';
 
 function getFrameLabelScale(zoom: number): number {
@@ -22,6 +23,7 @@ function getFrameLabelMode(zoom: number): 'normal' | 'overview' | 'far' {
 
 interface CanvasFrameProps {
   item: FrameItem;
+  movementLocked?: boolean;
   zoom: number;
   isSelected: boolean;
   isAnimating: boolean;
@@ -89,7 +91,8 @@ export default function CanvasFrame({
   onRequestDelete,
   onItemResize,
   onFitFrame,
-  onQuickConnectStart
+  onQuickConnectStart,
+  movementLocked = false
 }: CanvasFrameProps) {
   const [editingTitle, setEditingTitle] = useState(false);
 
@@ -112,7 +115,7 @@ export default function CanvasFrame({
       style={{
         left: item.x,
         top: item.y,
-        zIndex: item.zIndex,
+        zIndex: 0,
         transform: isDragging
           ? `
               perspective(900px)
@@ -146,6 +149,7 @@ export default function CanvasFrame({
       onMouseDown={event => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
     >
+      {(item.locked || movementLocked) && <ItemLockBadge inherited={!item.locked} />}
       <ItemCommentBadge
         comments={item.comments}
       />
@@ -293,7 +297,7 @@ export default function CanvasFrame({
       )}
 
       {/* Resize */}
-      {isSelected && !item.locked && (
+      {isSelected && !item.locked && !movementLocked && (
         <ResizeHandles
           visible
           onResizeStart={(event, direction) =>

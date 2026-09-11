@@ -28,3 +28,12 @@ export function getFrameContents(
 ): BoardItem[] {
   return items.filter(item => isItemInsideFrame(item, frame, sizes));
 }
+
+function containsLockedItem(item: BoardItem): boolean {
+  return !!item.locked || (item.type === 'column' && item.items.some(containsLockedItem));
+}
+
+/** Derived from current contents; unlocking/removing a child immediately releases the frame. */
+export function isFrameMovementLocked(frame: FrameItem, items: BoardItem[], sizes?: SizeMap): boolean {
+  return !!frame.locked || items.some(item => containsLockedItem(item) && isItemInsideFrame(item, frame, sizes));
+}

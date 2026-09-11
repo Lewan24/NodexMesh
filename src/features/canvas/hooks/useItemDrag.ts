@@ -10,7 +10,7 @@ import type { ToolType } from '@/entities/board/toolTypes';
 import { DROPPABLE_ON_COLUMN } from '@/features/canvas/constants';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import { getItemSize } from '@/features/canvas/utils/itemGeometry';
-import { isItemInsideFrame } from '../utils/frameGeometry';
+import { isItemInsideFrame, isFrameMovementLocked } from '../utils/frameGeometry';
 import { AlignmentGuide, findAlignmentSnap } from '../utils/alignmentGuides';
 import { snapToGrid } from '../utils/gridSnap';
 
@@ -147,7 +147,8 @@ export function useItemDrag({
           item => item.id === id,
         );
 
-      if (clickedItem?.locked) {
+      const movementLocked = (item: BoardItem) => !!item.locked || (item.type === 'frame' && isFrameMovementLocked(item, items, measuredSizes));
+      if (clickedItem && movementLocked(clickedItem)) {
         /*
         * Selection already happened above,
         * but locked item cannot start drag.
@@ -165,7 +166,7 @@ export function useItemDrag({
           continue;
         }
 
-        if (item.locked) {
+        if (movementLocked(item)) {
           continue;
         }
 
@@ -183,7 +184,7 @@ export function useItemDrag({
           const frame = item as FrameItem;
 
           const children = items.filter(child => {
-            if (child.locked) {
+            if (movementLocked(child)) {
               return false;
             }
             if (dragIds.includes(child.id)) return false;

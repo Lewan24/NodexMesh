@@ -1,6 +1,13 @@
 export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem | DocumentItem | EmbedItem | CodeItem | DispenserItem | TimelineItem | DiagramItem | DrawingItem;
 
+export interface DrawingStroke {
+  points: { x: number; y: number; pressure?: number }[];
+  x: number; y: number; scaleX: number; scaleY: number;
+  color: string; strokeWidth: number;
+}
+
 export interface DrawingItem extends BaseItem {
+  strokes?: DrawingStroke[];
   type: 'drawing';
   points: { x: number; y: number; pressure?: number }[];
   viewWidth: number;

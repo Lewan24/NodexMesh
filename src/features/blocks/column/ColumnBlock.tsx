@@ -1,7 +1,9 @@
+import { useCardAppearance } from '../shared/cardAppearance';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BoardItem, ColumnItem } from '@/entities/board/types';
 
+import type { TaskDroppedOutsideHandler } from '../types';
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import ColumnItemRow from '@/features/blocks/column/ColumnItemRow';
 
@@ -9,7 +11,6 @@ import {
   COLUMN_ADD_TYPES,
   COLUMN_BG_COLORS,
   createDefaultColumnItem,
-  isLightColor,
 } from '@/features/blocks/column/utils/columnItems';
 
 import { useColumnDrag } from '@/features/blocks/column/hooks/useColumnDrag';
@@ -23,6 +24,7 @@ interface ColumnBlockProps {
   zoom?: number;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
+  onTaskDroppedOutside?: TaskDroppedOutsideHandler;
   onEjectItem?: (ejectedItem: BoardItem, clientX?: number, clientY?: number) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
   onRequestDelete?: (execute: () => void) => void;
@@ -78,6 +80,7 @@ export default function ColumnBlock({
   onUpdate,
   onDelete,
   onEjectItem,
+  onTaskDroppedOutside,
   onSelectColumnItem,
   onRequestDelete,
   searchActive = false,
@@ -148,7 +151,7 @@ export default function ColumnBlock({
     );
   };
 
-  const columnLight = isLightColor(item.color);
+  const { background, light: columnLight } = useCardAppearance(item.color);
   const headerTextColor = columnLight ? '#1e293b' : '#f1f5f9';
   const headerMutedColor = columnLight ? '#64748b' : '#94a3b8';
 
@@ -366,9 +369,9 @@ export default function ColumnBlock({
       )}
 
       <div
-        className="item-rounded border shadow-xl flex flex-col overflow-hidden"
+        className="item-rounded shadow-xl flex flex-col overflow-hidden"
         style={{
-          backgroundColor: item.color,
+          backgroundColor: background,
           borderColor: isSelected || isDragOver
             ? 'var(--color-accent)'
             : columnLight
@@ -397,7 +400,7 @@ export default function ColumnBlock({
                 onClick={() => setShowBackgroundMenu(previous => !previous)}
                 className="w-4 h-4 rounded-full border-2 transition-transform hover:scale-125 cursor-pointer"
                 style={{
-                  backgroundColor: item.color,
+                  backgroundColor: background,
                   borderColor: columnLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)',
                 }}
                 title="Column background color"
@@ -594,6 +597,7 @@ export default function ColumnBlock({
 
                 <ColumnItemRow
                   itemId={nestedItem.id}
+                  locked={nestedItem.locked}
                   isDragging={draggingIndex === index}
                   isSelected={selectedItemId === nestedItem.id}
                   onDragHandleMouseDown={event => handleDragStart(index, event)}
@@ -617,6 +621,9 @@ export default function ColumnBlock({
                   >
                     <BlockRenderer
                       item={prepareNestedItemForColumn(nestedItem, getNestedItemWidth(nestedItem))}
+                      onTaskDroppedOutside={onTaskDroppedOutside}
+                      onEntryDroppedOutside={onTaskDroppedOutside ? (task, x, y) => onTaskDroppedOutside(nestedItem.id, task, x, y) : undefined}
+                      onCardDroppedOutside={onTaskDroppedOutside ? (task, x, y) => onTaskDroppedOutside(nestedItem.id, task, x, y) : undefined}
                       isInsideColumn
                       isSelected={false}
                       onUpdate={updater => updateNested(nestedItem.id, updater)}

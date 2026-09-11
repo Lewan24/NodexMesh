@@ -168,18 +168,7 @@ export function useChecklistDrag({
             moveEvent.clientY,
           );
 
-          const rect =
-            card.getBoundingClientRect();
-
-          const inside =
-            moveEvent.clientX >=
-              rect.left - 24 &&
-            moveEvent.clientX <=
-              rect.right + 24 &&
-            moveEvent.clientY >=
-              rect.top - 24 &&
-            moveEvent.clientY <=
-              rect.bottom + 24;
+          const inside = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest('[data-checklist-id]')?.getAttribute('data-checklist-id') === card.dataset.checklistId;
 
           /*
            * Poza własną checklistą:
@@ -249,18 +238,7 @@ export function useChecklistDrag({
             upEvent.clientY,
           );
 
-          const rect =
-            card.getBoundingClientRect();
-
-          const inside =
-            upEvent.clientX >=
-              rect.left - 24 &&
-            upEvent.clientX <=
-              rect.right + 24 &&
-            upEvent.clientY >=
-              rect.top - 24 &&
-            upEvent.clientY <=
-              rect.bottom + 24;
+          const inside = document.elementFromPoint(upEvent.clientX, upEvent.clientY)?.closest('[data-checklist-id]')?.getAttribute('data-checklist-id') === card.dataset.checklistId;
 
           if (!inside) {
             /*

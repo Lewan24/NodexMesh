@@ -1,11 +1,10 @@
+import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useState } from 'react';
 
 import type { BoardItem, LinkItem } from '@/entities/board/types';
 
 import {
-  DEFAULT_LINK_BACKGROUND,
   getLinkDomain,
-  isLightColor,
 } from '@/features/blocks/link/utils/linkUtils';
 import { getTypographyStyle } from '../typography/typographyUtils';
 
@@ -28,11 +27,10 @@ export default function LinkBlock({
 
   const typographyStyle = getTypographyStyle(item);
 
-  const background = item.color ?? DEFAULT_LINK_BACKGROUND;
-  const light = isLightColor(background);
+  const { background, light } = useCardAppearance(item.color);
 
   const textColor = light ? '#1e293b' : '#e2e8f0';
-  const mutedColor = light ? '#64748b' : '#5a8a94';
+  const mutedColor = light ? '#64748b' : '#b9aec9';
 
   const borderBase = light ? 'rgba(0,0,0,0.1)' : '#1a3040';
   const borderHover = light
@@ -83,7 +81,7 @@ export default function LinkBlock({
        }}
     >
       <div
-        className="item-rounded border shadow-xl overflow-hidden transition-colors duration-150"
+        className="item-rounded shadow-xl overflow-hidden transition-colors duration-150"
         style={{
           height: item.height
           ? '100%'
@@ -235,6 +233,7 @@ export default function LinkBlock({
                 placeholder="https://…"
                 className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border focus:border-[#7C3AED] transition-colors"
                 style={{
+                  ...typographyStyle,
                   backgroundColor: inputBackground,
                   color: textColor,
                   borderColor: '#7C3AED',
@@ -253,6 +252,7 @@ export default function LinkBlock({
                 placeholder="Title"
                 className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border transition-colors"
                 style={{
+                  ...typographyStyle,
                   backgroundColor: inputBackground,
                   color: textColor,
                   borderColor: inputBorder,
@@ -273,6 +273,7 @@ export default function LinkBlock({
                 rows={3}
                 className="w-full text-xs px-2.5 py-1.5 rounded-xl outline-none border transition-colors resize-none"
                 style={{
+                  ...typographyStyle,
                   backgroundColor: inputBackground,
                   color: mutedColor,
                   borderColor: inputBorder,

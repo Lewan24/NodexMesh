@@ -30,6 +30,7 @@ function LoadingBlock({ item }: { item: BoardItem }) {
 }
 
 import type {
+  TaskDroppedOutsideHandler,
   BlockDeleteHandler,
   BlockUpdateHandler,
   CardDroppedOutsideHandler,
@@ -57,6 +58,7 @@ export interface BlockRendererProps {
   onRequestDelete?: RequestDeleteHandler;
   onEntryDroppedOutside?: EntryDroppedOutsideHandler;
   onCardDroppedOutside?: CardDroppedOutsideHandler;
+  onTaskDroppedOutside?: TaskDroppedOutsideHandler;
   searchActive?: boolean;
   nestedSearchMatchIds?: Set<string>;
 }
@@ -76,6 +78,7 @@ export default function BlockRenderer({
   onRequestDelete,
   onEntryDroppedOutside,
   onCardDroppedOutside,
+  onTaskDroppedOutside,
   searchActive = false,
   nestedSearchMatchIds,
 }: BlockRendererProps) {
@@ -154,6 +157,7 @@ export default function BlockRenderer({
           onUpdate={onUpdate}
           onDelete={onDelete}
           onEjectItem={onEjectItem}
+          onTaskDroppedOutside={onTaskDroppedOutside}
           onSelectColumnItem={onSelectColumnItem}
           onRequestDelete={onRequestDelete}
           searchActive={searchActive}

@@ -1,3 +1,6 @@
+import { getTypographyStyle } from '../typography/typographyUtils';
+import { useCardAppearance } from '../shared/cardAppearance';
+import './code.css';
 import { useMemo, useState } from "react"
 import hljs from "highlight.js/lib/common"
 import "highlight.js/styles/github-dark.css"
@@ -14,6 +17,8 @@ export default function CodeBlock({
   onUpdate: BlockUpdateHandler
   onDelete: () => void
 }) {
+  const { background, textColor, light } = useCardAppearance(item.color);
+  const codeStyle = { ...getTypographyStyle(item), fontFamily: item.typography?.fontFamily ? getTypographyStyle(item).fontFamily : 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' };
   const [editing, setEditing] = useState(false)
   const [copyStatus, setCopyStatus] = useState("Copy")
   const autoHeight = item.autoHeight ?? !item.height
@@ -94,7 +99,9 @@ export default function CodeBlock({
       }
     >
       <div
-        className={`flex-1 min-h-0 ${autoHeight ? 'overflow-x-auto' : 'overflow-auto'} bg-[#0d1117] text-[#e6edf3]`}
+        className={`flex-1 min-h-0 ${autoHeight ? 'overflow-x-auto' : 'overflow-auto'} code-content`}
+        data-light={light}
+        style={{ background, color: textColor }}
         data-wheel-scroll={!autoHeight}
         onMouseDown={(e) => { if (editing) e.stopPropagation() }}
         onDoubleClick={() => setEditing(true)}
@@ -102,6 +109,7 @@ export default function CodeBlock({
       >
         {editing && !item.locked ? (
           <textarea
+            style={codeStyle}
             aria-label="Code content"
             spellCheck={false}
             wrap="off"
@@ -132,10 +140,10 @@ export default function CodeBlock({
             }}
           />
         ) : (
-          <pre className="p-4 text-sm leading-6 font-mono min-h-full cursor-grab active:cursor-grabbing select-none">
+          <pre style={codeStyle} className="p-4 text-sm leading-6 font-mono min-h-full cursor-grab active:cursor-grabbing select-none">
             <code
               className={`hljs language-${language}`}
-              style={{ padding: 0, background: "transparent" }}
+              style={{ padding: 0, background: "transparent", fontFamily: 'inherit', fontSize: 'inherit' }}
               dangerouslySetInnerHTML={{ __html: highlighted || '<span style="opacity:.45">Double-click to write code…</span>' }}
             />
           </pre>

@@ -73,12 +73,14 @@ export function getArrowHeadPoints(
   x: number,
   y: number,
   angle: number,
+  strokeWidth = 2,
 ): ArrowHeadPoints {
-  const firstX = x - ARROW_SIZE * Math.cos(angle - Math.PI / 6);
-  const firstY = y - ARROW_SIZE * Math.sin(angle - Math.PI / 6);
+  const size = ARROW_SIZE / 2 + Math.max(1, strokeWidth) * 3;
+  const firstX = x - size * Math.cos(angle - Math.PI / 6);
+  const firstY = y - size * Math.sin(angle - Math.PI / 6);
 
-  const secondX = x - ARROW_SIZE * Math.cos(angle + Math.PI / 6);
-  const secondY = y - ARROW_SIZE * Math.sin(angle + Math.PI / 6);
+  const secondX = x - size * Math.cos(angle + Math.PI / 6);
+  const secondY = y - size * Math.sin(angle + Math.PI / 6);
 
   return {
     firstX,

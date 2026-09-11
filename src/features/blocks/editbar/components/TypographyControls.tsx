@@ -80,7 +80,7 @@ export default function TypographyControls({
 
       <select
         value={
-          typography?.fontFamily ?? DEFAULT_FONT_FAMILY
+          typography?.fontFamily ?? (item.type === 'code' ? 'mono' : DEFAULT_FONT_FAMILY)
         }
         onChange={event =>
           update({
@@ -405,7 +405,7 @@ function getDefaultFontSize(
       return 14;
 
     case 'image':
-      return 13;
+      return 14;
 
     default:
       return 14;

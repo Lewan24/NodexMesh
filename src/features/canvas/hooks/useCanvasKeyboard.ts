@@ -37,6 +37,13 @@ export function useCanvasKeyboard({
   deleteNested,
 }: UseCanvasKeyboardOptions) {
   useEffect(() => {
+    const handleUndoCapture = (event: KeyboardEvent) => {
+      const textField = event.target instanceof HTMLElement && (event.target.isContentEditable || event.target.matches('textarea,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=button]):not([type=number]):not([type=date]):not([type=time]):not([type=datetime-local])'));
+      const modal = event.target instanceof Element ? event.target.closest('[role="dialog"], [role="menu"]') : null;
+      if (!event.defaultPrevented && !textField && (!modal || modal.hasAttribute('data-board-history')) && (event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z') {
+        event.preventDefault(); event.stopPropagation(); undo(); return;
+      }
+    };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || (event.target instanceof Element && event.target.closest('[role="dialog"], [role="menu"]'))) return;
       const inField =
@@ -87,9 +94,11 @@ export function useCanvasKeyboard({
       }
     };
 
+    window.addEventListener('keydown', handleUndoCapture, true);
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      window.removeEventListener('keydown', handleUndoCapture, true);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [

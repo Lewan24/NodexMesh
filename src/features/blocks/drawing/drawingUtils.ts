@@ -1,4 +1,4 @@
-import type { DrawingItem } from '@/entities/board/types';
+import type { DrawingItem, DrawingStroke } from '@/entities/board/types';
 
 export type DrawingPoint = { x: number; y: number; pressure?: number };
 
@@ -85,4 +85,31 @@ export function drawingOutline(points: DrawingPoint[], strokeWidth: number): str
     ` A ${radius(samples[last]!)} ${radius(samples[last]!)} 0 0 0 ${right[last]!.x} ${right[last]!.y} ` +
     right.slice(0, -1).reverse().map(p => `L ${p.x} ${p.y}`).join(' ') +
     ` A ${radius(first)} ${radius(first)} 0 0 0 ${left[0]!.x} ${left[0]!.y} Z`;
+}
+
+
+export function drawingStrokes(item: DrawingItem): DrawingStroke[] {
+  return item.strokes ?? [{ points: item.points, x: 0, y: 0, scaleX: 1, scaleY: 1, color: item.color, strokeWidth: item.strokeWidth }];
+}
+
+/** Preserve separate strokes and their original SVG transforms, including nonuniform resizing. */
+export function joinDrawings(items: DrawingItem[]): DrawingItem | null {
+  if (items.length < 2 || items.some(item => item.locked)) return null;
+  const ordered = [...items].sort((a, b) => a.zIndex - b.zIndex);
+  const x = Math.min(...items.map(item => item.x)), y = Math.min(...items.map(item => item.y));
+  const width = Math.max(...items.map(item => item.x + item.width)) - x;
+  const height = Math.max(...items.map(item => item.y + item.height)) - y;
+  const first = ordered[0]!;
+  return { id: crypto.randomUUID(), type: 'drawing', x, y, width, height,
+    viewWidth: width, viewHeight: height, points: [], color: first.color, strokeWidth: first.strokeWidth,
+    zIndex: Math.max(...items.map(item => item.zIndex)),
+    strokes: ordered.flatMap(item => {
+      const sx = item.width / item.viewWidth, sy = item.height / item.viewHeight;
+      return drawingStrokes(item).map(stroke => ({ ...stroke,
+        points: stroke.points.map(point => ({ ...point })),
+        x: item.x - x + stroke.x * sx, y: item.y - y + stroke.y * sy,
+        scaleX: stroke.scaleX * sx, scaleY: stroke.scaleY * sy,
+      }));
+    }),
+  };
 }

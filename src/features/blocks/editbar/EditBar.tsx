@@ -1,4 +1,5 @@
 import type { BoardItem } from '@/entities/board/types';
+import DrawingControls from './components/DrawingControls';
 import ColorPanel from './components/ColorPanel';
 import FrameControls from './components/FrameControls';
 import LineControls from './components/LineControls';
@@ -10,6 +11,7 @@ import LayerControls from './components/LayerControls';
 
 interface EditBarProps {
   selectedItems: BoardItem[];
+  onJoinDrawings?: () => void;
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
   onDeleteItems: (ids: string[]) => void;
   onGroupItems: () => void;
@@ -26,6 +28,7 @@ interface EditBarProps {
 
 export default function EditBar({
   selectedItems,
+  onJoinDrawings,
   onUpdateItem,
   onDeleteItems,
   onGroupItems,
@@ -74,7 +77,7 @@ export default function EditBar({
         ? ITEM_TYPE_LABELS[single.type] ?? single.type
         : '';
 
-  const hasStyleControls = !!single && !isMulti && !['code', 'dispenser'].includes(single.type);
+  const hasStyleControls = !!single && !isMulti && single.type !== 'dispenser';
 
   return (
     <div
@@ -119,7 +122,7 @@ export default function EditBar({
 
         {(isMulti || single?.type === 'frame') && <EditBarDivider />}
 
-        {single && !isColumnMode && (
+        {single && single.type !== 'frame' && !isColumnMode && (
           <>
             <LayerControls
               onSendToBack={() => onSendToBack(single.id)}
@@ -129,6 +132,8 @@ export default function EditBar({
             />
           </>
         )}
+
+        {isMulti && onJoinDrawings && <button onClick={onJoinDrawings} className="h-8 px-2.5 rounded-lg text-sm font-medium whitespace-nowrap cursor-pointer hover:bg-violet-500/20" style={{ color: 'var(--color-text-primary)' }}>Join drawings</button>}
 
         {isMulti && (
           <button
@@ -200,6 +205,9 @@ export default function EditBar({
         </button>
       </div>
 
+      {isMulti && selectedItems.some(item => item.type === 'drawing') && <div className="flex items-center gap-3 px-3 py-2 border-t" style={{ borderColor: 'var(--color-border-soft)' }}>
+        <DrawingControls items={selectedItems.filter(item => item.type === 'drawing')} onUpdate={onUpdateItem} />
+      </div>}
       {/* Style controls */}
       {hasStyleControls && (
         <div
@@ -225,10 +233,7 @@ export default function EditBar({
             <LineControls item={single} onUpdate={handleUpdate} />
           )}
 
-          {single.type === 'drawing' && <>
-            <label className="flex items-center gap-2 text-xs">Ink <input aria-label="Drawing color" type="color" value={single.color} onChange={event => handleUpdate(current => current.type === 'drawing' ? { ...current, color: event.target.value } : current)} /></label>
-            <label className="flex items-center gap-2 text-xs">Width <input aria-label="Drawing stroke width" type="range" min="1" max="12" value={single.strokeWidth} onChange={event => handleUpdate(current => current.type === 'drawing' ? { ...current, strokeWidth: Number(event.target.value) } : current)} />{single.strokeWidth}</label>
-          </>}
+          {single.type === 'drawing' && <DrawingControls items={[single]} onUpdate={(_, updater) => handleUpdate(updater)} />}
           {(single.type === 'document') && <button className="px-2 text-xs whitespace-nowrap" onClick={() => handleUpdate(current => current.type === 'document' ? { ...current, autoHeight: true, height: undefined } : current)}>Auto-fit height</button>}
           {single.type === 'embed' && <label className="flex gap-2 text-xs whitespace-nowrap"><input type="checkbox" checked={single.showLabel} onChange={event => handleUpdate(current => current.type === 'embed' ? { ...current, showLabel: event.target.checked } : current)} />Show label</label>}
           {single.type === 'timeline' && <select aria-label="Timeline view" value={single.mode} className="text-xs bg-transparent" onChange={event => handleUpdate(current => current.type === 'timeline' ? { ...current, mode: event.target.value as 'simple' | 'schedule' } : current)}><option value="simple">Milestones</option><option value="schedule">Schedule</option></select>}

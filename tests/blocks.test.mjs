@@ -31,7 +31,13 @@ const { dateDay, taskRange, shiftTask, scheduleRange, reorderTasks } = await ser
 const { cloneItems, copyOrigin } = await server.ssrLoadModule('/src/features/canvas/utils/cloneItems.ts')
 const { diagramTemplate, layoutDiagram, removeDiagramNodes } = await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts')
 const { loadProjects, saveProjects } = await server.ssrLoadModule('/src/features/projects/storage/projectStorage.ts')
-const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure } = await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts')
+const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure, joinDrawings, drawingStrokes } = await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts')
+const { insertTask } = await server.ssrLoadModule('/src/features/canvas/hooks/useCrossItemDrop.ts')
+const { changeItemLayer } = await server.ssrLoadModule('/src/features/projects/hooks/useProjectItems.ts')
+const { getArrowHeadPoints } = await server.ssrLoadModule('/src/features/blocks/line/utils/lineRenderGeometry.ts')
+const { isFrameMovementLocked } = await server.ssrLoadModule('/src/features/canvas/utils/frameGeometry.ts')
+const { ItemHistory } = await server.ssrLoadModule('/src/features/canvas/utils/itemHistory.ts')
+const { resolveCardColor } = await server.ssrLoadModule('/src/features/blocks/shared/cardAppearance.ts')
 await server.close()
 
 test("new blocks survive JSON persistence and have usable default dimensions", () => {
@@ -324,4 +330,157 @@ test("smoothing damps jitter without overshoot and renders dots and reversals", 
     assert.ok(outline.endsWith('Z'));
     assert.ok(!/NaN|Infinity/.test(outline));
   }
+});
+
+
+test("tasks transfer between checklist and Kanban without losing completion or identity", () => {
+  const task = { id: 'task', text: 'Ship feature', done: true };
+  const board = createCanvasItem('kanban', 0, 0);
+  const next = insertTask(board, task, 0, board.columns[1].id);
+  assert.deepEqual(next.columns[1].cards, [task]);
+  assert.equal(board.columns[1].cards.length, 0);
+  const checklist = createCanvasItem('checklist', 0, 0);
+  const restored = insertTask(checklist, next.columns[1].cards[0], 99);
+  assert.deepEqual(restored.entries, [task]);
+  assert.equal(insertTask(restored, task, 0).entries.length, 1);
+  const locked = { ...checklist, locked: true };
+  assert.equal(insertTask(locked, task, 0), locked);
+});
+
+test("frames remain at layer zero through all layer operations and copies", () => {
+  const frame = { ...createCanvasItem('frame', 0, 0), zIndex: 99 };
+  const note = createCanvasItem('note', 0, 0);
+  const text = { ...createCanvasItem('text', 0, 0), zIndex: 2 };
+  for (const action of ['front', 'back', 'forward', 'backward']) {
+    for (const id of [frame.id, note.id]) {
+      const items = changeItemLayer([note, frame, text], id, action);
+      assert.equal(items.find(item => item.type === 'frame').zIndex, 0);
+      assert.ok(items.filter(item => item.type !== 'frame').every(item => item.zIndex > 0));
+    }
+  }
+  assert.equal(createCanvasItem('frame', 0, 0).zIndex, 0);
+  assert.equal(cloneItems([frame], 20, 20, 100)[0].zIndex, 0);
+});
+
+test("filled arrowhead geometry scales with line thickness in both directions", () => {
+  for (const angle of [0, Math.PI, Math.PI / 3]) {
+    const thin = getArrowHeadPoints(50, 50, angle, 1);
+    const thick = getArrowHeadPoints(50, 50, angle, 8);
+    const span = head => Math.hypot(head.firstX - head.secondX, head.firstY - head.secondY);
+    assert.ok(span(thick) > span(thin) * 2);
+    assert.equal(thick.tipX, 50); assert.equal(thick.tipY, 50);
+  }
+});
+
+
+test("frame movement follows current locks in its contents, including nested items", () => {
+  const frame = createCanvasItem('frame', 0, 0, { width: 800, height: 600 });
+  const child = { ...createCanvasItem('note', 40, 50), height: 120, locked: true };
+  const outside = { ...child, id: 'outside', x: 1000 };
+  assert.equal(isFrameMovementLocked(frame, [frame, child]), true);
+  assert.equal(isFrameMovementLocked(frame, [frame, { ...child, locked: false }]), false);
+  assert.equal(isFrameMovementLocked(frame, [frame, outside]), false);
+  const column = { ...createCanvasItem('column', 40, 40), height: 300, items: [child] };
+  assert.equal(isFrameMovementLocked(frame, [frame, column]), true);
+  assert.equal(isFrameMovementLocked({ ...frame, locked: true }, []), true);
+  assert.equal(isFrameMovementLocked(frame, [frame]), false);
+});
+
+
+test('joined drawings preserve separate ink, pressure, styles and resized geometry', () => {
+  const a = { ...createDrawing([{ x: 10, y: 20, pressure: .7 }, { x: 60, y: 40, pressure: 1.3 }], 2), color: '#ff0000', strokeWidth: 6 };
+  a.width *= 2; a.height *= .5;
+  const b = { ...createDrawing([{ x: 90, y: 10 }, { x: 80, y: 30 }], 1), color: '#0000ff' };
+  const joined = joinDrawings([a, b]);
+  assert.equal(joined.strokes.length, 2);
+  assert.deepEqual(joined.strokes.map(s => s.color), [b.color, a.color]);
+  for (const [index, source] of [b, a].entries()) {
+    const stroke = joined.strokes[index];
+    assert.equal(stroke.strokeWidth, source.strokeWidth);
+    assert.equal(drawingOutline(stroke.points, stroke.strokeWidth), drawingOutline(source.points, source.strokeWidth));
+    source.points.forEach((point, i) => {
+      assert.equal(joined.x + stroke.x + stroke.points[i].x * stroke.scaleX, source.x + point.x * source.width / source.viewWidth);
+      assert.equal(joined.y + stroke.y + stroke.points[i].y * stroke.scaleY, source.y + point.y * source.height / source.viewHeight);
+    });
+  }
+  assert.deepEqual(JSON.parse(JSON.stringify(joined)), joined);
+  const clone = cloneItems([joined], 100, 200, 4)[0];
+  assert.deepEqual(clone.strokes, joined.strokes);
+  clone.strokes[0].points[0].x += 5;
+  assert.notEqual(clone.strokes[0].points[0].x, joined.strokes[0].points[0].x);
+});
+
+test('joining a resized joined drawing composes transforms and respects locks', () => {
+  const a = createDrawing([{ x: 10, y: 20 }], 1);
+  const b = createDrawing([{ x: 90, y: 10 }], 2);
+  assert.equal(joinDrawings([a]), null);
+  assert.equal(joinDrawings([a, { ...b, locked: true }]), null);
+  const joined = joinDrawings([a, b]);
+  joined.width *= 2; joined.height *= 3;
+  const result = joinDrawings([joined, createDrawing([{ x: -30, y: -20 }], 3)]);
+  assert.equal(result.strokes.length, 3);
+  drawingStrokes(joined).forEach((stroke, i) => {
+    const next = result.strokes[i];
+    assert.equal(result.x + next.x, joined.x + stroke.x * 2);
+    assert.equal(result.y + next.y, joined.y + stroke.y * 3);
+    assert.equal(next.scaleX, stroke.scaleX * 2);
+    assert.equal(next.scaleY, stroke.scaleY * 3);
+  });
+});
+
+
+test('history records checklist, timeline and diagram mutations without explicit pushes', () => {
+  const checklist = createCanvasItem('checklist', 0, 0);
+  checklist.entries = [{ id: 'entry', text: 'Task', done: false }];
+  const timeline = createCanvasItem('timeline', 0, 0);
+  timeline.tasks = [{ id: 'a', title: 'A' }, { id: 'b', title: 'B' }];
+  const diagram = createCanvasItem('diagram', 0, 0);
+  const original = [checklist, timeline, diagram];
+  const history = new ItemHistory(original, 20);
+  const toggled = [{ ...checklist, entries: [{ ...checklist.entries[0], done: true }] }, timeline, diagram];
+  history.observe(toggled);
+  history.boundary();
+  const reordered = [toggled[0], { ...timeline, tasks: [...timeline.tasks].reverse() }, diagram];
+  history.observe(reordered);
+  history.boundary();
+  const connected = [reordered[0], reordered[1], { ...diagram, ...diagramTemplate() }];
+  history.observe(connected);
+  assert.deepEqual(history.undo(connected), reordered);
+  assert.deepEqual(history.undo(reordered), toggled);
+  assert.deepEqual(history.undo(toggled), original);
+  assert.equal(history.undo(original), undefined);
+});
+
+test('history groups gestures, ignores no-ops and isolates project resets', () => {
+  const original = [createCanvasItem('note', 0, 0)];
+  const history = new ItemHistory(original, 2);
+  history.boundary(); history.observe(structuredClone(original)); history.boundary();
+  let moved;
+  for (let x = 1; x < 20; x++) { moved = [{ ...original[0], x }]; history.observe(moved); }
+  assert.deepEqual(history.undo(moved), original);
+  assert.equal(history.undo(original), undefined);
+  history.observe(moved); history.clear(original);
+  assert.equal(history.undo(original), undefined);
+});
+
+test('default white cards follow the theme; custom colors remain fixed', () => {
+  for (const value of [undefined, '#fff', '#FFFFFF', '#ffffff', 'white']) {
+    assert.equal(resolveCardColor(value, 'light'), '#ffffff');
+    assert.equal(resolveCardColor(value, 'dark'), '#1f1233');
+  }
+  for (const value of ['#fefce8', '#0d2a35', '#ff0000']) {
+    assert.equal(resolveCardColor(value, 'light'), value);
+    assert.equal(resolveCardColor(value, 'dark'), value);
+  }
+  for (const type of ['note', 'checklist', 'kanban', 'column', 'document', 'timeline', 'diagram', 'embed', 'image', 'link', 'code', 'dispenser']) assert.equal(createCanvasItem(type, 0, 0).color, '#ffffff');
+});
+
+
+test('native text undo does not leave an empty board undo step', () => {
+  const initial = [createCanvasItem('note', 0, 0)];
+  const history = new ItemHistory(initial, 10);
+  const moved = [{ ...initial[0], x: 100 }]; history.observe(moved); history.boundary();
+  const typed = [{ ...moved[0], content: 'Text' }]; history.observe(typed);
+  history.observe(moved);
+  assert.deepEqual(history.undo(moved), initial);
 });

@@ -1,9 +1,9 @@
+import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BoardItem, NoteItem } from '@/entities/board/types';
 
 import {
-  isLightColor,
   NOTE_FONT_SIZE_CLASS,
   type NoteFontSize,
 } from '@/features/blocks/note/utils/noteUtils';
@@ -32,7 +32,7 @@ export default function NoteBlock({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const light = isLightColor(item.color);
+  const { background, light } = useCardAppearance(item.color);
 
   const textColor = light ? '#1e293b' : '#e8f4f4';
   const mutedColor = light
@@ -121,7 +121,7 @@ export default function NoteBlock({
         className="item-rounded shadow-xl transition-shadow duration-150 group-hover:shadow-2xl flex flex-col"
         style={{
           height: item.height ? '100%' : undefined,
-          backgroundColor: item.color,
+          backgroundColor: background,
           outline: isSelected
             ? '2px solid var(--color-accent)'
             : 'none',
@@ -141,7 +141,7 @@ export default function NoteBlock({
 
         {/* Header */}
 
-        <div className="flex items-center justify-between px-3 pt-2.5 pb-0 cursor-grab active:cursor-grabbing">
+        <div className="absolute top-1 left-2 right-2 z-10 flex items-center justify-between pointer-events-none [&>button]:pointer-events-auto">
           {item.height && (
             <button
               onMouseDown={event => event.stopPropagation()}
@@ -182,7 +182,7 @@ export default function NoteBlock({
         <div
           ref={contentRef}
           data-wheel-scroll={item.height ? "true" : "false"}
-          className="px-3 pb-3 pt-1 flex-1 min-h-0 flex flex-col"
+          className="p-3 flex-1 min-h-0 flex flex-col"
           style={{
             overflow: editing ? 'hidden' : 'auto',
             justifyContent: verticalJustify,

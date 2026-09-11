@@ -199,3 +199,10 @@ body {
 .content-block-shell .timeline-bar { height: max(28px, calc(var(--block-font-size, 12px) + 10px)); }
 .content-block-shell .diagram-shape, .diagram-editor .diagram-shape { font-size: var(--block-font-size, 13px); }
 .content-block-shell .text-theme-muted { color: inherit; opacity: .65; }
+
+/* Typography applies to user content; compact action controls keep their UI sizes. */
+.content-block-shell header, .content-block-shell .timeline-card h3,
+.content-block-shell .timeline-label, .content-block-shell .diagram-shape {
+  font-weight: var(--block-font-weight, inherit);
+}
+.content-block-shell input:not([type]), .content-block-shell input[type=text] { font-family: inherit; }

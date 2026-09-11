@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { Copy, CopyPlus, ClipboardPaste, Trash2, Layers, Lock, Unlock } from 'lucide-react';
 
 export interface CanvasMenuState { x: number; y: number; canvasX: number; canvasY: number; hasSelection: boolean }
-export default function CanvasContextMenu({ menu, count, canPaste, allLocked, onClose, onCopy, onPaste, onDuplicate, onDelete, onLock, onGroup }: {
+export default function CanvasContextMenu({ menu, count, canPaste, allLocked, onClose, onCopy, onPaste, onDuplicate, onDelete, onLock, onGroup, onJoinDrawings }: {
+  onJoinDrawings?: () => void;
   menu: CanvasMenuState; count: number; canPaste: boolean; allLocked: boolean;
   onClose: () => void; onCopy: () => void; onPaste: () => void; onDuplicate: () => void;
   onDelete: () => void; onLock: () => void; onGroup: () => void;
@@ -31,6 +32,7 @@ export default function CanvasContextMenu({ menu, count, canPaste, allLocked, on
     ...(menu.hasSelection ? [
       { name: allLocked ? 'Unlock' : 'Lock position', keys: '', icon: allLocked ? Unlock : Lock, run: onLock },
       ...(count > 1 ? [{ name: 'Group in frame', keys: '', icon: Layers, run: onGroup }] : []),
+      ...(onJoinDrawings ? [{ name: 'Join drawings', keys: '', icon: Layers, run: onJoinDrawings }] : []),
       { name: 'Delete', keys: 'Del', icon: Trash2, run: onDelete },
     ] : []),
   ];

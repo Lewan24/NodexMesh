@@ -1,10 +1,10 @@
+import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BoardItem, TextItem } from '@/entities/board/types';
 
 import {
   DEFAULT_TEXT_CARD_WIDTH,
-  isLightColor,
   TEXT_SIZE_STYLES,
 } from '@/features/blocks/text/utils/textUtils';
 import { getTypographyStyle } from '../typography/typographyUtils';
@@ -38,13 +38,20 @@ export default function TextBlock({
         ? 'flex-end'
         : 'flex-start';
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (editing) {
       inputRef.current?.focus();
     }
   }, [editing]);
+
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (!editing || !textarea) return;
+    textarea.style.height = '0px';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, [editing, item.content, item.width, item.typography?.fontSize, item.typography?.fontFamily]);
 
   const update = useCallback(
     (patch: Partial<TextItem>) => {
@@ -64,10 +71,7 @@ export default function TextBlock({
 
   const isCard = Boolean(item.color);
 
-  const light =
-    isCard && item.color
-      ? isLightColor(item.color)
-      : true;
+  const { background, light } = useCardAppearance(item.color);
 
   const textColor = isCard
     ? light
@@ -88,8 +92,8 @@ export default function TextBlock({
   }, []);
 
   const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Enter' || event.key === 'Escape') {
+    (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === 'Escape' || (event.key === 'Enter' && (event.ctrlKey || event.metaKey))) {
         setEditing(false);
       }
     },
@@ -115,7 +119,7 @@ export default function TextBlock({
         style={
           isCard
             ? {
-                backgroundColor: item.color,
+                backgroundColor: background,
                 padding: '14px 18px',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                 height: item.height ? '100%' : undefined,
@@ -146,7 +150,9 @@ export default function TextBlock({
           {/* Text */}
 
         {editing ? (
-          <input
+          <textarea
+            aria-label="Text content"
+            rows={1}
             ref={inputRef}
             value={item.content}
             onChange={event =>
@@ -157,7 +163,7 @@ export default function TextBlock({
             onBlur={finishEditing}
             onKeyDown={handleKeyDown}
             onMouseDown={event => event.stopPropagation()}
-            className={`bg-transparent outline-none leading-tight ${
+            className={`bg-transparent resize-none outline-none leading-tight ${
               item.typography?.fontSize
                 ? ''
                 : TEXT_SIZE_STYLES[item.size]
@@ -185,7 +191,7 @@ export default function TextBlock({
             } ${
               isCard
                 ? 'whitespace-pre-wrap break-words'
-                : 'text-nowrap'
+                : 'whitespace-pre-wrap break-words'
             }`}
             style={{
               color:

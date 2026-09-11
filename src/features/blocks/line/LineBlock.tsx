@@ -1,3 +1,4 @@
+import { getFontFamilyCss } from '../typography/typographyUtils';
 import { useState } from 'react';
 
 import type { LineItem } from '@/entities/board/types';
@@ -24,9 +25,10 @@ interface ArrowHeadProps {
   y: number;
   angle: number;
   color: string;
+  strokeWidth: number;
 }
 
-function ArrowHead({ x, y, angle, color }: ArrowHeadProps) {
+function ArrowHead({ x, y, angle, color, strokeWidth }: ArrowHeadProps) {
   const {
     firstX,
     firstY,
@@ -34,14 +36,15 @@ function ArrowHead({ x, y, angle, color }: ArrowHeadProps) {
     tipY,
     secondX,
     secondY,
-  } = getArrowHeadPoints(x, y, angle);
+  } = getArrowHeadPoints(x, y, angle, strokeWidth);
 
   return (
-    <polyline
+    <polygon
       points={`${firstX},${firstY} ${tipX},${tipY} ${secondX},${secondY}`}
       stroke={color}
-      strokeWidth="2"
-      fill="none"
+      strokeWidth={strokeWidth / 2}
+      fill={color}
+      style={{ pointerEvents: 'all', cursor: 'grab' }}
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -141,13 +144,13 @@ export default function LineBlock({
           }}
         />
 
-        {/* Visible line */}
+        {/* Stop the shaft inside filled heads so its round cap cannot protrude. */}
 
         <line
-          x1={originX}
-          y1={originY}
-          x2={endX}
-          y2={endY}
+          x1={originX + (item.arrowStart ? Math.cos(angle) * item.strokeWidth : 0)}
+          y1={originY + (item.arrowStart ? Math.sin(angle) * item.strokeWidth : 0)}
+          x2={endX - (item.arrowEnd ? Math.cos(angle) * item.strokeWidth : 0)}
+          y2={endY - (item.arrowEnd ? Math.sin(angle) * item.strokeWidth : 0)}
           stroke={lineColor}
           strokeWidth={item.strokeWidth}
           strokeLinecap="round"
@@ -162,6 +165,7 @@ export default function LineBlock({
             y={endY}
             angle={angle}
             color={lineColor}
+            strokeWidth={item.strokeWidth}
           />
         )}
 
@@ -173,6 +177,7 @@ export default function LineBlock({
             y={originY}
             angle={angle + Math.PI}
             color={lineColor}
+            strokeWidth={item.strokeWidth}
           />
         )}
 
@@ -257,10 +262,10 @@ export default function LineBlock({
               'center center',
 
             fontSize:
-              `${item.labelFontSize ?? 11}px`,
+              `${item.typography?.fontSize ?? item.labelFontSize ?? 11}px`,
 
             fontFamily:
-              item.typography?.fontFamily,
+              getFontFamilyCss(item.typography?.fontFamily),
 
             fontWeight:
               item.typography?.bold
@@ -280,7 +285,7 @@ export default function LineBlock({
             border:
               '1px solid var(--color-border-soft)',
 
-            borderRadius: 7,
+            borderRadius: 2,
 
             padding: '2px 6px',
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { DispenserItem } from "@/entities/board/types"
 import type { BlockUpdateHandler } from "../types"
 import { startToolDrag } from "@/features/canvas/utils/toolDrag"
-import { isLightColor } from "../note/utils/noteUtils"
+import { useCardAppearance } from '../shared/cardAppearance';
 import ContentBlockShell from "../shared/ContentBlockShell"
 
 export default function DispenserBlock({
@@ -14,6 +14,7 @@ export default function DispenserBlock({
   onUpdate: BlockUpdateHandler
   onDelete: () => void
 }) {
+  const { background, textColor } = useCardAppearance(item.color);
   const [editingLabel, setEditingLabel] = useState(false);
   return (
     <ContentBlockShell
@@ -62,9 +63,9 @@ export default function DispenserBlock({
           aria-label="Drag a new note"
           className="relative flex-1 min-h-12 item-rounded text-xs font-medium cursor-grab active:cursor-grabbing"
           style={{
-            background: item.color,
-            color: isLightColor(item.color) ? "#1e293b" : "#e8f4f4",
-            boxShadow: `3px 4px 0 ${item.color}, 6px 8px 0 ${item.color}, 8px 11px 8px #0003`,
+            background,
+            color: textColor,
+            boxShadow: `3px 4px 0 ${background}, 6px 8px 0 ${background}, 8px 11px 8px #0003`,
             border: "1px solid #0002",
           }}
           onMouseDown={(e) => {

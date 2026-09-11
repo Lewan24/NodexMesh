@@ -1,12 +1,11 @@
+import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { BoardItem, ImageItem } from '@/entities/board/types';
 
 import {
-  DEFAULT_IMAGE_BACKGROUND,
   DEFAULT_IMAGE_HEIGHT,
   DEFAULT_IMAGE_WIDTH,
-  isLightColor,
 } from '@/features/blocks/image/utils/imageUtils';
 import { getTypographyStyle } from '../typography/typographyUtils';
 
@@ -30,12 +29,10 @@ export default function ImageBlock({
 
   const width = item.width ?? DEFAULT_IMAGE_WIDTH;
   const imageHeight = item.imgHeight ?? DEFAULT_IMAGE_HEIGHT;
-  const background = item.color ?? DEFAULT_IMAGE_BACKGROUND;
-
-  const light = isLightColor(background);
+  const { background, light } = useCardAppearance(item.color);
 
   const textColor = light ? '#1e293b' : '#8aacb8';
-  const mutedColor = light ? '#94a3b8' : '#5a8a94';
+  const mutedColor = light ? '#94a3b8' : '#b9aec9';
   const borderColor = light ? 'rgba(0,0,0,0.1)' : '#1a3040';
   const inputBackground = light ? '#f8fafc' : '#071317';
 
@@ -82,7 +79,7 @@ export default function ImageBlock({
         className={
           isSticker
             ? 'overflow-hidden item-rounded'
-            : 'overflow-hidden border shadow-xl item-rounded'
+            : 'overflow-hidden shadow-xl item-rounded'
         }
         style={
           isSticker

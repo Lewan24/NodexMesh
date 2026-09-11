@@ -26,7 +26,7 @@ export const FRAME_COLORS = [
 ];
 
 export const BACKGROUND_ITEM_TYPES = new Set<BoardItem['type']>([
-  'document', 'embed', 'timeline', 'diagram',
+  'code', 'document', 'embed', 'timeline', 'diagram',
   'note',
   'checklist',
   'link',

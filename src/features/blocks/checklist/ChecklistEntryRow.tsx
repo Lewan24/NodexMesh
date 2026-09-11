@@ -62,7 +62,7 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
       <DragHandle
         compact
         color={`${textColor}90`}
-        title="Drag to reorder or move to another checklist"
+        title="Drag to reorder or move to Checklist / Kanban"
         onMouseDown={onDragHandleMouseDown}
       />
 
@@ -70,6 +70,9 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
       <button
         onMouseDown={event => event.stopPropagation()}
         onClick={onToggle}
+        role="checkbox"
+        aria-checked={entry.done}
+        aria-label={`Complete ${entry.text || 'checklist item'}`}
         className="flex-shrink-0 w-4 h-4 mt-0.5 rounded flex items-center justify-center transition-all duration-200 border"
         style={{
           borderColor: entry.done ? accentColor : `${textColor}40`,
@@ -94,7 +97,7 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
         <textarea
           ref={inputRef}
           rows={1}
-          className="flex-1 min-w-0 bg-transparent outline-none text-sm leading-snug resize-none overflow-hidden"
+          className="flex-1 min-w-0 bg-transparent outline-none text-[length:inherit] leading-snug resize-none overflow-hidden"
           style={{
             color: textColor,
           }}
@@ -120,7 +123,7 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
         />
       ) : (
         <span
-          className="flex-1 min-w-0 text-sm leading-snug select-none cursor-text transition-all duration-150 whitespace-pre-wrap break-words"
+          className="flex-1 min-w-0 text-[length:inherit] leading-snug select-none cursor-text transition-all duration-150 whitespace-pre-wrap break-words"
           style={{
             color: entry.done ? `${textColor}55` : textColor,
             textDecoration: entry.done ? 'line-through' : 'none',

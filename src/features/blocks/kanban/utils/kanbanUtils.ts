@@ -13,7 +13,7 @@ export const DEFAULT_KANBAN_COLUMN_WIDTH = 180;
 export const MIN_KANBAN_COLUMN_WIDTH = 140;
 export const MAX_KANBAN_COLUMN_WIDTH = 600;
 
-export const DEFAULT_KANBAN_BACKGROUND = '#08171d';
+export const DEFAULT_KANBAN_BACKGROUND = '#ffffff';
 
 export function createId(): string {
   return Math.random().toString(36).slice(2, 9);

@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 
+import ItemLockBadge from '@/features/canvas/components/ItemLockBadge';
 import DragHandle from '@/features/blocks/shared/DragHandle';
 
 interface ColumnItemRowProps {
   itemId: string;
+  locked?: boolean;
   children: ReactNode;
 
   isDragging?: boolean;
@@ -19,6 +21,7 @@ interface ColumnItemRowProps {
 
 export default function ColumnItemRow({
   itemId,
+  locked,
   children,
   isDragging = false,
   isSelected = false,
@@ -41,6 +44,7 @@ export default function ColumnItemRow({
         onSelect();
       }}
     >
+      {locked && <ItemLockBadge />}
       {/* Drag column */}
 
       <div

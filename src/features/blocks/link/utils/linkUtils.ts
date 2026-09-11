@@ -1,4 +1,4 @@
-export const DEFAULT_LINK_BACKGROUND = '#08171d';
+export const DEFAULT_LINK_BACKGROUND = '#ffffff';
 
 export function isLightColor(hex: string): boolean {
   const red = parseInt(hex.slice(1, 3), 16);

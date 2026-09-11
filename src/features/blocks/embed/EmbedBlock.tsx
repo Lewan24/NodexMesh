@@ -4,7 +4,7 @@ import type { BlockUpdateHandler } from "../types"
 import ContentBlockShell from "../shared/ContentBlockShell"
 import { getEmbedUrl } from "./embedUrl"
 import { getTypographyStyle } from '../typography/typographyUtils';
-import { isLightColor } from '../kanban/utils/kanbanUtils';
+import { useCardAppearance } from '../shared/cardAppearance';
 import YouTubeVideo from './YouTubeVideo';
 
 export default function EmbedBlock({
@@ -16,6 +16,7 @@ export default function EmbedBlock({
   onUpdate: BlockUpdateHandler
   onDelete: () => void
 }) {
+  const { background, textColor } = useCardAppearance(item.color);
   const [editing, setEditing] = useState(!item.url)
   const [interactive, setInteractive] = useState(false)
   const [draft, setDraft] = useState(item.url)
@@ -26,7 +27,7 @@ export default function EmbedBlock({
     onUpdate((current) =>
       current.type === "embed" ? { ...current, ...patch } : current,
     )
-  if (videoId && !editing) return <section className="group relative item-rounded shadow-xl overflow-hidden flex flex-col" style={{ width: item.width, height: item.height, background: item.color ?? 'var(--color-surface)', color: item.color ? (isLightColor(item.color) ? '#1e293b' : '#f8fafc') : 'var(--color-text-primary)', ...getTypographyStyle(item) }}>
+  if (videoId && !editing) return <section className="group relative item-rounded shadow-xl overflow-hidden flex flex-col" style={{ width: item.width, height: item.height, background, color: textColor, ...getTypographyStyle(item) }}>
     {item.topColor && <div className="h-[5px] shrink-0" style={{ background: item.topColor }} />}
     {item.showLabel && <header className="px-4 py-2 font-medium cursor-grab">{item.title || 'YouTube video'}</header>}
     <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity" onMouseDown={event => event.stopPropagation()}>
