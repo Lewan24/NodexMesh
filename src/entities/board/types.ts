@@ -128,6 +128,8 @@ export interface TypographySettings {
 }
 
 export interface BaseItem {
+  /** Persistent root-frame ownership; null means explicitly unassigned. */
+  frameId?: string | null;
   color?: string;
   id: string;
   typography?: TypographySettings;

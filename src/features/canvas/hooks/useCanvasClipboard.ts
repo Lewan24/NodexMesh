@@ -4,7 +4,7 @@ import type { BoardItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
 import type { SizeMap } from '../utils/lineGeometry';
 import { resolveLineItem } from '../utils/lineGeometry';
-import { getContainedItemIds, getItemRect } from '../utils/itemGeometry';
+import { getFrameContents } from '../utils/frameGeometry';
 import { cloneItems, copyOrigin } from '../utils/cloneItems';
 
 // Board clipboard survives switching projects, and stays isolated per signed-in user.
@@ -30,7 +30,7 @@ export function useCanvasClipboard({ projectRef, selectedIdsRef, measuredSizes, 
     }
     const ids = new Set(selectedIdsRef.current);
     all.filter(item => ids.has(item.id) && item.type === 'frame').forEach(frame => {
-      getContainedItemIds(all, getItemRect(frame, measuredSizes), measuredSizes, frame.id).forEach(id => ids.add(id));
+      if (frame.type === 'frame') getFrameContents(frame, all).forEach(item => ids.add(item.id));
     });
     all.forEach(item => {
       if (item.type === 'line' && item.startItemId && item.endItemId && ids.has(item.startItemId) && ids.has(item.endItemId)) ids.add(item.id);

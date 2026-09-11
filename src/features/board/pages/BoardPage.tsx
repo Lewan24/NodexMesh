@@ -253,11 +253,13 @@ export default function BoardPage({
     };
 
     addItem(frame);
+    selectedItems.filter(item => item.type !== 'frame' && !item.locked).forEach(item => updateItem(item.id, current => ({ ...current, frameId: frame.id })));
     setSelectedIds([]);
   }, [
     selectedIds,
     activeProject,
     addItem,
+    updateItem,
     setSelectedIds,
   ]);
 

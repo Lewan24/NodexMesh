@@ -101,6 +101,7 @@ export function joinDrawings(items: DrawingItem[]): DrawingItem | null {
   const height = Math.max(...items.map(item => item.y + item.height)) - y;
   const first = ordered[0]!;
   return { id: crypto.randomUUID(), type: 'drawing', x, y, width, height,
+    frameId: items.every(item => item.frameId === items[0]?.frameId) ? items[0]?.frameId ?? null : null,
     viewWidth: width, viewHeight: height, points: [], color: first.color, strokeWidth: first.strokeWidth,
     zIndex: Math.max(...items.map(item => item.zIndex)),
     strokes: ordered.flatMap(item => {

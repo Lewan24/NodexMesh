@@ -27,14 +27,26 @@ export default function EmbedBlock({
     onUpdate((current) =>
       current.type === "embed" ? { ...current, ...patch } : current,
     )
-  if (videoId && !editing) return <section className="group relative item-rounded shadow-xl overflow-hidden flex flex-col" style={{ width: item.width, height: item.height, background, color: textColor, ...getTypographyStyle(item) }}>
+  if (videoId && !editing) return <section className="group/video relative item-rounded shadow-xl flex flex-col" style={{ width: item.width, height: item.height, background, color: textColor, ...getTypographyStyle(item) }}>
     {item.topColor && <div className="h-[5px] shrink-0" style={{ background: item.topColor }} />}
     {item.showLabel && <header className="px-4 py-2 font-medium cursor-grab">{item.title || 'YouTube video'}</header>}
-    <div className="absolute top-2 right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity" onMouseDown={event => event.stopPropagation()}>
+    <div className="absolute bottom-full right-0 z-20 pb-2 flex gap-1 opacity-0 pointer-events-none group-hover/video:opacity-100 group-hover/video:pointer-events-auto group-focus-within/video:opacity-100 group-focus-within/video:pointer-events-auto transition-opacity duration-150" onMouseDown={event => event.stopPropagation()}>
       <button className="rounded bg-black/75 text-white text-xs px-2 py-1" onClick={() => { setDraft(item.url); setEditing(true); }}>Settings</button>
       <button className="rounded bg-black/75 text-white text-xs px-2 py-1" aria-label="Delete block" onClick={onDelete}>×</button>
     </div>
-    <div className="flex-1 min-h-0"><YouTubeVideo videoId={videoId} title={item.title} /></div>
+    <div className="flex-1 min-h-0 overflow-hidden item-rounded"><YouTubeVideo videoId={videoId} title={item.title} interactive={interactive} /></div>
+    <div className="absolute top-full right-0 z-20 pt-2 opacity-0 pointer-events-none group-hover/video:opacity-100 group-hover/video:pointer-events-auto group-focus-within/video:opacity-100 group-focus-within/video:pointer-events-auto transition-opacity duration-150">
+      <button
+        type="button"
+        aria-pressed={interactive}
+        className={`text-xs font-medium px-2 py-1 rounded-sm shadow-md transition-colors ${interactive ? 'bg-violet-600 text-white' : 'bg-black/75 text-white hover:bg-black/90'}`}
+        title={interactive ? 'Return to click-to-play and drag-to-move mode' : 'Use all YouTube controls, including subtitles and video settings'}
+        onMouseDown={event => event.stopPropagation()}
+        onClick={() => setInteractive(value => !value)}
+      >
+        {interactive ? 'Finish video interaction' : 'Interact with video'}
+      </button>
+    </div>
   </section>;
   return (
     <ContentBlockShell

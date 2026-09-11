@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { loadYouTubeApi } from './youtubeApi';
 import type { YouTubePlayer } from './youtubeApi';
 
-export default function YouTubeVideo({ videoId, title }: { videoId: string; title: string }) {
+export default function YouTubeVideo({ videoId, title, interactive = false }: { videoId: string; title: string; interactive?: boolean }) {
   const host = useRef<HTMLDivElement>(null);
   const player = useRef<YouTubePlayer | null>(null);
   const gesture = useRef<{ x: number; y: number; time: number; moved: boolean } | null>(null);
@@ -38,7 +38,7 @@ export default function YouTubeVideo({ videoId, title }: { videoId: string; titl
   };
   return <div className="relative h-full w-full bg-black">
     <div ref={host} className="absolute inset-0" />
-    <div role="button" tabIndex={0} aria-label={`${playing ? 'Pause' : 'Play'} ${title || 'video'}`} aria-disabled={!ready} className="absolute inset-x-0 top-0 cursor-grab active:cursor-grabbing outline-none focus-visible:ring-2 focus-visible:ring-violet-400" style={{ bottom: ready ? 44 : 0 }} title="Click to play or pause · Drag to move"
+    {!interactive && <div role="button" tabIndex={0} aria-label={`${playing ? 'Pause' : 'Play'} ${title || 'video'}`} aria-disabled={!ready} className="absolute inset-x-0 top-0 cursor-grab active:cursor-grabbing outline-none focus-visible:ring-2 focus-visible:ring-violet-400" style={{ bottom: ready ? 44 : 0 }} title="Click to play or pause · Drag to move"
       onMouseDown={event => { if (event.button === 0) gesture.current = { x: event.clientX, y: event.clientY, time: performance.now(), moved: false }; }}
       onMouseMove={event => { const start = gesture.current; if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6) start.moved = true; }}
       onClick={event => {
@@ -46,7 +46,7 @@ export default function YouTubeVideo({ videoId, title }: { videoId: string; titl
         if (start && (start.moved || performance.now() - start.time > 350 || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6)) return;
         event.stopPropagation(); toggle();
       }}
-      onKeyDown={event => { if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); toggle(); } }} />
+      onKeyDown={event => { if (event.key === ' ' || event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); toggle(); } }} />}
     {(!ready || failed) && <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-white text-sm px-8 text-center">{failed ? <a className="pointer-events-auto underline" href={`https://www.youtube.com/watch?v=${videoId}`} target="_blank" rel="noopener noreferrer" onMouseDown={event => event.stopPropagation()}>Video unavailable here — open on YouTube ↗</a> : 'Loading video…'}</div>}
   </div>;
 }
