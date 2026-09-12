@@ -40,6 +40,7 @@ function getMinSize(item: BoardItem): MinSize {
   switch (item.type) {
     case 'drawing': return { width: 12, height: 12 };
     case 'timeline': return { width: 528, height: 340 };
+    case 'database':
     case 'diagram': return { width: 528, height: 360 };
     case 'document': return { width: 320, height: 240 };
     case 'embed': return { width: 320, height: 200 };

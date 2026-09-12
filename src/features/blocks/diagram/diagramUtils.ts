@@ -11,7 +11,7 @@ export function layoutDiagram(nodes: DiagramNode[], edges: DiagramEdge[]): Diagr
   while (remaining.size) {
     let layer = [...remaining].filter(id => !edges.some(edge => edge.target === id && remaining.has(edge.source)));
     if (!layer.length) layer = [...remaining];
-    layer.forEach((id, index) => { positions.set(id, { x: index * 220, y: row * 180 }); remaining.delete(id); });
+    layer.forEach((id, index) => { positions.set(id, { x: index * 224, y: row * 176 }); remaining.delete(id); });
     row++;
   }
   return nodes.map(node => ({ ...node, position: positions.get(node.id)! }));
@@ -29,3 +29,17 @@ export function diagramTemplate(): { nodes: DiagramNode[]; edges: DiagramEdge[] 
   return { nodes, edges };
 }
 
+
+
+export function alignDiagramNodes<T extends DiagramNode>(nodes: T[], ids: Set<string>, axis: 'x' | 'y'): T[] {
+  const selected = nodes.filter(node => ids.has(node.id));
+  if (selected.length < 2) return nodes;
+  const position = Math.round(Math.min(...selected.map(node => node.position[axis])) / 16) * 16;
+  return nodes.map(node => ids.has(node.id) ? { ...node, position: { ...node.position, [axis]: position } } : node);
+}
+
+export function canConnectDiagram(edges: DiagramEdge[], connection: { source: string; target: string; sourceHandle?: string | null; targetHandle?: string | null }, ignoredId?: string) {
+  return connection.source !== connection.target && !edges.some(edge => edge.id !== ignoredId &&
+    edge.source === connection.source && edge.target === connection.target &&
+    edge.sourceHandle === connection.sourceHandle && edge.targetHandle === connection.targetHandle);
+}

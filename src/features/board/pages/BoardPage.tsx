@@ -38,6 +38,7 @@ export default function BoardPage({
     renameProject,
     trashProject,
     restoreProject,
+    emptyTrash,
   } = useProjects(userId);
 
   const {
@@ -267,6 +268,7 @@ export default function BoardPage({
     onSelectProject={handleSelectProject} onAddProject={handleAddProject}
     onRenameProject={renameProject}
     onTrashProject={id => { trashProject(id); resetBoardView(); }}
+    onEmptyTrash={emptyTrash}
     onRestoreProject={id => { restoreProject(id); resetBoardView(); }}
     onResetDemo={resetDemo} searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />;
 

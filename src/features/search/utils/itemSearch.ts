@@ -13,6 +13,7 @@ export function getSearchableText(
 ): string {
   switch (item.type) {
     case 'timeline': return [item.title, ...item.tasks.flatMap(task => [task.title, task.start, task.end, ...task.checklist.map(entry => entry.text)])].join(' ');
+    case 'database': return [item.title, ...item.tables.flatMap(table => [table.name, ...table.fields.flatMap(field => [field.name, field.dataType])])].join(' ');
     case 'diagram': return [item.title, ...item.nodes.map(node => node.data.label), ...item.edges.map(edge => edge.label ?? '')].join(' ');
     case 'document': return `${item.title} ${item.content.replace(/<[^>]*>/g, ' ')}`;
     case 'code': return `${item.language} ${item.content}`;

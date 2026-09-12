@@ -14,6 +14,7 @@ interface ProjectMenuProps {
   onAddProject: (name: string) => void;
   onRenameProject: (id: string, name: string) => void;
   onTrashProject: (id: string) => void;
+  onEmptyTrash: () => void;
   onRestoreProject: (id: string) => void;
 }
 export default function ProjectMenu(props: ProjectMenuProps) {
@@ -64,7 +65,8 @@ export default function ProjectMenu(props: ProjectMenuProps) {
         </div>)}
         {!visible.length && <p className="py-8 text-center text-sm opacity-65">{trash ? 'Your project trash is empty.' : 'No projects yet. Create your first board.'}</p>}
       </div>
-      <p className="px-4 pb-3 text-xs opacity-65" role="status">{message || (trash ? 'Projects stay here until you restore them. No automatic deletion.' : 'All changes are saved automatically.')}</p>
+      {trash && visible.length > 0 && <button className="project-tab m-3 text-rose-400" onClick={() => { if (window.confirm(`Permanently delete all ${visible.length} projects in Trash? This cannot be undone.`)) { props.onEmptyTrash(); setMessage('Trash emptied.'); } }}>Empty trash</button>}
+      <p className="px-4 pb-3 text-xs opacity-65" role="status">{message || (trash ? 'Restore projects or empty the trash permanently. No automatic deletion.' : 'All changes are saved automatically.')}</p>
     </div>}
   </div>;
 }

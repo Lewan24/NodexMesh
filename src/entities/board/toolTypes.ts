@@ -3,6 +3,7 @@ export type ToolType =
   | 'drawing'
   | 'timeline'
   | 'diagram'
+  | 'database'
   | 'document'
   | 'embed'
   | 'code'

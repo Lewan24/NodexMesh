@@ -37,6 +37,8 @@ export function createCanvasItem(
   switch (type) {
     case 'timeline':
       return { ...base, type, title: 'Project timeline', mode: 'simple', tasks: [], width: ITEM_WIDTH.timeline, height: 520 };
+    case 'database':
+      return { ...base, type, title: 'Database schema', tables: [], relations: [], width: ITEM_WIDTH.database, height: 600 };
     case 'diagram':
       return { ...base, type, title: 'System diagram', nodes: [], edges: [], width: ITEM_WIDTH.diagram, height: 560 };
     case 'document':

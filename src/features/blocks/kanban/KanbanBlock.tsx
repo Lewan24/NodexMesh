@@ -8,7 +8,7 @@ import type {
   KanbanItem,
 } from '@/entities/board/types';
 
-import CustomColorInput from '../editbar/components/CustomColorInput';
+import KanbanColumnDialog from './KanbanColumnDialog';
 import KanbanCardItem from '@/features/blocks/kanban/KanbanCardItem';
 
 import {
@@ -59,7 +59,6 @@ export default function KanbanBlock({
   const [dropColumn, setDropColumn] = useState<string | null>(null);
   const [addAtTop, setAddAtTop] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
-  const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
   const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(null);
   const [newCardText, setNewCardText] = useState('');
 
@@ -224,21 +223,6 @@ export default function KanbanBlock({
     [updateColumns],
   );
 
-  const renameColumn = useCallback(
-    (columnId: string, title: string) => {
-      updateColumns(columns =>
-        columns.map(column =>
-          column.id === columnId
-            ? {
-                ...column,
-                title,
-              }
-            : column,
-        ),
-      );
-    },
-    [updateColumns],
-  );
 
   const handleColumnResizeStart = useCallback(
     (columnId: string, event: React.MouseEvent) => {
@@ -422,7 +406,7 @@ export default function KanbanBlock({
                   className="text-[11px] font-mono"
                   style={{ color: mutedColor }}
                 >
-                  {doneCards}/{totalCards}
+                  {doneCards}/{totalCards} · {Math.round(totalCards ? doneCards / totalCards * 100 : 0)}%
                 </span>
               </div>
             )}
@@ -530,45 +514,7 @@ export default function KanbanBlock({
                 {([-1, 1] as const).map(direction => <button key={direction} aria-label={`Move ${column.title} ${direction === -1 ? 'left' : 'right'}`} className="text-xs disabled:opacity-20" style={{ color: mutedColor }} disabled={!item.columns[columnIndex + direction]} onMouseDown={event => event.stopPropagation()} onClick={() => reorderColumn(column.id, item.columns[columnIndex + direction]!.id)}>{direction === -1 ? '‹' : '›'}</button>)}
                 <button aria-label={`Settings for ${column.title}`} title="Column settings" aria-expanded={columnSettings === column.id} className="w-5 h-5 shrink-0 cursor-pointer border border-current rounded-sm" style={{ color: column.color, background: `${column.color}22` }} onMouseDown={event => event.stopPropagation()} onClick={() => setColumnSettings(columnSettings === column.id ? null : column.id)}>⚙</button>
 
-                {editingColumnId === column.id ? (
-                  <input
-                    autoFocus
-                    className="flex-1 text-[11px] font-bold uppercase tracking-widest bg-transparent outline-none border-b"
-                    style={{
-                      color: column.color,
-                      borderColor: `${column.color}80`,
-                      ...typographyStyle,
-                      fontSize: baseFontSize
-                        ? `${baseFontSize}px`
-                        : undefined,
-                    }}
-                    value={column.title}
-                    onChange={event =>
-                      renameColumn(column.id, event.target.value)
-                    }
-                    onBlur={() => setEditingColumnId(null)}
-                    onKeyDown={event => {
-                      if (event.key === 'Enter' || event.key === 'Escape') {
-                        setEditingColumnId(null);
-                      }
-                    }}
-                    onMouseDown={event => event.stopPropagation()}
-                  />
-                ) : (
-                  <span
-                    className="flex-1 text-[11px] font-bold uppercase tracking-widest select-none cursor-text"
-                    style={{ 
-                      color: column.color,
-                      ...typographyStyle,
-                      fontSize: baseFontSize
-                        ? `${baseFontSize}px`
-                        : undefined, }}
-                    onDoubleClick={() => setEditingColumnId(column.id)}
-                    title="Double-click to rename"
-                  >
-                    {column.title}
-                  </span>
-                )}
+                <button className="flex-1 text-left font-bold uppercase tracking-widest" style={{ color: column.color, ...typographyStyle }} onMouseDown={event => event.stopPropagation()} onClick={() => setColumnSettings(column.id)} title="Edit column">{column.title}</button>
 
                 <span
                   className="ml-auto text-[11px] font-mono flex-shrink-0"
@@ -604,12 +550,7 @@ export default function KanbanBlock({
                 )}
               </div>
 
-              {columnSettings === column.id && <div className="p-2 mb-2 border rounded-sm space-y-2 text-xs" style={{ order: -2, background: 'var(--color-surface)', color: 'var(--color-text-primary)', borderColor: 'var(--color-border)' }} onMouseDown={event => event.stopPropagation()}>
-                <label className="block">Column name<input aria-label="Column name" className="w-full bg-transparent border-b outline-none py-1" value={column.title} onChange={event => renameColumn(column.id, event.target.value)} /></label>
-                <span className="block">Title color</span>
-                <CustomColorInput title="Column title color" value={column.color} onChange={color => updateColumns(columns => columns.map(current => current.id === column.id ? { ...current, color } : current))} />
-                <button className="px-2 py-1 hover:bg-violet-500/10" onClick={() => setColumnSettings(null)}>Done</button>
-              </div>}
+
               <button className="text-xs text-left py-1.5 px-2 mb-1 hover:bg-violet-500/10" style={{ color: mutedColor, order: -2 }} aria-label={`Add card at top of ${column.title}`} onMouseDown={event => event.stopPropagation()} onClick={() => { setAddAtTop(true); setAddingCardColumnId(column.id); }}>+ Add card</button>
               {/* Cards */}
 
@@ -798,6 +739,11 @@ export default function KanbanBlock({
           </button>
         </div>
       </div>
+      {columnSettings && item.columns.find(column => column.id === columnSettings) && <KanbanColumnDialog
+        key={columnSettings} column={item.columns.find(column => column.id === columnSettings)!}
+        onClose={() => setColumnSettings(null)}
+        onSave={patch => { updateColumns(columns => columns.map(column => column.id === columnSettings ? { ...column, ...patch } : column)); setColumnSettings(null); }}
+      />}
     </div>
   );
 }
