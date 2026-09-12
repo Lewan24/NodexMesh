@@ -1,7 +1,5 @@
 import { BoardItem } from '@/entities/board/types';
-import type {
-  NestedDragPayload,
-} from '@/features/canvas/utils/nestedDrag';
+import type { NestedDragPayload } from '@/features/canvas/utils/nestedDrag';
 
 interface NestedDragGhostProps {
   payload: NestedDragPayload;
@@ -9,11 +7,7 @@ interface NestedDragGhostProps {
   clientY: number;
 }
 
-export default function NestedDragGhost({
-  payload,
-  clientX,
-  clientY,
-}: NestedDragGhostProps) {
+export default function NestedDragGhost({ payload, clientX, clientY }: NestedDragGhostProps) {
   return (
     <div
       className="
@@ -39,20 +33,15 @@ export default function NestedDragGhost({
         minWidth: 150,
         maxWidth: 260,
 
-        backgroundColor:
-          'var(--color-surface-translucent)',
+        backgroundColor: 'var(--color-surface-translucent)',
 
-        borderColor:
-          'var(--color-accent)',
+        borderColor: 'var(--color-accent)',
 
-        boxShadow:
-          '0 14px 32px rgba(0,0,0,0.2), 0 0 0 2px rgba(124,58,237,0.08)',
+        boxShadow: '0 14px 32px rgba(0,0,0,0.2), 0 0 0 2px rgba(124,58,237,0.08)',
 
-        backdropFilter:
-          'blur(10px)',
+        backdropFilter: 'blur(10px)',
 
-        transform:
-          'rotate(1.5deg) scale(1.02)',
+        transform: 'rotate(1.5deg) scale(1.02)',
 
         opacity: 0.92,
       }}
@@ -67,10 +56,7 @@ export default function NestedDragGhost({
             tracking-widest
             font-semibold
           "
-          style={{
-            color:
-              'var(--color-text-faint)',
-          }}
+          style={{ color: 'var(--color-text-faint)' }}
         >
           {getTypeLabel(payload)}
         </div>
@@ -81,10 +67,7 @@ export default function NestedDragGhost({
             font-medium
             truncate
           "
-          style={{
-            color:
-              'var(--color-text-primary)',
-          }}
+          style={{ color: 'var(--color-text-primary)' }}
         >
           {getText(payload)}
         </div>
@@ -93,9 +76,7 @@ export default function NestedDragGhost({
   );
 }
 
-function getTypeLabel(
-  payload: NestedDragPayload,
-): string {
+function getTypeLabel(payload: NestedDragPayload): string {
   switch (payload.kind) {
     case 'kanban-card':
       return 'Kanban card';
@@ -108,26 +89,16 @@ function getTypeLabel(
   }
 }
 
-function getText(
-  payload: NestedDragPayload,
-): string {
+function getText(payload: NestedDragPayload): string {
   switch (payload.kind) {
     case 'kanban-card':
-      return (
-        payload.card.text ||
-        'Untitled card'
-      );
+      return payload.card.text || 'Untitled card';
 
     case 'checklist-entry':
-      return (
-        payload.entry.text ||
-        'Untitled item'
-      );
+      return payload.entry.text || 'Untitled item';
 
     case 'column-item':
-      return getBoardItemText(
-        payload.item,
-      );
+      return getBoardItemText(payload.item);
   }
 }
 
@@ -163,11 +134,8 @@ function DragIcon() {
         opacity-50
       "
     >
-      {[0, 1, 2].map(row => (
-        <div
-          key={row}
-          className="flex gap-[2px]"
-        >
+      {[0, 1, 2].map((row) => (
+        <div key={row} className="flex gap-[2px]">
           <span className="w-1 h-1 rounded-full bg-current" />
           <span className="w-1 h-1 rounded-full bg-current" />
         </div>

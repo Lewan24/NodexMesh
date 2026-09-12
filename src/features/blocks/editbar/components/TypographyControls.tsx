@@ -1,9 +1,4 @@
-import type {
-  BoardItem,
-  FontFamily,
-  TextAlign,
-  VerticalAlign
-} from '@/entities/board/types';
+import type { BoardItem, FontFamily, TextAlign, VerticalAlign } from '@/entities/board/types';
 
 import {
   FONT_FAMILIES,
@@ -13,62 +8,32 @@ import {
   updateTypography,
 } from '@/features/blocks/typography/typographyUtils';
 
-import EditBarButton, {
-  EditBarDivider,
-} from './EditBarButton';
+import EditBarButton, { EditBarDivider } from './EditBarButton';
 
 interface TypographyControlsProps {
   item: BoardItem;
-  onUpdate: (
-    updater: (item: BoardItem) => BoardItem,
-  ) => void;
+  onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
 }
 
-const ALIGNMENTS: TextAlign[] = [
-  'left',
-  'center',
-  'right',
-];
+const ALIGNMENTS: TextAlign[] = ['left', 'center', 'right'];
 
-const VERTICAL_ALIGNMENTS: VerticalAlign[] = [
-  'top',
-  'middle',
-  'bottom',
-];
+const VERTICAL_ALIGNMENTS: VerticalAlign[] = ['top', 'middle', 'bottom'];
 
-export default function TypographyControls({
-  item,
-  onUpdate,
-}: TypographyControlsProps) {
+export default function TypographyControls({ item, onUpdate }: TypographyControlsProps) {
   const typography = item.typography;
 
-  const currentSize =
-    typography?.fontSize ??
-    getDefaultFontSize(item);
+  const currentSize = typography?.fontSize ?? getDefaultFontSize(item);
 
-  const update = (
-    patch: Partial<
-      NonNullable<BoardItem['typography']>
-    >,
-  ) => {
-    onUpdate(current =>
-      updateTypography(current, patch),
-    );
+  const update = (patch: Partial<NonNullable<BoardItem['typography']>>) => {
+    onUpdate((current) => updateTypography(current, patch));
   };
 
-  const handleSizeChange = (
-    value: number,
-  ) => {
+  const handleSizeChange = (value: number) => {
     if (!Number.isFinite(value)) return;
 
-    const next = Math.max(
-      MIN_FONT_SIZE,
-      Math.min(MAX_FONT_SIZE, value),
-    );
+    const next = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, value));
 
-    update({
-      fontSize: next,
-    });
+    update({ fontSize: next });
   };
 
   return (
@@ -78,38 +43,21 @@ export default function TypographyControls({
       {/* Font family */}
 
       <select
-        value={
-          typography?.fontFamily ?? (item.type === 'code' ? 'mono' : '')
-        }
-        onChange={event =>
-          update({
-            fontFamily:
-              (event.target.value || undefined) as FontFamily | undefined,
-          })
-        }
-        onMouseDown={event =>
-          event.stopPropagation()
-        }
+        value={typography?.fontFamily ?? (item.type === 'code' ? 'mono' : '')}
+        onChange={(event) => update({ fontFamily: (event.target.value || undefined) as FontFamily | undefined })}
+        onMouseDown={(event) => event.stopPropagation()}
         className="h-8 px-2 rounded-lg text-xs outline-none border flex-shrink-0"
         style={{
           minWidth: 92,
           color: 'var(--color-text-primary)',
-          backgroundColor:
-            'var(--color-surface)',
-          borderColor:
-            'var(--color-border)',
+          backgroundColor: 'var(--color-surface)',
+          borderColor: 'var(--color-border)',
         }}
         title="Font family"
       >
         <option value="">Project default</option>
-        {FONT_FAMILIES.map(font => (
-          <option
-            key={font.value}
-            value={font.value}
-            style={{
-              fontFamily: font.css,
-            }}
-          >
+        {FONT_FAMILIES.map((font) => (
+          <option key={font.value} value={font.value} style={{ fontFamily: font.css }}>
             {font.label}
           </option>
         ))}
@@ -119,18 +67,14 @@ export default function TypographyControls({
 
       {/* Presets */}
 
-      {FONT_SIZE_PRESETS.map(size => (
+      {FONT_SIZE_PRESETS.map((size) => (
         <EditBarButton
           key={size}
           active={currentSize === size}
-          onClick={() =>
-            handleSizeChange(size)
-          }
+          onClick={() => handleSizeChange(size)}
           title={`${size}px`}
         >
-          <span className="text-[10px] font-semibold">
-            {size}
-          </span>
+          <span className="text-[10px] font-semibold">{size}</span>
         </EditBarButton>
       ))}
 
@@ -138,41 +82,21 @@ export default function TypographyControls({
 
       <div
         className="h-8 flex items-center rounded-lg border overflow-hidden flex-shrink-0"
-        style={{
-          backgroundColor:
-            'var(--color-surface)',
-          borderColor:
-            'var(--color-border)',
-        }}
-        onMouseDown={event =>
-          event.stopPropagation()
-        }
+        style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <input
           type="number"
           min={MIN_FONT_SIZE}
           max={MAX_FONT_SIZE}
           value={currentSize}
-          onChange={event =>
-            handleSizeChange(
-              Number(event.target.value),
-            )
-          }
+          onChange={(event) => handleSizeChange(Number(event.target.value))}
           className="w-11 h-full px-1.5 text-xs text-right bg-transparent outline-none"
-          style={{
-            color:
-              'var(--color-text-primary)',
-          }}
+          style={{ color: 'var(--color-text-primary)' }}
           title="Custom font size"
         />
 
-        <span
-          className="text-[9px] pr-2 select-none"
-          style={{
-            color:
-              'var(--color-text-faint)',
-          }}
-        >
+        <span className="text-[9px] pr-2 select-none" style={{ color: 'var(--color-text-faint)' }}>
           px
         </span>
       </div>
@@ -181,114 +105,46 @@ export default function TypographyControls({
 
       {/* Bold */}
 
-      <EditBarButton
-        active={!!typography?.bold}
-        onClick={() =>
-          update({
-            bold: !typography?.bold,
-          })
-        }
-        title="Bold"
-      >
-        <span
-          style={{
-            fontWeight: 800,
-            fontSize: 13,
-          }}
-        >
-          B
-        </span>
+      <EditBarButton active={!!typography?.bold} onClick={() => update({ bold: !typography?.bold })} title="Bold">
+        <span style={{ fontWeight: 800, fontSize: 13 }}>B</span>
       </EditBarButton>
 
       {/* Italic */}
 
       <EditBarButton
         active={!!typography?.italic}
-        onClick={() =>
-          update({
-            italic:
-              !typography?.italic,
-          })
-        }
+        onClick={() => update({ italic: !typography?.italic })}
         title="Italic"
       >
-        <span
-          style={{
-            fontStyle: 'italic',
-            fontFamily:
-              'Georgia, serif',
-            fontSize: 13,
-          }}
-        >
-          I
-        </span>
+        <span style={{ fontStyle: 'italic', fontFamily: 'Georgia, serif', fontSize: 13 }}>I</span>
       </EditBarButton>
 
       <EditBarDivider />
 
       {/* Alignment */}
 
-      {ALIGNMENTS.map(alignment => (
+      {ALIGNMENTS.map((alignment) => (
         <EditBarButton
           key={alignment}
-          active={
-            (
-              typography?.textAlign ??
-              'left'
-            ) === alignment
-          }
-          onClick={() =>
-            update({
-              textAlign: alignment,
-            })
-          }
+          active={(typography?.textAlign ?? 'left') === alignment}
+          onClick={() => update({ textAlign: alignment })}
           title={`Align ${alignment}`}
         >
           {alignment === 'left' && (
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path
-                d="M3 6h18M3 12h12M3 18h15"
-                strokeLinecap="round"
-              />
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M3 6h18M3 12h12M3 18h15" strokeLinecap="round" />
             </svg>
           )}
 
           {alignment === 'center' && (
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path
-                d="M3 6h18M6 12h12M4 18h16"
-                strokeLinecap="round"
-              />
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M3 6h18M6 12h12M4 18h16" strokeLinecap="round" />
             </svg>
           )}
 
           {alignment === 'right' && (
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <path
-                d="M3 6h18M9 12h12M6 18h15"
-                strokeLinecap="round"
-              />
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M3 6h18M9 12h12M6 18h15" strokeLinecap="round" />
             </svg>
           )}
         </EditBarButton>
@@ -298,17 +154,11 @@ export default function TypographyControls({
         <>
           <EditBarDivider />
 
-          {VERTICAL_ALIGNMENTS.map(alignment => (
+          {VERTICAL_ALIGNMENTS.map((alignment) => (
             <EditBarButton
               key={alignment}
-              active={
-                (typography?.verticalAlign ?? 'top') === alignment
-              }
-              onClick={() =>
-                update({
-                  verticalAlign: alignment,
-                })
-              }
+              active={(typography?.verticalAlign ?? 'top') === alignment}
+              onClick={() => update({ verticalAlign: alignment })}
               title={`Align vertically ${alignment}`}
             >
               {alignment === 'top' && (
@@ -363,9 +213,7 @@ export default function TypographyControls({
   );
 }
 
-function getDefaultFontSize(
-  item: BoardItem,
-): number {
+function getDefaultFontSize(item: BoardItem): number {
   switch (item.type) {
     case 'text':
       switch (item.size) {

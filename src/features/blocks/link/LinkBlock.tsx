@@ -3,9 +3,7 @@ import { useCallback, useState } from 'react';
 
 import type { BoardItem, LinkItem } from '@/entities/board/types';
 
-import {
-  getLinkDomain,
-} from '@/features/blocks/link/utils/linkUtils';
+import { getLinkDomain } from '@/features/blocks/link/utils/linkUtils';
 import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface LinkBlockProps {
@@ -16,14 +14,8 @@ interface LinkBlockProps {
   onDelete: () => void;
 }
 
-export default function LinkBlock({
-  item,
-  onUpdate,
-  onDelete,
-}: LinkBlockProps) {
-  const [editing, setEditing] = useState(
-    !item.url || item.url === 'https://',
-  );
+export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) {
+  const [editing, setEditing] = useState(!item.url || item.url === 'https://');
 
   const typographyStyle = getTypographyStyle(item);
 
@@ -33,9 +25,7 @@ export default function LinkBlock({
   const mutedColor = light ? '#64748b' : '#b9aec9';
 
   const borderBase = light ? 'rgba(0,0,0,0.1)' : '#1a3040';
-  const borderHover = light
-    ? 'rgba(124, 58, 237,0.5)'
-    : 'rgba(124, 58, 237,0.4)';
+  const borderHover = light ? 'rgba(124, 58, 237,0.5)' : 'rgba(124, 58, 237,0.4)';
 
   const accentBackground = light ? '#f0fdf4' : '#112028';
   const inputBackground = light ? '#f8fafc' : '#071317';
@@ -45,13 +35,10 @@ export default function LinkBlock({
 
   const update = useCallback(
     (patch: Partial<LinkItem>) => {
-      onUpdate(current => {
+      onUpdate((current) => {
         if (current.type !== 'link') return current;
 
-        return {
-          ...current,
-          ...patch,
-        };
+        return { ...current, ...patch };
       });
     },
     [onUpdate],
@@ -63,48 +50,28 @@ export default function LinkBlock({
     setEditing(false);
   }, []);
 
-  const handleEditorKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === 'Escape') {
-        setEditing(false);
-      }
-    },
-    [],
-  );
+  const handleEditorKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      setEditing(false);
+    }
+  }, []);
 
   return (
-    <div
-      className="group relative transition-all duration-200 hover:shadow-2xl"
-      style={{ 
-        width,
-        height: item.height,
-       }}
-    >
+    <div className="group relative transition-all duration-200 hover:shadow-2xl" style={{ width, height: item.height }}>
       <div
         className="item-rounded shadow-xl overflow-hidden transition-colors duration-150"
-        style={{
-          height: item.height
-          ? '100%'
-          : undefined,
-          background,
-          borderColor: borderBase,
-        }}
-        onMouseEnter={event => {
+        style={{ height: item.height ? '100%' : undefined, background, borderColor: borderBase }}
+        onMouseEnter={(event) => {
           event.currentTarget.style.borderColor = borderHover;
         }}
-        onMouseLeave={event => {
+        onMouseLeave={(event) => {
           event.currentTarget.style.borderColor = borderBase;
         }}
       >
         {/* Top accent */}
 
         {item.topColor ? (
-          <div
-            style={{
-              height: 5,
-              backgroundColor: item.topColor,
-            }}
-          />
+          <div style={{ height: 5, backgroundColor: item.topColor }} />
         ) : (
           <div className="h-0.5 bg-gradient-to-r from-[#7C3AED] to-[#FFBD65]" />
         )}
@@ -116,60 +83,35 @@ export default function LinkBlock({
             <div className="flex items-center gap-2">
               <div
                 className="w-6 h-6 rounded-lg flex items-center justify-center"
-                style={{
-                  backgroundColor: accentBackground,
-                }}
+                style={{ backgroundColor: accentBackground }}
               >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#7C3AED"
-                  strokeWidth="2"
-                >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2">
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                 </svg>
               </div>
 
-              <span
-                className="text-[11px] truncate"
-                style={{
-                  color: mutedColor,
-                  maxWidth: 110,
-                }}
-              >
+              <span className="text-[11px] truncate" style={{ color: mutedColor, maxWidth: 110 }}>
                 {domain}
               </span>
             </div>
 
             {/* Actions */}
 
-            <div
-              className="flex items-center gap-1.5"
-              onMouseDown={event => event.stopPropagation()}
-            >
+            <div className="flex items-center gap-1.5" onMouseDown={(event) => event.stopPropagation()}>
               <button
-                onClick={() => setEditing(previous => !previous)}
+                onClick={() => setEditing((previous) => !previous)}
                 className="opacity-0 group-hover:opacity-100 transition-all"
                 style={{ color: mutedColor }}
-                onMouseEnter={event => {
+                onMouseEnter={(event) => {
                   event.currentTarget.style.color = '#7C3AED';
                 }}
-                onMouseLeave={event => {
+                onMouseLeave={(event) => {
                   event.currentTarget.style.color = mutedColor;
                 }}
                 title="Edit link"
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z" />
                 </svg>
@@ -179,22 +121,15 @@ export default function LinkBlock({
                 onClick={onDelete}
                 className="opacity-0 group-hover:opacity-100 transition-all"
                 style={{ color: mutedColor }}
-                onMouseEnter={event => {
+                onMouseEnter={(event) => {
                   event.currentTarget.style.color = '#FF6B8A';
                 }}
-                onMouseLeave={event => {
+                onMouseLeave={(event) => {
                   event.currentTarget.style.color = mutedColor;
                 }}
                 title="Delete link"
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M18 6 6 18M6 6l12 12" />
                 </svg>
               </button>
@@ -206,17 +141,13 @@ export default function LinkBlock({
           {editing ? (
             <div
               className="space-y-2"
-              onMouseDown={event => event.stopPropagation()}
-              onBlur={event => {
+              onMouseDown={(event) => event.stopPropagation()}
+              onBlur={(event) => {
                 /*
                  * Tabbing between url/title/description
                  * should not close the editor.
                  */
-                if (
-                  !event.currentTarget.contains(
-                    event.relatedTarget as Node | null,
-                  )
-                ) {
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
                   closeEditing();
                 }
               }}
@@ -224,11 +155,7 @@ export default function LinkBlock({
               <input
                 autoFocus
                 value={item.url}
-                onChange={event =>
-                  update({
-                    url: event.target.value,
-                  })
-                }
+                onChange={(event) => update({ url: event.target.value })}
                 onKeyDown={handleEditorKeyDown}
                 placeholder="https://…"
                 className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border focus:border-[#7C3AED] transition-colors"
@@ -243,11 +170,7 @@ export default function LinkBlock({
 
               <input
                 value={item.title}
-                onChange={event =>
-                  update({
-                    title: event.target.value,
-                  })
-                }
+                onChange={(event) => update({ title: event.target.value })}
                 onKeyDown={handleEditorKeyDown}
                 placeholder="Title"
                 className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border transition-colors"
@@ -261,12 +184,8 @@ export default function LinkBlock({
 
               <textarea
                 value={item.description}
-                onChange={event =>
-                  update({
-                    description: event.target.value,
-                  })
-                }
-                onKeyDown={event => {
+                onChange={(event) => update({ description: event.target.value })}
+                onKeyDown={(event) => {
                   if (event.key === 'Escape') setEditing(false);
                 }}
                 placeholder="Description"
@@ -282,13 +201,7 @@ export default function LinkBlock({
             </div>
           ) : (
             <div>
-              <h4
-                className="text-sm font-semibold leading-snug mb-1"
-                style={{
-                  color: textColor,
-                  ...typographyStyle,
-                }}
-              >
+              <h4 className="text-sm font-semibold leading-snug mb-1" style={{ color: textColor, ...typographyStyle }}>
                 {item.title || 'Untitled link'}
               </h4>
 
@@ -298,12 +211,7 @@ export default function LinkBlock({
                   style={{
                     color: mutedColor,
                     ...typographyStyle,
-                    fontSize: item.typography?.fontSize
-                      ? `${Math.max(
-                          8,
-                          item.typography.fontSize - 2,
-                        )}px`
-                      : undefined,
+                    fontSize: item.typography?.fontSize ? `${Math.max(8, item.typography.fontSize - 2)}px` : undefined,
                   }}
                 >
                   {item.description}
@@ -315,19 +223,11 @@ export default function LinkBlock({
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onMouseDown={event => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}
                   className="inline-flex items-center gap-1 text-[#7C3AED] text-xs hover:text-[#FFBD65] transition-colors"
                 >
                   Open link
-
-                  <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                     <polyline points="15 3 21 3 21 9" />
                     <line x1="10" y1="14" x2="21" y2="3" />

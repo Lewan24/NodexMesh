@@ -1,12 +1,7 @@
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useRef, useState } from 'react';
 
-import type {
-  BoardItem,
-  KanbanCard,
-  KanbanColumn,
-  KanbanItem,
-} from '@/entities/board/types';
+import type { BoardItem, KanbanCard, KanbanColumn, KanbanItem } from '@/entities/board/types';
 
 import KanbanColumnDialog from './KanbanColumnDialog';
 import KanbanCardItem from '@/features/blocks/kanban/KanbanCardItem';
@@ -28,32 +23,19 @@ interface KanbanBlockProps {
   isSelected?: boolean;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
   onDelete: () => void;
-  onCardDroppedOutside?: (
-    card: KanbanCard,
-    clientX: number,
-    clientY: number,
-  ) => boolean;
+  onCardDroppedOutside?: (card: KanbanCard, clientX: number, clientY: number) => boolean;
 }
 
 function DropLine() {
   return (
     <div
       className="h-1 rounded-full my-1"
-      style={{
-        backgroundColor: 'var(--color-accent)',
-        boxShadow: '0 0 8px rgba(124,58,237,0.5)',
-      }}
+      style={{ backgroundColor: 'var(--color-accent)', boxShadow: '0 0 8px rgba(124,58,237,0.5)' }}
     />
   );
 }
 
-export default function KanbanBlock({
-  item,
-  zoom = 1,
-  onUpdate,
-  onDelete,
-  onCardDroppedOutside,
-}: KanbanBlockProps) {
+export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCardDroppedOutside }: KanbanBlockProps) {
   const [columnSettings, setColumnSettings] = useState<string | null>(null);
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [dropColumn, setDropColumn] = useState<string | null>(null);
@@ -86,13 +68,10 @@ export default function KanbanBlock({
 
   const updateKanban = useCallback(
     (patch: Partial<KanbanItem>) => {
-      onUpdate(current => {
+      onUpdate((current) => {
         if (current.type !== 'kanban') return current;
 
-        return {
-          ...current,
-          ...patch,
-        };
+        return { ...current, ...patch };
       });
     },
     [onUpdate],
@@ -100,9 +79,7 @@ export default function KanbanBlock({
 
   const updateColumns = useCallback(
     (updater: (columns: KanbanColumn[]) => KanbanColumn[]) => {
-      updateKanban({
-        columns: updater(columnsRef.current),
-      });
+      updateKanban({ columns: updater(columnsRef.current) });
     },
     [updateKanban],
   );
@@ -112,8 +89,8 @@ export default function KanbanBlock({
       const text = newCardText.trim();
       if (!text) return;
 
-      updateColumns(columns =>
-        columns.map(column =>
+      updateColumns((columns) =>
+        columns.map((column) =>
           column.id === columnId
             ? {
                 ...column,
@@ -129,11 +106,7 @@ export default function KanbanBlock({
     [newCardText, updateColumns, addAtTop],
   );
 
-  const {
-    draggingCardId,
-    dropTarget,
-    handleCardDragStart,
-  } = useKanbanDrag({
+  const { draggingCardId, dropTarget, handleCardDragStart } = useKanbanDrag({
     columns: item.columns,
     boardRef,
     columnRefs,
@@ -142,31 +115,18 @@ export default function KanbanBlock({
     onCardDroppedOutside,
   });
 
-  const totalCards = item.columns.reduce(
-    (total, column) => total + column.cards.length,
-    0,
-  );
+  const totalCards = item.columns.reduce((total, column) => total + column.cards.length, 0);
 
-  const doneCards = item.columns.reduce(
-    (total, column) => total + column.cards.filter(card => card.done).length,
-    0,
-  );
+  const doneCards = item.columns.reduce((total, column) => total + column.cards.filter((card) => card.done).length, 0);
 
   const toggleCard = useCallback(
     (columnId: string, cardId: string) => {
-      updateColumns(columns =>
-        columns.map(column =>
+      updateColumns((columns) =>
+        columns.map((column) =>
           column.id === columnId
             ? {
                 ...column,
-                cards: column.cards.map(card =>
-                  card.id === cardId
-                    ? {
-                        ...card,
-                        done: !card.done,
-                      }
-                    : card,
-                ),
+                cards: column.cards.map((card) => (card.id === cardId ? { ...card, done: !card.done } : card)),
               }
             : column,
         ),
@@ -177,14 +137,9 @@ export default function KanbanBlock({
 
   const deleteCard = useCallback(
     (columnId: string, cardId: string) => {
-      updateColumns(columns =>
-        columns.map(column =>
-          column.id === columnId
-            ? {
-                ...column,
-                cards: column.cards.filter(card => card.id !== cardId),
-              }
-            : column,
+      updateColumns((columns) =>
+        columns.map((column) =>
+          column.id === columnId ? { ...column, cards: column.cards.filter((card) => card.id !== cardId) } : column,
         ),
       );
     },
@@ -193,20 +148,10 @@ export default function KanbanBlock({
 
   const editCard = useCallback(
     (columnId: string, cardId: string, text: string) => {
-      updateColumns(columns =>
-        columns.map(column =>
+      updateColumns((columns) =>
+        columns.map((column) =>
           column.id === columnId
-            ? {
-                ...column,
-                cards: column.cards.map(card =>
-                  card.id === cardId
-                    ? {
-                        ...card,
-                        text,
-                      }
-                    : card,
-                ),
-              }
+            ? { ...column, cards: column.cards.map((card) => (card.id === cardId ? { ...card, text } : card)) }
             : column,
         ),
       );
@@ -216,13 +161,10 @@ export default function KanbanBlock({
 
   const deleteColumn = useCallback(
     (columnId: string) => {
-      updateColumns(columns =>
-        columns.filter(column => column.id !== columnId),
-      );
+      updateColumns((columns) => columns.filter((column) => column.id !== columnId));
     },
     [updateColumns],
   );
-
 
   const handleColumnResizeStart = useCallback(
     (columnId: string, event: React.MouseEvent) => {
@@ -231,7 +173,7 @@ export default function KanbanBlock({
       event.preventDefault();
       event.stopPropagation();
 
-      const column = columnsRef.current.find(column => column.id === columnId);
+      const column = columnsRef.current.find((column) => column.id === columnId);
       if (!column) return;
 
       const startX = event.clientX;
@@ -240,20 +182,10 @@ export default function KanbanBlock({
       const handleMove = (moveEvent: MouseEvent) => {
         const deltaX = (moveEvent.clientX - startX) / zoom;
 
-        const width = Math.max(
-          MIN_KANBAN_COLUMN_WIDTH,
-          Math.min(MAX_KANBAN_COLUMN_WIDTH, startWidth + deltaX),
-        );
+        const width = Math.max(MIN_KANBAN_COLUMN_WIDTH, Math.min(MAX_KANBAN_COLUMN_WIDTH, startWidth + deltaX));
 
-        updateColumns(columns =>
-          columns.map(column =>
-            column.id === columnId
-              ? {
-                  ...column,
-                  width: Math.round(width),
-                }
-              : column,
-          ),
+        updateColumns((columns) =>
+          columns.map((column) => (column.id === columnId ? { ...column, width: Math.round(width) } : column)),
         );
       };
 
@@ -270,32 +202,25 @@ export default function KanbanBlock({
 
   const resetColumnWidth = useCallback(
     (columnId: string) => {
-      updateColumns(columns =>
-        columns.map(column =>
-          column.id === columnId
-            ? {
-                ...column,
-                width: DEFAULT_KANBAN_COLUMN_WIDTH,
-              }
-            : column,
-        ),
+      updateColumns((columns) =>
+        columns.map((column) => (column.id === columnId ? { ...column, width: DEFAULT_KANBAN_COLUMN_WIDTH } : column)),
       );
     },
     [updateColumns],
   );
 
-  const reorderColumn = (source: string, target: string) => updateColumns(columns => {
-    const from = columns.findIndex(column => column.id === source);
-    const to = columns.findIndex(column => column.id === target);
-    if (from < 0 || to < 0 || from === to) return columns;
-    const next = [...columns]; next.splice(to, 0, next.splice(from, 1)[0]!); return next;
-  });
+  const reorderColumn = (source: string, target: string) =>
+    updateColumns((columns) => {
+      const from = columns.findIndex((column) => column.id === source);
+      const to = columns.findIndex((column) => column.id === target);
+      if (from < 0 || to < 0 || from === to) return columns;
+      const next = [...columns];
+      next.splice(to, 0, next.splice(from, 1)[0]!);
+      return next;
+    });
 
   const addColumn = useCallback(() => {
-    updateColumns(columns => [
-      ...columns,
-      createKanbanColumn(columns.length),
-    ]);
+    updateColumns((columns) => [...columns, createKanbanColumn(columns.length)]);
   }, [updateColumns]);
 
   const resetHeight = useCallback(() => {
@@ -303,44 +228,26 @@ export default function KanbanBlock({
   }, [updateKanban]);
 
   return (
-    <div className="group relative" style={{
-      width: item.width,
-      height: item.height,
-    }}>
+    <div className="group relative" style={{ width: item.width, height: item.height }}>
       <div
         ref={boardRef}
-        data-wheel-scroll={item.height ? "true" : "false"}
+        data-wheel-scroll={item.height ? 'true' : 'false'}
         data-kanban-id={item.id}
         className="item-rounded shadow-xl overflow-scroll"
         style={{
-          width: item.width
-            ? '100%'
-            : undefined,
-          height: item.height
-            ? '100%'
-            : undefined,
+          width: item.width ? '100%' : undefined,
+          height: item.height ? '100%' : undefined,
           background,
           borderColor,
         }}
       >
-        {item.topColor && (
-          <div
-            style={{
-              height: 5,
-              backgroundColor: item.topColor,
-              borderRadius: '16px 16px 0 0',
-            }}
-          />
-        )}
+        {item.topColor && <div style={{ height: 5, backgroundColor: item.topColor, borderRadius: '16px 16px 0 0' }} />}
 
         {/* Header */}
 
         <div
           className="flex items-center justify-between px-4 py-3 border-b cursor-grab active:cursor-grabbing rounded-t-sm"
-          style={{
-            background,
-            borderColor,
-          }}
+          style={{ background, borderColor }}
         >
           <div className="flex items-center gap-3">
             {editingTitle ? (
@@ -351,33 +258,26 @@ export default function KanbanBlock({
                   color: textColor,
                   borderColor: accentColor,
                   ...typographyStyle,
-                  fontSize: baseFontSize
-                    ? `${baseFontSize + 2}px`
-                    : undefined,
+                  fontSize: baseFontSize ? `${baseFontSize + 2}px` : undefined,
                 }}
                 value={item.title}
-                onChange={event =>
-                  updateKanban({
-                    title: event.target.value,
-                  })
-                }
+                onChange={(event) => updateKanban({ title: event.target.value })}
                 onBlur={() => setEditingTitle(false)}
-                onKeyDown={event => {
+                onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === 'Escape') {
                     setEditingTitle(false);
                   }
                 }}
-                onMouseDown={event => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
               />
             ) : (
               <span
                 className="font-semibold text-sm cursor-text select-none"
-                style={{ 
+                style={{
                   ...typographyStyle,
                   color: textColor,
-                  fontSize: baseFontSize
-                    ? `${baseFontSize + 2}px`
-                    : undefined, }}
+                  fontSize: baseFontSize ? `${baseFontSize + 2}px` : undefined,
+                }}
                 onDoubleClick={() => setEditingTitle(true)}
               >
                 {item.title}
@@ -388,45 +288,33 @@ export default function KanbanBlock({
               <div className="flex items-center gap-1.5">
                 <div
                   className="h-1 rounded-full overflow-hidden"
-                  style={{
-                    width: 48,
-                    backgroundColor: trackBackground,
-                  }}
+                  style={{ width: 48, backgroundColor: trackBackground }}
                 >
                   <div
                     className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${(doneCards / totalCards) * 100}%`,
-                      backgroundColor: accentColor,
-                    }}
+                    style={{ width: `${(doneCards / totalCards) * 100}%`, backgroundColor: accentColor }}
                   />
                 </div>
 
-                <span
-                  className="text-[11px] font-mono"
-                  style={{ color: mutedColor }}
-                >
-                  {doneCards}/{totalCards} · {Math.round(totalCards ? doneCards / totalCards * 100 : 0)}%
+                <span className="text-[11px] font-mono" style={{ color: mutedColor }}>
+                  {doneCards}/{totalCards} · {Math.round(totalCards ? (doneCards / totalCards) * 100 : 0)}%
                 </span>
               </div>
             )}
           </div>
 
-          <div
-            className="flex items-center gap-1"
-            onMouseDown={event => event.stopPropagation()}
-          >
+          <div className="flex items-center gap-1" onMouseDown={(event) => event.stopPropagation()}>
             {item.height !== undefined && (
               <button
                 type="button"
                 onClick={resetHeight}
                 className="w-7 h-7 flex items-center justify-center rounded-lg transition-all cursor-pointer"
                 style={{ color: mutedColor }}
-                onMouseEnter={event => {
+                onMouseEnter={(event) => {
                   event.currentTarget.style.color = accentColor;
                   event.currentTarget.style.backgroundColor = cardBackground;
                 }}
-                onMouseLeave={event => {
+                onMouseLeave={(event) => {
                   event.currentTarget.style.color = mutedColor;
                   event.currentTarget.style.backgroundColor = 'transparent';
                 }}
@@ -456,24 +344,17 @@ export default function KanbanBlock({
               onClick={onDelete}
               className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg transition-all cursor-pointer"
               style={{ color: mutedColor }}
-              onMouseEnter={event => {
+              onMouseEnter={(event) => {
                 event.currentTarget.style.color = 'var(--color-danger-strong)';
                 event.currentTarget.style.backgroundColor = 'rgba(255,107,138,0.1)';
               }}
-              onMouseLeave={event => {
+              onMouseLeave={(event) => {
                 event.currentTarget.style.color = mutedColor;
                 event.currentTarget.style.backgroundColor = 'transparent';
               }}
               title="Delete Kanban"
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
@@ -488,9 +369,23 @@ export default function KanbanBlock({
               key={column.id}
               data-kanban-id={item.id}
               data-kanban-column-id={column.id}
-              onDragOver={event => { if (draggedColumn) { event.preventDefault(); event.stopPropagation(); setDropColumn(column.id); } }}
-              onDrop={event => { if (draggedColumn) { event.preventDefault(); event.stopPropagation(); reorderColumn(draggedColumn, column.id); setDraggedColumn(null); setDropColumn(null); } }}
-              ref={element => {
+              onDragOver={(event) => {
+                if (draggedColumn) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setDropColumn(column.id);
+                }
+              }}
+              onDrop={(event) => {
+                if (draggedColumn) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  reorderColumn(draggedColumn, column.id);
+                  setDraggedColumn(null);
+                  setDropColumn(null);
+                }
+              }}
+              ref={(element) => {
                 if (element) {
                   columnRefs.current.set(column.id, element);
                 } else {
@@ -501,57 +396,111 @@ export default function KanbanBlock({
               style={{
                 width: column.width ?? DEFAULT_KANBAN_COLUMN_WIDTH,
                 outline: dropColumn === column.id ? `2px solid ${accentColor}` : undefined,
-                opacity: draggedColumn === column.id ? .5 : 1,
+                opacity: draggedColumn === column.id ? 0.5 : 1,
               }}
             >
               {/* Column header */}
 
               <div className="flex items-center gap-1.5 mb-2.5 group/colhdr" style={{ order: -3 }}>
-                <button draggable aria-label={`Reorder column ${column.title}`} title="Drag column · Alt+← / Alt+→" className="cursor-grab" style={{ color: mutedColor }} onMouseDown={event => event.stopPropagation()}
-                  onDragStart={event => { event.stopPropagation(); event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', column.id); setDraggedColumn(column.id); }}
-                  onDragEnd={() => { setDraggedColumn(null); setDropColumn(null); }}
-                  onKeyDown={event => { if (event.altKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); const target = item.columns[columnIndex + (event.key === 'ArrowLeft' ? -1 : 1)]; if (target) reorderColumn(column.id, target.id); } }}>⠿</button>
-                {([-1, 1] as const).map(direction => <button key={direction} aria-label={`Move ${column.title} ${direction === -1 ? 'left' : 'right'}`} className="text-xs disabled:opacity-20" style={{ color: mutedColor }} disabled={!item.columns[columnIndex + direction]} onMouseDown={event => event.stopPropagation()} onClick={() => reorderColumn(column.id, item.columns[columnIndex + direction]!.id)}>{direction === -1 ? '‹' : '›'}</button>)}
-                <button aria-label={`Settings for ${column.title}`} title="Column settings" aria-expanded={columnSettings === column.id} className="w-5 h-5 shrink-0 cursor-pointer border border-current rounded-sm" style={{ color: column.color, background: `${column.color}22` }} onMouseDown={event => event.stopPropagation()} onClick={() => setColumnSettings(columnSettings === column.id ? null : column.id)}>⚙</button>
-
-                <button className="flex-1 text-left font-bold uppercase tracking-widest" style={{ color: column.color, ...typographyStyle }} onMouseDown={event => event.stopPropagation()} onClick={() => setColumnSettings(column.id)} title="Edit column">{column.title}</button>
-
-                <span
-                  className="ml-auto text-[11px] font-mono flex-shrink-0"
+                <button
+                  draggable
+                  aria-label={`Reorder column ${column.title}`}
+                  title="Drag column · Alt+← / Alt+→"
+                  className="cursor-grab"
                   style={{ color: mutedColor }}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onDragStart={(event) => {
+                    event.stopPropagation();
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', column.id);
+                    setDraggedColumn(column.id);
+                  }}
+                  onDragEnd={() => {
+                    setDraggedColumn(null);
+                    setDropColumn(null);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.altKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      const target = item.columns[columnIndex + (event.key === 'ArrowLeft' ? -1 : 1)];
+                      if (target) reorderColumn(column.id, target.id);
+                    }
+                  }}
                 >
+                  ⠿
+                </button>
+                {([-1, 1] as const).map((direction) => (
+                  <button
+                    key={direction}
+                    aria-label={`Move ${column.title} ${direction === -1 ? 'left' : 'right'}`}
+                    className="text-xs disabled:opacity-20"
+                    style={{ color: mutedColor }}
+                    disabled={!item.columns[columnIndex + direction]}
+                    onMouseDown={(event) => event.stopPropagation()}
+                    onClick={() => reorderColumn(column.id, item.columns[columnIndex + direction]!.id)}
+                  >
+                    {direction === -1 ? '‹' : '›'}
+                  </button>
+                ))}
+                <button
+                  aria-label={`Settings for ${column.title}`}
+                  title="Column settings"
+                  aria-expanded={columnSettings === column.id}
+                  className="w-5 h-5 shrink-0 cursor-pointer border border-current rounded-sm"
+                  style={{ color: column.color, background: `${column.color}22` }}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={() => setColumnSettings(columnSettings === column.id ? null : column.id)}
+                >
+                  ⚙
+                </button>
+
+                <button
+                  className="flex-1 text-left font-bold uppercase tracking-widest"
+                  style={{ color: column.color, ...typographyStyle }}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={() => setColumnSettings(column.id)}
+                  title="Edit column"
+                >
+                  {column.title}
+                </button>
+
+                <span className="ml-auto text-[11px] font-mono flex-shrink-0" style={{ color: mutedColor }}>
                   {column.cards.length}
                 </span>
 
                 {item.columns.length > 1 && (
                   <button
-                    onMouseDown={event => event.stopPropagation()}
+                    onMouseDown={(event) => event.stopPropagation()}
                     onClick={() => deleteColumn(column.id)}
                     className="transition-all flex-shrink-0 ml-0.5"
                     style={{ color: mutedColor }}
-                    onMouseEnter={event => {
+                    onMouseEnter={(event) => {
                       event.currentTarget.style.color = '#FF6B8A';
                     }}
-                    onMouseLeave={event => {
+                    onMouseLeave={(event) => {
                       event.currentTarget.style.color = mutedColor;
                     }}
                   >
-                    <svg
-                      width="10"
-                      height="10"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                    >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M18 6 6 18M6 6l12 12" />
                     </svg>
                   </button>
                 )}
               </div>
 
-
-              <button className="text-xs text-left py-1.5 px-2 mb-1 hover:bg-violet-500/10" style={{ color: mutedColor, order: -2 }} aria-label={`Add card at top of ${column.title}`} onMouseDown={event => event.stopPropagation()} onClick={() => { setAddAtTop(true); setAddingCardColumnId(column.id); }}>+ Add card</button>
+              <button
+                className="text-xs text-left py-1.5 px-2 mb-1 hover:bg-violet-500/10"
+                style={{ color: mutedColor, order: -2 }}
+                aria-label={`Add card at top of ${column.title}`}
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={() => {
+                  setAddAtTop(true);
+                  setAddingCardColumnId(column.id);
+                }}
+              >
+                + Add card
+              </button>
               {/* Cards */}
 
               <div
@@ -559,13 +508,9 @@ export default function KanbanBlock({
                 style={{
                   minHeight: 40,
                   backgroundColor:
-                    dropTarget?.columnId === column.id && draggingCardId
-                      ? 'rgba(124,58,237,0.06)'
-                      : 'transparent',
+                    dropTarget?.columnId === column.id && draggingCardId ? 'rgba(124,58,237,0.06)' : 'transparent',
                   outline:
-                    dropTarget?.columnId === column.id && draggingCardId
-                      ? '1.5px dashed rgba(124,58,237,0.4)'
-                      : 'none',
+                    dropTarget?.columnId === column.id && draggingCardId ? '1.5px dashed rgba(124,58,237,0.4)' : 'none',
                   outlineOffset: -2,
                 }}
               >
@@ -578,7 +523,7 @@ export default function KanbanBlock({
 
                     <div
                       data-kanban-card-id={card.id}
-                      ref={element => {
+                      ref={(element) => {
                         if (element) {
                           cardRowRefs.current.set(card.id, element);
                         } else {
@@ -596,28 +541,19 @@ export default function KanbanBlock({
                         cardBorder={cardBorder}
                         cardBorderHover={cardBorderHover}
                         accentColor={accentColor}
-                        onDragHandleMouseDown={event =>
-                          handleCardDragStart(column.id, card.id, event)
-                        }
+                        onDragHandleMouseDown={(event) => handleCardDragStart(column.id, card.id, event)}
                         onToggle={() => toggleCard(column.id, card.id)}
                         onDelete={() => deleteCard(column.id, card.id)}
-                        onEdit={text =>
-                          editCard(column.id, card.id, text)
-                        }
-                        textStyle={{
-                          ...typographyStyle,
-                          fontSize: baseFontSize
-                            ? `${baseFontSize}px`
-                            : undefined,
-                        }}
+                        onEdit={(text) => editCard(column.id, card.id, text)}
+                        textStyle={{ ...typographyStyle, fontSize: baseFontSize ? `${baseFontSize}px` : undefined }}
                       />
                     </div>
                   </div>
                 ))}
 
-                {dropTarget?.columnId === column.id &&
-                  dropTarget.index === column.cards.length &&
-                  draggingCardId && <DropLine />}
+                {dropTarget?.columnId === column.id && dropTarget.index === column.cards.length && draggingCardId && (
+                  <DropLine />
+                )}
               </div>
 
               {/* Add card */}
@@ -626,13 +562,13 @@ export default function KanbanBlock({
                 <div
                   className="mt-1"
                   style={{ order: addAtTop ? -1 : undefined }}
-                  onMouseDown={event => event.stopPropagation()}
+                  onMouseDown={(event) => event.stopPropagation()}
                 >
                   <input
                     autoFocus
                     value={newCardText}
-                    onChange={event => setNewCardText(event.target.value)}
-                    onKeyDown={event => {
+                    onChange={(event) => setNewCardText(event.target.value)}
+                    onKeyDown={(event) => {
                       if (event.key === 'Enter') addCard(column.id);
 
                       if (event.key === 'Escape') {
@@ -660,39 +596,34 @@ export default function KanbanBlock({
                 </div>
               ) : (
                 <button
-                  onMouseDown={event => event.stopPropagation()}
-                  onClick={() => { setAddAtTop(false); setAddingCardColumnId(column.id); }}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={() => {
+                    setAddAtTop(false);
+                    setAddingCardColumnId(column.id);
+                  }}
                   className="mt-1 flex items-center gap-1.5 text-xs py-1.5 px-2 rounded-lg transition-colors"
                   style={{ color: mutedColor }}
-                  onMouseEnter={event => {
+                  onMouseEnter={(event) => {
                     event.currentTarget.style.color = accentColor;
                     event.currentTarget.style.backgroundColor = cardBackground;
                   }}
-                  onMouseLeave={event => {
+                  onMouseLeave={(event) => {
                     event.currentTarget.style.color = mutedColor;
                     event.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >
-                  <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M12 5v14M5 12h14" />
                   </svg>
-
                   Add card
                 </button>
               )}
 
               <div
                 data-manual-resize="true"
-                    className="absolute top-0 -right-2 w-4 h-full cursor-col-resize z-20 group/resize"
-                onMouseDown={event => handleColumnResizeStart(column.id, event)}
-                onDoubleClick={event => {
+                className="absolute top-0 -right-2 w-4 h-full cursor-col-resize z-20 group/resize"
+                onMouseDown={(event) => handleColumnResizeStart(column.id, event)}
+                onDoubleClick={(event) => {
                   event.stopPropagation();
                   resetColumnWidth(column.id);
                 }}
@@ -700,50 +631,48 @@ export default function KanbanBlock({
               >
                 <div
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-8 rounded-full opacity-0 group-hover/col:opacity-50 group-hover/resize:opacity-100 transition-all"
-                  style={{
-                    backgroundColor: accentColor,
-                  }}
+                  style={{ backgroundColor: accentColor }}
                 />
               </div>
-
             </div>
           ))}
 
           {/* Add column */}
 
           <button
-            onMouseDown={event => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
             onClick={addColumn}
             className="self-start mt-5 w-8 h-8 flex items-center justify-center rounded-xl transition-colors flex-shrink-0"
             style={{ color: mutedColor }}
-            onMouseEnter={event => {
+            onMouseEnter={(event) => {
               event.currentTarget.style.color = accentColor;
               event.currentTarget.style.backgroundColor = cardBackground;
             }}
-            onMouseLeave={event => {
+            onMouseLeave={(event) => {
               event.currentTarget.style.color = mutedColor;
               event.currentTarget.style.backgroundColor = 'transparent';
             }}
             title="Add column"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 5v14M5 12h14" />
             </svg>
           </button>
         </div>
       </div>
-      {columnSettings && item.columns.find(column => column.id === columnSettings) && <KanbanColumnDialog
-        key={columnSettings} column={item.columns.find(column => column.id === columnSettings)!}
-        onClose={() => setColumnSettings(null)}
-        onSave={patch => { updateColumns(columns => columns.map(column => column.id === columnSettings ? { ...column, ...patch } : column)); setColumnSettings(null); }}
-      />}
+      {columnSettings && item.columns.find((column) => column.id === columnSettings) && (
+        <KanbanColumnDialog
+          key={columnSettings}
+          column={item.columns.find((column) => column.id === columnSettings)!}
+          onClose={() => setColumnSettings(null)}
+          onSave={(patch) => {
+            updateColumns((columns) =>
+              columns.map((column) => (column.id === columnSettings ? { ...column, ...patch } : column)),
+            );
+            setColumnSettings(null);
+          }}
+        />
+      )}
     </div>
   );
 }

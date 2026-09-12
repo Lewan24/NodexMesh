@@ -14,7 +14,16 @@ interface ChecklistEntryRowProps {
   onDragHandleMouseDown: (event: React.MouseEvent) => void;
 }
 
-export default function ChecklistEntryRow({ entry, isDragging, textColor, accentColor, onToggle, onDelete, onEdit, onDragHandleMouseDown }: ChecklistEntryRowProps) {
+export default function ChecklistEntryRow({
+  entry,
+  isDragging,
+  textColor,
+  accentColor,
+  onToggle,
+  onDelete,
+  onEdit,
+  onDragHandleMouseDown,
+}: ChecklistEntryRowProps) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(entry.text);
 
@@ -25,8 +34,7 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
     if (!textarea) return;
 
     textarea.style.height = 'auto';
-    textarea.style.height =
-      `${textarea.scrollHeight}px`;
+    textarea.style.height = `${textarea.scrollHeight}px`;
   };
 
   useEffect(() => {
@@ -55,10 +63,7 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
   };
 
   return (
-    <div
-      className="group/entry flex items-start gap-1 py-1"
-      style={{ opacity: isDragging ? 0.35 : 1 }}
-    >
+    <div className="group/entry flex items-start gap-1 py-1" style={{ opacity: isDragging ? 0.35 : 1 }}>
       <DragHandle
         compact
         color={`${textColor}90`}
@@ -68,7 +73,7 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
 
       {/* Toggle */}
       <button
-        onMouseDown={event => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
         onClick={onToggle}
         role="checkbox"
         aria-checked={entry.done}
@@ -98,16 +103,14 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
           ref={inputRef}
           rows={1}
           className="flex-1 min-w-0 bg-transparent outline-none text-[length:inherit] leading-snug resize-none overflow-hidden"
-          style={{
-            color: textColor,
-          }}
+          style={{ color: textColor }}
           value={text}
-          onChange={event => {
+          onChange={(event) => {
             setText(event.target.value);
             resizeEditor();
           }}
           onBlur={commit}
-          onKeyDown={event => {
+          onKeyDown={(event) => {
             if (event.key === 'Enter') {
               event.preventDefault();
               commit();
@@ -117,9 +120,7 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
               commit();
             }
           }}
-          onMouseDown={event =>
-            event.stopPropagation()
-          }
+          onMouseDown={(event) => event.stopPropagation()}
         />
       ) : (
         <span
@@ -136,7 +137,7 @@ export default function ChecklistEntryRow({ entry, isDragging, textColor, accent
 
       {/* Delete */}
       <button
-        onMouseDown={event => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
         onClick={onDelete}
         className="opacity-0 group-hover/entry:opacity-100 flex-shrink-0 transition-opacity"
         style={{ color: `${textColor}55` }}

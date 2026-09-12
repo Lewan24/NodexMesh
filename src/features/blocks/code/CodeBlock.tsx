@@ -1,53 +1,57 @@
 import { getTypographyStyle } from '../typography/typographyUtils';
 import { isDefaultCardColor, useCardAppearance } from '../shared/cardAppearance';
 import './code.css';
-import { useMemo, useState } from "react"
-import hljs from "highlight.js/lib/common"
-import "highlight.js/styles/github-dark.css"
-import type { CodeItem } from "@/entities/board/types"
-import type { BlockUpdateHandler } from "../types"
-import ContentBlockShell from "../shared/ContentBlockShell"
+import { useMemo, useState } from 'react';
+import hljs from 'highlight.js/lib/common';
+import 'highlight.js/styles/github-dark.css';
+import type { CodeItem } from '@/entities/board/types';
+import type { BlockUpdateHandler } from '../types';
+import ContentBlockShell from '../shared/ContentBlockShell';
 
 export default function CodeBlock({
   item,
   onUpdate,
   onDelete,
 }: {
-  item: CodeItem
-  onUpdate: BlockUpdateHandler
-  onDelete: () => void
+  item: CodeItem;
+  onUpdate: BlockUpdateHandler;
+  onDelete: () => void;
 }) {
   const { background, textColor, light } = useCardAppearance('#0d1117');
-  const codeStyle = { ...getTypographyStyle(item), fontFamily: item.typography?.fontFamily ? getTypographyStyle(item).fontFamily : 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' };
-  const [editing, setEditing] = useState(false)
-  const [copyStatus, setCopyStatus] = useState("Copy")
-  const autoHeight = item.autoHeight ?? !item.height
-  const language = hljs.getLanguage(item.language) ? item.language : "plaintext"
+  const codeStyle = {
+    ...getTypographyStyle(item),
+    fontFamily: item.typography?.fontFamily
+      ? getTypographyStyle(item).fontFamily
+      : 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+  };
+  const [editing, setEditing] = useState(false);
+  const [copyStatus, setCopyStatus] = useState('Copy');
+  const autoHeight = item.autoHeight ?? !item.height;
+  const language = hljs.getLanguage(item.language) ? item.language : 'plaintext';
   const highlighted = useMemo(
-    () =>
-      hljs.highlight(item.content, { language, ignoreIllegals: true }).value,
+    () => hljs.highlight(item.content, { language, ignoreIllegals: true }).value,
     [item.content, language],
-  )
+  );
   const update = (patch: Partial<CodeItem>) =>
-    onUpdate((current) =>
-      current.type === "code" ? { ...current, ...patch } : current,
-    )
+    onUpdate((current) => (current.type === 'code' ? { ...current, ...patch } : current));
   return (
     <ContentBlockShell
-      item={{ ...item, color: isDefaultCardColor(item.color) && !item.colorRole ? "#0d1117" : item.color }}
+      item={{ ...item, color: isDefaultCardColor(item.color) && !item.colorRole ? '#0d1117' : item.color }}
       autoHeight={autoHeight}
       minHeight={160}
       onDelete={onDelete}
       title={
-        <div
-          className="flex items-center gap-2"
-        >
+        <div className="flex items-center gap-2">
           <span className="font-mono opacity-60">&lt;/&gt;</span>
           <select
             aria-label="Code language"
             onMouseDown={(e) => e.stopPropagation()}
             className="text-xs flex-1 min-w-0 rounded-sm px-2 py-1"
-            style={{ background: "var(--color-surface)", color: "var(--color-text-primary)", colorScheme: light ? "light" : "dark" }}
+            style={{
+              background: 'var(--color-surface)',
+              color: 'var(--color-text-primary)',
+              colorScheme: light ? 'light' : 'dark',
+            }}
             value={language}
             disabled={item.locked}
             onChange={(e) => update({ language: e.target.value })}
@@ -59,9 +63,9 @@ export default function CodeBlock({
                 <option
                   key={name}
                   value={name}
-                  style={{ background: "var(--color-surface)", color: "var(--color-text-primary)" }}
+                  style={{ background: 'var(--color-surface)', color: 'var(--color-text-primary)' }}
                 >
-                  {name === "xml" ? "HTML / XML" : name}
+                  {name === 'xml' ? 'HTML / XML' : name}
                 </option>
               ))}
           </select>
@@ -79,7 +83,7 @@ export default function CodeBlock({
           )}
           {!item.locked && (
             <button className="text-xs" onMouseDown={(e) => e.stopPropagation()} onClick={() => setEditing(!editing)}>
-              {editing ? "Preview" : "Edit"}
+              {editing ? 'Preview' : 'Edit'}
             </button>
           )}
           <button
@@ -87,10 +91,10 @@ export default function CodeBlock({
             onMouseDown={(e) => e.stopPropagation()}
             onClick={async () => {
               try {
-                await navigator.clipboard.writeText(item.content)
-                setCopyStatus("Copied!")
+                await navigator.clipboard.writeText(item.content);
+                setCopyStatus('Copied!');
               } catch {
-                setCopyStatus("Copy failed")
+                setCopyStatus('Copy failed');
               }
             }}
           >
@@ -104,7 +108,9 @@ export default function CodeBlock({
         data-light={light}
         style={{ background, color: textColor }}
         data-wheel-scroll={!autoHeight}
-        onMouseDown={(e) => { if (editing) e.stopPropagation() }}
+        onMouseDown={(e) => {
+          if (editing) e.stopPropagation();
+        }}
         onDoubleClick={() => setEditing(true)}
         onKeyDown={(e) => e.stopPropagation()}
       >
@@ -119,37 +125,35 @@ export default function CodeBlock({
             value={item.content}
             placeholder="Paste or type code…"
             onChange={(e) => {
-              update({ content: e.target.value })
-              setCopyStatus("Copy")
+              update({ content: e.target.value });
+              setCopyStatus('Copy');
             }}
             onKeyDown={(e) => {
-              if (e.key === "Tab") {
-                e.preventDefault()
-                const input = e.currentTarget
-                const start = input.selectionStart
-                const end = input.selectionEnd
-                update({
-                  content:
-                    item.content.slice(0, start) +
-                    "  " +
-                    item.content.slice(end),
-                })
-                requestAnimationFrame(() =>
-                  input.setSelectionRange(start + 2, start + 2),
-                )
+              if (e.key === 'Tab') {
+                e.preventDefault();
+                const input = e.currentTarget;
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                update({ content: item.content.slice(0, start) + '  ' + item.content.slice(end) });
+                requestAnimationFrame(() => input.setSelectionRange(start + 2, start + 2));
               }
             }}
           />
         ) : (
-          <pre style={codeStyle} className="p-4 text-sm leading-6 font-mono min-h-full cursor-grab active:cursor-grabbing select-none">
+          <pre
+            style={codeStyle}
+            className="p-4 text-sm leading-6 font-mono min-h-full cursor-grab active:cursor-grabbing select-none"
+          >
             <code
               className={`hljs language-${language}`}
-              style={{ padding: 0, background: "transparent", fontFamily: 'inherit', fontSize: 'inherit' }}
-              dangerouslySetInnerHTML={{ __html: highlighted || '<span style="opacity:.45">Double-click to write code…</span>' }}
+              style={{ padding: 0, background: 'transparent', fontFamily: 'inherit', fontSize: 'inherit' }}
+              dangerouslySetInnerHTML={{
+                __html: highlighted || '<span style="opacity:.45">Double-click to write code…</span>',
+              }}
             />
           </pre>
         )}
       </div>
     </ContentBlockShell>
-  )
+  );
 }

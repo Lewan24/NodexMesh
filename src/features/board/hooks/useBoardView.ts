@@ -1,8 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { ToolType } from '@/entities/board/toolTypes';
 
@@ -12,24 +8,16 @@ export interface CanvasPoint {
 }
 
 export function useBoardView() {
-  const [selectedTool, setSelectedTool] =
-    useState<ToolType>('select');
+  const [selectedTool, setSelectedTool] = useState<ToolType>('select');
 
-  const [pan, setPan] = useState<CanvasPoint>({
-    x: 0,
-    y: 0,
-  });
+  const [pan, setPan] = useState<CanvasPoint>({ x: 0, y: 0 });
 
   const [zoom, setZoom] = useState(1);
 
-  const [selectedIds, setSelectedIds] =
-    useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const resetViewport = useCallback(() => {
-    setPan({
-      x: 0,
-      y: 0,
-    });
+    setPan({ x: 0, y: 0 });
 
     setZoom(1);
   }, []);
@@ -47,9 +35,7 @@ export function useBoardView() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const resetShortcut =
-        (event.metaKey || event.ctrlKey) &&
-        event.key === '0';
+      const resetShortcut = (event.metaKey || event.ctrlKey) && event.key === '0';
 
       if (!resetShortcut) {
         return;

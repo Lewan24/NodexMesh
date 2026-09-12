@@ -16,37 +16,37 @@ https://nodexmesh.lewanmordor.workers.dev
 
 ### Canvas and editing
 
-* Pan, zoom, grid snapping (16 px), resizing and multi-selection.
-* Context menu and shortcuts: Ctrl/Cmd+C to copy, Ctrl/Cmd+V to paste, Ctrl/Cmd+D to duplicate, Ctrl/Cmd+Z to undo board changes.
-* Typography, handwriting fonts, alignment, card colors and top strips through the edit bar.
-* Default white cards follow the light/dark theme; custom colors remain unchanged.
-* Locked items display a yellow lock. A frame with a locked member cannot move.
-* Content-driven growth pushes lower items in the same frame down; manual resizing preserves deliberate overlaps.
-* Click a connection handle to create an empty sibling for supported block types, or drag it to connect existing items.
-* Categorized tool menu, search, comments and tags.
+- Pan, zoom, grid snapping (16 px), resizing and multi-selection.
+- Context menu and shortcuts: Ctrl/Cmd+C to copy, Ctrl/Cmd+V to paste, Ctrl/Cmd+D to duplicate, Ctrl/Cmd+Z to undo board changes.
+- Typography, handwriting fonts, alignment, card colors and top strips through the edit bar.
+- Default white cards follow the light/dark theme; custom colors remain unchanged.
+- Locked items display a yellow lock. A frame with a locked member cannot move.
+- Content-driven growth pushes lower items in the same frame down; manual resizing preserves deliberate overlaps.
+- Click a connection handle to create an empty sibling for supported block types, or drag it to connect existing items.
+- Categorized tool menu, search, comments and tags.
 
 ### Supported blocks
 
-| Block | Capabilities |
-| --- | --- |
-| Note | Editable text, horizontal/vertical alignment, auto fit |
-| Text | Multiline text and typography |
-| Image | Image with optional caption |
-| Link | Website link card |
-| Checklist | Reorderable tasks, completion count and percentage |
-| Kanban | Reorderable columns/cards, task completion count and percentage, column settings dialog for name, title color and width |
-| Column | Nested blocks, reorder and eject to canvas |
-| Frame | Persistent membership, fit to contents, explicit reassignment |
-| Line / arrow | Colors, thickness, filled arrowheads, endpoint attachments, labels, adjustable curve and round/flat/square ends |
-| Divider | Grid-snapped line without item attachments |
-| Note dispenser | Drag out centered flashcards in the selected color |
-| Document | Rich text, headings and inline formatting, auto fit/automatic height |
-| Embed | Interactive websites and YouTube; hover controls outside the video, optional full player interaction |
-| Code | Language selection, syntax highlighting, copy code and auto fit |
-| Timeline | Milestones and schedule modes, task dialog, dates/checklists, task reordering and draggable/resizable schedule bars |
-| Database diagram | Tables, typed fields, PK/FK, nullable/unique/default values, field relations and cardinalities, grid-based editor |
-| Diagram | Process/decision/database and other shapes, editable connections, grid snapping, multi-node alignment and automatic layout |
-| Drawing | Smoothed pressure-like freehand strokes, resize/move, bulk color/thickness changes and joining strokes |
+| Block            | Capabilities                                                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Note             | Editable text, horizontal/vertical alignment, auto fit                                                                     |
+| Text             | Multiline text and typography                                                                                              |
+| Image            | Image with optional caption                                                                                                |
+| Link             | Website link card                                                                                                          |
+| Checklist        | Reorderable tasks, completion count and percentage                                                                         |
+| Kanban           | Reorderable columns/cards, task completion count and percentage, column settings dialog for name, title color and width    |
+| Column           | Nested blocks, reorder and eject to canvas                                                                                 |
+| Frame            | Persistent membership, fit to contents, explicit reassignment                                                              |
+| Line / arrow     | Colors, thickness, filled arrowheads, endpoint attachments, labels, adjustable curve and round/flat/square ends            |
+| Divider          | Grid-snapped line without item attachments                                                                                 |
+| Note dispenser   | Drag out centered flashcards in the selected color                                                                         |
+| Document         | Rich text, headings and inline formatting, auto fit/automatic height                                                       |
+| Embed            | Interactive websites and YouTube; hover controls outside the video, optional full player interaction                       |
+| Code             | Language selection, syntax highlighting, copy code and auto fit                                                            |
+| Timeline         | Milestones and schedule modes, task dialog, dates/checklists, task reordering and draggable/resizable schedule bars        |
+| Database diagram | Tables, typed fields, PK/FK, nullable/unique/default values, field relations and cardinalities, grid-based editor          |
+| Diagram          | Process/decision/database and other shapes, editable connections, grid snapping, multi-node alignment and automatic layout |
+| Drawing          | Smoothed pressure-like freehand strokes, resize/move, bulk color/thickness changes and joining strokes                     |
 
 The pencil stays active until Escape or selecting another tool. Joined drawings retain separate strokes, colors and geometry.
 
@@ -110,40 +110,40 @@ The application has been structured around feature boundaries rather than placin
 
 The frontend separates:
 
-* domain entities,
-* authentication,
-* project management,
-* canvas state,
-* canvas interaction logic,
-* individual block implementations,
-* layout components,
-* persistence concerns,
-* reusable UI utilities.
+- domain entities,
+- authentication,
+- project management,
+- canvas state,
+- canvas interaction logic,
+- individual block implementations,
+- layout components,
+- persistence concerns,
+- reusable UI utilities.
 
 This separation is intended to make the frontend suitable for replacing the current local persistence mechanisms with a remote API without requiring a major rewrite of the presentation layer.
 
 ### Main technologies
 
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-* Tiptap for rich documents
-* React Flow for diagrams
-* highlight.js for code highlighting
-* Browser local storage for the current local persistence layer
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Tiptap for rich documents
+- React Flow for diagrams
+- highlight.js for code highlighting
+- Browser local storage for the current local persistence layer
 
 ### Planned backend
 
 The planned backend will use:
 
-* C#
-* ASP.NET Core Web API
-* Entity Framework Core
-* relational database storage
-* JWT-based authentication
-* refresh tokens
-* role and policy-based authorization
+- C#
+- ASP.NET Core Web API
+- Entity Framework Core
+- relational database storage
+- JWT-based authentication
+- refresh tokens
+- role and policy-based authorization
 
 SignalR may later be introduced for real-time collaboration.
 
@@ -188,10 +188,10 @@ The `entities` layer contains the main application data models.
 
 Examples include:
 
-* users,
-* projects,
-* board items,
-* tool types.
+- users,
+- projects,
+- board items,
+- tool types.
 
 Board items are represented as a TypeScript discriminated union, allowing each block type to have its own properties while still being handled through the common `BoardItem` type.
 
@@ -207,15 +207,15 @@ features/canvas/
 
 contains canvas interaction logic such as:
 
-* dragging,
-* resizing,
-* selection,
-* zooming,
-* keyboard handling,
-* line endpoint manipulation,
-* history,
-* frame actions,
-* cross-item drag and drop.
+- dragging,
+- resizing,
+- selection,
+- zooming,
+- keyboard handling,
+- line endpoint manipulation,
+- history,
+- frame actions,
+- cross-item drag and drop.
 
 Block-specific behavior is contained under:
 
@@ -280,18 +280,18 @@ The backend is planned as a separate ASP.NET Core application.
 
 Its responsibilities will include:
 
-* authentication,
-* authorization,
-* user management,
-* role management,
-* project ownership,
-* project persistence,
-* board item persistence,
-* validation,
-* security enforcement,
-* refresh token handling,
-* centralized error responses,
-* audit and security logging.
+- authentication,
+- authorization,
+- user management,
+- role management,
+- project ownership,
+- project persistence,
+- board item persistence,
+- validation,
+- security enforcement,
+- refresh token handling,
+- centralized error responses,
+- audit and security logging.
 
 The frontend will introduce dedicated API modules such as:
 
@@ -399,14 +399,14 @@ ASP.NET Core `ProblemDetails` or an equivalent consistent response format is pla
 
 Typical responses will include:
 
-* `400 Bad Request`
-* `401 Unauthorized`
-* `403 Forbidden`
-* `404 Not Found`
-* `409 Conflict`
-* `422 Unprocessable Entity`, where appropriate
-* `429 Too Many Requests`
-* `500 Internal Server Error`
+- `400 Bad Request`
+- `401 Unauthorized`
+- `403 Forbidden`
+- `404 Not Found`
+- `409 Conflict`
+- `422 Unprocessable Entity`, where appropriate
+- `429 Too Many Requests`
+- `500 Internal Server Error`
 
 The frontend HTTP client will distinguish authentication failures from authorization failures.
 
@@ -428,15 +428,15 @@ A `403` response must not trigger token refresh.
 
 The planned refresh implementation will include:
 
-* secure cookies,
-* `HttpOnly`,
-* `Secure`,
-* appropriate `SameSite` configuration,
-* refresh token rotation,
-* server-side token revocation,
-* logout invalidation,
-* refresh token hashing before database storage,
-* protection against refresh token reuse.
+- secure cookies,
+- `HttpOnly`,
+- `Secure`,
+- appropriate `SameSite` configuration,
+- refresh token rotation,
+- server-side token revocation,
+- logout invalidation,
+- refresh token hashing before database storage,
+- protection against refresh token reuse.
 
 The frontend HTTP client will coordinate refresh requests so multiple simultaneous `401` responses do not result in multiple refresh operations.
 
@@ -468,8 +468,8 @@ This prevents sending a request for every mouse movement.
 
 Text-based changes may use either:
 
-* save on blur,
-* debounced updates.
+- save on blur,
+- debounced updates.
 
 The interface should remain responsive through optimistic updates.
 
@@ -531,27 +531,27 @@ The planned API implementation will take the OWASP Top 10 into account.
 
 Key areas include:
 
-* server-side authorization for every protected resource,
-* prevention of broken object-level authorization,
-* strict request validation,
-* secure password hashing,
-* refresh token protection,
-* rate limiting,
-* secure CORS configuration,
-* CSRF considerations for cookie-based endpoints,
-* safe error responses,
-* protection against excessive data exposure,
-* logging of security-relevant events,
-* avoiding sensitive information in application logs.
+- server-side authorization for every protected resource,
+- prevention of broken object-level authorization,
+- strict request validation,
+- secure password hashing,
+- refresh token protection,
+- rate limiting,
+- secure CORS configuration,
+- CSRF considerations for cookie-based endpoints,
+- safe error responses,
+- protection against excessive data exposure,
+- logging of security-relevant events,
+- avoiding sensitive information in application logs.
 
 The backend will never trust client-side checks for:
 
-* user identity,
-* project ownership,
-* roles,
-* permissions,
-* timestamps,
-* resource ownership.
+- user identity,
+- project ownership,
+- roles,
+- permissions,
+- timestamps,
+- resource ownership.
 
 Sensitive values such as passwords, access tokens, and refresh tokens must not be written to logs.
 
@@ -586,113 +586,113 @@ Concurrency handling may also be introduced to prevent users from silently overw
 
 ### Frontend foundation
 
-* [x] Project-based canvas
-* [x] Notes
-* [x] Text blocks
-* [x] Images
-* [x] Link cards
-* [x] Checklists
-* [x] Kanban boards
-* [x] Columns
-* [x] Frames
-* [x] Lines and arrows
-* [x] Drag and drop
-* [x] Resizing
-* [x] Multi-selection
-* [x] Grouping
-* [x] Canvas zoom and pan
-* [x] Grid snapping
-* [x] Contextual edit bar
-* [x] Light and dark themes
-* [x] Local project persistence
-* [x] Frontend authentication prototype
-* [x] User and administrator roles
-* [x] Refactored feature-oriented frontend architecture
+- [x] Project-based canvas
+- [x] Notes
+- [x] Text blocks
+- [x] Images
+- [x] Link cards
+- [x] Checklists
+- [x] Kanban boards
+- [x] Columns
+- [x] Frames
+- [x] Lines and arrows
+- [x] Drag and drop
+- [x] Resizing
+- [x] Multi-selection
+- [x] Grouping
+- [x] Canvas zoom and pan
+- [x] Grid snapping
+- [x] Contextual edit bar
+- [x] Light and dark themes
+- [x] Local project persistence
+- [x] Frontend authentication prototype
+- [x] User and administrator roles
+- [x] Refactored feature-oriented frontend architecture
 
 ### API foundation
 
-* [ ] Create ASP.NET Core Web API
-* [ ] Configure application layers
-* [ ] Configure Entity Framework Core
-* [ ] Configure database
-* [ ] Add migrations
-* [ ] Define API DTOs
-* [ ] Define consistent API error responses
-* [ ] Add server-side validation
+- [ ] Create ASP.NET Core Web API
+- [ ] Configure application layers
+- [ ] Configure Entity Framework Core
+- [ ] Configure database
+- [ ] Add migrations
+- [ ] Define API DTOs
+- [ ] Define consistent API error responses
+- [ ] Add server-side validation
 
 ### Authentication
 
-* [ ] Implement user accounts
-* [ ] Implement password hashing
-* [ ] Implement login endpoint
-* [ ] Implement short-lived access tokens
-* [ ] Implement refresh tokens
-* [ ] Store refresh token hashes
-* [ ] Implement refresh token rotation
-* [ ] Implement session restoration
-* [ ] Implement logout and token revocation
-* [ ] Add rate limiting to authentication endpoints
+- [ ] Implement user accounts
+- [ ] Implement password hashing
+- [ ] Implement login endpoint
+- [ ] Implement short-lived access tokens
+- [ ] Implement refresh tokens
+- [ ] Store refresh token hashes
+- [ ] Implement refresh token rotation
+- [ ] Implement session restoration
+- [ ] Implement logout and token revocation
+- [ ] Add rate limiting to authentication endpoints
 
 ### Authorization
 
-* [ ] Implement roles
-* [ ] Implement authorization policies
-* [ ] Protect administrative endpoints
-* [ ] Validate project ownership
-* [ ] Validate item ownership through projects
-* [ ] Prevent unauthorized object access
+- [ ] Implement roles
+- [ ] Implement authorization policies
+- [ ] Protect administrative endpoints
+- [ ] Validate project ownership
+- [ ] Validate item ownership through projects
+- [ ] Prevent unauthorized object access
 
 ### Project API
 
-* [ ] Load projects from API
-* [ ] Create projects through API
-* [ ] Update project metadata
-* [ ] Delete projects
-* [ ] Persist board items
-* [ ] Persist nested column items
-* [ ] Persist checklist entries
-* [ ] Persist kanban cards and columns
-* [ ] Persist frame state
-* [ ] Persist line connections
+- [ ] Load projects from API
+- [ ] Create projects through API
+- [ ] Update project metadata
+- [ ] Delete projects
+- [ ] Persist board items
+- [ ] Persist nested column items
+- [ ] Persist checklist entries
+- [ ] Persist kanban cards and columns
+- [ ] Persist frame state
+- [ ] Persist line connections
 
 ### Frontend API integration
 
-* [ ] Add centralized HTTP client
-* [ ] Add centralized API error handling
-* [ ] Add authentication bootstrap state
-* [ ] Replace local auth storage
-* [ ] Replace local project storage
-* [ ] Implement automatic access token refresh
-* [ ] Prevent duplicate simultaneous refresh requests
-* [ ] Add optimistic API updates
-* [ ] Add rollback or recovery for failed updates
-* [ ] Add debounced text persistence
-* [ ] Persist drag and resize state after interaction completion
+- [ ] Add centralized HTTP client
+- [ ] Add centralized API error handling
+- [ ] Add authentication bootstrap state
+- [ ] Replace local auth storage
+- [ ] Replace local project storage
+- [ ] Implement automatic access token refresh
+- [ ] Prevent duplicate simultaneous refresh requests
+- [ ] Add optimistic API updates
+- [ ] Add rollback or recovery for failed updates
+- [ ] Add debounced text persistence
+- [ ] Persist drag and resize state after interaction completion
 
 ### Security
 
-* [ ] Apply OWASP Top 10 recommendations
-* [ ] Configure secure CORS policy
-* [ ] Configure secure cookies
-* [ ] Review CSRF protection requirements
-* [ ] Add request rate limiting
-* [ ] Add security event logging
-* [ ] Add centralized exception handling
-* [ ] Prevent sensitive data exposure in logs and responses
-* [ ] Add server-side request size and input limits
-* [ ] Perform authorization tests for protected resources
+- [ ] Apply OWASP Top 10 recommendations
+- [ ] Configure secure CORS policy
+- [ ] Configure secure cookies
+- [ ] Review CSRF protection requirements
+- [ ] Add request rate limiting
+- [ ] Add security event logging
+- [ ] Add centralized exception handling
+- [ ] Prevent sensitive data exposure in logs and responses
+- [ ] Add server-side request size and input limits
+- [ ] Perform authorization tests for protected resources
 
 ### Future development
 
-* [ ] Shared projects
-* [ ] Project permissions
-* [ ] Real-time updates with SignalR
-* [ ] Concurrent update handling
-* [ ] Activity history
-* [ ] Improved undo/redo synchronization
-* [ ] Additional board item types
-* [ ] Import/export
-* [ ] Improved mobile and touch support
+- [ ] Shared projects
+- [ ] Project permissions
+- [ ] Real-time updates with SignalR
+- [ ] Concurrent update handling
+- [ ] Activity history
+- [ ] Improved undo/redo synchronization
+- [ ] Additional board item types
+- [ ] Import/export
+- [ ] Improved mobile and touch support
 
 ---
 
@@ -702,8 +702,8 @@ Concurrency handling may also be introduced to prevent users from silently overw
 
 Install:
 
-* Node.js
-* npm
+- Node.js
+- npm
 
 ### Installation
 
@@ -778,25 +778,28 @@ Until API integration is completed, authentication and project persistence use t
 
 ## Development Principles
 
+### Code formatting
+
+Run `npm run format` to format project files and `npm run format:check` to verify their style. Prettier and EditorConfig define a shared style with 2-space indentation and a preferred width of 120 characters. Keep short expressions and simple JSX on one line; split complex or longer code into readable blocks. Formatting must preserve application behavior and rendered appearance. Generated files, dependency lockfiles and binary assets are excluded. See [AGENTS.md](./AGENTS.md) for guidance when creating or editing code.
+
 The project follows several implementation principles:
 
-* UI components should not directly depend on persistence technology.
-* HTTP requests should not be scattered across presentation components.
-* Authentication should be centralized.
-* Authorization must always be enforced by the backend.
-* API DTOs should remain separate from database entities.
-* Canvas interactions should remain responsive independently of network latency.
-* High-frequency interactions should not generate unnecessary API requests.
-* Shared behavior should be extracted only when it provides a clear architectural benefit.
-* TypeScript discriminated unions should be preferred over unsafe casting.
-* Components should remain focused on a single responsibility.
+- UI components should not directly depend on persistence technology.
+- HTTP requests should not be scattered across presentation components.
+- Authentication should be centralized.
+- Authorization must always be enforced by the backend.
+- API DTOs should remain separate from database entities.
+- Canvas interactions should remain responsive independently of network latency.
+- High-frequency interactions should not generate unnecessary API requests.
+- Shared behavior should be extracted only when it provides a clear architectural benefit.
+- TypeScript discriminated unions should be preferred over unsafe casting.
+- Components should remain focused on a single responsibility.
 
 ---
 
 ## License
 
 Check out the [MIT License](https://github.com/Lewan24/NodexMesh/blob/main/LICENSE)
-
 
 ### Appearance scopes
 

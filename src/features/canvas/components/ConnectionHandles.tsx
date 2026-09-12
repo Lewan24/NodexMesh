@@ -1,67 +1,33 @@
-export type ConnectionSide =
-  | 'top'
-  | 'right'
-  | 'bottom'
-  | 'left';
+export type ConnectionSide = 'top' | 'right' | 'bottom' | 'left';
 
 interface ConnectionHandlesProps {
   visible: boolean;
 
-  onStart: (
-    event: React.MouseEvent,
-    side: ConnectionSide,
-  ) => void;
+  onStart: (event: React.MouseEvent, side: ConnectionSide) => void;
 }
 
-export default function ConnectionHandles({
-  visible,
-  onStart,
-}: ConnectionHandlesProps) {
+export default function ConnectionHandles({ visible, onStart }: ConnectionHandlesProps) {
   if (!visible) return null;
 
   return (
     <>
-      <ConnectionHandle
-        side="top"
-        style={{
-          left: '50%',
-          top: -20,
-          transform:
-            'translateX(-50%)',
-        }}
-        onStart={onStart}
-      />
+      <ConnectionHandle side="top" style={{ left: '50%', top: -20, transform: 'translateX(-50%)' }} onStart={onStart} />
 
       <ConnectionHandle
         side="right"
-        style={{
-          right: -20,
-          top: '50%',
-          transform:
-            'translateY(-50%)',
-        }}
+        style={{ right: -20, top: '50%', transform: 'translateY(-50%)' }}
         onStart={onStart}
       />
 
       <ConnectionHandle
         side="bottom"
-        style={{
-          left: '50%',
-          bottom: -20,
-          transform:
-            'translateX(-50%)',
-        }}
+        style={{ left: '50%', bottom: -20, transform: 'translateX(-50%)' }}
         onStart={onStart}
       />
 
       <ConnectionHandle
         side="left"
-        style={{
-          left: -20,
-          top: '50%',
-          transform:
-            'translateY(-50%)',
-        }}
+        style={{ left: -20, top: '50%', transform: 'translateY(-50%)' }}
         onStart={onStart}
       />
     </>
@@ -73,23 +39,11 @@ interface ConnectionHandleProps {
 
   style: React.CSSProperties;
 
-  onStart: (
-    event: React.MouseEvent,
-    side: ConnectionSide,
-  ) => void;
+  onStart: (event: React.MouseEvent, side: ConnectionSide) => void;
 }
 
-function ConnectionHandle({
-  side,
-  style,
-  onStart,
-}: ConnectionHandleProps) {
-  const rotation = {
-    top: -90,
-    right: 0,
-    bottom: 90,
-    left: 180,
-  }[side];
+function ConnectionHandle({ side, style, onStart }: ConnectionHandleProps) {
+  const rotation = { top: -90, right: 0, bottom: 90, left: 180 }[side];
 
   return (
     <button
@@ -98,23 +52,17 @@ function ConnectionHandle({
       style={{
         ...style,
 
-        color:
-          'var(--color-accent)',
+        color: 'var(--color-accent)',
 
-        backgroundColor:
-          'var(--color-surface)',
+        backgroundColor: 'var(--color-surface)',
 
-        border:
-          '1.5px solid var(--color-accent)',
+        border: '1.5px solid var(--color-accent)',
 
-        boxShadow:
-          '0 2px 8px rgba(0,0,0,0.15)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
 
         cursor: 'crosshair',
       }}
-      onMouseDown={event =>
-        onStart(event, side)
-      }
+      onMouseDown={(event) => onStart(event, side)}
       aria-label={`Connect ${side}`}
       title="Drag to connect · Click to create a connected empty block (content blocks)"
     >
@@ -125,16 +73,9 @@ function ConnectionHandle({
         fill="none"
         stroke="currentColor"
         strokeWidth="2.5"
-        style={{
-          transform:
-            `rotate(${rotation}deg)`,
-        }}
+        style={{ transform: `rotate(${rotation}deg)` }}
       >
-        <path
-          d="M5 12h14M13 6l6 6-6 6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </button>
   );

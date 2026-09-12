@@ -1,44 +1,21 @@
-import {
-  useCallback,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useRef, useState } from 'react';
 
-import type {
-  RefObject,
-} from 'react';
+import type { RefObject } from 'react';
 
-import type {
-  ChecklistEntry,
-} from '@/entities/board/types';
+import type { ChecklistEntry } from '@/entities/board/types';
 
-import {
-  emitNestedDragEnd,
-  emitNestedDragMove,
-} from '@/features/canvas/utils/nestedDrag';
+import { emitNestedDragEnd, emitNestedDragMove } from '@/features/canvas/utils/nestedDrag';
 
 interface UseChecklistDragOptions {
   entries: ChecklistEntry[];
 
-  cardRef:
-    RefObject<HTMLDivElement | null>;
+  cardRef: RefObject<HTMLDivElement | null>;
 
-  rowRefs:
-    RefObject<
-      Map<number, HTMLDivElement>
-    >;
+  rowRefs: RefObject<Map<number, HTMLDivElement>>;
 
-  updateEntries: (
-    updater: (
-      entries: ChecklistEntry[],
-    ) => ChecklistEntry[],
-  ) => void;
+  updateEntries: (updater: (entries: ChecklistEntry[]) => ChecklistEntry[]) => void;
 
-  onEntryDroppedOutside?: (
-    entry: ChecklistEntry,
-    clientX: number,
-    clientY: number,
-  ) => boolean;
+  onEntryDroppedOutside?: (entry: ChecklistEntry, clientX: number, clientY: number) => boolean;
 }
 
 export function useChecklistDrag({
@@ -48,328 +25,196 @@ export function useChecklistDrag({
   updateEntries,
   onEntryDroppedOutside,
 }: UseChecklistDragOptions) {
-  const [
-    draggingIndex,
-    setDraggingIndex,
-  ] =
-    useState<number | null>(
-      null,
-    );
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
 
-  const [
-    dropIndex,
-    setDropIndex,
-  ] =
-    useState<number | null>(
-      null,
-    );
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
 
-  const dropIndexRef =
-    useRef<number | null>(
-      null,
-    );
+  const dropIndexRef = useRef<number | null>(null);
 
-  const entriesRef =
-    useRef(entries);
+  const entriesRef = useRef(entries);
 
-  entriesRef.current =
-    entries;
+  entriesRef.current = entries;
 
-  const handleDragStart =
-    useCallback(
-      (
-        fromIndex: number,
-        event: React.MouseEvent,
-      ) => {
-        if (
-          event.button !== 0
-        ) {
-          return;
+  const handleDragStart = useCallback(
+    (fromIndex: number, event: React.MouseEvent) => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      event.stopPropagation();
+      event.preventDefault();
+
+      const card = cardRef.current;
+
+      if (!card) return;
+
+      /*
+       * WAŻNE:
+       * bierzemy element z fromIndex,
+       * nie z draggingIndex.
+       */
+      const draggedEntry = entriesRef.current[fromIndex];
+
+      if (!draggedEntry) {
+        return;
+      }
+
+      setDraggingIndex(fromIndex);
+
+      setDropIndex(fromIndex);
+
+      dropIndexRef.current = fromIndex;
+
+      const getCenters = () => {
+        const centers: number[] = [];
+
+        for (let index = 0; index < entriesRef.current.length; index++) {
+          const element = rowRefs.current.get(index);
+
+          if (!element) {
+            centers.push(0);
+            continue;
+          }
+
+          const rect = element.getBoundingClientRect();
+
+          centers.push(rect.top + rect.height / 2);
         }
 
-        event.stopPropagation();
-        event.preventDefault();
+        return centers;
+      };
 
-        const card =
-          cardRef.current;
+      const handleMove = (moveEvent: MouseEvent) => {
+        emitNestedDragMove(
+          {
+            kind: 'checklist-entry',
 
-        if (!card) return;
+            entry: draggedEntry,
+          },
+          moveEvent.clientX,
+          moveEvent.clientY,
+        );
+
+        const inside =
+          document
+            .elementFromPoint(moveEvent.clientX, moveEvent.clientY)
+            ?.closest('[data-checklist-id]')
+            ?.getAttribute('data-checklist-id') === card.dataset.checklistId;
 
         /*
-         * WAŻNE:
-         * bierzemy element z fromIndex,
-         * nie z draggingIndex.
+         * Poza własną checklistą:
+         * nie robimy lokalnego reorder.
          */
-        const draggedEntry =
-          entriesRef.current[
-            fromIndex
-          ];
+        if (!inside) {
+          dropIndexRef.current = null;
 
-        if (!draggedEntry) {
+          setDropIndex(null);
+
           return;
         }
 
-        setDraggingIndex(
-          fromIndex,
+        const centers = getCenters();
+
+        let targetIndex = entriesRef.current.length;
+
+        for (let index = 0; index < centers.length; index++) {
+          if (moveEvent.clientY < centers[index]!) {
+            targetIndex = index;
+            break;
+          }
+        }
+
+        dropIndexRef.current = targetIndex;
+
+        setDropIndex(targetIndex);
+      };
+
+      const handleUp = (upEvent: MouseEvent) => {
+        document.removeEventListener('mousemove', handleMove);
+
+        document.removeEventListener('mouseup', handleUp);
+
+        emitNestedDragEnd(
+          {
+            kind: 'checklist-entry',
+
+            entry: draggedEntry,
+          },
+          upEvent.clientX,
+          upEvent.clientY,
         );
 
-        setDropIndex(
-          fromIndex,
-        );
+        const inside =
+          document
+            .elementFromPoint(upEvent.clientX, upEvent.clientY)
+            ?.closest('[data-checklist-id]')
+            ?.getAttribute('data-checklist-id') === card.dataset.checklistId;
 
-        dropIndexRef.current =
-          fromIndex;
-
-        const getCenters =
-          () => {
-            const centers:
-              number[] = [];
-
-            for (
-              let index = 0;
-              index <
-              entriesRef.current.length;
-              index++
-            ) {
-              const element =
-                rowRefs.current.get(
-                  index,
-                );
-
-              if (!element) {
-                centers.push(0);
-                continue;
-              }
-
-              const rect =
-                element.getBoundingClientRect();
-
-              centers.push(
-                rect.top +
-                  rect.height / 2,
-              );
-            }
-
-            return centers;
-          };
-
-        const handleMove = (
-          moveEvent: MouseEvent,
-        ) => {
-          emitNestedDragMove(
-            {
-              kind:
-                'checklist-entry',
-
-              entry:
-                draggedEntry,
-            },
-            moveEvent.clientX,
-            moveEvent.clientY,
-          );
-
-          const inside = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest('[data-checklist-id]')?.getAttribute('data-checklist-id') === card.dataset.checklistId;
+        if (!inside) {
+          /*
+           * Canvas zwraca true tylko wtedy,
+           * gdy faktycznie przyjął element
+           * do innej checklisty.
+           */
+          const accepted = onEntryDroppedOutside?.(draggedEntry, upEvent.clientX, upEvent.clientY) ?? false;
 
           /*
-           * Poza własną checklistą:
-           * nie robimy lokalnego reorder.
+           * Dopiero PO potwierdzeniu
+           * usuwamy źródło.
            */
-          if (!inside) {
-            dropIndexRef.current =
-              null;
-
-            setDropIndex(null);
-
-            return;
+          if (accepted) {
+            updateEntries((currentEntries) => currentEntries.filter((entry) => entry.id !== draggedEntry.id));
           }
+        } else {
+          const finalDropIndex = dropIndexRef.current;
 
-          const centers =
-            getCenters();
+          if (finalDropIndex !== null && finalDropIndex !== fromIndex) {
+            updateEntries((currentEntries) => {
+              const next = [...currentEntries];
 
-          let targetIndex =
-            entriesRef.current.length;
+              const sourceIndex = next.findIndex((entry) => entry.id === draggedEntry.id);
 
-          for (
-            let index = 0;
-            index <
-            centers.length;
-            index++
-          ) {
-            if (
-              moveEvent.clientY <
-              centers[index]!
-            ) {
-              targetIndex =
-                index;
-              break;
-            }
+              if (sourceIndex === -1) {
+                return currentEntries;
+              }
+
+              const [moved] = next.splice(sourceIndex, 1);
+
+              if (!moved) {
+                return currentEntries;
+              }
+
+              /*
+               * Po usunięciu elementu
+               * indeks docelowy może
+               * przesunąć się o 1.
+               */
+              let insertIndex = finalDropIndex;
+
+              if (sourceIndex < finalDropIndex) {
+                insertIndex -= 1;
+              }
+
+              insertIndex = Math.max(0, Math.min(insertIndex, next.length));
+
+              next.splice(insertIndex, 0, moved);
+
+              return next;
+            });
           }
+        }
 
-          dropIndexRef.current =
-            targetIndex;
+        setDraggingIndex(null);
+        setDropIndex(null);
+        dropIndexRef.current = null;
+      };
 
-          setDropIndex(
-            targetIndex,
-          );
-        };
+      document.addEventListener('mousemove', handleMove);
 
-        const handleUp = (
-          upEvent: MouseEvent,
-        ) => {
-          document.removeEventListener(
-            'mousemove',
-            handleMove,
-          );
+      document.addEventListener('mouseup', handleUp);
+    },
+    [cardRef, rowRefs, updateEntries, onEntryDroppedOutside],
+  );
 
-          document.removeEventListener(
-            'mouseup',
-            handleUp,
-          );
-
-          emitNestedDragEnd(
-            {
-              kind:
-                'checklist-entry',
-
-              entry:
-                draggedEntry,
-            },
-            upEvent.clientX,
-            upEvent.clientY,
-          );
-
-          const inside = document.elementFromPoint(upEvent.clientX, upEvent.clientY)?.closest('[data-checklist-id]')?.getAttribute('data-checklist-id') === card.dataset.checklistId;
-
-          if (!inside) {
-            /*
-             * Canvas zwraca true tylko wtedy,
-             * gdy faktycznie przyjął element
-             * do innej checklisty.
-             */
-            const accepted =
-              onEntryDroppedOutside?.(
-                draggedEntry,
-                upEvent.clientX,
-                upEvent.clientY,
-              ) ?? false;
-
-            /*
-             * Dopiero PO potwierdzeniu
-             * usuwamy źródło.
-             */
-            if (accepted) {
-              updateEntries(
-                currentEntries =>
-                  currentEntries.filter(
-                    entry =>
-                      entry.id !==
-                      draggedEntry.id,
-                  ),
-              );
-            }
-          } else {
-            const finalDropIndex =
-              dropIndexRef.current;
-
-            if (
-              finalDropIndex !==
-                null &&
-              finalDropIndex !==
-                fromIndex
-            ) {
-              updateEntries(
-                currentEntries => {
-                  const next = [
-                    ...currentEntries,
-                  ];
-
-                  const sourceIndex =
-                    next.findIndex(
-                      entry =>
-                        entry.id ===
-                        draggedEntry.id,
-                    );
-
-                  if (
-                    sourceIndex ===
-                    -1
-                  ) {
-                    return currentEntries;
-                  }
-
-                  const [moved] =
-                    next.splice(
-                      sourceIndex,
-                      1,
-                    );
-
-                  if (!moved) {
-                    return currentEntries;
-                  }
-
-                  /*
-                   * Po usunięciu elementu
-                   * indeks docelowy może
-                   * przesunąć się o 1.
-                   */
-                  let insertIndex =
-                    finalDropIndex;
-
-                  if (
-                    sourceIndex <
-                    finalDropIndex
-                  ) {
-                    insertIndex -= 1;
-                  }
-
-                  insertIndex =
-                    Math.max(
-                      0,
-                      Math.min(
-                        insertIndex,
-                        next.length,
-                      ),
-                    );
-
-                  next.splice(
-                    insertIndex,
-                    0,
-                    moved,
-                  );
-
-                  return next;
-                },
-              );
-            }
-          }
-
-          setDraggingIndex(null);
-          setDropIndex(null);
-          dropIndexRef.current =
-            null;
-        };
-
-        document.addEventListener(
-          'mousemove',
-          handleMove,
-        );
-
-        document.addEventListener(
-          'mouseup',
-          handleUp,
-        );
-      },
-      [
-        cardRef,
-        rowRefs,
-        updateEntries,
-        onEntryDroppedOutside,
-      ],
-    );
-
-  return {
-    draggingIndex,
-    dropIndex,
-    handleDragStart,
-  };
+  return { draggingIndex, dropIndex, handleDragStart };
 }

@@ -10,33 +10,26 @@ import { getItemRect } from '@/features/canvas/utils/itemGeometry';
 interface UseFrameActionsOptions {
   items: BoardItem[];
   measuredSizes: SizeMap;
-  onUpdateItem: (
-    id: string,
-    updater: (item: BoardItem) => BoardItem,
-  ) => void;
+  onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
 }
 
-export function useFrameActions({
-  items,
-  measuredSizes,
-  onUpdateItem,
-}: UseFrameActionsOptions) {
+export function useFrameActions({ items, measuredSizes, onUpdateItem }: UseFrameActionsOptions) {
   const handleFitFrame = useCallback(
     (frameId: string) => {
-      const frame = items.find(item => item.id === frameId && item.type === 'frame');
+      const frame = items.find((item) => item.id === frameId && item.type === 'frame');
       if (!frame || frame.type !== 'frame') return;
 
       const inside = getFrameContents(frame, items, measuredSizes);
       if (inside.length === 0) return;
 
-      const rects = inside.map(item => getItemRect(item, measuredSizes));
+      const rects = inside.map((item) => getItemRect(item, measuredSizes));
 
-      const minX = Math.min(...rects.map(rect => rect.x));
-      const minY = Math.min(...rects.map(rect => rect.y));
-      const maxX = Math.max(...rects.map(rect => rect.right));
-      const maxY = Math.max(...rects.map(rect => rect.bottom));
+      const minX = Math.min(...rects.map((rect) => rect.x));
+      const minY = Math.min(...rects.map((rect) => rect.y));
+      const maxX = Math.max(...rects.map((rect) => rect.right));
+      const maxY = Math.max(...rects.map((rect) => rect.bottom));
 
-      onUpdateItem(frameId, current => {
+      onUpdateItem(frameId, (current) => {
         if (current.type !== 'frame') return current;
 
         return {

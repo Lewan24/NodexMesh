@@ -6,13 +6,7 @@ import type { BoardItem } from '@/entities/board/types';
 import type { ResizeDirection } from '@/features/canvas/types';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 
-
-import {
-  MIN_BLOCK_WIDTH,
-  MIN_FRAME_HEIGHT,
-  MIN_FRAME_WIDTH,
-  MIN_IMAGE_HEIGHT,
-} from '@/features/canvas/constants';
+import { MIN_BLOCK_WIDTH, MIN_FRAME_HEIGHT, MIN_FRAME_WIDTH, MIN_IMAGE_HEIGHT } from '@/features/canvas/constants';
 
 interface ProjectLike {
   items: BoardItem[];
@@ -38,14 +32,21 @@ interface MinSize {
 
 function getMinSize(item: BoardItem): MinSize {
   switch (item.type) {
-    case 'drawing': return { width: 12, height: 12 };
-    case 'timeline': return { width: 528, height: 340 };
+    case 'drawing':
+      return { width: 12, height: 12 };
+    case 'timeline':
+      return { width: 528, height: 340 };
     case 'database':
-    case 'diagram': return { width: 528, height: 360 };
-    case 'document': return { width: 320, height: 240 };
-    case 'embed': return { width: 320, height: 200 };
-    case 'code': return { width: 288, height: 160 };
-    case 'dispenser': return { width: 192, height: 160 };
+    case 'diagram':
+      return { width: 528, height: 360 };
+    case 'document':
+      return { width: 320, height: 240 };
+    case 'embed':
+      return { width: 320, height: 200 };
+    case 'code':
+      return { width: 288, height: 160 };
+    case 'dispenser':
+      return { width: 192, height: 160 };
     case 'frame':
       return { width: MIN_FRAME_WIDTH, height: MIN_FRAME_HEIGHT };
 
@@ -79,7 +80,7 @@ export function useItemResize({
     (id: string, event: React.MouseEvent, direction: ResizeDirection) => {
       if (event.button !== 0) return;
 
-      const item = projectRef.current.items.find(current => current.id === id);
+      const item = projectRef.current.items.find((current) => current.id === id);
       if (
         !item ||
         item.type === 'line' ||
@@ -149,12 +150,14 @@ export function useItemResize({
         const height = bottom - top;
 
         if (item.type === 'frame') {
-          framePreviewIds = projectRef.current.items.filter(child => child.type !== 'frame' && child.frameId === item.id).map(child => child.id);
+          framePreviewIds = projectRef.current.items
+            .filter((child) => child.type !== 'frame' && child.frameId === item.id)
+            .map((child) => child.id);
 
           onFramePreviewChange?.(framePreviewIds);
         }
 
-        onUpdateItem(id, current => {
+        onUpdateItem(id, (current) => {
           if (current.type === 'line') return current;
 
           /*
@@ -193,7 +196,6 @@ export function useItemResize({
 
         onResizeEnd?.(id);
         if (moved) {
-
           if (item.type === 'frame') {
             onFrameResizeEnd?.(id, framePreviewIds);
             onFramePreviewChange?.([]);

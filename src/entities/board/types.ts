@@ -1,11 +1,36 @@
-export interface SectionTitleItem extends BaseItem { type: 'section-title'; content: string }
+export interface SectionTitleItem extends BaseItem {
+  type: 'section-title';
+  content: string;
+}
 
-export type BoardItem = SectionTitleItem | NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem | DocumentItem | EmbedItem | CodeItem | DispenserItem | TimelineItem | DiagramItem | DatabaseDiagramItem | DrawingItem;
+export type BoardItem =
+  | SectionTitleItem
+  | NoteItem
+  | KanbanItem
+  | ImageItem
+  | LinkItem
+  | TextItem
+  | FrameItem
+  | ChecklistItem
+  | LineItem
+  | ColumnItem
+  | DocumentItem
+  | EmbedItem
+  | CodeItem
+  | DispenserItem
+  | TimelineItem
+  | DiagramItem
+  | DatabaseDiagramItem
+  | DrawingItem;
 
 export interface DrawingStroke {
   points: { x: number; y: number; pressure?: number }[];
-  x: number; y: number; scaleX: number; scaleY: number;
-  color: string; strokeWidth: number;
+  x: number;
+  y: number;
+  scaleX: number;
+  scaleY: number;
+  color: string;
+  strokeWidth: number;
 }
 
 export interface DrawingItem extends BaseItem {

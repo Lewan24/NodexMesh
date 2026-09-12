@@ -7,12 +7,7 @@ export const TEXT_SIZE_STYLES: Record<TextItem['size'], string> = {
   xl: 'text-4xl',
 };
 
-export const TEXT_SIZE_LABELS: TextItem['size'][] = [
-  'sm',
-  'md',
-  'lg',
-  'xl',
-];
+export const TEXT_SIZE_LABELS: TextItem['size'][] = ['sm', 'md', 'lg', 'xl'];
 
 export const DEFAULT_TEXT_CARD_WIDTH = 220;
 

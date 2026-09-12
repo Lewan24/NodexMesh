@@ -1,12 +1,10 @@
 import { useCallback, useState } from 'react';
 
 export function useItemAnimation() {
-  const [animatingIds, setAnimatingIds] = useState<Set<string>>(
-    () => new Set(),
-  );
+  const [animatingIds, setAnimatingIds] = useState<Set<string>>(() => new Set());
 
   const triggerEnterAnimation = useCallback((id: string) => {
-    setAnimatingIds(previous => {
+    setAnimatingIds((previous) => {
       if (previous.has(id)) {
         return previous;
       }
@@ -19,7 +17,7 @@ export function useItemAnimation() {
   }, []);
 
   const clearEnterAnimation = useCallback((id: string) => {
-    setAnimatingIds(previous => {
+    setAnimatingIds((previous) => {
       if (!previous.has(id)) {
         return previous;
       }
@@ -31,9 +29,5 @@ export function useItemAnimation() {
     });
   }, []);
 
-  return {
-    animatingIds,
-    triggerEnterAnimation,
-    clearEnterAnimation,
-  };
+  return { animatingIds, triggerEnterAnimation, clearEnterAnimation };
 }

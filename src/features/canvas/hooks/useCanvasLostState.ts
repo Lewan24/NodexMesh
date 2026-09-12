@@ -35,11 +35,7 @@ export function useCanvasLostState({
   const [isLost, setIsLost] = useState(false);
 
   const hasVisibleItem = useMemo(() => {
-    if (
-      items.length === 0 ||
-      viewportWidth <= 0 ||
-      viewportHeight <= 0
-    ) {
+    if (items.length === 0 || viewportWidth <= 0 || viewportHeight <= 0) {
       return true;
     }
 
@@ -47,42 +43,22 @@ export function useCanvasLostState({
      * Convert screen viewport into canvas coordinates.
      */
 
-    const viewportLeft =
-      -pan.x / zoom;
+    const viewportLeft = -pan.x / zoom;
 
-    const viewportTop =
-      -pan.y / zoom;
+    const viewportTop = -pan.y / zoom;
 
-    const viewportRight =
-      viewportLeft +
-      viewportWidth / zoom;
+    const viewportRight = viewportLeft + viewportWidth / zoom;
 
-    const viewportBottom =
-      viewportTop +
-      viewportHeight / zoom;
+    const viewportBottom = viewportTop + viewportHeight / zoom;
 
-    return items.some(item => {
-      const rect = getItemRect(
-        item,
-        measuredSizes,
-      );
+    return items.some((item) => {
+      const rect = getItemRect(item, measuredSizes);
 
       return (
-        rect.right >= viewportLeft &&
-        rect.x <= viewportRight &&
-        rect.bottom >= viewportTop &&
-        rect.y <= viewportBottom
+        rect.right >= viewportLeft && rect.x <= viewportRight && rect.bottom >= viewportTop && rect.y <= viewportBottom
       );
     });
-  }, [
-    items,
-    measuredSizes,
-    pan.x,
-    pan.y,
-    zoom,
-    viewportWidth,
-    viewportHeight,
-  ]);
+  }, [items, measuredSizes, pan.x, pan.y, zoom, viewportWidth, viewportHeight]);
 
   useEffect(() => {
     if (hasVisibleItem) {
@@ -90,19 +66,14 @@ export function useCanvasLostState({
       return;
     }
 
-    const timeout = window.setTimeout(
-      () => {
-        setIsLost(true);
-      },
-      delay,
-    );
+    const timeout = window.setTimeout(() => {
+      setIsLost(true);
+    }, delay);
 
     return () => {
       window.clearTimeout(timeout);
     };
   }, [hasVisibleItem, delay]);
 
-  return {
-    isLost,
-  };
+  return { isLost };
 }

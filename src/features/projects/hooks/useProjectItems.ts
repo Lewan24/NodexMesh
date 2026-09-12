@@ -16,7 +16,7 @@ type LayerAction = 'forward' | 'backward' | 'front' | 'back';
 function detachLines(items: BoardItem[], removedIds: string[]): BoardItem[] {
   const removed = new Set(removedIds);
 
-  return items.map(item => {
+  return items.map((item) => {
     if (item.type !== 'line') return item;
 
     let nextItem = item;
@@ -34,7 +34,7 @@ function detachLines(items: BoardItem[], removedIds: string[]): BoardItem[] {
 }
 
 function getNextZIndex(items: BoardItem[]): number {
-  return Math.max(0, ...items.filter(item => item.type !== 'frame').map(item => item.zIndex)) + 1;
+  return Math.max(0, ...items.filter((item) => item.type !== 'frame').map((item) => item.zIndex)) + 1;
 }
 
 function normalizeLayers(items: BoardItem[]): BoardItem[] {
@@ -44,20 +44,13 @@ function normalizeLayers(items: BoardItem[]): BoardItem[] {
       if (a.item.zIndex !== b.item.zIndex) return a.item.zIndex - b.item.zIndex;
       return a.index - b.index;
     })
-    .map(({ item }, index) => ({
-      ...item,
-      zIndex: index + 1,
-    }));
+    .map(({ item }, index) => ({ ...item, zIndex: index + 1 }));
 }
 
-export function changeItemLayer(
-  items: BoardItem[],
-  id: string,
-  action: LayerAction,
-): BoardItem[] {
-  const frames = items.filter(item => item.type === 'frame').map(item => ({ ...item, zIndex: 0 }));
-  const normalized = normalizeLayers(items.filter(item => item.type !== 'frame'));
-  const currentIndex = normalized.findIndex(item => item.id === id);
+export function changeItemLayer(items: BoardItem[], id: string, action: LayerAction): BoardItem[] {
+  const frames = items.filter((item) => item.type === 'frame').map((item) => ({ ...item, zIndex: 0 }));
+  const normalized = normalizeLayers(items.filter((item) => item.type !== 'frame'));
+  const currentIndex = normalized.findIndex((item) => item.id === id);
 
   if (currentIndex === -1) return [...frames, ...normalized];
 
@@ -66,19 +59,13 @@ export function changeItemLayer(
   if (action === 'forward') {
     if (currentIndex === next.length - 1) return [...frames, ...normalized];
 
-    [next[currentIndex], next[currentIndex + 1]] = [
-      next[currentIndex + 1]!,
-      next[currentIndex]!,
-    ];
+    [next[currentIndex], next[currentIndex + 1]] = [next[currentIndex + 1]!, next[currentIndex]!];
   }
 
   if (action === 'backward') {
     if (currentIndex === 0) return [...frames, ...normalized];
 
-    [next[currentIndex], next[currentIndex - 1]] = [
-      next[currentIndex - 1]!,
-      next[currentIndex]!,
-    ];
+    [next[currentIndex], next[currentIndex - 1]] = [next[currentIndex - 1]!, next[currentIndex]!];
   }
 
   if (action === 'front') {
@@ -95,22 +82,21 @@ export function changeItemLayer(
     if (target) next.unshift(target);
   }
 
-  return [...frames, ...next.map((item, index) => ({
-    ...item,
-    zIndex: index + 1,
-  }))];
+  return [...frames, ...next.map((item, index) => ({ ...item, zIndex: index + 1 }))];
 }
 
-export function useProjectItems({
-  activeProjectId,
-  setProjects,
-}: UseProjectItemsOptions) {
+export function useProjectItems({ activeProjectId, setProjects }: UseProjectItemsOptions) {
   const updateItems = useCallback(
     (update: (items: BoardItem[]) => BoardItem[]) => {
-      setProjects(previous =>
-        previous.map(project =>
+      setProjects((previous) =>
+        previous.map((project) =>
           project.id === activeProjectId
-            ? { ...project, items: normalizeFrameMembership(update(project.items)).map(item => item.type === 'frame' ? { ...item, zIndex: 0 } : item) }
+            ? {
+                ...project,
+                items: normalizeFrameMembership(update(project.items)).map((item) =>
+                  item.type === 'frame' ? { ...item, zIndex: 0 } : item,
+                ),
+              }
             : project,
         ),
       );
@@ -120,28 +106,25 @@ export function useProjectItems({
 
   const addItem = useCallback(
     (item: BoardItem) => {
-      updateItems(items => [
-        ...items.map(existing => item.type === 'frame' && existing.type !== 'frame' && !existing.frameId && !existing.locked && isItemInsideFrame(existing, item)
-          ? { ...existing, frameId: item.id } : existing),
-        {
-          ...item,
-          zIndex: item.type === 'frame' ? 0 : getNextZIndex(items),
-        },
+      updateItems((items) => [
+        ...items.map((existing) =>
+          item.type === 'frame' &&
+          existing.type !== 'frame' &&
+          !existing.frameId &&
+          !existing.locked &&
+          isItemInsideFrame(existing, item)
+            ? { ...existing, frameId: item.id }
+            : existing,
+        ),
+        { ...item, zIndex: item.type === 'frame' ? 0 : getNextZIndex(items) },
       ]);
     },
     [updateItems],
   );
 
   const updateItem = useCallback(
-    (
-      id: string,
-      update: (item: BoardItem) => BoardItem,
-    ) => {
-      updateItems(items =>
-        items.map(item =>
-          item.id === id ? update(item) : item,
-        ),
-      );
+    (id: string, update: (item: BoardItem) => BoardItem) => {
+      updateItems((items) => items.map((item) => (item.id === id ? update(item) : item)));
     },
     [updateItems],
   );
@@ -155,9 +138,9 @@ export function useProjectItems({
 
   const deleteItem = useCallback(
     (id: string) => {
-      updateItems(items =>
+      updateItems((items) =>
         detachLines(
-          items.filter(item => item.id !== id),
+          items.filter((item) => item.id !== id),
           [id],
         ),
       );
@@ -169,9 +152,9 @@ export function useProjectItems({
     (ids: string[]) => {
       const removed = new Set(ids);
 
-      updateItems(items =>
+      updateItems((items) =>
         detachLines(
-          items.filter(item => !removed.has(item.id)),
+          items.filter((item) => !removed.has(item.id)),
           ids,
         ),
       );
@@ -181,36 +164,28 @@ export function useProjectItems({
 
   const bringForward = useCallback(
     (id: string) => {
-      updateItems(items =>
-        changeItemLayer(items, id, 'forward'),
-      );
+      updateItems((items) => changeItemLayer(items, id, 'forward'));
     },
     [updateItems],
   );
 
   const sendBackward = useCallback(
     (id: string) => {
-      updateItems(items =>
-        changeItemLayer(items, id, 'backward'),
-      );
+      updateItems((items) => changeItemLayer(items, id, 'backward'));
     },
     [updateItems],
   );
 
   const bringToFront = useCallback(
     (id: string) => {
-      updateItems(items =>
-        changeItemLayer(items, id, 'front'),
-      );
+      updateItems((items) => changeItemLayer(items, id, 'front'));
     },
     [updateItems],
   );
 
   const sendToBack = useCallback(
     (id: string) => {
-      updateItems(items =>
-        changeItemLayer(items, id, 'back'),
-      );
+      updateItems((items) => changeItemLayer(items, id, 'back'));
     },
     [updateItems],
   );

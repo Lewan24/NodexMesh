@@ -10,30 +10,57 @@ export function growsAutomatically(item: BoardItem): boolean {
 }
 
 /** Push only cards that were below the old bounds, preserving intentional overlaps. */
-export function autoGrowthLayout(items: BoardItem[], sourceId: string, before: SizeMap, after: SizeMap): Map<string, Partial<BoardItem>> {
+export function autoGrowthLayout(
+  items: BoardItem[],
+  sourceId: string,
+  before: SizeMap,
+  after: SizeMap,
+): Map<string, Partial<BoardItem>> {
   const patches = new Map<string, Partial<BoardItem>>();
-  const source = items.find(item => item.id === sourceId);
+  const source = items.find((item) => item.id === sourceId);
   if (!source || !growsAutomatically(source)) return patches;
-  const oldSize = before.get(sourceId), newSize = after.get(sourceId);
-  if (!oldSize || !newSize || newSize.height <= oldSize.height + .5) return patches;
+  const oldSize = before.get(sourceId),
+    newSize = after.get(sourceId);
+  if (!oldSize || !newSize || newSize.height <= oldSize.height + 0.5) return patches;
   const queue = [source];
   const bounds = (item: BoardItem, sizes: SizeMap) => {
     const rect = getItemRect(item, sizes);
-    return item.type === 'line' ? { ...rect, x: Math.min(item.x, item.x2), y: Math.min(item.y, item.y2), right: Math.max(item.x, item.x2), bottom: Math.max(item.y, item.y2) } : rect;
+    return item.type === 'line'
+      ? {
+          ...rect,
+          x: Math.min(item.x, item.x2),
+          y: Math.min(item.y, item.y2),
+          right: Math.max(item.x, item.x2),
+          bottom: Math.max(item.y, item.y2),
+        }
+      : rect;
   };
-  const original = new Map(items.map(item => [item.id, bounds(item, before)]));
+  const original = new Map(items.map((item) => [item.id, bounds(item, before)]));
   const rect = (item: BoardItem) => bounds({ ...item, ...patches.get(item.id) } as BoardItem, after);
   while (queue.length) {
     const growing = queue.shift()!;
     const old = original.get(growing.id)!;
     const current = rect(growing);
     for (const item of items) {
-      if ((item.frameId ?? null) !== (growing.frameId ?? null) || item.id === growing.id || item.type === 'frame' || item.locked || (item.type === 'line' && (item.startItemId || item.endItemId))) continue;
+      if (
+        (item.frameId ?? null) !== (growing.frameId ?? null) ||
+        item.id === growing.id ||
+        item.type === 'frame' ||
+        item.locked ||
+        (item.type === 'line' && (item.startItemId || item.endItemId))
+      )
+        continue;
       const targetBefore = original.get(item.id)!;
       const target = rect(item);
-      if (targetBefore.y <= old.y + .5 || targetBefore.y < old.bottom - .5 || target.x >= current.x + current.width || target.x + target.width <= current.x) continue;
+      if (
+        targetBefore.y <= old.y + 0.5 ||
+        targetBefore.y < old.bottom - 0.5 ||
+        target.x >= current.x + current.width ||
+        target.x + target.width <= current.x
+      )
+        continue;
       const nextY = current.y + current.height + CANVAS_GRID_SIZE;
-      if (target.y >= nextY - .5) continue;
+      if (target.y >= nextY - 0.5) continue;
       const patch: Partial<BoardItem> = { y: item.y + nextY - targetBefore.y };
       if (item.type === 'line') Object.assign(patch, { y2: item.y2 + nextY - targetBefore.y });
       patches.set(item.id, patch);

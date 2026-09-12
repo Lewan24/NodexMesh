@@ -15,11 +15,7 @@ export const COLUMN_BG_COLORS = [
 
 export type ColumnChildType = 'note' | 'checklist' | 'link' | 'text' | 'image' | 'document' | 'code' | 'embed';
 
-export const COLUMN_ADD_TYPES: {
-  kind: ColumnChildType;
-  label: string;
-  icon: string;
-}[] = [
+export const COLUMN_ADD_TYPES: { kind: ColumnChildType; label: string; icon: string }[] = [
   { kind: 'document', label: 'Document', icon: '📄' },
   { kind: 'code', label: 'Code', icon: '</>' },
   { kind: 'embed', label: 'Embed', icon: '▶' },

@@ -27,12 +27,7 @@ export function useAddUserForm() {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
 
-    const result = addUser({
-      name,
-      username,
-      password,
-      role,
-    });
+    const result = addUser({ name, username, password, role });
 
     if (!result.ok) {
       setError(result.error);

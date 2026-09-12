@@ -11,9 +11,7 @@ interface ColumnItemRowProps {
   isDragging?: boolean;
   isSelected?: boolean;
 
-  onDragHandleMouseDown: (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ) => void;
+  onDragHandleMouseDown: (event: React.MouseEvent<HTMLButtonElement>) => void;
 
   onEject: () => void;
   onSelect: () => void;
@@ -39,7 +37,7 @@ export default function ColumnItemRow({
         opacity: isDragging ? 0.32 : 1,
         boxShadow: isSelected ? '0 0 0 2px var(--color-accent)' : undefined,
       }}
-      onClick={event => {
+      onClick={(event) => {
         event.stopPropagation();
         onSelect();
       }}
@@ -55,24 +53,18 @@ export default function ColumnItemRow({
           justify-center
           pt-2
         "
-        onClick={event =>
-          event.stopPropagation()
-        }
+        onClick={(event) => event.stopPropagation()}
       >
         <DragHandle
           color="var(--color-text-faint)"
           title="Drag to reorder or move out of column"
-          onMouseDown={
-            onDragHandleMouseDown
-          }
+          onMouseDown={onDragHandleMouseDown}
         />
       </div>
 
       {/* Actual nested block */}
 
-      <div className="min-w-0 w-full overflow-hidden">
-        {children}
-      </div>
+      <div className="min-w-0 w-full overflow-hidden">{children}</div>
 
       {/* Eject */}
 
@@ -83,13 +75,11 @@ export default function ColumnItemRow({
           items-start
           pt-2
         "
-        onMouseDown={event =>
-          event.stopPropagation()
-        }
+        onMouseDown={(event) => event.stopPropagation()}
       >
         <button
           type="button"
-          onClick={event => {
+          onClick={(event) => {
             event.stopPropagation();
             onEject();
           }}
@@ -109,10 +99,7 @@ export default function ColumnItemRow({
             hover:ring-[var(--color-accent)]
             hover:bg-black/5
           "
-          style={{
-            color:
-              'var(--color-text-faint)',
-          }}
+          style={{ color: 'var(--color-text-faint)' }}
           title="Move item to canvas"
         >
           <svg

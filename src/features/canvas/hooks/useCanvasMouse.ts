@@ -6,11 +6,7 @@ import type { RefObject } from 'react';
 
 import type { BoardItem } from '@/entities/board/types';
 import type { ToolType } from '@/entities/board/toolTypes';
-import type {
-  CanvasPoint,
-  FrameDraft,
-  SelectionBox,
-} from '@/features/canvas/types';
+import type { CanvasPoint, FrameDraft, SelectionBox } from '@/features/canvas/types';
 
 import { createCanvasItem } from '@/features/canvas/utils/createCanvasItem';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
@@ -32,10 +28,7 @@ interface UseCanvasMouseOptions {
   measuredSizes: SizeMap;
   onFramePreviewChange: (ids: string[]) => void;
 
-  screenToCanvas: (
-    screenX: number,
-    screenY: number,
-  ) => CanvasPoint;
+  screenToCanvas: (screenX: number, screenY: number) => CanvasPoint;
 
   snapValue: (value: number) => number;
   pushHistory: () => void;
@@ -64,16 +57,17 @@ export function useCanvasMouse({
   onSelectItems,
   triggerEnterAnimation,
 }: UseCanvasMouseOptions) {
-  const [frameDraft, setFrameDraft] = useState<FrameDraft | null>(
-    null,
-  );
+  const [frameDraft, setFrameDraft] = useState<FrameDraft | null>(null);
 
   const [lasso, setLasso] = useState<SelectionBox | null>(null);
   const [drawingDraft, setDrawingDraft] = useState<DrawingPoint[] | null>(null);
   const drawingCleanup = useRef<(() => void) | null>(null);
   useEffect(() => () => drawingCleanup.current?.(), []);
   useEffect(() => {
-    if (selectedTool !== 'drawing') { drawingCleanup.current?.(); setDrawingDraft(null); }
+    if (selectedTool !== 'drawing') {
+      drawingCleanup.current?.();
+      setDrawingDraft(null);
+    }
   }, [selectedTool]);
 
   const handleCanvasMouseDown = useCallback(
@@ -86,10 +80,7 @@ export function useCanvasMouse({
         const startPan = { ...panRef.current };
 
         const handleMove = (moveEvent: MouseEvent) => {
-          onPanChange({
-            x: startPan.x + moveEvent.clientX - startX,
-            y: startPan.y + moveEvent.clientY - startY,
-          });
+          onPanChange({ x: startPan.x + moveEvent.clientX - startX, y: startPan.y + moveEvent.clientY - startY });
         };
 
         const handleUp = () => {
@@ -126,10 +117,7 @@ export function useCanvasMouse({
       const startScreenX = event.clientX - rect.left;
       const startScreenY = event.clientY - rect.top;
 
-      const startCanvas = screenToCanvas(
-        startScreenX,
-        startScreenY,
-      );
+      const startCanvas = screenToCanvas(startScreenX, startScreenY);
 
       const panAtDown = { ...pan };
 
@@ -143,16 +131,23 @@ export function useCanvasMouse({
         const move = (moveEvent: MouseEvent) => {
           const point = screenToCanvas(moveEvent.clientX - rect.left, moveEvent.clientY - rect.top);
           const last = points[points.length - 1]!;
-          if (Math.hypot(point.x - last.x, point.y - last.y) < .5) return;
+          if (Math.hypot(point.x - last.x, point.y - last.y) < 0.5) return;
           const distance = Math.hypot(moveEvent.clientX - previous.x, moveEvent.clientY - previous.y);
           const elapsed = Math.max(1, moveEvent.timeStamp - previous.time);
           const pressure = penPressure(distance, elapsed);
           // A small, adaptive stabilizer damps slow hand jitter, but follows fast gestures.
-          const follow = Math.min(.85, .35 + distance / elapsed * .25);
-          points.push({ x: last.x + (point.x - last.x) * follow, y: last.y + (point.y - last.y) * follow,
-            pressure: (last.pressure ?? 1) * .7 + pressure * .3 });
+          const follow = Math.min(0.85, 0.35 + (distance / elapsed) * 0.25);
+          points.push({
+            x: last.x + (point.x - last.x) * follow,
+            y: last.y + (point.y - last.y) * follow,
+            pressure: (last.pressure ?? 1) * 0.7 + pressure * 0.3,
+          });
           previous = { x: moveEvent.clientX, y: moveEvent.clientY, time: moveEvent.timeStamp };
-          if (frame === null) frame = requestAnimationFrame(() => { frame = null; setDrawingDraft([...points]); });
+          if (frame === null)
+            frame = requestAnimationFrame(() => {
+              frame = null;
+              setDrawingDraft([...points]);
+            });
         };
         const cleanup = () => {
           if (frame !== null) cancelAnimationFrame(frame);
@@ -161,14 +156,24 @@ export function useCanvasMouse({
           window.removeEventListener('blur', cancel);
           drawingCleanup.current = null;
         };
-        const cancel = () => { cleanup(); setDrawingDraft(null); };
+        const cancel = () => {
+          cleanup();
+          setDrawingDraft(null);
+        };
         const finish = (upEvent: MouseEvent) => {
           const end = screenToCanvas(upEvent.clientX - rect.left, upEvent.clientY - rect.top);
           const last = points[points.length - 1]!;
-          if (Math.hypot(end.x - last.x, end.y - last.y) > .5) points.push({ ...end, pressure: last.pressure });
-          cleanup(); setDrawingDraft(null);
-          const drawing = createDrawing(points, Math.max(0, ...projectRef.current.items.map(item => item.zIndex)) + 1);
-          if (drawing) { pushHistory(); onAddItem(drawing); }
+          if (Math.hypot(end.x - last.x, end.y - last.y) > 0.5) points.push({ ...end, pressure: last.pressure });
+          cleanup();
+          setDrawingDraft(null);
+          const drawing = createDrawing(
+            points,
+            Math.max(0, ...projectRef.current.items.map((item) => item.zIndex)) + 1,
+          );
+          if (drawing) {
+            pushHistory();
+            onAddItem(drawing);
+          }
         };
         drawingCleanup.current = cleanup;
         document.addEventListener('mousemove', move);
@@ -179,33 +184,18 @@ export function useCanvasMouse({
 
       if (selectedTool === 'frame') {
         const handleMove = (moveEvent: MouseEvent) => {
-          const current = screenToCanvas(
-            moveEvent.clientX - rect.left,
-            moveEvent.clientY - rect.top,
-          );
+          const current = screenToCanvas(moveEvent.clientX - rect.left, moveEvent.clientY - rect.top);
 
           const left = snapValue(Math.min(startCanvas.x, current.x));
           const top = snapValue(Math.min(startCanvas.y, current.y));
           const right = snapValue(Math.max(startCanvas.x, current.x));
           const bottom = snapValue(Math.max(startCanvas.y, current.y));
 
-          setFrameDraft({
-            x: left,
-            y: top,
-            width: right - left,
-            height: bottom - top,
-          });
+          setFrameDraft({ x: left, y: top, width: right - left, height: bottom - top });
 
           const previewIds = getContainedItemIds(
-            projectRef.current.items.filter(child => child.type !== 'frame' && !child.frameId && !child.locked),
-            {
-              x: left,
-              y: top,
-              width: right - left,
-              height: bottom - top,
-              right,
-              bottom,
-            },
+            projectRef.current.items.filter((child) => child.type !== 'frame' && !child.frameId && !child.locked),
+            { x: left, y: top, width: right - left, height: bottom - top, right, bottom },
             measuredSizes,
           );
 
@@ -218,10 +208,7 @@ export function useCanvasMouse({
 
           setFrameDraft(null);
 
-          const current = screenToCanvas(
-            upEvent.clientX - rect.left,
-            upEvent.clientY - rect.top,
-          );
+          const current = screenToCanvas(upEvent.clientX - rect.left, upEvent.clientY - rect.top);
 
           const left = snapValue(Math.min(startCanvas.x, current.x));
           const top = snapValue(Math.min(startCanvas.y, current.y));
@@ -234,11 +221,7 @@ export function useCanvasMouse({
           const item =
             width > 40 && height > 40
               ? createCanvasItem('frame', left, top, { width, height })
-              : createCanvasItem(
-                  'frame',
-                  snapValue(startCanvas.x - 80),
-                  snapValue(startCanvas.y - 40),
-                );
+              : createCanvasItem('frame', snapValue(startCanvas.x - 80), snapValue(startCanvas.y - 40));
 
           if (!item || item.type !== 'frame') {
             onFramePreviewChange([]);
@@ -246,7 +229,7 @@ export function useCanvasMouse({
           }
 
           const containedIds = getContainedItemIds(
-            projectRef.current.items.filter(child => child.type !== 'frame' && !child.frameId && !child.locked),
+            projectRef.current.items.filter((child) => child.type !== 'frame' && !child.frameId && !child.locked),
             {
               x: item.x,
               y: item.y,
@@ -277,16 +260,9 @@ export function useCanvasMouse({
         const handleUp = (upEvent: MouseEvent) => {
           document.removeEventListener('mouseup', handleUp);
 
-          const point = screenToCanvas(
-            upEvent.clientX - rect.left,
-            upEvent.clientY - rect.top,
-          );
+          const point = screenToCanvas(upEvent.clientX - rect.left, upEvent.clientY - rect.top);
 
-          const item = createCanvasItem(
-            selectedTool,
-            snapValue(point.x),
-            snapValue(point.y),
-          );
+          const item = createCanvasItem(selectedTool, snapValue(point.x), snapValue(point.y));
 
           if (!item) {
             return;
@@ -314,10 +290,7 @@ export function useCanvasMouse({
       const handleMove = (moveEvent: MouseEvent) => {
         hasMoved = true;
 
-        endCanvas = screenToCanvas(
-          moveEvent.clientX - rect.left,
-          moveEvent.clientY - rect.top,
-        );
+        endCanvas = screenToCanvas(moveEvent.clientX - rect.left, moveEvent.clientY - rect.top);
 
         setLasso({
           x1: Math.min(startCanvas.x, endCanvas.x),
@@ -348,22 +321,15 @@ export function useCanvasMouse({
 
         const idsInBox = projectRef.current.items
           .filter(
-            item =>
-              item.type !== 'frame' &&
-              item.x >= box.x1 &&
-              item.y >= box.y1 &&
-              item.x <= box.x2 &&
-              item.y <= box.y2,
+            (item) =>
+              item.type !== 'frame' && item.x >= box.x1 && item.y >= box.y1 && item.x <= box.x2 && item.y <= box.y2,
           )
-          .map(item => item.id);
+          .map((item) => item.id);
 
         if (event.shiftKey) {
           const current = selectedIdsRef.current;
 
-          const merged = [
-            ...current,
-            ...idsInBox.filter(id => !current.includes(id)),
-          ];
+          const merged = [...current, ...idsInBox.filter((id) => !current.includes(id))];
 
           onSelectItems(merged);
 
@@ -394,12 +360,5 @@ export function useCanvasMouse({
     ],
   );
 
-  return {
-    drawingDraft,
-    frameDraft,
-    lasso,
-    handleCanvasMouseDown,
-    measuredSizes,
-    onFramePreviewChange,
-  };
+  return { drawingDraft, frameDraft, lasso, handleCanvasMouseDown, measuredSizes, onFramePreviewChange };
 }

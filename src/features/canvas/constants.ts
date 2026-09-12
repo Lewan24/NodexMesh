@@ -1,13 +1,4 @@
-export const DROPPABLE_ON_COLUMN = new Set([
-  'note',
-  'text',
-  'image',
-  'link',
-  'checklist',
-  'document',
-  'code',
-  'embed',
-]);
+export const DROPPABLE_ON_COLUMN = new Set(['note', 'text', 'image', 'link', 'checklist', 'document', 'code', 'embed']);
 
 export const ZOOM_MIN = 0.1;
 export const ZOOM_MAX = 3;

@@ -14,26 +14,17 @@ export default function FrameControls({ item, onUpdate }: FrameControlsProps) {
   const opacity = item.opacity ?? 0.2;
 
   const update = (patch: Partial<FrameItem>) => {
-    onUpdate(current => current.type === 'frame' ? { ...current, ...patch } : current);
+    onUpdate((current) => (current.type === 'frame' ? { ...current, ...patch } : current));
   };
 
   return (
     <>
       <div className="flex items-center gap-1 px-1">
-        {FRAME_COLORS.map(color => (
-          <ColorSwatch
-            key={color}
-            color={color}
-            active={item.color === color}
-            onClick={() => update({ color })}
-          />
+        {FRAME_COLORS.map((color) => (
+          <ColorSwatch key={color} color={color} active={item.color === color} onClick={() => update({ color })} />
         ))}
 
-        <CustomColorInput
-          value={item.color}
-          onChange={color => update({ color })}
-          title="Custom frame color"
-        />
+        <CustomColorInput value={item.color} onChange={(color) => update({ color })} title="Custom frame color" />
       </div>
 
       <EditBarDivider />
@@ -52,7 +43,7 @@ export default function FrameControls({ item, onUpdate }: FrameControlsProps) {
           max="1"
           step="0.05"
           value={opacity}
-          onChange={event => update({ opacity: Number(event.target.value) })}
+          onChange={(event) => update({ opacity: Number(event.target.value) })}
           className="w-24 cursor-pointer"
           title={`Opacity ${Math.round(opacity * 100)}%`}
         />

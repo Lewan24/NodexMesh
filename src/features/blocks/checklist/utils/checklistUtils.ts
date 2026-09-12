@@ -1,11 +1,7 @@
 import type { ChecklistEntry } from '@/entities/board/types';
 
 export function createChecklistEntry(text: string): ChecklistEntry {
-  return {
-    id: Math.random().toString(36).slice(2, 9),
-    text,
-    done: false,
-  };
+  return { id: Math.random().toString(36).slice(2, 9), text, done: false };
 }
 
 export function isLightColor(hex: string): boolean {

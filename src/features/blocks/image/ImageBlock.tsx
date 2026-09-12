@@ -3,10 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { BoardItem, ImageItem } from '@/entities/board/types';
 
-import {
-  DEFAULT_IMAGE_HEIGHT,
-  DEFAULT_IMAGE_WIDTH,
-} from '@/features/blocks/image/utils/imageUtils';
+import { DEFAULT_IMAGE_HEIGHT, DEFAULT_IMAGE_WIDTH } from '@/features/blocks/image/utils/imageUtils';
 import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface ImageBlockProps {
@@ -17,11 +14,7 @@ interface ImageBlockProps {
   onDelete: () => void;
 }
 
-export default function ImageBlock({
-  item,
-  onUpdate,
-  onDelete,
-}: ImageBlockProps) {
+export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps) {
   const [editingUrl, setEditingUrl] = useState(!item.url);
   const [urlInput, setUrlInput] = useState(item.url);
 
@@ -40,13 +33,10 @@ export default function ImageBlock({
 
   const update = useCallback(
     (patch: Partial<ImageItem>) => {
-      onUpdate(current => {
+      onUpdate((current) => {
         if (current.type !== 'image') return current;
 
-        return {
-          ...current,
-          ...patch,
-        };
+        return { ...current, ...patch };
       });
     },
     [onUpdate],
@@ -71,46 +61,20 @@ export default function ImageBlock({
   }, [item.url]);
 
   return (
-    <div className="group relative" style={{ 
-      width,
-      height: item.height,
-     }}>
+    <div className="group relative" style={{ width, height: item.height }}>
       <div
-        className={
-          isSticker
-            ? 'overflow-hidden item-rounded'
-            : 'overflow-hidden shadow-xl item-rounded'
-        }
-        style={
-          isSticker
-            ? {
-                boxShadow: '0 10px 26px rgba(0,0,0,0.22)',
-              }
-            : {
-                background,
-                borderColor,
-              }
-        }
+        className={isSticker ? 'overflow-hidden item-rounded' : 'overflow-hidden shadow-xl item-rounded'}
+        style={isSticker ? { boxShadow: '0 10px 26px rgba(0,0,0,0.22)' } : { background, borderColor }}
       >
         {/* Top accent */}
 
-        {!isSticker && item.topColor && (
-          <div
-            style={{
-              height: 5,
-              backgroundColor: item.topColor,
-            }}
-          />
-        )}
+        {!isSticker && item.topColor && <div style={{ height: 5, backgroundColor: item.topColor }} />}
 
         {/* Image area */}
 
         <div
           className="relative cursor-grab active:cursor-grabbing"
-          style={{
-            height: imageHeight,
-            backgroundColor: light ? '#e2e8f0' : '#071317',
-          }}
+          style={{ height: imageHeight, backgroundColor: light ? '#e2e8f0' : '#071317' }}
         >
           {item.url ? (
             <>
@@ -120,7 +84,6 @@ export default function ImageBlock({
                 className="w-full h-full object-cover"
                 draggable={false}
               />
-
             </>
           ) : (
             <div
@@ -129,18 +92,9 @@ export default function ImageBlock({
             >
               <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                style={{
-                  backgroundColor: light ? 'rgba(0,0,0,0.06)' : '#112028',
-                }}
+                style={{ backgroundColor: light ? 'rgba(0,0,0,0.06)' : '#112028' }}
               >
-                <svg
-                  width="26"
-                  height="26"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={mutedColor}
-                  strokeWidth="1.5"
-                >
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={mutedColor} strokeWidth="1.5">
                   <rect x="3" y="3" width="18" height="18" rx="2" />
                   <circle cx="8.5" cy="8.5" r="1.5" />
                   <path d="m21 15-5-5L5 21" />
@@ -162,30 +116,19 @@ export default function ImageBlock({
 
                 <div
                   className="flex items-center rounded-lg overflow-hidden"
-                  style={{
-                    backgroundColor: 'rgba(7,19,23,0.7)',
-                  }}
-                  onMouseDown={event => event.stopPropagation()}
+                  style={{ backgroundColor: 'rgba(7,19,23,0.7)' }}
+                  onMouseDown={(event) => event.stopPropagation()}
                 >
                   <button
                     onClick={() => update({ variant: 'card' })}
                     className="w-7 h-7 flex items-center justify-center transition-colors"
                     style={{
                       color: !isSticker ? '#fff' : '#8aacb8',
-                      backgroundColor: !isSticker
-                        ? 'rgba(124,58,237,0.5)'
-                        : 'transparent',
+                      backgroundColor: !isSticker ? 'rgba(124,58,237,0.5)' : 'transparent',
                     }}
                     title="Card with caption"
                   >
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="3" width="18" height="18" rx="2" />
                       <path d="M3 15h18M8 19h8" strokeLinecap="round" />
                     </svg>
@@ -196,20 +139,11 @@ export default function ImageBlock({
                     className="w-7 h-7 flex items-center justify-center transition-colors"
                     style={{
                       color: isSticker ? '#fff' : '#8aacb8',
-                      backgroundColor: isSticker
-                        ? 'rgba(124,58,237,0.5)'
-                        : 'transparent',
+                      backgroundColor: isSticker ? 'rgba(124,58,237,0.5)' : 'transparent',
                     }}
                     title="Sticker (image only)"
                   >
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M4 16.5V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10.5a3.5 3.5 0 0 1-3.5 3.5H7.5A3.5 3.5 0 0 1 4 16.5z" />
                       <path d="M14 20v-3a3 3 0 0 1 3-3h3" />
                     </svg>
@@ -219,29 +153,19 @@ export default function ImageBlock({
                 {/* Change URL */}
 
                 <button
-                  onMouseDown={event => event.stopPropagation()}
-                  onClick={() => setEditingUrl(previous => !previous)}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={() => setEditingUrl((previous) => !previous)}
                   className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
-                  style={{
-                    backgroundColor: 'rgba(7,19,23,0.7)',
-                    color: '#8aacb8',
-                  }}
-                  onMouseEnter={event => {
+                  style={{ backgroundColor: 'rgba(7,19,23,0.7)', color: '#8aacb8' }}
+                  onMouseEnter={(event) => {
                     event.currentTarget.style.color = '#fff';
                   }}
-                  onMouseLeave={event => {
+                  onMouseLeave={(event) => {
                     event.currentTarget.style.color = '#8aacb8';
                   }}
                   title="Change image URL"
                 >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z" />
                   </svg>
@@ -252,29 +176,19 @@ export default function ImageBlock({
             {/* Delete */}
 
             <button
-              onMouseDown={event => event.stopPropagation()}
+              onMouseDown={(event) => event.stopPropagation()}
               onClick={onDelete}
               className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
-              style={{
-                backgroundColor: 'rgba(7,19,23,0.7)',
-                color: '#8aacb8',
-              }}
-              onMouseEnter={event => {
+              style={{ backgroundColor: 'rgba(7,19,23,0.7)', color: '#8aacb8' }}
+              onMouseEnter={(event) => {
                 event.currentTarget.style.color = '#FF6B8A';
               }}
-              onMouseLeave={event => {
+              onMouseLeave={(event) => {
                 event.currentTarget.style.color = '#8aacb8';
               }}
               title="Delete"
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
@@ -288,21 +202,16 @@ export default function ImageBlock({
             className={isSticker ? 'p-2 mt-1 rounded-xl' : 'px-3 py-2.5 border-t'}
             style={
               isSticker
-                ? {
-                    backgroundColor: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                  }
-                : {
-                    borderColor,
-                  }
+                ? { backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }
+                : { borderColor }
             }
-            onMouseDown={event => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
           >
             <input
               autoFocus
               value={urlInput}
-              onChange={event => setUrlInput(event.target.value)}
-              onKeyDown={event => {
+              onChange={(event) => setUrlInput(event.target.value)}
+              onKeyDown={(event) => {
                 if (event.key === 'Enter') commitUrl();
                 if (event.key === 'Escape') cancelUrlEdit();
               }}
@@ -310,12 +219,8 @@ export default function ImageBlock({
               placeholder="Paste image URL…"
               className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border border-[#7C3AED]/40 focus:border-[#7C3AED] transition-colors"
               style={{
-                backgroundColor: isSticker
-                  ? 'var(--color-surface-alt)'
-                  : inputBackground,
-                color: isSticker
-                  ? 'var(--color-text-primary)'
-                  : textColor,
+                backgroundColor: isSticker ? 'var(--color-surface-alt)' : inputBackground,
+                color: isSticker ? 'var(--color-text-primary)' : textColor,
               }}
             />
           </div>
@@ -324,18 +229,13 @@ export default function ImageBlock({
         {/* Caption */}
 
         {!isSticker && (
-          <div
-            className="px-3 py-2.5"
-            onMouseDown={event => event.stopPropagation()}
-          >
+          <div className="px-3 py-2.5" onMouseDown={(event) => event.stopPropagation()}>
             <input
               value={item.caption}
-              onChange={event => update({ caption: event.target.value })}
+              onChange={(event) => update({ caption: event.target.value })}
               placeholder="Add caption…"
               className="w-full bg-transparent text-sm outline-none transition-colors"
-              style={{ color: textColor,
-                ...typographyStyle,
-               }}
+              style={{ color: textColor, ...typographyStyle }}
             />
           </div>
         )}

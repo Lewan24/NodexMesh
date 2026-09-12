@@ -12,10 +12,7 @@ interface CanvasEditBarProps {
   onJoinDrawings?: () => void;
   selectedColumnItem: SelectedColumnItem | null;
 
-  onUpdateItem: (
-    id: string,
-    updater: (item: BoardItem) => BoardItem,
-  ) => void;
+  onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
 
   onDeleteItems: (ids: string[]) => void;
   onSelectItems: (ids: string[]) => void;
@@ -26,19 +23,13 @@ interface CanvasEditBarProps {
   onBringToFront: (id: string) => void;
   onSendToBack: (id: string) => void;
 
-  onUpdateColumnItem: (
-    columnId: string,
-    updater: (item: BoardItem) => BoardItem,
-  ) => void;
+  onUpdateColumnItem: (columnId: string, updater: (item: BoardItem) => BoardItem) => void;
 
   deleteSelectedColumnItem: () => void;
   clearColumnSelection: () => void;
   pushHistory: () => void;
 
-  requestDelete: (
-    execute: () => void,
-    count?: number,
-  ) => void;
+  requestDelete: (execute: () => void, count?: number) => void;
 }
 
 export default function CanvasEditBar({
@@ -61,60 +52,44 @@ export default function CanvasEditBar({
   pushHistory,
   requestDelete,
 }: CanvasEditBarProps) {
-  const hasSelection =
-    selectedItems.length > 0 ||
-    selectedColumnItem !== null;
+  const hasSelection = selectedItems.length > 0 || selectedColumnItem !== null;
 
   if (!hasSelection) {
     return null;
   }
 
   return (
-    <Suspense fallback={null}><EditBar
-      selectedItems={selectedItems}
-      frameControls={selectedColumnItem ? undefined : frameControls}
-      onJoinDrawings={onJoinDrawings}
-      onUpdateItem={onUpdateItem}
-      onDeleteItems={ids =>
-        requestDelete(
-          () => {
+    <Suspense fallback={null}>
+      <EditBar
+        selectedItems={selectedItems}
+        frameControls={selectedColumnItem ? undefined : frameControls}
+        onJoinDrawings={onJoinDrawings}
+        onUpdateItem={onUpdateItem}
+        onDeleteItems={(ids) =>
+          requestDelete(() => {
             onDeleteItems(ids);
             onSelectItems([]);
-          },
-          ids.length,
-        )
-      }
-      onBringForward={onBringForward}
-      onSendBackward={onSendBackward}
-      onBringToFront={onBringToFront}
-      onSendToBack={onSendToBack}
-      onGroupItems={() => {
-        pushHistory();
-        onGroupSelected();
-      }}
-      onFitFrame={onFitFrame}
-      onClose={() => {
-        onSelectItems([]);
-        clearColumnSelection();
-      }}
-      columnItem={selectedColumnItem?.item}
-      onUpdateColumnItem={
-        selectedColumnItem
-          ? updater =>
-              onUpdateColumnItem(
-                selectedColumnItem.columnId,
-                updater,
-              )
-          : undefined
-      }
-      onDeleteColumnItem={
-        selectedColumnItem
-          ? () =>
-              requestDelete(
-                deleteSelectedColumnItem,
-              )
-          : undefined
-      }
-    /></Suspense>
+          }, ids.length)
+        }
+        onBringForward={onBringForward}
+        onSendBackward={onSendBackward}
+        onBringToFront={onBringToFront}
+        onSendToBack={onSendToBack}
+        onGroupItems={() => {
+          pushHistory();
+          onGroupSelected();
+        }}
+        onFitFrame={onFitFrame}
+        onClose={() => {
+          onSelectItems([]);
+          clearColumnSelection();
+        }}
+        columnItem={selectedColumnItem?.item}
+        onUpdateColumnItem={
+          selectedColumnItem ? (updater) => onUpdateColumnItem(selectedColumnItem.columnId, updater) : undefined
+        }
+        onDeleteColumnItem={selectedColumnItem ? () => requestDelete(deleteSelectedColumnItem) : undefined}
+      />
+    </Suspense>
   );
 }

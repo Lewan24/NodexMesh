@@ -25,24 +25,41 @@ export function createCanvasItem(
   y: number,
   extra?: Record<string, unknown>,
 ): BoardItem | null {
-  const base = {
-    id: createId(),
-    x,
-    y,
-    zIndex: 1,
-    color: '#ffffff',
-    typography: undefined
-  };
+  const base = { id: createId(), x, y, zIndex: 1, color: '#ffffff', typography: undefined };
 
   switch (type) {
     case 'timeline':
-      return { ...base, type, title: 'Project timeline', mode: 'simple', tasks: [], width: ITEM_WIDTH.timeline, height: 520 };
+      return {
+        ...base,
+        type,
+        title: 'Project timeline',
+        mode: 'simple',
+        tasks: [],
+        width: ITEM_WIDTH.timeline,
+        height: 520,
+      };
     case 'database':
-      return { ...base, type, title: 'Database schema', tables: [], relations: [], width: ITEM_WIDTH.database, height: 600 };
+      return {
+        ...base,
+        type,
+        title: 'Database schema',
+        tables: [],
+        relations: [],
+        width: ITEM_WIDTH.database,
+        height: 600,
+      };
     case 'diagram':
       return { ...base, type, title: 'System diagram', nodes: [], edges: [], width: ITEM_WIDTH.diagram, height: 560 };
     case 'document':
-      return { ...base, type, title: 'Untitled document', content: '', width: ITEM_WIDTH.document, height: 600, autoHeight: true };
+      return {
+        ...base,
+        type,
+        title: 'Untitled document',
+        content: '',
+        width: ITEM_WIDTH.document,
+        height: 600,
+        autoHeight: true,
+      };
     case 'embed':
       return { ...base, type, title: '', url: '', showLabel: false, width: ITEM_WIDTH.embed, height: 320 };
     case 'code':
@@ -70,48 +87,20 @@ export function createCanvasItem(
         title: 'New Board',
         width: ITEM_WIDTH.kanban,
         columns: [
-          {
-            id: createId(),
-            title: 'To Do',
-            color: '#5a8a94',
-            cards: [],
-          },
-          {
-            id: createId(),
-            title: 'In Progress',
-            color: '#FFBD65',
-            cards: [],
-          },
-          {
-            id: createId(),
-            title: 'Done',
-            color: '#7C3AED',
-            cards: [],
-          },
+          { id: createId(), title: 'To Do', color: '#5a8a94', cards: [] },
+          { id: createId(), title: 'In Progress', color: '#FFBD65', cards: [] },
+          { id: createId(), title: 'Done', color: '#7C3AED', cards: [] },
         ],
       } as KanbanItem;
 
     case 'image':
-      return {
-        ...base,
-        type: 'image',
-        url: '',
-        caption: '',
-        width: ITEM_WIDTH.image,
-        imgHeight: 192,
-      } as ImageItem;
+      return { ...base, type: 'image', url: '', caption: '', width: ITEM_WIDTH.image, imgHeight: 192 } as ImageItem;
 
     case 'link':
-      return {
-        ...base,
-        type: 'link',
-        url: '',
-        title: 'New Link',
-        description: '',
-        width: ITEM_WIDTH.link,
-      } as LinkItem;
+      return { ...base, type: 'link', url: '', title: 'New Link', description: '', width: ITEM_WIDTH.link } as LinkItem;
 
-    case 'section-title': return { ...base, type, content: 'Section title', width: ITEM_WIDTH['section-title'], color: '#7C3AED' };
+    case 'section-title':
+      return { ...base, type, content: 'Section title', width: ITEM_WIDTH['section-title'], color: '#7C3AED' };
     case 'text':
       return {
         ...base,
@@ -119,7 +108,7 @@ export function createCanvasItem(
         color: undefined,
         content: 'Heading',
         size: 'lg',
-        width: ITEM_WIDTH.text
+        width: ITEM_WIDTH.text,
       } as TextItem;
 
     case 'frame':
@@ -128,14 +117,8 @@ export function createCanvasItem(
         type: 'frame',
         zIndex: 0,
         title: 'Group',
-        width:
-          typeof extra?.width === 'number'
-            ? extra.width
-            : ITEM_WIDTH.frame,
-        height:
-          typeof extra?.height === 'number'
-            ? extra.height
-            : 256,
+        width: typeof extra?.width === 'number' ? extra.width : ITEM_WIDTH.frame,
+        height: typeof extra?.height === 'number' ? extra.height : 256,
         color: '#7C3AED',
       } as FrameItem;
 

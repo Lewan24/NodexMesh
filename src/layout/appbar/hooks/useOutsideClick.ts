@@ -4,11 +4,7 @@ interface ElementRef {
   readonly current: HTMLElement | null;
 }
 
-export function useOutsideClick(
-  enabled: boolean,
-  refs: ElementRef[],
-  onOutside: () => void,
-) {
+export function useOutsideClick(enabled: boolean, refs: ElementRef[], onOutside: () => void) {
   const refsRef = useRef(refs);
   refsRef.current = refs;
 
@@ -20,7 +16,7 @@ export function useOutsideClick(
 
     const handleMouseDown = (event: MouseEvent) => {
       const target = event.target as Node;
-      const clickedInside = refsRef.current.some(ref => ref.current?.contains(target));
+      const clickedInside = refsRef.current.some((ref) => ref.current?.contains(target));
 
       if (!clickedInside) onOutsideRef.current();
     };

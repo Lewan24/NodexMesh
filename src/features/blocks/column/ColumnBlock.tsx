@@ -10,10 +10,7 @@ import type { TaskDroppedOutsideHandler } from '../types';
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import ColumnItemRow from '@/features/blocks/column/ColumnItemRow';
 
-import {
-  COLUMN_ADD_TYPES,
-  createDefaultColumnItem,
-} from '@/features/blocks/column/utils/columnItems';
+import { COLUMN_ADD_TYPES, createDefaultColumnItem } from '@/features/blocks/column/utils/columnItems';
 
 import { useColumnDrag } from '@/features/blocks/column/hooks/useColumnDrag';
 import { getTypographyStyle } from '../typography/typographyUtils';
@@ -53,11 +50,7 @@ function DropIndicator({ layout }: { layout: 'vertical' | 'horizontal' | 'grid' 
     return (
       <div
         className="w-1 self-stretch rounded-full mx-1"
-        style={{
-          minHeight: 60,
-          backgroundColor: 'var(--color-accent)',
-          boxShadow: '0 0 8px rgba(124,58,237,0.5)',
-        }}
+        style={{ minHeight: 60, backgroundColor: 'var(--color-accent)', boxShadow: '0 0 8px rgba(124,58,237,0.5)' }}
       />
     );
   }
@@ -65,10 +58,7 @@ function DropIndicator({ layout }: { layout: 'vertical' | 'horizontal' | 'grid' 
   return (
     <div
       className="h-1 rounded-full mx-1 my-1.5"
-      style={{
-        backgroundColor: 'var(--color-accent)',
-        boxShadow: '0 0 8px rgba(124,58,237,0.5)',
-      }}
+      style={{ backgroundColor: 'var(--color-accent)', boxShadow: '0 0 8px rgba(124,58,237,0.5)' }}
     />
   );
 }
@@ -132,27 +122,17 @@ export default function ColumnBlock({
 
   const getNestedItemWidth = (nestedItem: BoardItem) => {
     if (isVertical) {
-      return Math.max(
-        120,
-        columnContentWidth - nestedControlsWidth,
-      );
+      return Math.max(120, columnContentWidth - nestedControlsWidth);
     }
 
     if (isHorizontal) {
-      return Math.max(
-        140,
-        (nestedItem.width ?? ITEM_WIDTH[nestedItem.type]) - nestedControlsWidth,
-      );
+      return Math.max(140, (nestedItem.width ?? ITEM_WIDTH[nestedItem.type]) - nestedControlsWidth);
     }
 
     const totalGap = gap * Math.max(0, gridColumns - 1);
-    const cellWidth =
-      (columnContentWidth - totalGap) / gridColumns;
+    const cellWidth = (columnContentWidth - totalGap) / gridColumns;
 
-    return Math.max(
-      140,
-      cellWidth - nestedControlsWidth,
-    );
+    return Math.max(140, cellWidth - nestedControlsWidth);
   };
 
   const { background, light: columnLight } = useCardAppearance(item.color, item.gradient, item.colorRole);
@@ -161,7 +141,7 @@ export default function ColumnBlock({
 
   const update = useCallback(
     (patch: Partial<ColumnItem>) => {
-      onUpdate(current => current.type === 'column' ? { ...current, ...patch } : current);
+      onUpdate((current) => (current.type === 'column' ? { ...current, ...patch } : current));
     },
     [onUpdate],
   );
@@ -175,8 +155,8 @@ export default function ColumnBlock({
 
   const updateNested = useCallback(
     (id: string, updater: (item: BoardItem) => BoardItem) => {
-      updateItems(currentItems =>
-        currentItems.map(nestedItem => nestedItem.id === id ? updater(nestedItem) : nestedItem),
+      updateItems((currentItems) =>
+        currentItems.map((nestedItem) => (nestedItem.id === id ? updater(nestedItem) : nestedItem)),
       );
     },
     [updateItems],
@@ -184,7 +164,7 @@ export default function ColumnBlock({
 
   const deleteNested = useCallback(
     (id: string) => {
-      updateItems(currentItems => currentItems.filter(nestedItem => nestedItem.id !== id));
+      updateItems((currentItems) => currentItems.filter((nestedItem) => nestedItem.id !== id));
     },
     [updateItems],
   );
@@ -202,28 +182,18 @@ export default function ColumnBlock({
 
   const addNewItem = useCallback(
     (kind: Parameters<typeof createDefaultColumnItem>[0]) => {
-      updateItems(currentItems => [...currentItems, createDefaultColumnItem(kind)]);
+      updateItems((currentItems) => [...currentItems, createDefaultColumnItem(kind)]);
       setShowAddMenu(false);
     },
     [updateItems],
   );
 
   const updateNestedItem = useCallback(
-    (
-      itemId: string,
-      updater: (item: BoardItem) => BoardItem,
-    ) => {
-      onUpdate(current => {
+    (itemId: string, updater: (item: BoardItem) => BoardItem) => {
+      onUpdate((current) => {
         if (current.type !== 'column') return current;
 
-        return {
-          ...current,
-          items: current.items.map(item =>
-            item.id === itemId
-              ? updater(item)
-              : item,
-          ),
-        };
+        return { ...current, items: current.items.map((item) => (item.id === itemId ? updater(item) : item)) };
       });
     },
     [onUpdate],
@@ -231,19 +201,13 @@ export default function ColumnBlock({
 
   const resetNestedItemWidth = useCallback(
     (itemId: string) => {
-      updateNestedItem(itemId, current => ({
-        ...current,
-        width: ITEM_WIDTH[current.type],
-      }));
+      updateNestedItem(itemId, (current) => ({ ...current, width: ITEM_WIDTH[current.type] }));
     },
     [updateNestedItem],
   );
 
   const handleNestedWidthResizeStart = useCallback(
-    (
-      itemId: string,
-      event: React.MouseEvent,
-    ) => {
+    (itemId: string, event: React.MouseEvent) => {
       if (!isHorizontal || event.button !== 0) {
         return;
       }
@@ -251,65 +215,32 @@ export default function ColumnBlock({
       event.preventDefault();
       event.stopPropagation();
 
-      const nestedItem = items.find(
-        item => item.id === itemId,
-      );
+      const nestedItem = items.find((item) => item.id === itemId);
 
       if (!nestedItem) return;
 
       const startX = event.clientX;
-      const startWidth =
-        nestedItem.width ?? ITEM_WIDTH[nestedItem.type];
+      const startWidth = nestedItem.width ?? ITEM_WIDTH[nestedItem.type];
 
       const handleMove = (moveEvent: MouseEvent) => {
-        const deltaX =
-          (moveEvent.clientX - startX) / zoom;
+        const deltaX = (moveEvent.clientX - startX) / zoom;
 
-        const width = Math.max(
-          140,
-          Math.min(
-            800,
-            startWidth + deltaX,
-          ),
-        );
+        const width = Math.max(140, Math.min(800, startWidth + deltaX));
 
-        updateNestedItem(
-          itemId,
-          current => ({
-            ...current,
-            width: Math.round(width),
-          }),
-        );
+        updateNestedItem(itemId, (current) => ({ ...current, width: Math.round(width) }));
       };
 
       const handleUp = () => {
-        document.removeEventListener(
-          'mousemove',
-          handleMove,
-        );
+        document.removeEventListener('mousemove', handleMove);
 
-        document.removeEventListener(
-          'mouseup',
-          handleUp,
-        );
+        document.removeEventListener('mouseup', handleUp);
       };
 
-      document.addEventListener(
-        'mousemove',
-        handleMove,
-      );
+      document.addEventListener('mousemove', handleMove);
 
-      document.addEventListener(
-        'mouseup',
-        handleUp,
-      );
+      document.addEventListener('mouseup', handleUp);
     },
-    [
-      isHorizontal,
-      items,
-      zoom,
-      updateNestedItem,
-    ],
+    [isHorizontal, items, zoom, updateNestedItem],
   );
 
   const clearNestedSelection = useCallback(() => {
@@ -351,27 +282,14 @@ export default function ColumnBlock({
   }
 
   const showDropIndicator = (index: number) =>
-    dropIndex === index &&
-    draggingIndex !== null &&
-    draggingIndex !== index &&
-    draggingIndex !== index - 1;
+    dropIndex === index && draggingIndex !== null && draggingIndex !== index && draggingIndex !== index - 1;
 
   return (
-    <div
-      className="group/col relative"
-      style={{
-        width: item.width,
-        height: item.height,
-      }}
-    >
+    <div className="group/col relative" style={{ width: item.width, height: item.height }}>
       {isDragOver && (
         <div
           className="absolute pointer-events-none rounded-sm"
-          style={{
-            inset: -4,
-            boxShadow: '0 0 0 3px var(--color-accent), 0 0 24px rgba(124,58,237,0.3)',
-            zIndex: 1,
-          }}
+          style={{ inset: -4, boxShadow: '0 0 0 3px var(--color-accent), 0 0 24px rgba(124,58,237,0.3)', zIndex: 1 }}
         />
       )}
 
@@ -379,11 +297,12 @@ export default function ColumnBlock({
         className="item-rounded shadow-xl flex flex-col overflow-hidden"
         style={{
           background,
-          borderColor: isSelected || isDragOver
-            ? 'var(--color-accent)'
-            : columnLight
-              ? 'rgba(0,0,0,0.08)'
-              : 'rgba(255,255,255,0.1)',
+          borderColor:
+            isSelected || isDragOver
+              ? 'var(--color-accent)'
+              : columnLight
+                ? 'rgba(0,0,0,0.08)'
+                : 'rgba(255,255,255,0.1)',
           transition: 'border-color 0.15s',
           minWidth: 220,
           height: item.height ? '100%' : undefined,
@@ -393,46 +312,34 @@ export default function ColumnBlock({
         {/* Header */}
         <div
           className="flex items-center justify-between px-4 py-3 border-b cursor-grab active:cursor-grabbing"
-          style={{
-            borderColor: columnLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.07)',
-          }}
+          style={{ borderColor: columnLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.07)' }}
         >
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div
               ref={backgroundMenuRef}
               className="relative flex-shrink-0"
-              onMouseDown={event => event.stopPropagation()}
+              onMouseDown={(event) => event.stopPropagation()}
             >
               <button
                 type="button"
-                onClick={() => setShowBackgroundMenu(previous => !previous)}
+                onClick={() => setShowBackgroundMenu((previous) => !previous)}
                 className="w-4 h-4 rounded-full border-2 transition-transform hover:scale-125 cursor-pointer"
-                style={{
-                  background,
-                  borderColor: columnLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)',
-                }}
+                style={{ background, borderColor: columnLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)' }}
                 title="Column background color"
               />
 
               {showBackgroundMenu && (
                 <div
                   className="absolute top-6 left-0 z-50 rounded-sm shadow-2xl border p-2.5"
-                  style={{
-                    backgroundColor: 'var(--color-surface)',
-                    borderColor: 'var(--color-border)',
-                    minWidth: 170,
-                  }}
-                  onMouseDown={event => event.stopPropagation()}
+                  style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', minWidth: 170 }}
+                  onMouseDown={(event) => event.stopPropagation()}
                 >
-                  <p
-                    className="text-xs font-semibold mb-2"
-                    style={{ color: 'var(--color-text-muted)' }}
-                  >
+                  <p className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
                     Layout background
                   </p>
 
                   <div className="flex flex-wrap gap-2">
-                    {paletteKeys.map(color => (
+                    {paletteKeys.map((color) => (
                       <button
                         key={color}
                         type="button"
@@ -443,9 +350,7 @@ export default function ColumnBlock({
                         className="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 cursor-pointer"
                         style={{
                           background: paletteBackground(palette, color),
-                          borderColor: item.colorRole === color
-                            ? 'var(--color-accent)'
-                            : 'rgba(0,0,0,0.12)',
+                          borderColor: item.colorRole === color ? 'var(--color-accent)' : 'rgba(0,0,0,0.12)',
                         }}
                         title={color}
                       />
@@ -459,28 +364,21 @@ export default function ColumnBlock({
               <input
                 autoFocus
                 className="bg-transparent font-bold text-base outline-none border-b-2 min-w-0 flex-1"
-                style={{
-                  ...typographyStyle,
-                  color: headerTextColor,
-                  borderColor: 'var(--color-accent)',
-                }}
+                style={{ ...typographyStyle, color: headerTextColor, borderColor: 'var(--color-accent)' }}
                 value={item.title}
-                onChange={event => update({ title: event.target.value })}
+                onChange={(event) => update({ title: event.target.value })}
                 onBlur={() => setEditingTitle(false)}
-                onKeyDown={event => {
+                onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === 'Escape') {
                     setEditingTitle(false);
                   }
                 }}
-                onMouseDown={event => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
               />
             ) : (
               <span
                 className="font-bold text-base select-none cursor-text truncate"
-                style={{
-                  ...typographyStyle,
-                  color: headerTextColor,
-                }}
+                style={{ ...typographyStyle, color: headerTextColor }}
                 onDoubleClick={() => setEditingTitle(true)}
               >
                 {item.title}
@@ -491,9 +389,7 @@ export default function ColumnBlock({
               className="text-xs font-mono flex-shrink-0 px-1.5 py-0.5 rounded-full"
               style={{
                 color: headerMutedColor,
-                backgroundColor: columnLight
-                  ? 'rgba(0,0,0,0.06)'
-                  : 'rgba(255,255,255,0.08)',
+                backgroundColor: columnLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)',
               }}
               title={`${items.length} items`}
             >
@@ -503,18 +399,18 @@ export default function ColumnBlock({
 
           <div
             className="flex items-center gap-1.5 flex-shrink-0 ml-2"
-            onMouseDown={event => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               onClick={onDelete}
               className="opacity-0 group-hover/col:opacity-100 transition-all rounded-lg p-1.5 cursor-pointer"
               style={{ color: headerMutedColor }}
-              onMouseEnter={event => {
+              onMouseEnter={(event) => {
                 event.currentTarget.style.color = 'var(--color-danger-strong)';
                 event.currentTarget.style.backgroundColor = 'rgba(255,107,138,0.1)';
               }}
-              onMouseLeave={event => {
+              onMouseLeave={(event) => {
                 event.currentTarget.style.color = headerMutedColor;
                 event.currentTarget.style.backgroundColor = 'transparent';
               }}
@@ -536,25 +432,21 @@ export default function ColumnBlock({
             flex: 1,
             display: isGrid ? 'grid' : 'flex',
             flexDirection: isHorizontal ? 'row' : 'column',
-            gridTemplateColumns: isGrid
-              ? `repeat(${gridColumns}, minmax(208px, 1fr))`
-              : undefined,
+            gridTemplateColumns: isGrid ? `repeat(${gridColumns}, minmax(208px, 1fr))` : undefined,
             gap,
             alignContent: 'start',
             alignItems: 'flex-start',
           }}
-          onClick={event => {
+          onClick={(event) => {
             if (event.target === event.currentTarget) clearNestedSelection();
           }}
         >
           {items.map((nestedItem, index) => (
             <Fragment key={nestedItem.id}>
-              {showDropIndicator(index) && (
-                <DropIndicator layout={layout} />
-              )}
+              {showDropIndicator(index) && <DropIndicator layout={layout} />}
 
               <div
-                ref={element => {
+                ref={(element) => {
                   if (element) {
                     itemRefsMap.current.set(index, element);
                   } else {
@@ -563,44 +455,25 @@ export default function ColumnBlock({
                 }}
                 className="relative flex-shrink-0 group/nested"
                 style={{
-                  width: isHorizontal
-                    ? nestedItem.width ?? ITEM_WIDTH[nestedItem.type]
-                    : '100%',
+                  width: isHorizontal ? (nestedItem.width ?? ITEM_WIDTH[nestedItem.type]) : '100%',
                   minWidth: 0,
 
-                  opacity:
-                    searchActive &&
-                    !searchMatchIds?.has(
-                      nestedItem.id,
-                    )
-                      ? 0.18
-                      : 1,
+                  opacity: searchActive && !searchMatchIds?.has(nestedItem.id) ? 0.18 : 1,
 
-                  filter:
-                    searchActive &&
-                    !searchMatchIds?.has(
-                      nestedItem.id,
-                    )
-                      ? 'saturate(0.55)'
-                      : undefined,
+                  filter: searchActive && !searchMatchIds?.has(nestedItem.id) ? 'saturate(0.55)' : undefined,
 
-                  transition:
-                    'opacity 0.18s ease, filter 0.18s ease',
+                  transition: 'opacity 0.18s ease, filter 0.18s ease',
                 }}
               >
-                {searchActive &&
-                  searchMatchIds?.has(
-                    nestedItem.id,
-                  ) && (
-                    <div
-                      className="absolute pointer-events-none rounded-sm"
-                      style={{
-                        inset: -3,
-                        boxShadow:
-                          '0 0 0 2px var(--color-accent), 0 0 14px rgba(124,58,237,0.25)',
-                        zIndex: 20,
-                      }}
-                    />
+                {searchActive && searchMatchIds?.has(nestedItem.id) && (
+                  <div
+                    className="absolute pointer-events-none rounded-sm"
+                    style={{
+                      inset: -3,
+                      boxShadow: '0 0 0 2px var(--color-accent), 0 0 14px rgba(124,58,237,0.25)',
+                      zIndex: 20,
+                    }}
+                  />
                 )}
 
                 <ColumnItemRow
@@ -608,13 +481,13 @@ export default function ColumnBlock({
                   locked={nestedItem.locked}
                   isDragging={draggingIndex === index}
                   isSelected={selectedItemId === nestedItem.id}
-                  onDragHandleMouseDown={event => handleDragStart(index, event)}
+                  onDragHandleMouseDown={(event) => handleDragStart(index, event)}
                   onEject={() => ejectNestedItem(nestedItem)}
                   onSelect={() => selectNestedItem(nestedItem)}
                 >
                   <div
                     className="min-w-0"
-                    onMouseDown={event => {
+                    onMouseDown={(event) => {
                       const target = event.target as Element;
 
                       const interactive =
@@ -630,11 +503,19 @@ export default function ColumnBlock({
                     <BlockRenderer
                       item={prepareNestedItemForColumn(nestedItem, getNestedItemWidth(nestedItem))}
                       onTaskDroppedOutside={onTaskDroppedOutside}
-                      onEntryDroppedOutside={onTaskDroppedOutside ? (task, x, y) => onTaskDroppedOutside(nestedItem.id, task, x, y) : undefined}
-                      onCardDroppedOutside={onTaskDroppedOutside ? (task, x, y) => onTaskDroppedOutside(nestedItem.id, task, x, y) : undefined}
+                      onEntryDroppedOutside={
+                        onTaskDroppedOutside
+                          ? (task, x, y) => onTaskDroppedOutside(nestedItem.id, task, x, y)
+                          : undefined
+                      }
+                      onCardDroppedOutside={
+                        onTaskDroppedOutside
+                          ? (task, x, y) => onTaskDroppedOutside(nestedItem.id, task, x, y)
+                          : undefined
+                      }
                       isInsideColumn
                       isSelected={selectedItemId === nestedItem.id}
-                      onUpdate={updater => updateNested(nestedItem.id, updater)}
+                      onUpdate={(updater) => updateNested(nestedItem.id, updater)}
                       onDelete={() => {
                         const execute = () => deleteNested(nestedItem.id);
 
@@ -654,17 +535,10 @@ export default function ColumnBlock({
                   <div
                     data-manual-resize="true"
                     className="absolute top-0 -right-2 w-4 h-full cursor-col-resize z-30 group/resize"
-                    onMouseDown={event =>
-                      handleNestedWidthResizeStart(
-                        nestedItem.id,
-                        event,
-                      )
-                    }
-                    onDoubleClick={event => {
+                    onMouseDown={(event) => handleNestedWidthResizeStart(nestedItem.id, event)}
+                    onDoubleClick={(event) => {
                       event.stopPropagation();
-                      resetNestedItemWidth(
-                        nestedItem.id,
-                      );
+                      resetNestedItemWidth(nestedItem.id);
                     }}
                     title={`Resize item (${Math.round(
                       nestedItem.width ?? ITEM_WIDTH[nestedItem.type],
@@ -672,10 +546,7 @@ export default function ColumnBlock({
                   >
                     <div
                       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-8 rounded-full opacity-0 group-hover/nested:opacity-50 group-hover/resize:opacity-100 transition-all"
-                      style={{
-                        backgroundColor:
-                          'var(--color-accent)',
-                      }}
+                      style={{ backgroundColor: 'var(--color-accent)' }}
                     />
                   </div>
                 )}
@@ -683,9 +554,7 @@ export default function ColumnBlock({
             </Fragment>
           ))}
 
-          {dropIndex === items.length && draggingIndex !== null && (
-            <DropIndicator layout={layout} />
-          )}
+          {dropIndex === items.length && draggingIndex !== null && <DropIndicator layout={layout} />}
 
           {items.length === 0 && (
             <div
@@ -693,12 +562,8 @@ export default function ColumnBlock({
               style={{
                 gridColumn: isGrid ? '1 / -1' : undefined,
                 minWidth: isHorizontal ? 180 : undefined,
-                color: columnLight
-                  ? 'rgba(0,0,0,0.25)'
-                  : 'rgba(255,255,255,0.2)',
-                borderColor: columnLight
-                  ? 'rgba(0,0,0,0.1)'
-                  : 'rgba(255,255,255,0.1)',
+                color: columnLight ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.2)',
+                borderColor: columnLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
               }}
             >
               Drop items here or click + to add
@@ -707,26 +572,21 @@ export default function ColumnBlock({
         </div>
 
         {/* Add item */}
-        <div
-          className="px-4 pb-4 pt-2 relative"
-          onMouseDown={event => event.stopPropagation()}
-        >
+        <div className="px-4 pb-4 pt-2 relative" onMouseDown={(event) => event.stopPropagation()}>
           <button
             type="button"
-            onClick={() => setShowAddMenu(previous => !previous)}
+            onClick={() => setShowAddMenu((previous) => !previous)}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 item-rounded text-sm font-semibold transition-all cursor-pointer"
             style={{
               color: 'var(--color-accent)',
-              backgroundColor: columnLight
-                ? 'rgba(124,58,237,0.07)'
-                : 'rgba(124,58,237,0.12)',
+              backgroundColor: columnLight ? 'rgba(124,58,237,0.07)' : 'rgba(124,58,237,0.12)',
               border: '1.5px dashed rgba(124,58,237,0.35)',
             }}
-            onMouseEnter={event => {
+            onMouseEnter={(event) => {
               event.currentTarget.style.backgroundColor = 'rgba(124,58,237,0.14)';
               event.currentTarget.style.borderStyle = 'solid';
             }}
-            onMouseLeave={event => {
+            onMouseLeave={(event) => {
               event.currentTarget.style.backgroundColor = columnLight
                 ? 'rgba(124,58,237,0.07)'
                 : 'rgba(124,58,237,0.12)';
@@ -736,18 +596,15 @@ export default function ColumnBlock({
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 5v14M5 12h14" />
             </svg>
-
             Add item
           </button>
 
           {showAddMenu && (
             <div
-              className="relative mt-2 rounded-sm shadow-xl z-50 max-h-80 overflow-auto" data-wheel-scroll="true"
-              style={{
-                backgroundColor: 'var(--color-surface)',
-                borderColor: 'var(--color-border)',
-              }}
-              onMouseDown={event => event.stopPropagation()}
+              className="relative mt-2 rounded-sm shadow-xl z-50 max-h-80 overflow-auto"
+              data-wheel-scroll="true"
+              style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+              onMouseDown={(event) => event.stopPropagation()}
             >
               {COLUMN_ADD_TYPES.map(({ kind, label, icon }) => (
                 <button
@@ -756,10 +613,10 @@ export default function ColumnBlock({
                   onClick={() => addNewItem(kind)}
                   className="w-full px-4 py-3 text-left text-sm font-medium transition-colors flex items-center gap-3 cursor-pointer"
                   style={{ color: 'var(--color-text-primary)' }}
-                  onMouseEnter={event => {
+                  onMouseEnter={(event) => {
                     event.currentTarget.style.backgroundColor = 'var(--color-surface-alt)';
                   }}
-                  onMouseLeave={event => {
+                  onMouseLeave={(event) => {
                     event.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >

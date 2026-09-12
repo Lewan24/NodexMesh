@@ -8,7 +8,13 @@ interface EditBarButtonProps {
   children: ReactNode;
 }
 
-export default function EditBarButton({ active = false, disabled = false, title, onClick, children }: EditBarButtonProps) {
+export default function EditBarButton({
+  active = false,
+  disabled = false,
+  title,
+  onClick,
+  children,
+}: EditBarButtonProps) {
   return (
     <button
       disabled={disabled}
@@ -21,10 +27,10 @@ export default function EditBarButton({ active = false, disabled = false, title,
         backgroundColor: active ? 'rgba(124, 58, 237,0.15)' : 'transparent',
         color: active ? '#7C3AED' : '#4a6070',
       }}
-      onMouseEnter={e => {
+      onMouseEnter={(e) => {
         if (!active) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
       }}
-      onMouseLeave={e => {
+      onMouseLeave={(e) => {
         if (!active) e.currentTarget.style.backgroundColor = 'transparent';
       }}
     >

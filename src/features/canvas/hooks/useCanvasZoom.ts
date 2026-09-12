@@ -2,10 +2,7 @@ import { useCallback, useEffect } from 'react';
 
 import type { RefObject } from 'react';
 
-import {
-  ZOOM_MAX,
-  ZOOM_MIN,
-} from '@/features/canvas/constants';
+import { ZOOM_MAX, ZOOM_MIN } from '@/features/canvas/constants';
 
 interface CanvasPoint {
   x: number;
@@ -34,13 +31,7 @@ export function useCanvasZoom({
   onZoomChange,
 }: UseCanvasZoomOptions) {
   const screenToCanvas = useCallback(
-    (
-      screenX: number,
-      screenY: number,
-    ) => ({
-      x: (screenX - pan.x) / zoom,
-      y: (screenY - pan.y) / zoom,
-    }),
+    (screenX: number, screenY: number) => ({ x: (screenX - pan.x) / zoom, y: (screenY - pan.y) / zoom }),
     [pan, zoom],
   );
 
@@ -54,10 +45,7 @@ export function useCanvasZoom({
     const handleWheel = (event: WheelEvent) => {
       const target = event.target;
 
-      if (
-        target instanceof Element &&
-        target.closest('[data-wheel-scroll="true"]')
-      ) {
+      if (target instanceof Element && target.closest('[data-wheel-scroll="true"]')) {
         return;
       }
 
@@ -71,51 +59,24 @@ export function useCanvasZoom({
       const currentZoom = zoomRef.current;
       const currentPan = panRef.current;
 
-      const factor =
-        event.ctrlKey || event.metaKey
-          ? 1 - event.deltaY * 0.008
-          : event.deltaY > 0
-            ? 0.92
-            : 1 / 0.92;
+      const factor = event.ctrlKey || event.metaKey ? 1 - event.deltaY * 0.008 : event.deltaY > 0 ? 0.92 : 1 / 0.92;
 
-      const nextZoom = Math.min(
-        ZOOM_MAX,
-        Math.max(
-          ZOOM_MIN,
-          Number((currentZoom * factor).toFixed(4)),
-        ),
-      );
+      const nextZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Number((currentZoom * factor).toFixed(4))));
 
       onPanChange({
-        x:
-          mouseX -
-          (mouseX - currentPan.x) *
-            (nextZoom / currentZoom),
-        y:
-          mouseY -
-          (mouseY - currentPan.y) *
-            (nextZoom / currentZoom),
+        x: mouseX - (mouseX - currentPan.x) * (nextZoom / currentZoom),
+        y: mouseY - (mouseY - currentPan.y) * (nextZoom / currentZoom),
       });
 
       onZoomChange(nextZoom);
     };
 
-    element.addEventListener('wheel', handleWheel, {
-      passive: false,
-    });
+    element.addEventListener('wheel', handleWheel, { passive: false });
 
     return () => {
       element.removeEventListener('wheel', handleWheel);
     };
-  }, [
-    containerRef,
-    panRef,
-    zoomRef,
-    onPanChange,
-    onZoomChange,
-  ]);
+  }, [containerRef, panRef, zoomRef, onPanChange, onZoomChange]);
 
-  return {
-    screenToCanvas,
-  };
+  return { screenToCanvas };
 }

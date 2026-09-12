@@ -53,33 +53,13 @@ export default function ResizeHandles({ visible, onResizeStart }: ResizeHandlesP
 
       {/* Corners */}
 
-      <ResizeCorner
-        top={-CORNER_SIZE / 2}
-        left={-CORNER_SIZE / 2}
-        cursor="nwse-resize"
-        onMouseDown={start('nw')}
-      />
+      <ResizeCorner top={-CORNER_SIZE / 2} left={-CORNER_SIZE / 2} cursor="nwse-resize" onMouseDown={start('nw')} />
 
-      <ResizeCorner
-        top={-CORNER_SIZE / 2}
-        right={-CORNER_SIZE / 2}
-        cursor="nesw-resize"
-        onMouseDown={start('ne')}
-      />
+      <ResizeCorner top={-CORNER_SIZE / 2} right={-CORNER_SIZE / 2} cursor="nesw-resize" onMouseDown={start('ne')} />
 
-      <ResizeCorner
-        bottom={-CORNER_SIZE / 2}
-        right={-CORNER_SIZE / 2}
-        cursor="nwse-resize"
-        onMouseDown={start('se')}
-      />
+      <ResizeCorner bottom={-CORNER_SIZE / 2} right={-CORNER_SIZE / 2} cursor="nwse-resize" onMouseDown={start('se')} />
 
-      <ResizeCorner
-        bottom={-CORNER_SIZE / 2}
-        left={-CORNER_SIZE / 2}
-        cursor="nesw-resize"
-        onMouseDown={start('sw')}
-      />
+      <ResizeCorner bottom={-CORNER_SIZE / 2} left={-CORNER_SIZE / 2} cursor="nesw-resize" onMouseDown={start('sw')} />
     </>
   );
 }
@@ -93,14 +73,7 @@ interface ResizeCornerProps {
   onMouseDown: (event: React.MouseEvent) => void;
 }
 
-function ResizeCorner({
-  top,
-  right,
-  bottom,
-  left,
-  cursor,
-  onMouseDown,
-}: ResizeCornerProps) {
+function ResizeCorner({ top, right, bottom, left, cursor, onMouseDown }: ResizeCornerProps) {
   return (
     <div
       data-manual-resize="true"

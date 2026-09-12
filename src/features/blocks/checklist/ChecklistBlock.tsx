@@ -18,8 +18,9 @@ interface ChecklistBlockProps {
 
 function DropLine() {
   return (
-    <div className="h-1 rounded-full mx-1 my-1" 
-         style={{ backgroundColor: 'var(--color-accent)', boxShadow: '0 0 8px rgba(124,58,237,0.5)' }}
+    <div
+      className="h-1 rounded-full mx-1 my-1"
+      style={{ backgroundColor: 'var(--color-accent)', boxShadow: '0 0 8px rgba(124,58,237,0.5)' }}
     />
   );
 }
@@ -28,7 +29,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
   const [editingTitle, setEditingTitle] = useState(false);
   const [addingEntry, setAddingEntry] = useState(false);
   const [newEntryText, setNewEntryText] = useState('');
-  
+
   const typographyStyle = getTypographyStyle(item);
 
   const addInputRef = useRef<HTMLInputElement>(null);
@@ -49,144 +50,115 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
 
   const update = useCallback(
     (patch: Partial<ChecklistItem>) => {
-      onUpdate((current) => 
-        current.type !== 'checklist' ? current : { ...current, ...patch }
-      );
+      onUpdate((current) => (current.type !== 'checklist' ? current : { ...current, ...patch }));
     },
-    [onUpdate]
+    [onUpdate],
   );
 
   const updateEntries = useCallback(
     (updater: (entries: ChecklistEntry[]) => ChecklistEntry[]) => {
       update({ entries: updater(entriesRef.current) });
     },
-    [update]
+    [update],
   );
 
   const doneCount = item.entries.filter((entry) => entry.done).length;
   const totalCount = item.entries.length;
   const progress = totalCount > 0 ? (doneCount / totalCount) * 100 : 0;
 
-  const commitNewEntry = useCallback(
-    () => {
-      const text = newEntryText.trim();
-      if (text) {
-        updateEntries((entries) => 
-          [...entries, createChecklistEntry(text)]
-        );
-        setNewEntryText('');
-        return;
-      }
-      setAddingEntry(false);
-    },
-    [newEntryText, updateEntries]
-  );
+  const commitNewEntry = useCallback(() => {
+    const text = newEntryText.trim();
+    if (text) {
+      updateEntries((entries) => [...entries, createChecklistEntry(text)]);
+      setNewEntryText('');
+      return;
+    }
+    setAddingEntry(false);
+  }, [newEntryText, updateEntries]);
 
-  const { draggingIndex, dropIndex, handleDragStart } = useChecklistDrag({ 
-    entries: item.entries, 
-    cardRef, 
-    rowRefs, 
-    updateEntries, 
-    onEntryDroppedOutside 
+  const { draggingIndex, dropIndex, handleDragStart } = useChecklistDrag({
+    entries: item.entries,
+    cardRef,
+    rowRefs,
+    updateEntries,
+    onEntryDroppedOutside,
   });
 
   const toggleEntry = useCallback(
     (entryId: string) => {
-      updateEntries((entries) => 
-        entries.map(entry => entry.id === entryId ? { ...entry, done: !entry.done } : entry)
+      updateEntries((entries) =>
+        entries.map((entry) => (entry.id === entryId ? { ...entry, done: !entry.done } : entry)),
       );
     },
-    [updateEntries]
+    [updateEntries],
   );
 
   const deleteEntry = useCallback(
     (entryId: string) => {
-      updateEntries((entries) => 
-        entries.filter(entry => entry.id !== entryId)
-      );
+      updateEntries((entries) => entries.filter((entry) => entry.id !== entryId));
     },
-    [updateEntries]
+    [updateEntries],
   );
 
   const editEntry = useCallback(
     (entryId: string, text: string) => {
-      updateEntries((entries) => 
-        entries.map(entry => entry.id === entryId ? { ...entry, text } : entry)
-      );
+      updateEntries((entries) => entries.map((entry) => (entry.id === entryId ? { ...entry, text } : entry)));
     },
-    [updateEntries]
+    [updateEntries],
   );
 
   return (
-    <div className="group relative transition-shadow duration-200 hover:shadow-2xl" style={{ 
-        width: item.width ?? 220,
-        height: item.height,
-       }}>
-      <div 
+    <div
+      className="group relative transition-shadow duration-200 hover:shadow-2xl"
+      style={{ width: item.width ?? 220, height: item.height }}
+    >
+      <div
         ref={cardRef}
-        data-wheel-scroll={item.height ? "true" : "false"}
+        data-wheel-scroll={item.height ? 'true' : 'false'}
         data-checklist-id={item.id}
-        className="item-rounded shadow-xl overflow-auto" 
-        style={{ 
-          background,
-          height: item.height ? '100%' : undefined,
-        }}>
-        {item.topColor && 
-          <div style={{ 
-            height: 5, 
-            backgroundColor: item.topColor }} />
-        }
-        
+        className="item-rounded shadow-xl overflow-auto"
+        style={{ background, height: item.height ? '100%' : undefined }}
+      >
+        {item.topColor && <div style={{ height: 5, backgroundColor: item.topColor }} />}
+
         <div className="flex items-center justify-between px-3 pt-3 pb-2 cursor-grab active:cursor-grabbing">
           <div className="flex-1 min-w-0">
             {editingTitle ? (
-              <input 
+              <input
                 autoFocus
-                className="w-full bg-transparent outline-none font-bold text-base" 
+                className="w-full bg-transparent outline-none font-bold text-base"
                 style={{ ...typographyStyle, color: textColor }}
-                value={item.title} 
-                onChange={(event) => update({ title: event.target.value })} 
-                onBlur={() => setEditingTitle(false)} 
-                onKeyDown={(event) => { if (event.key === 'Enter' || event.key === 'Escape') setEditingTitle(false); }} 
-                onMouseDown={(event) => event.stopPropagation()} 
+                value={item.title}
+                onChange={(event) => update({ title: event.target.value })}
+                onBlur={() => setEditingTitle(false)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === 'Escape') setEditingTitle(false);
+                }}
+                onMouseDown={(event) => event.stopPropagation()}
               />
             ) : (
-              <h3 
-                className="font-bold text-base leading-snug cursor-text select-none truncate" 
+              <h3
+                className="font-bold text-base leading-snug cursor-text select-none truncate"
                 style={{
                   ...typographyStyle,
-                  fontSize: item.typography?.fontSize
-                    ? `${item.typography.fontSize + 2}px`
-                    : undefined,
-                  fontWeight:
-                    item.typography?.bold
-                      ? 700
-                      : 600,
+                  fontSize: item.typography?.fontSize ? `${item.typography.fontSize + 2}px` : undefined,
+                  fontWeight: item.typography?.bold ? 700 : 600,
                   color: textColor,
                 }}
                 onDoubleClick={() => setEditingTitle(true)}
-              >{item.title}</h3>
+              >
+                {item.title}
+              </h3>
             )}
           </div>
 
-          <div
-            className="flex items-center gap-1.5 ml-2"
-            onMouseDown={event =>
-              event.stopPropagation()
-            }
-          >
+          <div className="flex items-center gap-1.5 ml-2" onMouseDown={(event) => event.stopPropagation()}>
             {item.height !== undefined && (
               <button
                 type="button"
-                onClick={() =>
-                  update({
-                    height: undefined,
-                  })
-                }
+                onClick={() => update({ height: undefined })}
                 className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5"
-                style={{
-                  color: mutedColor,
-                }}
+                style={{ color: mutedColor }}
                 title="Reset to auto height"
               >
                 Auto-fit
@@ -196,62 +168,45 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
             <button
               onClick={onDelete}
               className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 rounded-full p-0.5 hover:bg-black/10"
-              style={{
-                color: mutedColor,
-              }}
+              style={{ color: mutedColor }}
             >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M18 6 6 18M6 6l12 12" />
               </svg>
             </button>
           </div>
         </div>
 
-        {totalCount > 0 && 
+        {totalCount > 0 && (
           <div className="px-3 pb-2">
             <div className="flex items-center gap-2">
               <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: `${textColor}18` }}>
-                <div className="h-full rounded-full transition-all duration-500" 
-                     style={{
-                       width: `${progress}%`,
-                       backgroundColor: accentColor,
-                       opacity: 0.9
-                     }}
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%`, backgroundColor: accentColor, opacity: 0.9 }}
                 />
               </div>
 
-              <span 
-                className="text-[11px] font-mono flex-shrink-0"
-                style={{ color: mutedColor }}
-              >{doneCount}/{totalCount} · {Math.round(progress)}%</span>
+              <span className="text-[11px] font-mono flex-shrink-0" style={{ color: mutedColor }}>
+                {doneCount}/{totalCount} · {Math.round(progress)}%
+              </span>
             </div>
           </div>
-        }
+        )}
 
-        <div 
-          className="mx-3 mb-2"
-          style={{ height: 1, backgroundColor: `${textColor}12` }}
-        />
+        <div className="mx-3 mb-2" style={{ height: 1, backgroundColor: `${textColor}12` }} />
 
         {/* Entries */}
-        
-        <div className="px-3 pb-1">
-          {item.entries.map(
-            (entry, index) => (
-              <div key={entry.id}>
-                {dropIndex === index && draggingIndex !== null && 
-                  draggingIndex !== index && draggingIndex !== index - 1 && 
-                  <DropLine />
-                }
 
-                <div 
+        <div className="px-3 pb-1">
+          {item.entries.map((entry, index) => (
+            <div key={entry.id}>
+              {dropIndex === index &&
+                draggingIndex !== null &&
+                draggingIndex !== index &&
+                draggingIndex !== index - 1 && <DropLine />}
+
+              <div
                 data-checklist-entry-index={index}
                 ref={(element) => {
                   if (element) {
@@ -260,28 +215,23 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                     rowRefs.current.delete(index);
                   }
                 }}
-                style={{ fontSize: 14, ...typographyStyle }}>
-                  <ChecklistEntryRow
-                    entry={entry}
-                    isDragging={draggingIndex === index}
-                    textColor={textColor}
-                    accentColor={accentColor}
-                    onDragHandleMouseDown={(event) => 
-                      handleDragStart(index, event)
-                    }
-                    onToggle={() => toggleEntry(entry.id)}
-                    onDelete={() => deleteEntry(entry.id)}
-                    onEdit={(text) => editEntry(entry.id, text)}
-                  />
-                </div>
+                style={{ fontSize: 14, ...typographyStyle }}
+              >
+                <ChecklistEntryRow
+                  entry={entry}
+                  isDragging={draggingIndex === index}
+                  textColor={textColor}
+                  accentColor={accentColor}
+                  onDragHandleMouseDown={(event) => handleDragStart(index, event)}
+                  onToggle={() => toggleEntry(entry.id)}
+                  onDelete={() => deleteEntry(entry.id)}
+                  onEdit={(text) => editEntry(entry.id, text)}
+                />
               </div>
-            )
-          )}
+            </div>
+          ))}
 
-          {dropIndex === item.entries.length && 
-            draggingIndex !== null &&
-            <DropLine />
-          }
+          {dropIndex === item.entries.length && draggingIndex !== null && <DropLine />}
 
           {/* Add entry */}
 
@@ -295,14 +245,14 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                 onChange={(event) => setNewEntryText(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') commitNewEntry();
-                  if (event.key === 'Escape') { 
-                    setAddingEntry(false); 
-                    setNewEntryText(''); 
+                  if (event.key === 'Escape') {
+                    setAddingEntry(false);
+                    setNewEntryText('');
                   }
                 }}
                 onBlur={commitNewEntry}
-                placeholder="New item…" 
-                className="flex-1 bg-transparent outline-none text-sm" 
+                placeholder="New item…"
+                className="flex-1 bg-transparent outline-none text-sm"
                 style={{ ...typographyStyle, color: textColor }}
               />
             </div>
@@ -316,7 +266,6 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              
               Add item
             </button>
           )}

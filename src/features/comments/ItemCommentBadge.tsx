@@ -1,32 +1,19 @@
-import type {
-  ItemComment,
-} from '@/entities/board/types';
+import type { ItemComment } from '@/entities/board/types';
 
-import {
-  getActiveCommentStatus,
-  getUnresolvedCommentCount,
-} from '@/features/comments/utils/commentUtils';
+import { getActiveCommentStatus, getUnresolvedCommentCount } from '@/features/comments/utils/commentUtils';
 
 interface ItemCommentBadgeProps {
   comments?: ItemComment[];
 }
 
-export default function ItemCommentBadge({
-  comments,
-}: ItemCommentBadgeProps) {
+export default function ItemCommentBadge({ comments }: ItemCommentBadgeProps) {
   if (!comments?.length) {
     return null;
   }
 
-  const status =
-    getActiveCommentStatus(
-      comments,
-    );
+  const status = getActiveCommentStatus(comments);
 
-  const unresolved =
-    getUnresolvedCommentCount(
-      comments,
-    );
+  const unresolved = getUnresolvedCommentCount(comments);
 
   return (
     <div
@@ -35,51 +22,31 @@ export default function ItemCommentBadge({
         right: -6,
         top: -10,
 
-        color:
-          status
-            ? getStatusColor(
-                status,
-              )
-            : 'var(--color-text-secondary)',
+        color: status ? getStatusColor(status) : 'var(--color-text-secondary)',
 
-        backgroundColor:
-          'var(--color-surface-translucent)',
+        backgroundColor: 'var(--color-surface-translucent)',
 
-        border:
-          '1px solid var(--color-border-soft)',
+        border: '1px solid var(--color-border-soft)',
 
-        backdropFilter:
-          'blur(7px)',
+        backdropFilter: 'blur(7px)',
       }}
     >
       <span>💬</span>
 
-      <span>
-        {comments.length}
-      </span>
+      <span>{comments.length}</span>
 
       {unresolved > 0 && (
         <>
-          <span
-            style={{
-              opacity: 0.4,
-            }}
-          >
-            ·
-          </span>
+          <span style={{ opacity: 0.4 }}>·</span>
 
-          <span>
-            {status}
-          </span>
+          <span>{status}</span>
         </>
       )}
     </div>
   );
 }
 
-function getStatusColor(
-  status: string,
-): string {
+function getStatusColor(status: string): string {
   switch (status) {
     case 'todo':
       return '#FF6B8A';

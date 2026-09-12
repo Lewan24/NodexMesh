@@ -3,10 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BoardItem, NoteItem } from '@/entities/board/types';
 
-import {
-  NOTE_FONT_SIZE_CLASS,
-  type NoteFontSize,
-} from '@/features/blocks/note/utils/noteUtils';
+import { NOTE_FONT_SIZE_CLASS, type NoteFontSize } from '@/features/blocks/note/utils/noteUtils';
 import { getTypographyStyle } from '../typography/typographyUtils';
 
 interface NoteBlockProps {
@@ -17,12 +14,7 @@ interface NoteBlockProps {
   onDelete: () => void;
 }
 
-export default function NoteBlock({
-  item,
-  isSelected,
-  onUpdate,
-  onDelete,
-}: NoteBlockProps) {
+export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: NoteBlockProps) {
   const [editing, setEditing] = useState(!item.content);
   const typographyStyle = {
     ...getTypographyStyle(item),
@@ -35,30 +27,21 @@ export default function NoteBlock({
   const { background, light } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
   const textColor = light ? '#1e293b' : '#e8f4f4';
-  const mutedColor = light
-    ? 'rgba(30,41,59,0.4)'
-    : 'rgba(232,244,244,0.4)';
+  const mutedColor = light ? 'rgba(30,41,59,0.4)' : 'rgba(232,244,244,0.4)';
 
   const fontSize: NoteFontSize = item.fontSize ?? 'base';
 
   const verticalAlign = item.typography?.verticalAlign ?? (item.dispenserId ? 'middle' : 'top');
 
   const verticalJustify =
-    verticalAlign === 'middle'
-      ? 'center'
-      : verticalAlign === 'bottom'
-        ? 'flex-end'
-        : 'flex-start';
+    verticalAlign === 'middle' ? 'center' : verticalAlign === 'bottom' ? 'flex-end' : 'flex-start';
 
   const update = useCallback(
     (patch: Partial<NoteItem>) => {
-      onUpdate(current => {
+      onUpdate((current) => {
         if (current.type !== 'note') return current;
 
-        return {
-          ...current,
-          ...patch,
-        };
+        return { ...current, ...patch };
       });
     },
     [onUpdate],
@@ -83,14 +66,9 @@ export default function NoteBlock({
     textarea.style.height = 'auto';
 
     if (item.height) {
-      const availableHeight =
-        contentRef.current?.clientHeight ??
-        textarea.scrollHeight;
+      const availableHeight = contentRef.current?.clientHeight ?? textarea.scrollHeight;
 
-      textarea.style.height = `${Math.min(
-        textarea.scrollHeight,
-        availableHeight,
-      )}px`;
+      textarea.style.height = `${Math.min(textarea.scrollHeight, availableHeight)}px`;
 
       return;
     }
@@ -110,46 +88,27 @@ export default function NoteBlock({
   }, [item.content, resizeTextarea]);
 
   return (
-    <div
-      className="group relative"
-      style={{
-        width: item.width ?? 220,
-        height: item.height,
-      }}
-    >
+    <div className="group relative" style={{ width: item.width ?? 220, height: item.height }}>
       <div
         className="item-rounded shadow-xl transition-shadow duration-150 group-hover:shadow-2xl flex flex-col"
         style={{
           height: item.height ? '100%' : undefined,
           background,
-          outline: isSelected
-            ? '2px solid var(--color-accent)'
-            : 'none',
+          outline: isSelected ? '2px solid var(--color-accent)' : 'none',
           outlineOffset: 3,
         }}
       >
         {/* Top accent */}
 
-        {item.topColor && (
-          <div
-            style={{
-              height: 5,
-              backgroundColor: item.topColor,
-            }}
-          />
-        )}
+        {item.topColor && <div style={{ height: 5, backgroundColor: item.topColor }} />}
 
         {/* Header */}
 
         <div className="absolute top-1 left-2 right-2 z-10 flex items-center justify-between pointer-events-none [&>button]:pointer-events-auto">
           {item.height && (
             <button
-              onMouseDown={event => event.stopPropagation()}
-              onClick={() =>
-                update({
-                  height: undefined,
-                })
-              }
+              onMouseDown={(event) => event.stopPropagation()}
+              onClick={() => update({ height: undefined })}
               className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5"
               style={{ color: mutedColor }}
               title="Reset to auto height"
@@ -159,19 +118,12 @@ export default function NoteBlock({
           )}
 
           <button
-            onMouseDown={event => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
             onClick={onDelete}
             className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity rounded-full p-1 hover:bg-black/10"
             style={{ color: mutedColor }}
           >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
@@ -181,27 +133,22 @@ export default function NoteBlock({
 
         <div
           ref={contentRef}
-          data-wheel-scroll={item.height ? "true" : "false"}
+          data-wheel-scroll={item.height ? 'true' : 'false'}
           className="p-3 flex-1 min-h-0 flex flex-col"
-          style={{
-            overflow: editing ? 'hidden' : 'auto',
-            justifyContent: verticalJustify,
-          }}
->
+          style={{ overflow: editing ? 'hidden' : 'auto', justifyContent: verticalJustify }}
+        >
           {editing ? (
             <textarea
               ref={textareaRef}
               value={item.content}
-              onChange={event => {
-                update({
-                  content: event.target.value,
-                });
+              onChange={(event) => {
+                update({ content: event.target.value });
 
                 resizeTextarea();
               }}
-              onMouseDown={event => event.stopPropagation()}
+              onMouseDown={(event) => event.stopPropagation()}
               onBlur={() => setEditing(false)}
-              onKeyDown={event => {
+              onKeyDown={(event) => {
                 /*
                  * Enter is intentionally preserved,
                  * since notes are multiline.
@@ -212,13 +159,7 @@ export default function NoteBlock({
                 }
               }}
               className={`w-full bg-transparent resize-none outline-none wrap-break-word leading-relaxed ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
-              style={{
-                color: textColor,
-                resize: 'none',
-                maxHeight: '100%',
-                overflowY: 'auto',
-                ...typographyStyle,
-              }}
+              style={{ color: textColor, resize: 'none', maxHeight: '100%', overflowY: 'auto', ...typographyStyle }}
               placeholder="Type your note…"
               rows={1}
             />
@@ -226,10 +167,7 @@ export default function NoteBlock({
             <div
               onClick={() => setEditing(true)}
               className={`leading-relaxed whitespace-pre-wrap wrap-break-word cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
-              style={{
-                color: textColor,
-                ...typographyStyle,
-              }}
+              style={{ color: textColor, ...typographyStyle }}
             >
               {item.content || 'Click to edit…'}
             </div>
