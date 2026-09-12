@@ -17,6 +17,7 @@ import DrawingBlock from './drawing/DrawingBlock';
 const DocumentBlock = lazy(() => import('./document/DocumentBlock'));
 const CodeBlock = lazy(() => import('./code/CodeBlock'));
 const TimelineBlock = lazy(() => import('./timeline/TimelineBlock'));
+const DatabaseDiagramBlock = lazy(() => import('./database/DatabaseDiagramBlock'));
 const DiagramBlock = lazy(() => import('./diagram/DiagramBlock'));
 
 function LoadingBlock({ item }: { item: BoardItem }) {
@@ -85,6 +86,7 @@ export default function BlockRenderer({
   switch (item.type) {
     case 'drawing': return <DrawingBlock item={item} />;
     case 'timeline': return <Suspense fallback={<LoadingBlock item={item} />}><TimelineBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
+    case 'database': return <Suspense fallback={<LoadingBlock item={item} />}><DatabaseDiagramBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
     case 'diagram': return <Suspense fallback={<LoadingBlock item={item} />}><DiagramBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
     case 'document': return <Suspense fallback={<LoadingBlock item={item} />}><DocumentBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
     case 'embed': return <EmbedBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;

@@ -27,6 +27,7 @@ export const ITEM_WIDTH = {
   drawing: 208,
   timeline: 768,
   diagram: 800,
+  database: 960,
   document: 480,
   embed: 480,
   code: 480,

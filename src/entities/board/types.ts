@@ -1,4 +1,4 @@
-export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem | DocumentItem | EmbedItem | CodeItem | DispenserItem | TimelineItem | DiagramItem | DrawingItem;
+export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem | DocumentItem | EmbedItem | CodeItem | DispenserItem | TimelineItem | DiagramItem | DatabaseDiagramItem | DrawingItem;
 
 export interface DrawingStroke {
   points: { x: number; y: number; pressure?: number }[];
@@ -262,4 +262,34 @@ export interface ColumnItem extends BaseItem {
   layout?: ColumnLayout;
   gridColumns?: number;
   gap?: number;
+}
+
+export interface DatabaseField {
+  id: string;
+  name: string;
+  dataType: string;
+  primaryKey: boolean;
+  nullable: boolean;
+  unique: boolean;
+  defaultValue: string;
+}
+export interface DatabaseTable {
+  id: string;
+  name: string;
+  position: { x: number; y: number };
+  fields: DatabaseField[];
+}
+export interface DatabaseRelation {
+  id: string;
+  source: string;
+  target: string;
+  sourceField: string;
+  targetField: string;
+  cardinality: '1:1' | '1:N' | 'N:1' | 'N:N';
+}
+export interface DatabaseDiagramItem extends BaseItem {
+  type: 'database';
+  title: string;
+  tables: DatabaseTable[];
+  relations: DatabaseRelation[];
 }

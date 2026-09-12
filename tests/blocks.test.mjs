@@ -40,6 +40,7 @@ const { ItemHistory } = await server.ssrLoadModule('/src/features/canvas/utils/i
 const { resolveCardColor } = await server.ssrLoadModule('/src/features/blocks/shared/cardAppearance.ts')
 const { autoGrowthLayout, growsAutomatically } = await server.ssrLoadModule('/src/features/canvas/utils/autoGrowthLayout.ts')
 const { ITEM_WIDTH, CANVAS_GRID_SIZE } = await server.ssrLoadModule('/src/features/canvas/constants.ts')
+const { createDatabaseField, databaseExample, validDatabaseRelations, canAddDatabaseRelation } = await server.ssrLoadModule('/src/features/blocks/database/databaseUtils.ts');
 await server.close()
 
 test("new blocks survive JSON persistence and have usable default dimensions", () => {
@@ -597,4 +598,41 @@ test('diagram reconnect rejects self links and duplicates while preserving edge 
   const changed = { ...item, edges: [{ ...connection, target: 'c' }] };
   const history = new ItemHistory(); history.observe([item]); history.boundary(); history.observe([changed]);
   assert.deepEqual(history.undo([changed])[0].edges, [connection]);
+});
+
+
+test('database blocks persist, search, clone field references and create empty siblings', () => {
+  const item = { ...createCanvasItem('database', 16, 32), ...databaseExample() };
+  assert.deepEqual(JSON.parse(JSON.stringify(item)).tables, item.tables);
+  assert.deepEqual(JSON.parse(JSON.stringify(item)).relations, item.relations);
+  assert.ok(getSearchableText(item).includes('user_id'));
+  const copy = cloneItems([item], 32, 32, 1)[0];
+  assert.notEqual(copy.tables[0].id, item.tables[0].id);
+  assert.equal(copy.relations[0].source, copy.tables[1].id);
+  assert.equal(copy.relations[0].target, copy.tables[0].id);
+  assert.equal(copy.relations[0].sourceField, copy.tables[1].fields[1].id);
+  assert.equal(copy.relations[0].targetField, copy.tables[0].fields[0].id);
+  const sibling = createEmptySibling(item);
+  assert.deepEqual(sibling.tables, []); assert.deepEqual(sibling.relations, []);
+});
+
+test('database field/table removal cleans relations and undo restores entire schema', () => {
+  const initial = { ...createCanvasItem('database', 0, 0), ...databaseExample() };
+  const tables = initial.tables.map((table, index) => index === 0 ? { ...table, fields: table.fields.slice(1) } : table);
+  const changed = { ...initial, tables, relations: validDatabaseRelations(tables, initial.relations) };
+  assert.deepEqual(changed.relations, []);
+  assert.deepEqual(validDatabaseRelations(initial.tables.slice(1), initial.relations), []);
+  const history = new ItemHistory(); history.observe([initial]); history.boundary(); history.observe([changed]);
+  assert.deepEqual(history.undo([changed]), [initial]);
+});
+
+test('database supports self-referencing foreign keys but rejects duplicate and missing endpoints', () => {
+  const { tables, relations } = databaseExample();
+  assert.equal(canAddDatabaseRelation(tables, relations, relations[0]), false);
+  const field = createDatabaseField('manager_id');
+  const users = { ...tables[0], fields: [...tables[0].fields, field] };
+  const relation = { id: 'self', source: users.id, target: users.id, sourceField: field.id, targetField: users.fields[0].id, cardinality: 'N:1' };
+  assert.equal(canAddDatabaseRelation([users], [], relation), true);
+  assert.equal(canAddDatabaseRelation([users], [], { ...relation, targetField: field.id }), false);
+  assert.equal(canAddDatabaseRelation([users], [], { ...relation, targetField: 'missing' }), false);
 });

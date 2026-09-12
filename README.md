@@ -44,6 +44,7 @@ https://nodexmesh.lewanmordor.workers.dev
 | Embed | Interactive websites and YouTube; hover controls outside the video, optional full player interaction |
 | Code | Language selection, syntax highlighting, copy code and auto fit |
 | Timeline | Milestones and schedule modes, task dialog, dates/checklists, task reordering and draggable/resizable schedule bars |
+| Database diagram | Tables, typed fields, PK/FK, nullable/unique/default values, field relations and cardinalities, grid-based editor |
 | Diagram | Process/decision/database and other shapes, editable connections, grid snapping, multi-node alignment and automatic layout |
 | Drawing | Smoothed pressure-like freehand strokes, resize/move, bulk color/thickness changes and joining strokes |
 
@@ -68,6 +69,14 @@ Open **Edit diagram** for the dedicated editor. Drag nodes on the grid, Shift-cl
 Drag a port to connect nodes; drag an existing connection endpoint to reconnect it. Selected connections support labels, deletion and rounded-elbow, curved or straight routing. Nodes can disconnect all their connections.
 
 Canvas lines and arrows have a separate **Curve** slider: bend in either direction or use **Straight** to reset. Arrowheads follow the curve tangent, and labels follow the curve midpoint.
+
+### Database schema planning
+
+Choose **Planning → Database diagram** and open **Edit database**. Add tables, select a table to edit its name and fields, and use suggested or custom data types. Multiple PK fields can describe a composite primary key.
+
+Drag a port of a foreign-key field onto a port of its referenced field. Connections route between facing table sides. Relationships display cardinality (1:1, 1:N, N:1 or conceptual N:N). A physical many-to-many design can use an explicit junction table. Deleting fields/tables removes related connections, and board undo restores them. This is a schema planning tool; it does not connect to a live database or execute migrations.
+
+Code blocks use a dark background when the default/white color is selected so syntax highlighting remains readable in either application theme.
 
 ### Projects and persistence
 

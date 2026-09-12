@@ -1,5 +1,5 @@
 import { getTypographyStyle } from '../typography/typographyUtils';
-import { useCardAppearance } from '../shared/cardAppearance';
+import { isDefaultCardColor, useCardAppearance } from '../shared/cardAppearance';
 import './code.css';
 import { useMemo, useState } from "react"
 import hljs from "highlight.js/lib/common"
@@ -17,7 +17,7 @@ export default function CodeBlock({
   onUpdate: BlockUpdateHandler
   onDelete: () => void
 }) {
-  const { background, textColor, light } = useCardAppearance(item.color);
+  const { background, textColor, light } = useCardAppearance(isDefaultCardColor(item.color) ? "#0d1117" : item.color);
   const codeStyle = { ...getTypographyStyle(item), fontFamily: item.typography?.fontFamily ? getTypographyStyle(item).fontFamily : 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' };
   const [editing, setEditing] = useState(false)
   const [copyStatus, setCopyStatus] = useState("Copy")
@@ -34,7 +34,7 @@ export default function CodeBlock({
     )
   return (
     <ContentBlockShell
-      item={item}
+      item={{ ...item, color: isDefaultCardColor(item.color) ? "#0d1117" : item.color }}
       autoHeight={autoHeight}
       minHeight={160}
       onDelete={onDelete}
