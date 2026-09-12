@@ -33,7 +33,7 @@ export default function ColumnItemRow({
     <div
       data-column-item="true"
       data-nested-item-id={itemId}
-      className="group/row relative grid grid-cols-[24px_minmax(0,1fr)_24px] gap-2 items-start w-full min-w-0 rounded-xl transition-all"
+      className="group/row relative grid grid-cols-[24px_minmax(0,1fr)_24px] gap-2 items-start w-full min-w-0 rounded-sm transition-all"
       style={{
         width: '100%',
         opacity: isDragging ? 0.32 : 1,

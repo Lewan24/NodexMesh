@@ -15,6 +15,7 @@ export function createEmptySibling(source: BoardItem): BoardItem | null {
     case 'diagram': return { ...base, title: 'System diagram', nodes: [], edges: [] };
     case "note":
       return { ...base, content: "", dispenserId: undefined, typography: base.dispenserId ? { textAlign: 'center', verticalAlign: 'middle', ...base.typography } : base.typography }
+    case "section-title":
     case "text":
       return { ...base, content: "" }
     case "document":

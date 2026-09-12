@@ -4,6 +4,9 @@ export const DROPPABLE_ON_COLUMN = new Set([
   'image',
   'link',
   'checklist',
+  'document',
+  'code',
+  'embed',
 ]);
 
 export const ZOOM_MIN = 0.1;
@@ -24,6 +27,7 @@ export const MIN_IMAGE_HEIGHT = 80;
 export const CANVAS_HISTORY_LIMIT = 50;
 
 export const ITEM_WIDTH = {
+  'section-title': 320,
   drawing: 208,
   timeline: 768,
   diagram: 800,
@@ -37,7 +41,7 @@ export const ITEM_WIDTH = {
   link: 320,
   image: 320,
   text: 320,
-  column: 320,
+  column: 416,
   frame: 512,
   kanban: 576,
   line: 192,

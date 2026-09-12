@@ -39,3 +39,7 @@ export function scheduleRange(tasks: TimelineTask[]) {
   const last = ranges.length ? Math.max(...ranges.map(range => range.end)) : start + 27;
   return { start, days: Math.max(28, Math.ceil((last - start + 1) / 7) * 7) };
 }
+
+export function tasksInWindow(tasks: TimelineTask[], start: number, end: number): TimelineTask[] {
+  return tasks.filter(task => { const dates = taskRange(task); return !dates || (dates.start <= end && dates.end >= start); });
+}

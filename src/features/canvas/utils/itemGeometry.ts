@@ -50,6 +50,7 @@ export function getApproxItemSize(item: BoardItem): ItemSize {
         height: 150,
       };
 
+    case 'section-title':
     case 'text':
       return {
         width: item.width ?? ITEM_WIDTH.text,
@@ -159,6 +160,7 @@ export function getToolDefaultSize(type: ToolType): ItemSize {
         height: 144,
       };
 
+    case 'section-title':
     case 'text':
       return {
         width: ITEM_WIDTH.text,

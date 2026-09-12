@@ -53,6 +53,7 @@ export default function CustomColorInput({ value, onChange, title = 'Custom colo
       />
 
       <input
+        aria-label={title + " HEX"}
         value={text}
         onChange={event => setText(event.target.value)}
         onBlur={commit}
@@ -70,8 +71,8 @@ export default function CustomColorInput({ value, onChange, title = 'Custom colo
         spellCheck={false}
         className="w-[72px] h-6 px-1.5 rounded-md text-[10px] font-mono outline-none"
         style={{
-          color: 'var(--color-text-primary)',
-          backgroundColor: 'var(--color-surface-alt)',
+          color: '#172033',
+          backgroundColor: '#ffffff',
           border: '1px solid var(--color-border)',
         }}
       />

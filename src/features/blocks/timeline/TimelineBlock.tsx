@@ -1,9 +1,9 @@
 import TimelineTaskDialog from './TimelineTaskDialog';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { TimelineItem, TimelineTask } from '@/entities/board/types';
 import type { BlockDeleteHandler, BlockUpdateHandler } from '../types';
 import ContentBlockShell from '../shared/ContentBlockShell';
-import { dateDay, dayDate, scheduleRange, shiftTask, taskRange, todayDate, reorderTasks } from './timelineUtils';
+import { dateDay, dayDate, scheduleRange, shiftTask, taskRange, todayDate, reorderTasks, tasksInWindow } from './timelineUtils';
 import '../shared/planning.css';
 
 export default function TimelineBlock({ item, onUpdate, onDelete }: { item: TimelineItem; onUpdate: BlockUpdateHandler; onDelete: BlockDeleteHandler }) {
@@ -21,9 +21,28 @@ export default function TimelineBlock({ item, onUpdate, onDelete }: { item: Time
   };
   const updateTask = (id: string, fn: (task: TimelineTask) => TimelineTask) => update(current => ({ ...current, tasks: current.tasks.map(task => task.id === id ? fn(task) : task) }));
 
-  const range = scheduleRange(item.tasks);
-  // Keep multi-year plans bounded while preserving their full date range.
-  const dayWidth = Math.min(28, 12000 / range.days);
+  const [requestedDay, setRequestedDay] = useState<number | null>(null);
+  const fullRange = scheduleRange(item.tasks);
+  const range = { start: Math.min(fullRange.start, requestedDay ?? fullRange.start), days: 0 };
+  range.days = Math.max(fullRange.start + fullRange.days, (requestedDay ?? fullRange.start) + 28) - range.start;
+  const dayWidth = 28;
+  const viewport = useRef<HTMLDivElement>(null);
+  const [windowSize, setWindowSize] = useState({ left: 0, width: 600 });
+  const columnWidth = item.taskColumnWidth ?? 180;
+  const windowStart = range.start + Math.floor(windowSize.left / dayWidth);
+  const windowEnd = range.start + Math.ceil((windowSize.left + Math.max(dayWidth, windowSize.width - columnWidth)) / dayWidth) - 1;
+  const visibleTasks = tasksInWindow(item.tasks, windowStart, windowEnd);
+  useEffect(() => {
+    const element = viewport.current;
+    if (!element) return;
+    const measure = () => setWindowSize({ left: element.scrollLeft, width: element.clientWidth });
+    const observer = new ResizeObserver(measure); observer.observe(element); measure();
+    return () => observer.disconnect();
+  }, [item.mode]);
+  useEffect(() => {
+    if (requestedDay !== null) viewport.current?.scrollTo({ left: Math.max(0, (requestedDay - range.start) * dayWidth), behavior: 'smooth' });
+  }, [requestedDay, range.start]);
+  const scrollToDay = (day: number) => { setRequestedDay(day); viewport.current?.scrollTo({ left: Math.max(0, (day - range.start) * dayWidth), behavior: 'smooth' }); };
   const addTask = () => {
     const id = crypto.randomUUID();
     setDraft({ id, title: '', start: todayDate(), end: todayDate(), done: false, color: '#7c3aed', checklist: [] });
@@ -125,7 +144,14 @@ export default function TimelineBlock({ item, onUpdate, onDelete }: { item: Time
         </button>
       </div>
     </div>
-    <div data-wheel-scroll={item.height ? "true" : "false"} 
+    {item.mode === 'schedule' && <div className="planning-toolbar" onMouseDown={event => event.stopPropagation()}>
+      <button className="planning-button" aria-label="Previous week" onClick={() => scrollToDay(windowStart - 7)}>← Week</button>
+      <button className="planning-button" aria-label="Next week" onClick={() => scrollToDay(windowStart + 7)}>Week →</button>
+      <button className="planning-button" onClick={() => scrollToDay(dateDay(todayDate())!)}>Today</button>
+      <label className="text-xs">Go to date <input aria-label="Timeline visible date" type="date" className="planning-input" value={dayDate(windowStart)} onChange={event => { const day = dateDay(event.target.value); if (day !== null) scrollToDay(day); }} /></label>
+      <span className="text-xs">{visibleTasks.length}/{item.tasks.length} tasks · {dayDate(windowStart)} – {dayDate(windowEnd)}</span>
+    </div>}
+    <div ref={viewport} onScroll={event => setWindowSize({ left: event.currentTarget.scrollLeft, width: event.currentTarget.clientWidth })} style={item.mode === 'schedule' ? { overflow: 'auto', flex: item.height ? '1 1 0%' : 'none' } : undefined} data-wheel-scroll={item.mode === 'schedule' || item.height ? "true" : "false"} 
     className={`flex-1 min-h-0 ${
       item.height
         ? 'overflow-auto'
@@ -147,7 +173,8 @@ export default function TimelineBlock({ item, onUpdate, onDelete }: { item: Time
       </article>)}</div> : item.tasks.length > 0 && <div className="timeline-grid" style={{ width: (item.taskColumnWidth ?? 180) + range.days * dayWidth, gridTemplateColumns: `${item.taskColumnWidth ?? 180}px 1fr` }}>
         <div className="timeline-label font-semibold">Task / outcome</div>
         <div className="flex">{Array.from({ length: Math.ceil(range.days / 7) }, (_, index) => <div key={index} className="py-3 px-2 border-b border-r text-theme-muted shrink-0 overflow-hidden" style={{ width: dayWidth * 7, borderColor: 'var(--color-border)' }}>{dayDate(range.start + index * 7)}</div>)}</div>
-        {item.tasks.map(task => { const dates = taskRange(task); return <div className="contents" key={task.id}>
+        {!visibleTasks.length && <div className="timeline-label" style={{ gridColumn: 1 }}>No tasks in this period</div>}
+        {visibleTasks.map(task => { const dates = taskRange(task); return <div className="contents" key={task.id}>
           <div className="timeline-label flex items-center gap-1 !p-1" style={{ boxShadow: dropRow === task.id ? 'inset 0 2px var(--color-accent)' : undefined }} onMouseDown={event => event.stopPropagation()}
             onDragOver={event => { if (draggedRow) { event.preventDefault(); setDropRow(task.id); } }}
             onDrop={event => { if (draggedRow) { event.preventDefault(); event.stopPropagation(); update(current => ({ ...current, tasks: reorderTasks(current.tasks, draggedRow, task.id) })); setDraggedRow(null); setDropRow(null); } }}>
@@ -163,7 +190,7 @@ export default function TimelineBlock({ item, onUpdate, onDelete }: { item: Time
               {([-1, 1] as const).map(direction => <button key={direction} className="px-1 disabled:opacity-20 cursor-pointer" aria-label={`${direction === -1 ? 'Move up' : 'Move down'} ${task.title}`} disabled={!item.tasks[item.tasks.findIndex(current => current.id === task.id) + direction]} onClick={() => { const target = item.tasks[item.tasks.findIndex(current => current.id === task.id) + direction]; if (target) update(current => ({ ...current, tasks: reorderTasks(current.tasks, task.id, target.id) })); }}>{direction === -1 ? '↑' : '↓'}</button>)}
             </div>
           </div>
-          <div className="timeline-track" style={{ backgroundSize: `${dayWidth * 7}px 100%` }}>
+          <div className="timeline-track" style={{ overflow: "hidden", backgroundSize: `${dayWidth * 7}px 100%` }}>
             {dates ? <div role="button" tabIndex={0} aria-label={`Move ${task.title}`} title={`${task.start} → ${task.end || task.start} · ${dates.end - dates.start + 1} days`} className="timeline-bar" style={{ left: (dates.start - range.start) * dayWidth, width: (dates.end - dates.start + 1) * dayWidth, background: task.color, opacity: task.done ? .5 : 1 }} onMouseDown={event => event.stopPropagation()} onPointerDown={event => moveBar(event, task, false)} onClick={() => { if (!movedBar.current) setDraft({ ...task, checklist: task.checklist.map(entry => ({ ...entry })) }); movedBar.current = false; }} onKeyDown={event => { if (editing && ['ArrowLeft', 'ArrowRight'].includes(event.key)) { event.preventDefault(); event.stopPropagation(); updateTask(task.id, current => shiftTask(current, event.key === 'ArrowLeft' ? -1 : 1, event.shiftKey)); } }}>
               <span className="block truncate px-2 leading-7 pointer-events-none">{task.title}</span>
               {editing && <div className="absolute right-0 top-0 h-full w-3 cursor-ew-resize rounded-r bg-white/25" title="Drag to change end date" onPointerDown={event => moveBar(event, task, true, event.currentTarget.parentElement as HTMLDivElement)} />}

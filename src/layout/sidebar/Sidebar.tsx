@@ -8,7 +8,7 @@ import './sidebar.css';
 const groups = [
   { id: 'planning', label: 'Planning', icon: ListTree, tools: ['timeline', 'diagram', 'database'] },
   { id: 'common', label: 'Common', icon: LayoutGrid, tools: ['drawing', 'note', 'dispenser', 'text', 'document', 'code'] },
-  { id: 'organize', label: 'Organize', icon: ListTree, tools: ['checklist', 'kanban', 'column', 'frame', 'line', 'divider'] },
+  { id: 'organize', label: 'Organize', icon: ListTree, tools: ['checklist', 'kanban', 'column', 'section-title', 'frame', 'line', 'divider'] },
   { id: 'media', label: 'Media', icon: Play, tools: ['image', 'link', 'embed'] },
 ] satisfies { id: string; label: string; icon: typeof LayoutGrid; tools: ToolType[] }[];
 

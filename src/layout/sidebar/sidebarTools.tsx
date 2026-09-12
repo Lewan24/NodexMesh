@@ -11,6 +11,7 @@ export interface SidebarTool {
 }
 
 export const SIDEBAR_TOOLS: SidebarTool[] = [
+  { id: 'section-title', label: 'Section title', icon: <FileText size={TOOL_ICON_SIZE} /> },
   { id: 'drawing', label: 'Pencil', icon: <Pencil size={TOOL_ICON_SIZE} /> },
   { id: 'timeline', label: 'Timeline', icon: <GanttChart size={TOOL_ICON_SIZE} /> },
   { id: 'database', label: 'Database diagram', icon: <Database size={TOOL_ICON_SIZE} /> },

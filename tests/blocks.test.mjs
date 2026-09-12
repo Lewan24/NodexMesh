@@ -27,7 +27,7 @@ const { getEmbedUrl } = await server.ssrLoadModule(
 const { getSearchableText } = await server.ssrLoadModule(
   "/src/features/search/utils/itemSearch.ts",
 )
-const { dateDay, taskRange, shiftTask, scheduleRange, reorderTasks } = await server.ssrLoadModule('/src/features/blocks/timeline/timelineUtils.ts')
+const { tasksInWindow, dateDay, taskRange, shiftTask, scheduleRange, reorderTasks } = await server.ssrLoadModule('/src/features/blocks/timeline/timelineUtils.ts')
 const { cloneItems, copyOrigin } = await server.ssrLoadModule('/src/features/canvas/utils/cloneItems.ts')
 const { diagramTemplate, layoutDiagram, removeDiagramNodes, alignDiagramNodes, canConnectDiagram } = await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts')
 const { loadProjects, saveProjects } = await server.ssrLoadModule('/src/features/projects/storage/projectStorage.ts')
@@ -42,6 +42,10 @@ const { autoGrowthLayout, growsAutomatically } = await server.ssrLoadModule('/sr
 const { ITEM_WIDTH, CANVAS_GRID_SIZE } = await server.ssrLoadModule('/src/features/canvas/constants.ts')
 const { createDatabaseField, databaseExample, validDatabaseRelations, canAddDatabaseRelation } = await server.ssrLoadModule('/src/features/blocks/database/databaseUtils.ts');
 const { defaultAppearance, activeAppearance, newPreferences, preferenceKey, withAppearanceMode, migratePreferences } = await server.ssrLoadModule('/src/features/appearance/appearanceModel.ts');
+const { copyItemStyle, pasteItemStyle } = await server.ssrLoadModule('/src/features/canvas/utils/itemStyle.ts');
+const { COLUMN_ADD_TYPES, createDefaultColumnItem } = await server.ssrLoadModule('/src/features/blocks/column/utils/columnItems.ts');
+const { DROPPABLE_ON_COLUMN } = await server.ssrLoadModule('/src/features/canvas/constants.ts');
+const { sectionTitleScale } = await server.ssrLoadModule('/src/features/blocks/section-title/SectionTitleBlock.tsx');
 await server.close()
 
 test("new blocks survive JSON persistence and have usable default dimensions", () => {
@@ -711,4 +715,59 @@ test('theme gradients apply to semantic cards, preserve custom fills and survive
   assert.equal(resolveAppearance(undefined, palette, { from: '#000000', to: '#111111', angle: 45, kind: 'linear' }, 'accent1').background, 'linear-gradient(45deg, #000000, #111111)');
   preferences.projects.custom = structuredClone(preferences.defaults);
   assert.ok(migratePreferences({ ...preferences, defaults: structuredClone(defaultAppearance) }).projects.custom);
+});
+
+
+test('style copying applies to a selection without copying content, dimensions or identity', async () => {
+  const source = { id: 'source', type: 'note', color: '#123456', colorRole: 'accent1', typography: { fontSize: 24, bold: true }, content: 'private', x: 10, width: 300 };
+  const target = { id: 'target', type: 'checklist', entries: [], x: 50, width: 400, gradient: { from: '#fff', to: '#000' } };
+  const style = copyItemStyle(source);
+  const styledTarget = { ...target, topColor: '#abcdef', typography: { fontSize: 12 } };
+  const colorOnly = pasteItemStyle(styledTarget, style, { fill: true, strip: false, typography: false });
+  assert.equal(colorOnly.color, '#123456');
+  assert.equal(colorOnly.topColor, '#abcdef');
+  assert.deepEqual(colorOnly.typography, { fontSize: 12 });
+  const fontOnly = pasteItemStyle(styledTarget, style, { fill: false, strip: false, typography: true });
+  assert.deepEqual(fontOnly.gradient, target.gradient);
+  assert.equal(fontOnly.typography.fontSize, 24);
+  const pasted = pasteItemStyle(target, style);
+  assert.equal(pasted.id, 'target'); assert.equal(pasted.x, 50); assert.equal(pasted.width, 400);
+  assert.equal(pasted.content, undefined); assert.equal(pasted.gradient, undefined);
+  assert.equal(pasted.typography.fontSize, 24);
+  pasted.typography.fontSize = 16; assert.equal(style.typography.fontSize, 24);
+  const locked = { ...target, locked: true }; assert.equal(pasteItemStyle(locked, style), locked);
+});
+
+test('timeline window shows overlapping tasks and restores hidden tasks without deleting data', async () => {
+  const tasks = [{ id: 'a', start: '2026-01-01', end: '2026-01-03' }, { id: 'b', start: '2026-02-01', end: '2026-03-01' }, { id: 'c', start: '', end: '' }];
+  assert.deepEqual(tasksInWindow(tasks, dateDay('2026-01-02'), dateDay('2026-01-04')).map(t => t.id), ['a', 'c']);
+  assert.deepEqual(tasksInWindow(tasks, dateDay('2026-02-10'), dateDay('2026-02-20')).map(t => t.id), ['b', 'c']);
+  assert.equal(tasks.length, 3);
+});
+
+
+test('column creation and drop support agree for compact content blocks', () => {
+  for (const { kind } of COLUMN_ADD_TYPES) {
+    assert.ok(DROPPABLE_ON_COLUMN.has(kind));
+    const child = createDefaultColumnItem(kind);
+    assert.equal(child.type, kind);
+    assert.equal(JSON.parse(JSON.stringify(child)).id, child.id);
+    if (kind === 'document' || kind === 'code') assert.equal(child.autoHeight, true);
+  }
+  for (const kind of ['timeline', 'diagram', 'database', 'kanban', 'column', 'frame']) assert.equal(DROPPABLE_ON_COLUMN.has(kind), false);
+  assert.equal(ITEM_WIDTH.column - 32 - 64, ITEM_WIDTH.note);
+});
+
+
+test('section titles retain their text and presentation and scale like frame labels', () => {
+  const title = createCanvasItem('section-title', 16, 32);
+  assert.equal(title.type, 'section-title');
+  assert.equal(title.width, 320);
+  assert.equal(getSearchableText(title), 'Section title');
+  assert.equal(JSON.parse(JSON.stringify(title)).content, title.content);
+  assert.equal(createEmptySibling(title).content, '');
+  assert.equal(sectionTitleScale(1), 1);
+  assert.equal(sectionTitleScale(2), 1);
+  assert.equal(sectionTitleScale(0.5), 2);
+  assert.equal(sectionTitleScale(0.1), 3.2);
 });

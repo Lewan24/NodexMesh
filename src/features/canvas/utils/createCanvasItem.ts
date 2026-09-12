@@ -111,6 +111,7 @@ export function createCanvasItem(
         width: ITEM_WIDTH.link,
       } as LinkItem;
 
+    case 'section-title': return { ...base, type, content: 'Section title', width: ITEM_WIDTH['section-title'], typography: { fontSize: 24, bold: true } };
     case 'text':
       return {
         ...base,

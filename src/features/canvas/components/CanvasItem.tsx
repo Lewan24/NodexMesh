@@ -101,6 +101,7 @@ interface CanvasItemProps {
 }
 
 export default function CanvasItem({
+  zoom,
   item,
   renderedItem,
   isSelected,
@@ -273,7 +274,7 @@ export default function CanvasItem({
         itemId={item.id}
         onResize={onResize}
       >
-        <BlockRenderer
+        <BlockRenderer zoom={zoom}
           item={renderedItem}
           onTaskDroppedOutside={onChecklistDropOutside}
           isSelected={isSelected}

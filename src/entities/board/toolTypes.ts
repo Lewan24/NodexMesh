@@ -1,4 +1,5 @@
 export type ToolType =
+  | 'section-title'
   | 'select'
   | 'drawing'
   | 'timeline'

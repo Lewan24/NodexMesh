@@ -1,3 +1,4 @@
+import SectionTitleBlock from './section-title/SectionTitleBlock';
 import type { BoardItem } from '@/entities/board/types';
 import { lazy, Suspense } from 'react';
 
@@ -41,6 +42,7 @@ import type {
 } from '@/features/blocks/types';
 
 export interface BlockRendererProps {
+  zoom?: number;
   item: BoardItem;
   isSelected: boolean;
   isDragOver?: boolean;
@@ -65,6 +67,7 @@ export interface BlockRendererProps {
 }
 
 export default function BlockRenderer({
+  zoom = 1,
   item,
   isSelected,
   isDragOver,
@@ -84,6 +87,7 @@ export default function BlockRenderer({
   nestedSearchMatchIds,
 }: BlockRendererProps) {
   switch (item.type) {
+    case 'section-title': return <SectionTitleBlock item={item} zoom={zoom} onUpdate={onUpdate} />;
     case 'drawing': return <DrawingBlock item={item} />;
     case 'timeline': return <Suspense fallback={<LoadingBlock item={item} />}><TimelineBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
     case 'database': return <Suspense fallback={<LoadingBlock item={item} />}><DatabaseDiagramBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;

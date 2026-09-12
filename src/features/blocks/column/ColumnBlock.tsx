@@ -1,3 +1,6 @@
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { paletteKeys, paletteBackground } from '@/features/appearance/appearanceModel';
+import { ITEM_WIDTH } from '@/features/canvas/constants';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
@@ -9,7 +12,6 @@ import ColumnItemRow from '@/features/blocks/column/ColumnItemRow';
 
 import {
   COLUMN_ADD_TYPES,
-  COLUMN_BG_COLORS,
   createDefaultColumnItem,
 } from '@/features/blocks/column/utils/columnItems';
 
@@ -36,7 +38,7 @@ function DropIndicator({ layout }: { layout: 'vertical' | 'horizontal' | 'grid' 
   if (layout === 'grid') {
     return (
       <div
-        className="rounded-xl border-2 border-dashed"
+        className="rounded-sm border-2 border-dashed"
         style={{
           minHeight: 80,
           borderColor: 'var(--color-accent)',
@@ -86,6 +88,8 @@ export default function ColumnBlock({
   searchActive = false,
   searchMatchIds,
 }: ColumnBlockProps) {
+  const { appearance, theme } = useTheme();
+  const palette = appearance[theme];
   const [editingTitle, setEditingTitle] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showBackgroundMenu, setShowBackgroundMenu] = useState(false);
@@ -137,7 +141,7 @@ export default function ColumnBlock({
     if (isHorizontal) {
       return Math.max(
         140,
-        (nestedItem.width ?? 260) - nestedControlsWidth,
+        (nestedItem.width ?? ITEM_WIDTH[nestedItem.type]) - nestedControlsWidth,
       );
     }
 
@@ -229,7 +233,7 @@ export default function ColumnBlock({
     (itemId: string) => {
       updateNestedItem(itemId, current => ({
         ...current,
-        width: 260,
+        width: ITEM_WIDTH[current.type],
       }));
     },
     [updateNestedItem],
@@ -255,7 +259,7 @@ export default function ColumnBlock({
 
       const startX = event.clientX;
       const startWidth =
-        nestedItem.width ?? 260;
+        nestedItem.width ?? ITEM_WIDTH[nestedItem.type];
 
       const handleMove = (moveEvent: MouseEvent) => {
         const deltaX =
@@ -331,6 +335,9 @@ export default function ColumnBlock({
 
   function prepareNestedItemForColumn(nestedItem: BoardItem, width: number): BoardItem {
     switch (nestedItem.type) {
+      case 'document':
+      case 'code':
+      case 'embed':
       case 'note':
       case 'checklist':
       case 'link':
@@ -359,7 +366,7 @@ export default function ColumnBlock({
     >
       {isDragOver && (
         <div
-          className="absolute pointer-events-none rounded-2xl"
+          className="absolute pointer-events-none rounded-sm"
           style={{
             inset: -4,
             boxShadow: '0 0 0 3px var(--color-accent), 0 0 24px rgba(124,58,237,0.3)',
@@ -382,6 +389,7 @@ export default function ColumnBlock({
           height: item.height ? '100%' : undefined,
         }}
       >
+        {item.topColor && <div className="h-[5px] shrink-0" style={{ background: item.topColor }} />}
         {/* Header */}
         <div
           className="flex items-center justify-between px-4 py-3 border-b cursor-grab active:cursor-grabbing"
@@ -408,7 +416,7 @@ export default function ColumnBlock({
 
               {showBackgroundMenu && (
                 <div
-                  className="absolute top-6 left-0 z-50 rounded-xl shadow-2xl border p-2.5"
+                  className="absolute top-6 left-0 z-50 rounded-sm shadow-2xl border p-2.5"
                   style={{
                     backgroundColor: 'var(--color-surface)',
                     borderColor: 'var(--color-border)',
@@ -424,18 +432,18 @@ export default function ColumnBlock({
                   </p>
 
                   <div className="flex flex-wrap gap-2">
-                    {COLUMN_BG_COLORS.map(color => (
+                    {paletteKeys.map(color => (
                       <button
                         key={color}
                         type="button"
                         onClick={() => {
-                          update({ color });
+                          update({ colorRole: color, gradient: undefined });
                           setShowBackgroundMenu(false);
                         }}
                         className="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 cursor-pointer"
                         style={{
-                          backgroundColor: color,
-                          borderColor: item.color === color
+                          background: paletteBackground(palette, color),
+                          borderColor: item.colorRole === color
                             ? 'var(--color-accent)'
                             : 'rgba(0,0,0,0.12)',
                         }}
@@ -521,7 +529,7 @@ export default function ColumnBlock({
 
         {/* Nested items */}
         <div
-          data-wheel-scroll={item.height ? "true" : "false"}
+          data-wheel-scroll="true"
           ref={containerRef}
           className="px-4 pt-3 pb-1 overflow-auto"
           style={{
@@ -529,7 +537,7 @@ export default function ColumnBlock({
             display: isGrid ? 'grid' : 'flex',
             flexDirection: isHorizontal ? 'row' : 'column',
             gridTemplateColumns: isGrid
-              ? `repeat(${gridColumns}, minmax(0, 1fr))`
+              ? `repeat(${gridColumns}, minmax(208px, 1fr))`
               : undefined,
             gap,
             alignContent: 'start',
@@ -556,7 +564,7 @@ export default function ColumnBlock({
                 className="relative flex-shrink-0 group/nested"
                 style={{
                   width: isHorizontal
-                    ? nestedItem.width ?? 260
+                    ? nestedItem.width ?? ITEM_WIDTH[nestedItem.type]
                     : '100%',
                   minWidth: 0,
 
@@ -585,7 +593,7 @@ export default function ColumnBlock({
                     nestedItem.id,
                   ) && (
                     <div
-                      className="absolute pointer-events-none rounded-xl"
+                      className="absolute pointer-events-none rounded-sm"
                       style={{
                         inset: -3,
                         boxShadow:
@@ -625,7 +633,7 @@ export default function ColumnBlock({
                       onEntryDroppedOutside={onTaskDroppedOutside ? (task, x, y) => onTaskDroppedOutside(nestedItem.id, task, x, y) : undefined}
                       onCardDroppedOutside={onTaskDroppedOutside ? (task, x, y) => onTaskDroppedOutside(nestedItem.id, task, x, y) : undefined}
                       isInsideColumn
-                      isSelected={false}
+                      isSelected={selectedItemId === nestedItem.id}
                       onUpdate={updater => updateNested(nestedItem.id, updater)}
                       onDelete={() => {
                         const execute = () => deleteNested(nestedItem.id);
@@ -659,7 +667,7 @@ export default function ColumnBlock({
                       );
                     }}
                     title={`Resize item (${Math.round(
-                      nestedItem.width ?? 260,
+                      nestedItem.width ?? ITEM_WIDTH[nestedItem.type],
                     )}px) · Double-click to reset`}
                   >
                     <div
@@ -681,7 +689,7 @@ export default function ColumnBlock({
 
           {items.length === 0 && (
             <div
-              className="py-8 px-4 text-center text-sm select-none rounded-xl border-2 border-dashed"
+              className="py-8 px-4 text-center text-sm select-none rounded-sm border-2 border-dashed"
               style={{
                 gridColumn: isGrid ? '1 / -1' : undefined,
                 minWidth: isHorizontal ? 180 : undefined,
@@ -734,7 +742,7 @@ export default function ColumnBlock({
 
           {showAddMenu && (
             <div
-              className="absolute bottom-full left-4 right-4 mb-1.5 rounded-2xl border shadow-2xl z-50 overflow-hidden"
+              className="relative mt-2 rounded-sm shadow-xl z-50 max-h-80 overflow-auto" data-wheel-scroll="true"
               style={{
                 backgroundColor: 'var(--color-surface)',
                 borderColor: 'var(--color-border)',

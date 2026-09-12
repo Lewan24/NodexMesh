@@ -22,6 +22,7 @@ export function getSearchableText(
     case 'note':
       return item.content;
 
+    case 'section-title':
     case 'text':
       return item.content;
 

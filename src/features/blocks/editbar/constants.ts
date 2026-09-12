@@ -26,7 +26,7 @@ export const FRAME_COLORS = [
 ];
 
 export const BACKGROUND_ITEM_TYPES = new Set<BoardItem['type']>([
-  'dispenser', 'code', 'document', 'embed', 'timeline', 'diagram', 'database',
+  'section-title', 'dispenser', 'code', 'document', 'embed', 'timeline', 'diagram', 'database',
   'note',
   'checklist',
   'link',
@@ -49,6 +49,7 @@ export const ITEM_TYPE_LABELS: Partial<Record<BoardItem['type'], string>> = {
   kanban: 'Kanban',
   image: 'Image',
   link: 'Link',
+  'section-title': 'Section title',
   text: 'Text',
   frame: 'Frame',
   checklist: 'Checklist',

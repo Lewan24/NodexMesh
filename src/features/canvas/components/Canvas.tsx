@@ -1,3 +1,6 @@
+import PasteStyleDialog from './PasteStyleDialog';
+import { copyItemStyle, pasteItemStyle } from '../utils/itemStyle';
+import type { ItemStyle } from '../utils/itemStyle';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BoardItem, LineItem } from '@/entities/board/types';
@@ -658,6 +661,8 @@ export default function Canvas({
     x: snapValue(((containerRef.current?.clientWidth ?? 800) / 2 - panRef.current.x) / zoomRef.current),
     y: snapValue(((containerRef.current?.clientHeight ?? 600) / 2 - panRef.current.y) / zoomRef.current),
   }, [snapValue]);
+  const [pasteStyleOpen, setPasteStyleOpen] = useState(false);
+  const [styleClipboard, setStyleClipboard] = useState<ItemStyle | null>(null);
   const clipboard = useCanvasClipboard({ projectRef, selectedIdsRef, measuredSizes, pushHistory, onRestoreItems, onSelectItems, pastePoint, nestedSelection: selectedColumnItem, clearColumnSelection });
 
   useCanvasKeyboard({
@@ -1141,7 +1146,17 @@ export default function Canvas({
         setContextMenu({ x: event.clientX, y: event.clientY, canvasX: snapValue((event.clientX - rect.left - pan.x) / zoom), canvasY: snapValue((event.clientY - rect.top - pan.y) / zoom), hasSelection: Boolean(id) });
       }}
     >
-      {contextMenu && <CanvasContextMenu onJoinDrawings={canJoinDrawings ? handleJoinDrawings : undefined} menu={contextMenu} count={selectedColumnItem ? 1 : selectedIds.length} canPaste={clipboard.canPaste}
+      {pasteStyleOpen && <PasteStyleDialog onClose={() => setPasteStyleOpen(false)} onPaste={parts => {
+        if (styleClipboard) { pushHistory();
+          if (selectedColumnItem) handleUpdateColumnItem(selectedColumnItem.columnId, item => pasteItemStyle(item, styleClipboard, parts));
+          else onRestoreItems(project.items.map(item => selectedIds.includes(item.id) ? pasteItemStyle(item, styleClipboard, parts) : item));
+        }
+        setPasteStyleOpen(false);
+      }} />}
+      {contextMenu && <CanvasContextMenu
+        onCopyStyle={() => { const source = selectedColumnItem?.item ?? selectedItems[0]; if (source) setStyleClipboard(copyItemStyle(source)); }}
+        canPasteStyle={!!styleClipboard}
+        onPasteStyle={() => setPasteStyleOpen(true)} onJoinDrawings={canJoinDrawings ? handleJoinDrawings : undefined} menu={contextMenu} count={selectedColumnItem ? 1 : selectedIds.length} canPaste={clipboard.canPaste}
         allLocked={selectedColumnItem ? Boolean(selectedColumnItem.item.locked) : selectedItems.length > 0 && selectedItems.every(item => item.locked)} onClose={closeContextMenu}
         onCopy={clipboard.copy} onDuplicate={clipboard.duplicate} onPaste={() => clipboard.paste({ x: contextMenu.canvasX, y: contextMenu.canvasY })}
         onDelete={() => { if (selectedColumnItem) { requestDelete(deleteSelectedColumnItem); return; } const ids = [...selectedIdsRef.current]; requestDelete(() => { onDeleteItems(ids); onSelectItems([]); }, ids.length); }}

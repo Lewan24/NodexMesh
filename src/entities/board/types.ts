@@ -1,4 +1,6 @@
-export type BoardItem = NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem | DocumentItem | EmbedItem | CodeItem | DispenserItem | TimelineItem | DiagramItem | DatabaseDiagramItem | DrawingItem;
+export interface SectionTitleItem extends BaseItem { type: 'section-title'; content: string }
+
+export type BoardItem = SectionTitleItem | NoteItem | KanbanItem | ImageItem | LinkItem | TextItem | FrameItem | ChecklistItem | LineItem | ColumnItem | DocumentItem | EmbedItem | CodeItem | DispenserItem | TimelineItem | DiagramItem | DatabaseDiagramItem | DrawingItem;
 
 export interface DrawingStroke {
   points: { x: number; y: number; pressure?: number }[];

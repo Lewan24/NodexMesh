@@ -17,6 +17,7 @@ interface ColorPanelProps {
 
 function getBackgroundColor(item: BoardItem): string | undefined {
   switch (item.type) {
+    case 'section-title':
     case 'dispenser':
     case 'code':
     case 'document':
@@ -43,6 +44,7 @@ function updateBackgroundColor(item: BoardItem, color: string | undefined): Boar
     case 'text':
       return { ...item, color };
 
+    case 'section-title':
     case 'dispenser':
     case 'code':
     case 'document':
