@@ -44,7 +44,7 @@ export default function CustomColorInput({ value, onChange, title = 'Custom colo
       <input
         type="color"
         value={fallback}
-        onChange={event => {
+        onChange={(event) => {
           const color = event.target.value.toUpperCase();
           setText(color);
           onChange(color);
@@ -53,10 +53,11 @@ export default function CustomColorInput({ value, onChange, title = 'Custom colo
       />
 
       <input
+        aria-label={title + ' HEX'}
         value={text}
-        onChange={event => setText(event.target.value)}
+        onChange={(event) => setText(event.target.value)}
         onBlur={commit}
-        onKeyDown={event => {
+        onKeyDown={(event) => {
           if (event.key === 'Enter') {
             commit();
             event.currentTarget.blur();
@@ -69,11 +70,7 @@ export default function CustomColorInput({ value, onChange, title = 'Custom colo
         }}
         spellCheck={false}
         className="w-[72px] h-6 px-1.5 rounded-md text-[10px] font-mono outline-none"
-        style={{
-          color: 'var(--color-text-primary)',
-          backgroundColor: 'var(--color-surface-alt)',
-          border: '1px solid var(--color-border)',
-        }}
+        style={{ color: '#172033', backgroundColor: '#ffffff', border: '1px solid var(--color-border)' }}
       />
     </div>
   );

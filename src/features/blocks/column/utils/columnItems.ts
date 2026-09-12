@@ -1,12 +1,5 @@
-import type {
-  BoardItem,
-  ChecklistItem,
-  ImageItem,
-  LinkItem,
-  NoteItem,
-  TextItem,
-} from '@/entities/board/types';
-
+import type { BoardItem } from '@/entities/board/types';
+import { createCanvasItem } from '@/features/canvas/utils/createCanvasItem';
 export const COLUMN_BG_COLORS = [
   '#f0f9ff',
   '#fefce8',
@@ -20,13 +13,12 @@ export const COLUMN_BG_COLORS = [
   '#fce7f3',
 ] as const;
 
-export type ColumnChildType = 'note' | 'checklist' | 'link' | 'text' | 'image';
+export type ColumnChildType = 'note' | 'checklist' | 'link' | 'text' | 'image' | 'document' | 'code' | 'embed';
 
-export const COLUMN_ADD_TYPES: {
-  kind: ColumnChildType;
-  label: string;
-  icon: string;
-}[] = [
+export const COLUMN_ADD_TYPES: { kind: ColumnChildType; label: string; icon: string }[] = [
+  { kind: 'document', label: 'Document', icon: '📄' },
+  { kind: 'code', label: 'Code', icon: '</>' },
+  { kind: 'embed', label: 'Embed', icon: '▶' },
   { kind: 'note', label: 'Note', icon: '📝' },
   { kind: 'checklist', label: 'Checklist', icon: '✅' },
   { kind: 'link', label: 'Link', icon: '🔗' },
@@ -34,64 +26,10 @@ export const COLUMN_ADD_TYPES: {
   { kind: 'image', label: 'Image', icon: '🖼' },
 ];
 
-function createId(): string {
-  return Math.random().toString(36).slice(2, 9);
-}
-
 export function createDefaultColumnItem(kind: ColumnChildType): BoardItem {
-  const base = {
-    id: createId(),
-    x: 0,
-    y: 0,
-    zIndex: 1,
-  };
-
-  switch (kind) {
-    case 'note':
-      return {
-        ...base,
-        type: 'note',
-        content: '',
-        color: '#fefce8',
-        width: 240,
-      } as NoteItem;
-
-    case 'checklist':
-      return {
-        ...base,
-        type: 'checklist',
-        title: 'Checklist',
-        color: '#f0fdf4',
-        entries: [],
-      } as ChecklistItem;
-
-    case 'link':
-      return {
-        ...base,
-        type: 'link',
-        url: '',
-        title: 'New Link',
-        description: '',
-      } as LinkItem;
-
-    case 'image':
-      return {
-        ...base,
-        type: 'image',
-        url: '',
-        caption: '',
-        width: 240,
-        imgHeight: 150,
-      } as ImageItem;
-
-    case 'text':
-      return {
-        ...base,
-        type: 'text',
-        content: 'Text',
-        size: 'md',
-      } as TextItem;
-  }
+  const item = createCanvasItem(kind, 0, 0);
+  if (!item) throw new Error('Unsupported column item: ' + kind);
+  return item.type === 'document' || item.type === 'code' ? { ...item, autoHeight: true } : item;
 }
 
 export function isLightColor(hex: string): boolean {

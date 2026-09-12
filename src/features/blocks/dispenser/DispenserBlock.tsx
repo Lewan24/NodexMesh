@@ -1,18 +1,18 @@
 import { useState } from 'react';
-import type { DispenserItem } from "@/entities/board/types"
-import type { BlockUpdateHandler } from "../types"
-import { startToolDrag } from "@/features/canvas/utils/toolDrag"
+import type { DispenserItem } from '@/entities/board/types';
+import type { BlockUpdateHandler } from '../types';
+import { startToolDrag } from '@/features/canvas/utils/toolDrag';
 import { useCardAppearance } from '../shared/cardAppearance';
-import ContentBlockShell from "../shared/ContentBlockShell"
+import ContentBlockShell from '../shared/ContentBlockShell';
 
 export default function DispenserBlock({
   item,
   onUpdate,
   onDelete,
 }: {
-  item: DispenserItem
-  onUpdate: BlockUpdateHandler
-  onDelete: () => void
+  item: DispenserItem;
+  onUpdate: BlockUpdateHandler;
+  onDelete: () => void;
 }) {
   const { background, solid, textColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
   const [editingLabel, setEditingLabel] = useState(false);
@@ -21,37 +21,38 @@ export default function DispenserBlock({
       item={item}
       onDelete={onDelete}
       title={
-        editingLabel ? <input
-          aria-label="Dispenser label"
-          className="w-full bg-transparent outline-none"
-          value={item.title}
-          autoFocus
-          onBlur={() => setEditingLabel(false)}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditingLabel(false); }}
-          onMouseDown={(e) => e.stopPropagation()}
-          onChange={(e) =>
-            onUpdate((current) =>
-              current.type === "dispenser"
-                ? { ...current, title: e.target.value }
-                : current,
-            )
-          }
-        /> : <span className="block truncate" title="Double-click to rename" onDoubleClick={() => setEditingLabel(true)}>{item.title}</span>
+        editingLabel ? (
+          <input
+            aria-label="Dispenser label"
+            className="w-full bg-transparent outline-none"
+            value={item.title}
+            autoFocus
+            onBlur={() => setEditingLabel(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') setEditingLabel(false);
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onChange={(e) =>
+              onUpdate((current) => (current.type === 'dispenser' ? { ...current, title: e.target.value } : current))
+            }
+          />
+        ) : (
+          <span className="block truncate" title="Double-click to rename" onDoubleClick={() => setEditingLabel(true)}>
+            {item.title}
+          </span>
+        )
       }
     >
       <div className="flex-1 min-h-0 px-6 pt-4 pb-6 flex flex-col gap-3">
-        <label
-          className="flex items-center justify-between text-xs"
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          Paper color{" "}
+        <label className="flex items-center justify-between text-xs" onMouseDown={(e) => e.stopPropagation()}>
+          Paper color{' '}
           <input
             aria-label="Paper color"
             type="color"
             value={item.color}
             onChange={(e) =>
               onUpdate((current) =>
-                current.type === "dispenser"
+                current.type === 'dispenser'
                   ? { ...current, color: e.target.value, colorRole: undefined, gradient: undefined }
                   : current,
               )
@@ -66,21 +67,22 @@ export default function DispenserBlock({
             background,
             color: textColor,
             boxShadow: `3px 4px 0 ${solid}, 6px 8px 0 ${solid}, 8px 11px 8px #0003`,
-            border: "1px solid #0002",
+            border: '1px solid #0002',
           }}
           onMouseDown={(e) => {
-            e.stopPropagation()
-            e.preventDefault()
-            startToolDrag("note", e, {
+            e.stopPropagation();
+            e.preventDefault();
+            startToolDrag('note', e, {
               color: item.color,
-              colorRole: item.colorRole, gradient: item.gradient,
+              colorRole: item.colorRole,
+              gradient: item.gradient,
               dispenserId: item.id,
-            })
+            });
           }}
         >
           Drag a fresh note ↗
         </button>
       </div>
     </ContentBlockShell>
-  )
+  );
 }

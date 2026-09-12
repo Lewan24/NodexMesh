@@ -9,27 +9,15 @@ interface UseDeleteConfirmationOptions {
   pushHistory: () => void;
 }
 
-export function useDeleteConfirmation({
-  pushHistory,
-}: UseDeleteConfirmationOptions) {
-  const [pendingDelete, setPendingDelete] =
-    useState<PendingDelete | null>(null);
+export function useDeleteConfirmation({ pushHistory }: UseDeleteConfirmationOptions) {
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
 
-  const requestDelete = useCallback(
-    (
-      execute: () => void,
-      count = 1,
-    ) => {
-      setPendingDelete({
-        execute,
-        count,
-      });
-    },
-    [],
-  );
+  const requestDelete = useCallback((execute: () => void, count = 1) => {
+    setPendingDelete({ execute, count });
+  }, []);
 
   const confirmDelete = useCallback(() => {
-    setPendingDelete(previous => {
+    setPendingDelete((previous) => {
       if (!previous) {
         return null;
       }
@@ -45,10 +33,5 @@ export function useDeleteConfirmation({
     setPendingDelete(null);
   }, []);
 
-  return {
-    pendingDelete,
-    requestDelete,
-    confirmDelete,
-    cancelDelete,
-  };
+  return { pendingDelete, requestDelete, confirmDelete, cancelDelete };
 }

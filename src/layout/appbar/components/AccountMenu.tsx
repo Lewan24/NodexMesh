@@ -25,7 +25,7 @@ export default function AccountMenu({
   onToggleTheme,
   onManageUsers,
   onLogout,
-  onResetDemo
+  onResetDemo,
 }: AccountMenuProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -39,10 +39,10 @@ export default function AccountMenu({
         onClick={onToggle}
         className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-colors"
         style={{ backgroundColor: open ? 'var(--color-accent-soft)' : 'transparent' }}
-        onMouseEnter={e => {
+        onMouseEnter={(e) => {
           if (!open) e.currentTarget.style.backgroundColor = 'var(--color-chrome-hover)';
         }}
-        onMouseLeave={e => {
+        onMouseLeave={(e) => {
           if (!open) e.currentTarget.style.backgroundColor = 'transparent';
         }}
       >
@@ -54,17 +54,11 @@ export default function AccountMenu({
         </div>
 
         <div className="hidden sm:block text-left max-w-32">
-          <div
-            className="text-xs font-semibold truncate"
-            style={{ color: 'var(--color-chrome-text)' }}
-          >
+          <div className="text-xs font-semibold truncate" style={{ color: 'var(--color-chrome-text)' }}>
             {user?.name}
           </div>
 
-          <div
-            className="text-[10px] truncate"
-            style={{ color: 'var(--color-chrome-text-faint)' }}
-          >
+          <div className="text-[10px] truncate" style={{ color: 'var(--color-chrome-text-faint)' }}>
             @{user?.username}
           </div>
         </div>
@@ -90,21 +84,12 @@ export default function AccountMenu({
             animation: 'slide-up 0.15s ease forwards',
           }}
         >
-          <div
-            className="px-4 py-3.5"
-            style={{ borderBottom: '1px solid var(--color-chrome-border-soft)' }}
-          >
-            <p
-              className="text-sm font-semibold truncate"
-              style={{ color: 'var(--color-chrome-text-strong)' }}
-            >
+          <div className="px-4 py-3.5" style={{ borderBottom: '1px solid var(--color-chrome-border-soft)' }}>
+            <p className="text-sm font-semibold truncate" style={{ color: 'var(--color-chrome-text-strong)' }}>
               {user?.name}
             </p>
 
-            <p
-              className="text-xs mt-0.5 truncate capitalize"
-              style={{ color: 'var(--color-chrome-text-faint)' }}
-            >
+            <p className="text-xs mt-0.5 truncate capitalize" style={{ color: 'var(--color-chrome-text-faint)' }}>
               @{user?.username} · {user?.role}
             </p>
           </div>
@@ -114,10 +99,10 @@ export default function AccountMenu({
               onClick={onToggleTheme}
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm"
               style={{ color: 'var(--color-chrome-text)' }}
-              onMouseEnter={e => {
+              onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'var(--color-chrome-panel)';
               }}
-              onMouseLeave={e => {
+              onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
@@ -140,10 +125,10 @@ export default function AccountMenu({
                 onClick={onManageUsers}
                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm"
                 style={{ color: 'var(--color-chrome-text)' }}
-                onMouseEnter={e => {
+                onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'var(--color-chrome-panel)';
                 }}
-                onMouseLeave={e => {
+                onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
@@ -152,17 +137,11 @@ export default function AccountMenu({
                   <circle cx="9" cy="7" r="4" />
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
-
                 Manage users
               </button>
             )}
 
-            <div
-              className="my-1"
-              style={{
-                borderTop: '1px solid var(--color-chrome-border-soft)',
-              }}
-            />
+            <div className="my-1" style={{ borderTop: '1px solid var(--color-chrome-border-soft)' }} />
 
             <button
               type="button"
@@ -178,13 +157,11 @@ export default function AccountMenu({
               }}
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm"
               style={{ color: 'var(--color-danger)' }}
-              onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor =
-                  'rgba(255,107,138,0.08)';
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255,107,138,0.08)';
               }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor =
-                  'transparent';
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
               <svg
@@ -200,7 +177,6 @@ export default function AccountMenu({
                 <path d="M3 12a9 9 0 1 0 3-6.7" />
                 <path d="M3 3v6h6" />
               </svg>
-
               Reset demo
             </button>
 
@@ -208,10 +184,10 @@ export default function AccountMenu({
               onClick={onLogout}
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm"
               style={{ color: 'var(--color-danger)' }}
-              onMouseEnter={e => {
+              onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(255,107,138,0.08)';
               }}
-              onMouseLeave={e => {
+              onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
@@ -220,7 +196,6 @@ export default function AccountMenu({
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
-
               Log out
             </button>
           </div>

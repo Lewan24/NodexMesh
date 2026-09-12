@@ -13,18 +13,14 @@ interface TextControlsProps {
 
 export default function TextControls({ item, onUpdate }: TextControlsProps) {
   const update = (patch: Partial<TextItem>) => {
-    onUpdate(current =>
-      current.type === 'text'
-        ? { ...current, ...patch }
-        : current,
-    );
+    onUpdate((current) => (current.type === 'text' ? { ...current, ...patch } : current));
   };
 
   return (
     <>
       <EditBarDivider />
 
-      {ALIGNMENTS.map(alignment => (
+      {ALIGNMENTS.map((alignment) => (
         <EditBarButton
           key={alignment}
           active={(item.textAlign ?? 'left') === alignment}
@@ -53,34 +49,21 @@ export default function TextControls({ item, onUpdate }: TextControlsProps) {
 
       <EditBarDivider />
 
-      {SIZES.map(size => (
-        <EditBarButton
-          key={size}
-          active={item.size === size}
-          onClick={() => update({ size })}
-          title={`Size ${size}`}
-        >
+      {SIZES.map((size) => (
+        <EditBarButton key={size} active={item.size === size} onClick={() => update({ size })} title={`Size ${size}`}>
           <span style={{ fontSize: size === 'sm' ? 9 : size === 'md' ? 11 : size === 'lg' ? 13 : 15 }}>
             {size.toUpperCase()}
           </span>
         </EditBarButton>
       ))}
-      
+
       <EditBarDivider />
 
-      <EditBarButton
-        active={!!item.bold}
-        onClick={() => update({ bold: !item.bold })}
-        title="Bold"
-      >
+      <EditBarButton active={!!item.bold} onClick={() => update({ bold: !item.bold })} title="Bold">
         <span style={{ fontWeight: 800, fontSize: 13 }}>B</span>
       </EditBarButton>
 
-      <EditBarButton
-        active={!!item.italic}
-        onClick={() => update({ italic: !item.italic })}
-        title="Italic"
-      >
+      <EditBarButton active={!!item.italic} onClick={() => update({ italic: !item.italic })} title="Italic">
         <span style={{ fontStyle: 'italic', fontFamily: 'Georgia, serif', fontSize: 13 }}>I</span>
       </EditBarButton>
     </>

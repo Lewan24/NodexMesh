@@ -15,10 +15,7 @@ interface LineBlockProps {
   item: LineItem;
   isSelected: boolean;
   onDelete: () => void;
-  onLineEndpointDrag: (
-    event: React.MouseEvent,
-    endpoint: 1 | 2,
-  ) => void;
+  onLineEndpointDrag: (event: React.MouseEvent, endpoint: 1 | 2) => void;
 }
 
 interface ArrowHeadProps {
@@ -30,14 +27,7 @@ interface ArrowHeadProps {
 }
 
 function ArrowHead({ x, y, angle, color, strokeWidth }: ArrowHeadProps) {
-  const {
-    firstX,
-    firstY,
-    tipX,
-    tipY,
-    secondX,
-    secondY,
-  } = getArrowHeadPoints(x, y, angle, strokeWidth);
+  const { firstX, firstY, tipX, tipY, secondX, secondY } = getArrowHeadPoints(x, y, angle, strokeWidth);
 
   return (
     <polygon
@@ -52,85 +42,47 @@ function ArrowHead({ x, y, angle, color, strokeWidth }: ArrowHeadProps) {
   );
 }
 
-export default function LineBlock({
-  item,
-  isSelected,
-  onDelete,
-  onLineEndpointDrag,
-}: LineBlockProps) {
+export default function LineBlock({ item, isSelected, onDelete, onLineEndpointDrag }: LineBlockProps) {
   const [hovered, setHovered] = useState(false);
 
-  const {
-    angle,
-    svgWidth,
-    svgHeight,
-    originX,
-    originY,
-    endX,
-    endY,
-    svgLeft,
-    svgTop,
-
-  } = getLineRenderGeometry(item.x, item.y, item.x2, item.y2);
+  const { angle, svgWidth, svgHeight, originX, originY, endX, endY, svgLeft, svgTop } = getLineRenderGeometry(
+    item.x,
+    item.y,
+    item.x2,
+    item.y2,
+  );
 
   const curve = getLineCurve(originX, originY, endX, endY, item.curve);
   const { centerX, centerY } = curve;
   const showHandles = hovered || isSelected;
   const lineColor = isSelected ? '#7C3AED' : item.color;
 
-  const labelOffset =
-    item.labelOffset ?? 14;
+  const labelOffset = item.labelOffset ?? 14;
 
-  const labelMode =
-    item.labelMode ?? 'horizontal';
+  const labelMode = item.labelMode ?? 'horizontal';
 
-  const angleDegrees =
-    angle * (180 / Math.PI);
+  const angleDegrees = angle * (180 / Math.PI);
 
-  const normalizedAngle =
-    angleDegrees > 90 ||
-    angleDegrees < -90
-      ? angleDegrees + 180
-      : angleDegrees;
+  const normalizedAngle = angleDegrees > 90 || angleDegrees < -90 ? angleDegrees + 180 : angleDegrees;
 
   /*
-  * Perpendicular direction from the line.
-  * Negative Y means visually "above" the line.
-  */
-  const labelX =
-    centerX +
-    Math.sin(angle) *
-      labelOffset;
+   * Perpendicular direction from the line.
+   * Negative Y means visually "above" the line.
+   */
+  const labelX = centerX + Math.sin(angle) * labelOffset;
 
-  const labelY =
-    centerY -
-    Math.cos(angle) *
-      labelOffset;
+  const labelY = centerY - Math.cos(angle) * labelOffset;
 
-  const labelRotation =
-    labelMode === 'follow-line'
-      ? normalizedAngle
-      : 0;
+  const labelRotation = labelMode === 'follow-line' ? normalizedAngle : 0;
 
   return (
     <div
       className="absolute"
-      style={{
-        left: svgLeft,
-        top: svgTop,
-        pointerEvents: 'none',
-      }}
+      style={{ left: svgLeft, top: svgTop, pointerEvents: 'none' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <svg
-        width={svgWidth}
-        height={svgHeight}
-        style={{
-          overflow: 'visible',
-          display: 'block',
-        }}
-      >
+      <svg width={svgWidth} height={svgHeight} style={{ overflow: 'visible', display: 'block' }}>
         {/* Larger invisible hit area */}
 
         <path
@@ -138,10 +90,7 @@ export default function LineBlock({
           fill="none"
           stroke="transparent"
           strokeWidth={16}
-          style={{
-            pointerEvents: 'stroke',
-            cursor: 'grab',
-          }}
+          style={{ pointerEvents: 'stroke', cursor: 'grab' }}
         />
 
         {/* Stop the shaft inside filled heads so its round cap cannot protrude. */}
@@ -158,13 +107,7 @@ export default function LineBlock({
         {/* Arrow end */}
 
         {item.arrowEnd && (
-          <ArrowHead
-            x={endX}
-            y={endY}
-            angle={curve.endAngle}
-            color={lineColor}
-            strokeWidth={item.strokeWidth}
-          />
+          <ArrowHead x={endX} y={endY} angle={curve.endAngle} color={lineColor} strokeWidth={item.strokeWidth} />
         )}
 
         {/* Arrow start */}
@@ -188,7 +131,7 @@ export default function LineBlock({
               y={originY}
               attached={Boolean(item.startItemId)}
               color={item.color}
-              onMouseDown={event => onLineEndpointDrag(event, 1)}
+              onMouseDown={(event) => onLineEndpointDrag(event, 1)}
             />
 
             <LineEndpointHandle
@@ -196,7 +139,7 @@ export default function LineBlock({
               y={endY}
               attached={Boolean(item.endItemId)}
               color={item.color}
-              onMouseDown={event => onLineEndpointDrag(event, 2)}
+              onMouseDown={(event) => onLineEndpointDrag(event, 2)}
             />
           </>
         )}
@@ -205,21 +148,11 @@ export default function LineBlock({
 
         {showHandles && (
           <g
-            style={{
-              cursor: 'pointer',
-              pointerEvents: 'all',
-            }}
+            style={{ cursor: 'pointer', pointerEvents: 'all' }}
             onClick={onDelete}
-            onMouseDown={event => event.stopPropagation()}
+            onMouseDown={(event) => event.stopPropagation()}
           >
-            <circle
-              cx={centerX}
-              cy={centerY}
-              r={7}
-              fill="#08171d"
-              stroke={item.color}
-              strokeWidth={1.5}
-            />
+            <circle cx={centerX} cy={centerY} r={7} fill="#08171d" stroke={item.color} strokeWidth={1.5} />
 
             <line
               x1={centerX - 3}
@@ -256,32 +189,21 @@ export default function LineBlock({
               rotate(${labelRotation}deg)
             `,
 
-            transformOrigin:
-              'center center',
+            transformOrigin: 'center center',
 
-            fontSize:
-              `${item.typography?.fontSize ?? item.labelFontSize ?? 11}px`,
+            fontSize: `${item.typography?.fontSize ?? item.labelFontSize ?? 11}px`,
 
-            fontFamily:
-              getFontFamilyCss(item.typography?.fontFamily),
+            fontFamily: getFontFamilyCss(item.typography?.fontFamily),
 
-            fontWeight:
-              item.typography?.bold
-                ? 700
-                : 600,
+            fontWeight: item.typography?.bold ? 700 : 600,
 
-            fontStyle:
-              item.typography?.italic
-                ? 'italic'
-                : undefined,
+            fontStyle: item.typography?.italic ? 'italic' : undefined,
 
             color: lineColor,
 
-            backgroundColor:
-              'var(--color-surface-translucent)',
+            backgroundColor: 'var(--color-surface-translucent)',
 
-            border:
-              '1px solid var(--color-border-soft)',
+            border: '1px solid var(--color-border-soft)',
 
             borderRadius: 2,
 
@@ -289,8 +211,7 @@ export default function LineBlock({
 
             backdropFilter: 'blur(5px)',
 
-            boxShadow:
-              '0 2px 6px rgba(0,0,0,0.08)',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.08)',
 
             zIndex: 10,
           }}

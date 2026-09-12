@@ -1,10 +1,6 @@
 export type NoteFontSize = 'sm' | 'base' | 'lg';
 
-export const NOTE_FONT_SIZE_CLASS: Record<NoteFontSize, string> = {
-  sm: 'text-sm',
-  base: 'text-base',
-  lg: 'text-lg',
-};
+export const NOTE_FONT_SIZE_CLASS: Record<NoteFontSize, string> = { sm: 'text-sm', base: 'text-base', lg: 'text-lg' };
 
 export const MIN_NOTE_HEIGHT = 60;
 

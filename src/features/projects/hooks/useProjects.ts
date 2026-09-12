@@ -1,17 +1,9 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { Project } from '@/entities/project/types';
 import { createDefaultProjectFor } from '@/entities/project/projectFactory';
 
-import {
-  loadProjects,
-  saveProjects,
-  resetProjects
-} from '@/features/projects/storage/projectStorage';
+import { loadProjects, saveProjects, resetProjects } from '@/features/projects/storage/projectStorage';
 
 interface UseProjectsResult {
   projects: Project[];
@@ -28,39 +20,40 @@ interface UseProjectsResult {
   restoreProject: (id: string) => void;
 }
 
-export function useProjects(
-  userId: string,
-): UseProjectsResult {
-  const [projects, setProjects] = useState<Project[]>(
-    () => loadProjects(userId),
-  );
+export function useProjects(userId: string): UseProjectsResult {
+  const [projects, setProjects] = useState<Project[]>(() => loadProjects(userId));
 
-  const [activeProjectId, setActiveProjectId] =
-    useState<string>(() => projects.find(project => !project.deletedAt)?.id ?? '');
+  const [activeProjectId, setActiveProjectId] = useState<string>(
+    () => projects.find((project) => !project.deletedAt)?.id ?? '',
+  );
 
   useEffect(() => {
     saveProjects(userId, projects);
   }, [projects, userId]);
 
   const activeProject =
-    projects.find(project => project.id === activeProjectId && !project.deletedAt) ??
-    projects.find(project => !project.deletedAt);
+    projects.find((project) => project.id === activeProjectId && !project.deletedAt) ??
+    projects.find((project) => !project.deletedAt);
 
   const renameProject = useCallback((id: string, name: string) => {
     if (!name.trim()) return;
-    setProjects(previous => previous.map(project => project.id === id ? { ...project, name: name.trim() } : project));
+    setProjects((previous) =>
+      previous.map((project) => (project.id === id ? { ...project, name: name.trim() } : project)),
+    );
   }, []);
   const trashProject = useCallback((id: string) => {
     const deletedAt = new Date().toISOString();
-    setProjects(previous => previous.map(project => project.id === id ? { ...project, deletedAt } : project));
+    setProjects((previous) => previous.map((project) => (project.id === id ? { ...project, deletedAt } : project)));
   }, []);
   const restoreProject = useCallback((id: string) => {
-    setProjects(previous => previous.map(project => project.id === id ? { ...project, deletedAt: undefined } : project));
+    setProjects((previous) =>
+      previous.map((project) => (project.id === id ? { ...project, deletedAt: undefined } : project)),
+    );
     setActiveProjectId(id);
   }, []);
 
   const emptyTrash = useCallback(() => {
-    setProjects(previous => previous.filter(project => !project.deletedAt));
+    setProjects((previous) => previous.filter((project) => !project.deletedAt));
   }, []);
 
   const resetDemo = useCallback(() => {
@@ -74,12 +67,9 @@ export function useProjects(
     (name: string): string => {
       const project = createDefaultProjectFor(userId);
 
-      const newProject: Project = {
-        ...project,
-        name,
-      };
+      const newProject: Project = { ...project, name };
 
-      setProjects(previous => [...previous, newProject]);
+      setProjects((previous) => [...previous, newProject]);
       setActiveProjectId(newProject.id);
 
       return newProject.id;
@@ -94,7 +84,7 @@ export function useProjects(
   const createFirstProject = useCallback(() => {
     const project = createDefaultProjectFor(userId);
 
-    setProjects(previous => [...previous, project]);
+    setProjects((previous) => [...previous, project]);
     setActiveProjectId(project.id);
   }, [userId]);
 

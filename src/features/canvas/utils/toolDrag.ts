@@ -15,11 +15,7 @@ const DRAG_THRESHOLD = 6;
 
 let suppressNextToolClick = false;
 
-export function startToolDrag(
-  tool: ToolType,
-  event: React.MouseEvent,
-  extra?: ToolDragDetail['extra'],
-) {
+export function startToolDrag(tool: ToolType, event: React.MouseEvent, extra?: ToolDragDetail['extra']) {
   if (event.button !== 0 || tool === 'select') return;
 
   const startX = event.clientX;
@@ -28,10 +24,7 @@ export function startToolDrag(
   let dragging = false;
 
   const handleMove = (moveEvent: MouseEvent) => {
-    const distance = Math.hypot(
-      moveEvent.clientX - startX,
-      moveEvent.clientY - startY,
-    );
+    const distance = Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY);
 
     if (!dragging && distance < DRAG_THRESHOLD) return;
 
@@ -42,13 +35,7 @@ export function startToolDrag(
 
     moveEvent.preventDefault();
 
-    dispatchToolDragEvent(
-      TOOL_DRAG_MOVE_EVENT,
-      tool,
-      moveEvent.clientX,
-      moveEvent.clientY,
-      extra,
-    );
+    dispatchToolDragEvent(TOOL_DRAG_MOVE_EVENT, tool, moveEvent.clientX, moveEvent.clientY, extra);
   };
 
   const handleUp = (upEvent: MouseEvent) => {
@@ -61,13 +48,7 @@ export function startToolDrag(
 
     suppressNextToolClick = true;
 
-    dispatchToolDragEvent(
-      TOOL_DRAG_END_EVENT,
-      tool,
-      upEvent.clientX,
-      upEvent.clientY,
-      extra,
-    );
+    dispatchToolDragEvent(TOOL_DRAG_END_EVENT, tool, upEvent.clientX, upEvent.clientY, extra);
 
     window.setTimeout(() => {
       suppressNextToolClick = false;
@@ -92,14 +73,5 @@ function dispatchToolDragEvent(
   clientY: number,
   extra?: ToolDragDetail['extra'],
 ) {
-  window.dispatchEvent(
-    new CustomEvent<ToolDragDetail>(eventName, {
-      detail: {
-        tool,
-        extra,
-        clientX,
-        clientY,
-      },
-    }),
-  );
+  window.dispatchEvent(new CustomEvent<ToolDragDetail>(eventName, { detail: { tool, extra, clientX, clientY } }));
 }

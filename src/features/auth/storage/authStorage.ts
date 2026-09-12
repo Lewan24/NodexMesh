@@ -25,10 +25,7 @@ export function loadUsers(): User[] {
 }
 
 export function saveUsers(users: User[]): void {
-  localStorage.setItem(
-    USERS_KEY,
-    JSON.stringify(users),
-  );
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
 export function loadSessionUserId(): string | null {

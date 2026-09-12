@@ -16,14 +16,14 @@ export default function ColumnLayoutControls({ item, onUpdate }: ColumnLayoutCon
   const layout = item.layout ?? 'vertical';
 
   const update = (patch: Partial<ColumnItem>) => {
-    onUpdate(current => current.type === 'column' ? { ...current, ...patch } : current);
+    onUpdate((current) => (current.type === 'column' ? { ...current, ...patch } : current));
   };
 
   return (
     <>
       <EditBarDivider />
 
-      {LAYOUTS.map(option => (
+      {LAYOUTS.map((option) => (
         <EditBarButton
           key={option.value}
           active={layout === option.value}
@@ -38,7 +38,7 @@ export default function ColumnLayoutControls({ item, onUpdate }: ColumnLayoutCon
         <>
           <EditBarDivider />
 
-          {[2, 3, 4].map(columns => (
+          {[2, 3, 4].map((columns) => (
             <EditBarButton
               key={columns}
               active={(item.gridColumns ?? 2) === columns}

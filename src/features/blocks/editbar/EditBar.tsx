@@ -51,7 +51,7 @@ export default function EditBar({
 
   if (!columnItem && selectedItems.length === 0) return null;
 
-  const ids = selectedItems.map(item => item.id);
+  const ids = selectedItems.map((item) => item.id);
 
   const handleUpdate = (updater: (item: BoardItem) => BoardItem) => {
     if (isColumnMode && onUpdateColumnItem) {
@@ -73,11 +73,13 @@ export default function EditBar({
   };
 
   const typeLabel = isColumnMode
-    ? single ? ITEM_TYPE_LABELS[single.type] ?? single.type : ''
+    ? single
+      ? (ITEM_TYPE_LABELS[single.type] ?? single.type)
+      : ''
     : isMulti
       ? `${selectedItems.length} items`
       : single
-        ? ITEM_TYPE_LABELS[single.type] ?? single.type
+        ? (ITEM_TYPE_LABELS[single.type] ?? single.type)
         : '';
 
   const hasStyleControls = !!single && !isMulti && single.type !== 'dispenser';
@@ -93,7 +95,7 @@ export default function EditBar({
         backdropFilter: 'blur(10px)',
         maxWidth: 'calc(100% - 24px)',
       }}
-      onMouseDown={e => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       {/* Main actions */}
       <div className="flex items-center gap-1 px-2 py-1.5 overflow-x-auto">
@@ -101,11 +103,11 @@ export default function EditBar({
           onClick={onClose}
           className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors flex-shrink-0 cursor-pointer"
           style={{ color: 'var(--color-text-faint)' }}
-          onMouseEnter={e => {
+          onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
             e.currentTarget.style.color = 'var(--color-text-primary)';
           }}
-          onMouseLeave={e => {
+          onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = 'transparent';
             e.currentTarget.style.color = 'var(--color-text-faint)';
           }}
@@ -137,17 +139,25 @@ export default function EditBar({
         )}
 
         {frameControls}
-        {isMulti && onJoinDrawings && <button onClick={onJoinDrawings} className="h-8 px-2.5 rounded-lg text-sm font-medium whitespace-nowrap cursor-pointer hover:bg-violet-500/20" style={{ color: 'var(--color-text-primary)' }}>Join drawings</button>}
+        {isMulti && onJoinDrawings && (
+          <button
+            onClick={onJoinDrawings}
+            className="h-8 px-2.5 rounded-lg text-sm font-medium whitespace-nowrap cursor-pointer hover:bg-violet-500/20"
+            style={{ color: 'var(--color-text-primary)' }}
+          >
+            Join drawings
+          </button>
+        )}
 
         {isMulti && (
           <button
             onClick={onGroupItems}
             className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0 cursor-pointer"
             style={{ color: '#7C3AED', backgroundColor: 'rgba(124,58,237,0.1)' }}
-            onMouseEnter={e => {
+            onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = 'rgba(124,58,237,0.2)';
             }}
-            onMouseLeave={e => {
+            onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'rgba(124,58,237,0.1)';
             }}
             title="Wrap in a frame"
@@ -164,10 +174,10 @@ export default function EditBar({
             onClick={() => onFitFrame(single.id)}
             className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0 cursor-pointer"
             style={{ color: 'var(--color-text-secondary)' }}
-            onMouseEnter={e => {
+            onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
             }}
-            onMouseLeave={e => {
+            onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
             }}
             title="Fit frame to contents"
@@ -187,11 +197,11 @@ export default function EditBar({
           onClick={handleDelete}
           className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0 cursor-pointer"
           style={{ color: 'var(--color-text-faint)' }}
-          onMouseEnter={e => {
+          onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = 'rgba(255,107,138,0.1)';
             e.currentTarget.style.color = 'var(--color-danger-strong)';
           }}
-          onMouseLeave={e => {
+          onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = 'transparent';
             e.currentTarget.style.color = 'var(--color-text-faint)';
           }}
@@ -209,9 +219,11 @@ export default function EditBar({
         </button>
       </div>
 
-      {isMulti && selectedItems.some(item => item.type === 'drawing') && <div className="flex items-center gap-3 px-3 py-2 border-t" style={{ borderColor: 'var(--color-border-soft)' }}>
-        <DrawingControls items={selectedItems.filter(item => item.type === 'drawing')} onUpdate={onUpdateItem} />
-      </div>}
+      {isMulti && selectedItems.some((item) => item.type === 'drawing') && (
+        <div className="flex items-center gap-3 px-3 py-2 border-t" style={{ borderColor: 'var(--color-border-soft)' }}>
+          <DrawingControls items={selectedItems.filter((item) => item.type === 'drawing')} onUpdate={onUpdateItem} />
+        </div>
+      )}
       {/* Style controls */}
       {hasStyleControls && (
         <div
@@ -221,29 +233,62 @@ export default function EditBar({
           {single.type !== 'drawing' && single.type !== 'line' && single.type !== 'frame' && (
             <ColorPanel item={single} onUpdate={handleUpdate} />
           )}
-          
-          {single.type === 'column' && (
-            <ColumnLayoutControls
-              item={single}
-              onUpdate={handleUpdate}
-            />
-          )}
+
+          {single.type === 'column' && <ColumnLayoutControls item={single} onUpdate={handleUpdate} />}
 
           {single.type !== 'drawing' && single.type !== 'line' && (
             <TypographyControls item={single} onUpdate={handleUpdate} />
           )}
 
-          {!isColumnMode && single.type === 'line' && (
-            <LineControls item={single} onUpdate={handleUpdate} />
-          )}
+          {!isColumnMode && single.type === 'line' && <LineControls item={single} onUpdate={handleUpdate} />}
 
-          {single.type === 'drawing' && <DrawingControls items={[single]} onUpdate={(_, updater) => handleUpdate(updater)} />}
-          {(single.type === 'document') && <button className="px-2 text-xs whitespace-nowrap" onClick={() => handleUpdate(current => current.type === 'document' ? { ...current, autoHeight: true, height: undefined } : current)}>Auto-fit height</button>}
-          {single.type === 'embed' && <label className="flex gap-2 text-xs whitespace-nowrap"><input type="checkbox" checked={single.showLabel} onChange={event => handleUpdate(current => current.type === 'embed' ? { ...current, showLabel: event.target.checked } : current)} />Show label</label>}
-          {single.type === 'timeline' && <select aria-label="Timeline view" value={single.mode} className="text-xs bg-transparent" onChange={event => handleUpdate(current => current.type === 'timeline' ? { ...current, mode: event.target.value as 'simple' | 'schedule' } : current)}><option value="simple">Milestones</option><option value="schedule">Schedule</option></select>}
-          {!isColumnMode && single.type === 'frame' && (
-            <FrameControls item={single} onUpdate={handleUpdate} />
+          {single.type === 'drawing' && (
+            <DrawingControls items={[single]} onUpdate={(_, updater) => handleUpdate(updater)} />
           )}
+          {single.type === 'document' && (
+            <button
+              className="px-2 text-xs whitespace-nowrap"
+              onClick={() =>
+                handleUpdate((current) =>
+                  current.type === 'document' ? { ...current, autoHeight: true, height: undefined } : current,
+                )
+              }
+            >
+              Auto-fit height
+            </button>
+          )}
+          {single.type === 'embed' && (
+            <label className="flex gap-2 text-xs whitespace-nowrap">
+              <input
+                type="checkbox"
+                checked={single.showLabel}
+                onChange={(event) =>
+                  handleUpdate((current) =>
+                    current.type === 'embed' ? { ...current, showLabel: event.target.checked } : current,
+                  )
+                }
+              />
+              Show label
+            </label>
+          )}
+          {single.type === 'timeline' && (
+            <select
+              aria-label="Timeline view"
+              value={single.mode}
+              className="text-xs bg-transparent"
+              onChange={(event) =>
+                handleUpdate((current) =>
+                  current.type === 'timeline'
+                    ? { ...current, mode: event.target.value as 'simple' | 'schedule' }
+                    : current,
+                )
+              }
+            >
+              <option value="simple">Milestones</option>
+              <option value="schedule">Schedule</option>
+            </select>
+          )}
+          {!isColumnMode && single.type === 'frame' && <FrameControls item={single} onUpdate={handleUpdate} />}
         </div>
       )}
     </div>

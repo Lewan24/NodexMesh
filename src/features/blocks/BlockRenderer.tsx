@@ -1,3 +1,4 @@
+import SectionTitleBlock from './section-title/SectionTitleBlock';
 import type { BoardItem } from '@/entities/board/types';
 import { lazy, Suspense } from 'react';
 
@@ -22,9 +23,18 @@ const DiagramBlock = lazy(() => import('./diagram/DiagramBlock'));
 
 function LoadingBlock({ item }: { item: BoardItem }) {
   return (
-    <div data-block-loading="true" role="status" className="item-rounded border p-4 text-sm"
-      style={{ width: item.width, height: item.height ?? (item.type === 'document' ? 600 : 280),
-        borderColor: 'var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text-muted)' }}>
+    <div
+      data-block-loading="true"
+      role="status"
+      className="item-rounded border p-4 text-sm"
+      style={{
+        width: item.width,
+        height: item.height ?? (item.type === 'document' ? 600 : 280),
+        borderColor: 'var(--color-border)',
+        background: 'var(--color-surface)',
+        color: 'var(--color-text-muted)',
+      }}
+    >
       Loading…
     </div>
   );
@@ -41,6 +51,7 @@ import type {
 } from '@/features/blocks/types';
 
 export interface BlockRendererProps {
+  zoom?: number;
   item: BoardItem;
   isSelected: boolean;
   isDragOver?: boolean;
@@ -50,11 +61,7 @@ export interface BlockRendererProps {
   onDelete: BlockDeleteHandler;
   onFitFrame: () => void;
   onLineEndpointDrag: LineEndpointDragHandler;
-  onEjectItem?: (
-    item: BoardItem,
-    clientX?: number,
-    clientY?: number,
-  ) => void;
+  onEjectItem?: (item: BoardItem, clientX?: number, clientY?: number) => void;
   onSelectColumnItem?: (item: BoardItem | null) => void;
   onRequestDelete?: RequestDeleteHandler;
   onEntryDroppedOutside?: EntryDroppedOutsideHandler;
@@ -65,6 +72,7 @@ export interface BlockRendererProps {
 }
 
 export default function BlockRenderer({
+  zoom = 1,
   item,
   isSelected,
   isDragOver,
@@ -84,62 +92,67 @@ export default function BlockRenderer({
   nestedSearchMatchIds,
 }: BlockRendererProps) {
   switch (item.type) {
-    case 'drawing': return <DrawingBlock item={item} />;
-    case 'timeline': return <Suspense fallback={<LoadingBlock item={item} />}><TimelineBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
-    case 'database': return <Suspense fallback={<LoadingBlock item={item} />}><DatabaseDiagramBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
-    case 'diagram': return <Suspense fallback={<LoadingBlock item={item} />}><DiagramBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
-    case 'document': return <Suspense fallback={<LoadingBlock item={item} />}><DocumentBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
-    case 'embed': return <EmbedBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;
-    case 'code': return <Suspense fallback={<LoadingBlock item={item} />}><CodeBlock item={item} onUpdate={onUpdate} onDelete={onDelete} /></Suspense>;
-    case 'dispenser': return <DispenserBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;
-    case 'note':
+    case 'section-title':
+      return <SectionTitleBlock item={item} zoom={zoom} onUpdate={onUpdate} />;
+    case 'drawing':
+      return <DrawingBlock item={item} />;
+    case 'timeline':
       return (
-        <NoteBlock
-          item={item}
-          isSelected={isSelected}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
-        />
+        <Suspense fallback={<LoadingBlock item={item} />}>
+          <TimelineBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />
+        </Suspense>
       );
+    case 'database':
+      return (
+        <Suspense fallback={<LoadingBlock item={item} />}>
+          <DatabaseDiagramBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />
+        </Suspense>
+      );
+    case 'diagram':
+      return (
+        <Suspense fallback={<LoadingBlock item={item} />}>
+          <DiagramBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />
+        </Suspense>
+      );
+    case 'document':
+      return (
+        <Suspense fallback={<LoadingBlock item={item} />}>
+          <DocumentBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />
+        </Suspense>
+      );
+    case 'embed':
+      return <EmbedBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;
+    case 'code':
+      return (
+        <Suspense fallback={<LoadingBlock item={item} />}>
+          <CodeBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />
+        </Suspense>
+      );
+    case 'dispenser':
+      return <DispenserBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;
+    case 'note':
+      return <NoteBlock item={item} isSelected={isSelected} onUpdate={onUpdate} onDelete={onDelete} />;
 
     case 'kanban':
       return (
         <Suspense fallback={<LoadingBlock item={item} />}>
-        <KanbanBlock
-          item={item}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
-          onCardDroppedOutside={onCardDroppedOutside}
-        />
+          <KanbanBlock
+            item={item}
+            onUpdate={onUpdate}
+            onDelete={onDelete}
+            onCardDroppedOutside={onCardDroppedOutside}
+          />
         </Suspense>
       );
 
     case 'image':
-      return (
-        <ImageBlock
-          item={item}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
-        />
-      );
+      return <ImageBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;
 
     case 'link':
-      return (
-        <LinkBlock
-          item={item}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
-        />
-      );
+      return <LinkBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;
 
     case 'text':
-      return (
-        <TextBlock
-          item={item}
-          fillWidth={isInsideColumn}
-          onUpdate={onUpdate}
-        />
-      );
+      return <TextBlock item={item} fillWidth={isInsideColumn} onUpdate={onUpdate} />;
 
     case 'checklist':
       return (
@@ -170,23 +183,11 @@ export default function BlockRenderer({
       );
 
     case 'frame':
-      return (
-        <FrameBlock
-          item={item}
-          onUpdate={onUpdate}
-          onDelete={onDelete}
-          onFitFrame={onFitFrame}
-        />
-      );
+      return <FrameBlock item={item} onUpdate={onUpdate} onDelete={onDelete} onFitFrame={onFitFrame} />;
 
     case 'line':
       return (
-        <LineBlock
-          item={item}
-          isSelected={isSelected}
-          onDelete={onDelete}
-          onLineEndpointDrag={onLineEndpointDrag}
-        />
+        <LineBlock item={item} isSelected={isSelected} onDelete={onDelete} onLineEndpointDrag={onLineEndpointDrag} />
       );
 
     default:

@@ -64,29 +64,20 @@ export default function KanbanCardItem({
   return (
     <div
       className="group/card flex items-center gap-1.5 item-rounded px-2 py-2 mb-1.5 shadow-sm transition-all duration-150"
-      style={{
-        backgroundColor: cardBackground,
-        borderColor: cardBorder,
-        opacity: isDragging ? 0.35 : 1,
-      }}
-      onMouseEnter={event => {
+      style={{ backgroundColor: cardBackground, borderColor: cardBorder, opacity: isDragging ? 0.35 : 1 }}
+      onMouseEnter={(event) => {
         event.currentTarget.style.borderColor = cardBorderHover;
       }}
-      onMouseLeave={event => {
+      onMouseLeave={(event) => {
         event.currentTarget.style.borderColor = cardBorder;
       }}
     >
-      <DragHandle
-        compact
-        color={mutedColor}
-        title="Drag card"
-        onMouseDown={onDragHandleMouseDown}
-      />
+      <DragHandle compact color={mutedColor} title="Drag card" onMouseDown={onDragHandleMouseDown} />
 
       {/* Done toggle */}
 
       <button
-        onMouseDown={event => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
         onClick={onToggle}
         className="w-4 h-4 rounded-full mt-0.5 flex-shrink-0 border-2 flex items-center justify-center transition-all duration-200"
         style={{
@@ -96,13 +87,7 @@ export default function KanbanCardItem({
       >
         {card.done && (
           <svg viewBox="0 0 10 10" fill="none" width="10" height="10">
-            <path
-              d="M2 5.5l2 2 4-4"
-              stroke="white"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M2 5.5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
       </button>
@@ -113,19 +98,16 @@ export default function KanbanCardItem({
         <input
           autoFocus
           className="flex-1 bg-transparent text-sm outline-none min-w-0"
-          style={{ 
-            color: textColor,
-            ...textStyle
-          }}
+          style={{ color: textColor, ...textStyle }}
           value={text}
-          onChange={event => setText(event.target.value)}
+          onChange={(event) => setText(event.target.value)}
           onBlur={commit}
-          onKeyDown={event => {
+          onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === 'Escape') {
               commit();
             }
           }}
-          onMouseDown={event => event.stopPropagation()}
+          onMouseDown={(event) => event.stopPropagation()}
         />
       ) : (
         <span
@@ -134,7 +116,7 @@ export default function KanbanCardItem({
           style={{
             color: card.done ? doneColor : textColor,
             textDecoration: card.done ? 'line-through' : 'none',
-            ...textStyle
+            ...textStyle,
           }}
         >
           {card.text}
@@ -147,23 +129,16 @@ export default function KanbanCardItem({
         onClick={onDelete}
         className="opacity-0 group-hover/card:opacity-100 transition-opacity flex-shrink-0"
         style={{ color: mutedColor }}
-        onMouseDown={event => event.stopPropagation()}
-        onMouseEnter={event => {
+        onMouseDown={(event) => event.stopPropagation()}
+        onMouseEnter={(event) => {
           event.currentTarget.style.color = '#FF6B8A';
         }}
-        onMouseLeave={event => {
+        onMouseLeave={(event) => {
           event.currentTarget.style.color = mutedColor;
         }}
         title="Delete card"
       >
-        <svg
-          width="11"
-          height="11"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-        >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
       </button>

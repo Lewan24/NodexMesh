@@ -10,18 +10,9 @@ interface FrameBlockProps {
   onFitFrame: () => void;
 }
 
-export default function FrameBlock({
-  item,
-}: FrameBlockProps) {
+export default function FrameBlock({ item }: FrameBlockProps) {
   return (
-    <div
-      className="group/frame"
-      style={{
-        width: item.width,
-        height: item.height,
-        pointerEvents: 'none',
-      }}
-    >
+    <div className="group/frame" style={{ width: item.width, height: item.height, pointerEvents: 'none' }}>
       {/* Frame background / border */}
 
       <div
@@ -29,8 +20,7 @@ export default function FrameBlock({
         style={{
           border: `2px solid ${item.color}60`,
           backgroundColor: colorWithOpacity(item.color, item.opacity ?? 0.2),
-          transition:
-            'border-color 0.15s, background-color 0.15s',
+          transition: 'border-color 0.15s, background-color 0.15s',
         }}
       />
 
@@ -38,21 +28,14 @@ export default function FrameBlock({
 
       <div
         className="absolute inset-0 item-rounded opacity-0 group-hover/frame:opacity-100 transition-opacity duration-200 pointer-events-none"
-        style={{
-          border: `2px solid ${item.color}aa`,
-          boxShadow: `0 0 0 1px ${item.color}20`,
-        }}
+        style={{ border: `2px solid ${item.color}aa`, boxShadow: `0 0 0 1px ${item.color}20` }}
       />
 
       {/* Size indicator */}
 
       <span
         className="absolute opacity-0 group-hover/frame:opacity-100 transition-opacity text-[9px] font-mono pointer-events-none"
-        style={{
-          bottom: -22,
-          right: 0,
-          color: `${item.color}88`,
-        }}
+        style={{ bottom: -22, right: 0, color: `${item.color}88` }}
       >
         {Math.round(item.width)} × {Math.round(item.height)}
       </span>

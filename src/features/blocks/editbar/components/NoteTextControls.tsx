@@ -14,7 +14,7 @@ interface NoteTextControlsProps {
 
 export default function NoteTextControls({ item, onUpdate }: NoteTextControlsProps) {
   const update = (patch: Partial<NoteItem>) => {
-    onUpdate(current => current.type === 'note' ? { ...current, ...patch } : current);
+    onUpdate((current) => (current.type === 'note' ? { ...current, ...patch } : current));
   };
 
   const fontSize = item.fontSize ?? 'base';
@@ -23,7 +23,7 @@ export default function NoteTextControls({ item, onUpdate }: NoteTextControlsPro
     <>
       <EditBarDivider />
 
-      {ALIGNMENTS.map(alignment => (
+      {ALIGNMENTS.map((alignment) => (
         <EditBarButton
           key={alignment}
           active={(item.textAlign ?? 'left') === alignment}
@@ -52,7 +52,7 @@ export default function NoteTextControls({ item, onUpdate }: NoteTextControlsPro
 
       <EditBarDivider />
 
-      {FONT_SIZES.map(size => (
+      {FONT_SIZES.map((size) => (
         <EditBarButton
           key={size}
           active={fontSize === size}

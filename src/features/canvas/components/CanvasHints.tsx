@@ -5,10 +5,7 @@ interface CanvasHintsProps {
   hasSelection: boolean;
 }
 
-export default function CanvasHints({
-  selectedTool,
-  hasSelection,
-}: CanvasHintsProps) {
+export default function CanvasHints({ selectedTool, hasSelection }: CanvasHintsProps) {
   return (
     <>
       {selectedTool !== 'select' && (
@@ -26,10 +23,7 @@ export default function CanvasHints({
               ? 'Drag to draw a frame — items inside will move with it'
               : `Click to place ${selectedTool}`}
 
-            <span
-              className="text-xs"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
+            <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
               ESC to cancel
             </span>
           </div>

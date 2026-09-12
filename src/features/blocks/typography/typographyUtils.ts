@@ -1,14 +1,6 @@
-import type {
-  BoardItem,
-  FontFamily,
-  TypographySettings,
-} from '@/entities/board/types';
+import type { BoardItem, FontFamily, TypographySettings } from '@/entities/board/types';
 
-export const FONT_FAMILIES: {
-  value: FontFamily;
-  label: string;
-  css: string;
-}[] = [
+export const FONT_FAMILIES: { value: FontFamily; label: string; css: string }[] = [
   { value: 'caveat', label: 'Caveat · Handwriting', css: '"Caveat", cursive' },
   { value: 'kalam', label: 'Kalam · Sketch', css: '"Kalam", cursive' },
   { value: 'patrick-hand', label: 'Patrick Hand · Notes', css: '"Patrick Hand", cursive' },
@@ -25,109 +17,44 @@ export const FONT_FAMILIES: {
   { value: 'indie-flower', label: 'Indie Flower · Handwriting', css: '"Indie Flower", cursive' },
   { value: 'gloria-hallelujah', label: 'Gloria Hallelujah · Handwriting', css: '"Gloria Hallelujah", cursive' },
 
-  {
-    value: 'sans',
-    label: 'Sans',
-    css: 'Inter, ui-sans-serif, system-ui, sans-serif',
-  },
-  {
-    value: 'serif',
-    label: 'Serif',
-    css: 'ui-serif, Georgia, Cambria, serif',
-  },
-  {
-    value: 'mono',
-    label: 'Mono',
-    css: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-  },
-  {
-    value: 'arial',
-    label: 'Arial',
-    css: 'Arial, sans-serif',
-  },
-  {
-    value: 'georgia',
-    label: 'Georgia',
-    css: 'Georgia, serif',
-  },
-  {
-    value: 'verdana',
-    label: 'Verdana',
-    css: 'Verdana, sans-serif',
-  },
-  {
-    value: 'trebuchet',
-    label: 'Trebuchet',
-    css: '"Trebuchet MS", sans-serif',
-  },
+  { value: 'sans', label: 'Sans', css: 'Inter, ui-sans-serif, system-ui, sans-serif' },
+  { value: 'serif', label: 'Serif', css: 'ui-serif, Georgia, Cambria, serif' },
+  { value: 'mono', label: 'Mono', css: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' },
+  { value: 'arial', label: 'Arial', css: 'Arial, sans-serif' },
+  { value: 'georgia', label: 'Georgia', css: 'Georgia, serif' },
+  { value: 'verdana', label: 'Verdana', css: 'Verdana, sans-serif' },
+  { value: 'trebuchet', label: 'Trebuchet', css: '"Trebuchet MS", sans-serif' },
 ];
 
-export const FONT_SIZE_PRESETS = [
-  12,
-  14,
-  16,
-  20,
-  24,
-  32,
-];
+export const FONT_SIZE_PRESETS = [12, 14, 16, 20, 24, 32];
 
 export const MIN_FONT_SIZE = 8;
 export const MAX_FONT_SIZE = 96;
 
-export const DEFAULT_FONT_FAMILY: FontFamily =
-  'short-stack';
+export const DEFAULT_FONT_FAMILY: FontFamily = 'short-stack';
 
-export function getFontFamilyCss(
-  family?: FontFamily,
-): string {
+export function getFontFamilyCss(family?: FontFamily): string {
   if (!family) return 'var(--project-font, "Short Stack", cursive)';
-  const resolvedFamily =
-    family ??
-    DEFAULT_FONT_FAMILY;
+  const resolvedFamily = family ?? DEFAULT_FONT_FAMILY;
 
   return (
-    FONT_FAMILIES.find(
-      option =>
-        option.value ===
-        resolvedFamily,
-    )?.css ??
+    FONT_FAMILIES.find((option) => option.value === resolvedFamily)?.css ??
     'Inter, ui-sans-serif, system-ui, sans-serif'
   );
 }
 
-export function getTypographyStyle(
-  item: BoardItem,
-): React.CSSProperties {
+export function getTypographyStyle(item: BoardItem): React.CSSProperties {
   const typography = item.typography;
 
   return {
-    fontFamily: getFontFamilyCss(
-      typography?.fontFamily,
-    ),
-    fontSize: typography?.fontSize
-      ? `${typography.fontSize}px`
-      : undefined,
-    fontWeight: typography?.bold
-      ? 700
-      : undefined,
-    fontStyle: typography?.italic
-      ? 'italic'
-      : undefined,
-    textAlign:
-      typography?.textAlign ??
-      undefined,
+    fontFamily: getFontFamilyCss(typography?.fontFamily),
+    fontSize: typography?.fontSize ? `${typography.fontSize}px` : undefined,
+    fontWeight: typography?.bold ? 700 : undefined,
+    fontStyle: typography?.italic ? 'italic' : undefined,
+    textAlign: typography?.textAlign ?? undefined,
   };
 }
 
-export function updateTypography(
-  item: BoardItem,
-  patch: Partial<TypographySettings>,
-): BoardItem {
-  return {
-    ...item,
-    typography: {
-      ...item.typography,
-      ...patch,
-    },
-  } as BoardItem;
+export function updateTypography(item: BoardItem, patch: Partial<TypographySettings>): BoardItem {
+  return { ...item, typography: { ...item.typography, ...patch } } as BoardItem;
 }

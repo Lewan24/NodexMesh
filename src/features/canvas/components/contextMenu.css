@@ -1,6 +1,40 @@
-.canvas-context-menu { position:fixed; width:230px; padding:5px; border:1px solid var(--color-border); border-radius:12px; background:var(--color-surface); color:var(--color-text-primary); box-shadow:0 12px 40px #0003; z-index:210000; animation:slide-up .12s ease; }
-.canvas-context-menu button { display:flex; align-items:center; width:100%; gap:10px; padding:9px 10px; font-size:13px; border-radius:7px; cursor:pointer; }
-.canvas-context-menu button:hover,.canvas-context-menu button:focus-visible { outline:none; background:var(--color-accent-soft); }
-.canvas-context-menu button:disabled { opacity:.35; cursor:default; }
-.canvas-context-menu kbd { font-size:10px; opacity:.5; }
-@media(prefers-reduced-motion:reduce) { .canvas-context-menu { animation:none; } }
+.canvas-context-menu {
+  position: fixed;
+  width: 230px;
+  padding: 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 12px 40px #0003;
+  z-index: 210000;
+  animation: slide-up 0.12s ease;
+}
+.canvas-context-menu button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 10px;
+  padding: 9px 10px;
+  font-size: 13px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.canvas-context-menu button:hover,
+.canvas-context-menu button:focus-visible {
+  outline: none;
+  background: var(--color-accent-soft);
+}
+.canvas-context-menu button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.canvas-context-menu kbd {
+  font-size: 10px;
+  opacity: 0.5;
+}
+@media (prefers-reduced-motion: reduce) {
+  .canvas-context-menu {
+    animation: none;
+  }
+}

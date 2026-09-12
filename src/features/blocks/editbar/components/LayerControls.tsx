@@ -36,7 +36,16 @@ export default function LayerControls({
         onMouseLeave={handleLeave}
         title="Send to back"
       >
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="17"
+          height="17"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect x="7" y="7" width="11" height="11" rx="2" />
           <path d="M5 5h9a2 2 0 0 1 2 2" />
           <path d="M12 21v-5" />
@@ -54,7 +63,16 @@ export default function LayerControls({
         onMouseLeave={handleLeave}
         title="Send backward"
       >
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="17"
+          height="17"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect x="9" y="9" width="10" height="10" rx="2" />
           <rect x="5" y="5" width="10" height="10" rx="2" />
           <path d="M7 19h4" />
@@ -73,7 +91,16 @@ export default function LayerControls({
         onMouseLeave={handleLeave}
         title="Bring forward"
       >
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="17"
+          height="17"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect x="9" y="9" width="10" height="10" rx="2" />
           <rect x="5" y="5" width="10" height="10" rx="2" />
           <path d="M17 5h-4" />
@@ -92,7 +119,16 @@ export default function LayerControls({
         onMouseLeave={handleLeave}
         title="Bring to front"
       >
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="17"
+          height="17"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <rect x="6" y="6" width="11" height="11" rx="2" />
           <path d="M8 19h9a2 2 0 0 0 2-2V8" />
           <path d="M12 8V3" />

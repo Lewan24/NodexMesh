@@ -5,10 +5,7 @@ interface CanvasOverlaysProps {
   lasso: SelectionBox | null;
 }
 
-export default function CanvasOverlays({
-  frameDraft,
-  lasso,
-}: CanvasOverlaysProps) {
+export default function CanvasOverlays({ frameDraft, lasso }: CanvasOverlaysProps) {
   return (
     <>
       {frameDraft && (

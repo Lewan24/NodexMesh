@@ -3,11 +3,7 @@ import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 
 import { getItemRect } from '@/features/canvas/utils/itemGeometry';
 
-export function isItemInsideFrame(
-  item: BoardItem,
-  frame: FrameItem,
-  sizes?: SizeMap,
-): boolean {
+export function isItemInsideFrame(item: BoardItem, frame: FrameItem, sizes?: SizeMap): boolean {
   if (item.id === frame.id) return false;
 
   const itemRect = getItemRect(item, sizes);
@@ -21,12 +17,8 @@ export function isItemInsideFrame(
   );
 }
 
-export function getFrameContents(
-  frame: FrameItem,
-  items: BoardItem[],
-  _sizes?: SizeMap,
-): BoardItem[] {
-  return items.filter(item => item.type !== 'frame' && item.frameId === frame.id);
+export function getFrameContents(frame: FrameItem, items: BoardItem[], _sizes?: SizeMap): BoardItem[] {
+  return items.filter((item) => item.type !== 'frame' && item.frameId === frame.id);
 }
 
 function containsLockedItem(item: BoardItem): boolean {
@@ -35,18 +27,27 @@ function containsLockedItem(item: BoardItem): boolean {
 
 /** Derived from current contents; unlocking/removing a child immediately releases the frame. */
 export function isFrameMovementLocked(frame: FrameItem, items: BoardItem[], _sizes?: SizeMap): boolean {
-  return !!frame.locked || items.some(item => containsLockedItem(item) && item.type !== 'frame' && item.frameId === frame.id);
+  return (
+    !!frame.locked ||
+    items.some((item) => containsLockedItem(item) && item.type !== 'frame' && item.frameId === frame.id)
+  );
 }
 
 /** Undefined ownership is migrated once. Explicitly detached cards stay detached. */
 export function normalizeFrameMembership(items: BoardItem[]): BoardItem[] {
-  const frames = items.filter((item): item is FrameItem => item.type === 'frame')
+  const frames = items
+    .filter((item): item is FrameItem => item.type === 'frame')
     .sort((a, b) => a.width * a.height - b.width * b.height || a.id.localeCompare(b.id));
-  const ids = new Set(frames.map(frame => frame.id));
-  return items.map(item => {
-    const frameId = item.type === 'frame' ? null
-      : item.frameId === undefined ? frames.find(frame => isItemInsideFrame(item, frame))?.id ?? null
-      : item.frameId && ids.has(item.frameId) ? item.frameId : null;
+  const ids = new Set(frames.map((frame) => frame.id));
+  return items.map((item) => {
+    const frameId =
+      item.type === 'frame'
+        ? null
+        : item.frameId === undefined
+          ? (frames.find((frame) => isItemInsideFrame(item, frame))?.id ?? null)
+          : item.frameId && ids.has(item.frameId)
+            ? item.frameId
+            : null;
     return item.frameId === frameId ? item : { ...item, frameId };
   });
 }

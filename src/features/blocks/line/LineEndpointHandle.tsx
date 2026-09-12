@@ -6,13 +6,7 @@ interface LineEndpointHandleProps {
   onMouseDown: (event: React.MouseEvent) => void;
 }
 
-export default function LineEndpointHandle({
-  x,
-  y,
-  attached,
-  color,
-  onMouseDown,
-}: LineEndpointHandleProps) {
+export default function LineEndpointHandle({ x, y, attached, color, onMouseDown }: LineEndpointHandleProps) {
   const handleMouseDown = (event: React.MouseEvent) => {
     if (event.button !== 0) return;
 
@@ -31,10 +25,7 @@ export default function LineEndpointHandle({
         fill={color}
         stroke="#08171d"
         strokeWidth={2}
-        style={{
-          cursor: 'crosshair',
-          pointerEvents: 'all',
-        }}
+        style={{ cursor: 'crosshair', pointerEvents: 'all' }}
         onMouseDown={handleMouseDown}
       />
     );
@@ -48,10 +39,7 @@ export default function LineEndpointHandle({
       fill={color}
       stroke="#08171d"
       strokeWidth={2}
-      style={{
-        cursor: 'crosshair',
-        pointerEvents: 'all',
-      }}
+      style={{ cursor: 'crosshair', pointerEvents: 'all' }}
       onMouseDown={handleMouseDown}
     />
   );

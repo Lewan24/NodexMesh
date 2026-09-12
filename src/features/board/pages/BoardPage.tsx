@@ -2,11 +2,7 @@ const AppearanceDialog = lazy(() => import('@/features/appearance/AppearanceDial
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { useCallback, useState, useEffect, lazy, Suspense } from 'react';
 
-import type {
-  BoardItem,
-  ColumnItem,
-  FrameItem,
-} from '@/entities/board/types';
+import type { BoardItem, ColumnItem, FrameItem } from '@/entities/board/types';
 
 import { useBoardView } from '@/features/board/hooks/useBoardView';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
@@ -25,9 +21,7 @@ function createId(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
-export default function BoardPage({
-  userId,
-}: BoardPageProps) {
+export default function BoardPage({ userId }: BoardPageProps) {
   const {
     projects,
     activeProject,
@@ -45,7 +39,9 @@ export default function BoardPage({
 
   const { setScope } = useTheme();
   const [appearanceOpen, setAppearanceOpen] = useState(false);
-  useEffect(() => { setScope(userId, activeProjectId); }, [userId, activeProjectId, setScope]);
+  useEffect(() => {
+    setScope(userId, activeProjectId);
+  }, [userId, activeProjectId, setScope]);
   useEffect(() => () => setScope('', ''), [setScope]);
 
   const {
@@ -72,15 +68,9 @@ export default function BoardPage({
     sendBackward,
     bringToFront,
     sendToBack,
-  } = useProjectItems({
-    activeProjectId,
-    setProjects,
-  });
+  } = useProjectItems({ activeProjectId, setProjects });
 
-  const [
-    searchQuery,
-    setSearchQuery,
-  ] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleAddProject = useCallback(
     (name: string) => {
@@ -100,15 +90,13 @@ export default function BoardPage({
 
   const handleDropOnColumn = useCallback(
     (itemId: string, columnId: string) => {
-      setProjects(previous =>
-        previous.map(project => {
+      setProjects((previous) =>
+        previous.map((project) => {
           if (project.id !== activeProjectId) {
             return project;
           }
 
-          const droppedItem = project.items.find(
-            item => item.id === itemId,
-          );
+          const droppedItem = project.items.find((item) => item.id === itemId);
 
           if (!droppedItem) {
             return project;
@@ -117,24 +105,13 @@ export default function BoardPage({
           return {
             ...project,
             items: project.items
-              .filter(item => item.id !== itemId)
-              .map(item => {
+              .filter((item) => item.id !== itemId)
+              .map((item) => {
                 if (item.id !== columnId || item.type !== 'column') {
                   return item;
                 }
 
-                return {
-                  ...item,
-                  items: [
-                    ...item.items,
-                    {
-                      ...droppedItem,
-                      x: 0,
-                      y: 0,
-                      zIndex: 1,
-                    },
-                  ],
-                };
+                return { ...item, items: [...item.items, { ...droppedItem, x: 0, y: 0, zIndex: 1 }] };
               }),
           };
         }),
@@ -144,25 +121,16 @@ export default function BoardPage({
   );
 
   const handleEjectFromColumn = useCallback(
-    (
-      columnId: string,
-      ejectedItem: BoardItem,
-      position?: {
-        x: number;
-        y: number;
-      },
-    ) => {
-      setProjects(previous =>
-        previous.map(project => {
+    (columnId: string, ejectedItem: BoardItem, position?: { x: number; y: number }) => {
+      setProjects((previous) =>
+        previous.map((project) => {
           if (project.id !== activeProjectId) {
             return project;
           }
 
-          const column = project.items.find(
-            item =>
-              item.id === columnId &&
-              item.type === 'column',
-          ) as ColumnItem | undefined;
+          const column = project.items.find((item) => item.id === columnId && item.type === 'column') as
+            | ColumnItem
+            | undefined;
 
           if (!column) {
             return project;
@@ -173,46 +141,28 @@ export default function BoardPage({
 
             id: createId(),
 
-            x:
-              position?.x ??
-              column.x + column.width + 24,
+            x: position?.x ?? column.x + column.width + 24,
 
-            y:
-              position?.y ??
-              column.y + 40,
+            y: position?.y ?? column.y + 40,
 
-            zIndex: Math.max(0, ...project.items.map(item => item.zIndex)) + 1,
+            zIndex: Math.max(0, ...project.items.map((item) => item.zIndex)) + 1,
           };
 
           const updatedColumn: ColumnItem = {
             ...column,
 
-            items: column.items.filter(
-              item =>
-                item.id !== ejectedItem.id,
-            ),
+            items: column.items.filter((item) => item.id !== ejectedItem.id),
           };
 
           return {
             ...project,
 
-            items: [
-              ...project.items.filter(
-                item =>
-                  item.id !== columnId,
-              ),
-
-              updatedColumn,
-              newItem,
-            ],
+            items: [...project.items.filter((item) => item.id !== columnId), updatedColumn, newItem],
           };
         }),
       );
     },
-    [
-      activeProjectId,
-      setProjects,
-    ],
+    [activeProjectId, setProjects],
   );
 
   const handleGroupSelected = useCallback(() => {
@@ -220,9 +170,7 @@ export default function BoardPage({
       return;
     }
 
-    const selectedItems = activeProject.items.filter(item =>
-      selectedIds.includes(item.id),
-    );
+    const selectedItems = activeProject.items.filter((item) => selectedIds.includes(item.id));
 
     if (selectedItems.length < 2) {
       return;
@@ -250,10 +198,7 @@ export default function BoardPage({
       type: 'frame',
       x: minX - padding,
       y: minY - padding,
-      zIndex: Math.max(
-        0,
-        Math.min(...selectedItems.map(item => item.zIndex)) - 1,
-      ),
+      zIndex: Math.max(0, Math.min(...selectedItems.map((item) => item.zIndex)) - 1),
       title: 'Group',
       width: maxX - minX + padding * 2,
       height: maxY - minY + padding * 2,
@@ -261,41 +206,51 @@ export default function BoardPage({
     };
 
     addItem(frame);
-    selectedItems.filter(item => item.type !== 'frame' && !item.locked).forEach(item => updateItem(item.id, current => ({ ...current, frameId: frame.id })));
+    selectedItems
+      .filter((item) => item.type !== 'frame' && !item.locked)
+      .forEach((item) => updateItem(item.id, (current) => ({ ...current, frameId: frame.id })));
     setSelectedIds([]);
-  }, [
-    selectedIds,
-    activeProject,
-    addItem,
-    updateItem,
-    setSelectedIds,
-  ]);
+  }, [selectedIds, activeProject, addItem, updateItem, setSelectedIds]);
 
-  const appBar = <><AppBar onAppearance={() => setAppearanceOpen(true)} projects={projects} activeProjectId={activeProjectId}
-    onSelectProject={handleSelectProject} onAddProject={handleAddProject}
-    onRenameProject={renameProject}
-    onTrashProject={id => { trashProject(id); resetBoardView(); }}
-    onEmptyTrash={emptyTrash}
-    onRestoreProject={id => { restoreProject(id); resetBoardView(); }}
-    onResetDemo={resetDemo} searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />{appearanceOpen && <Suspense fallback={null}><AppearanceDialog projects={projects} onClose={() => setAppearanceOpen(false)} /></Suspense>}</>;
+  const appBar = (
+    <>
+      <AppBar
+        onAppearance={() => setAppearanceOpen(true)}
+        projects={projects}
+        activeProjectId={activeProjectId}
+        onSelectProject={handleSelectProject}
+        onAddProject={handleAddProject}
+        onRenameProject={renameProject}
+        onTrashProject={(id) => {
+          trashProject(id);
+          resetBoardView();
+        }}
+        onEmptyTrash={emptyTrash}
+        onRestoreProject={(id) => {
+          restoreProject(id);
+          resetBoardView();
+        }}
+        onResetDemo={resetDemo}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+      />
+      {appearanceOpen && (
+        <Suspense fallback={null}>
+          <AppearanceDialog projects={projects} onClose={() => setAppearanceOpen(false)} />
+        </Suspense>
+      )}
+    </>
+  );
 
   if (!activeProject) {
     return (
-      <div
-        className="flex flex-col h-dvh w-full"
-        style={{
-          backgroundColor: 'var(--color-app-bg)',
-        }}
-      >
+      <div className="flex flex-col h-dvh w-full" style={{ backgroundColor: 'var(--color-app-bg)' }}>
         {appBar}
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-theme-muted">
-        <p>No active projects. Create a board or restore one from the project trash.</p>
-        <button
-          className="btn-accent rounded-xl px-4 py-2.5 text-sm font-semibold"
-          onClick={createFirstProject}
-        >
-          Create your first board
-        </button>
+          <p>No active projects. Create a board or restore one from the project trash.</p>
+          <button className="btn-accent rounded-xl px-4 py-2.5 text-sm font-semibold" onClick={createFirstProject}>
+            Create your first board
+          </button>
         </div>
       </div>
     );
@@ -307,14 +262,9 @@ export default function BoardPage({
 
       <div
         className="relative isolate z-0 flex flex-1 min-h-0 min-w-0 w-full overflow-hidden"
-        style={{
-          backgroundColor: 'var(--color-app-bg)',
-        }}
+        style={{ backgroundColor: 'var(--color-app-bg)' }}
       >
-        <Sidebar
-          selectedTool={selectedTool}
-          onSelectTool={selectTool}
-        />
+        <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />
 
         <Canvas
           key={activeProjectId}

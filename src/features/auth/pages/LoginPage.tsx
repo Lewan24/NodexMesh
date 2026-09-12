@@ -1,15 +1,7 @@
 import { useLoginForm } from '@/features/auth/hooks/useLoginForm';
 
 export default function LoginPage() {
-  const {
-    username,
-    password,
-    error,
-    submitting,
-    setUsername,
-    setPassword,
-    handleSubmit,
-  } = useLoginForm();
+  const { username, password, error, submitting, setUsername, setPassword, handleSubmit } = useLoginForm();
 
   return (
     <div
@@ -26,8 +18,7 @@ export default function LoginPage() {
           borderRadius: '50%',
           top: -180,
           left: -160,
-          background:
-            'radial-gradient(circle, rgba(124, 58, 237,0.25), transparent 70%)',
+          background: 'radial-gradient(circle, rgba(124, 58, 237,0.25), transparent 70%)',
         }}
       />
 
@@ -39,8 +30,7 @@ export default function LoginPage() {
           borderRadius: '50%',
           bottom: -160,
           right: -140,
-          background:
-            'radial-gradient(circle, rgba(139,92,246,0.18), transparent 70%)',
+          background: 'radial-gradient(circle, rgba(139,92,246,0.18), transparent 70%)',
         }}
       />
 
@@ -69,36 +59,26 @@ export default function LoginPage() {
 
           <span
             className="text-sm font-bold"
-            style={{
-              color: 'var(--color-accent)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-            }}
+            style={{ color: 'var(--color-accent)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             NodexMesh
           </span>
 
-          <p
-            className="text-sm text-center mt-1"
-            style={{ color: 'var(--color-text-muted)' }}
-          >
+          <p className="text-sm text-center mt-1" style={{ color: 'var(--color-text-muted)' }}>
             Sign in to open your boards
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           <label className="flex flex-col gap-1.5">
-            <span
-              className="text-xs font-semibold"
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
+            <span className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
               Username
             </span>
 
             <input
               autoFocus
               value={username}
-              onChange={e => setUsername(e.target.value)}
+              onChange={(e) => setUsername(e.target.value)}
               placeholder="e.g. demo"
               className="input-theme text-sm px-3.5 py-2.5"
               autoComplete="username"
@@ -106,17 +86,14 @@ export default function LoginPage() {
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span
-              className="text-xs font-semibold"
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
+            <span className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
               Password
             </span>
 
             <input
               type="password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               className="input-theme text-sm px-3.5 py-2.5"
               autoComplete="current-password"
@@ -126,10 +103,7 @@ export default function LoginPage() {
           {error && (
             <div
               className="text-xs px-3 py-2 rounded-xl"
-              style={{
-                color: 'var(--color-danger-strong)',
-                backgroundColor: 'rgba(255,107,138,0.1)',
-              }}
+              style={{ color: 'var(--color-danger-strong)', backgroundColor: 'rgba(255,107,138,0.1)' }}
             >
               {error}
             </div>
@@ -144,10 +118,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p
-          className="text-xs text-center mt-6"
-          style={{ color: 'var(--color-text-muted)' }}
-        >
+        <p className="text-xs text-center mt-6" style={{ color: 'var(--color-text-muted)' }}>
           Accounts are created by your workspace admin — there's no self sign-up.
         </p>
 
@@ -155,13 +126,9 @@ export default function LoginPage() {
 
         <div
           className="mt-4 text-[11px] rounded-xl px-3 py-2 leading-relaxed"
-          style={{
-            backgroundColor: 'var(--color-surface-alt)',
-            color: 'var(--color-text-muted)',
-          }}
+          style={{ backgroundColor: 'var(--color-surface-alt)', color: 'var(--color-text-muted)' }}
         >
-          Demo logins — <strong>demo / demo123</strong> (user) or{' '}
-          <strong>admin / admin123</strong> (admin)
+          Demo logins — <strong>demo / demo123</strong> (user) or <strong>admin / admin123</strong> (admin)
         </div>
       </div>
     </div>

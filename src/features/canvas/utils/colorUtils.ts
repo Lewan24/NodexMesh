@@ -5,7 +5,10 @@ export function colorWithOpacity(color: string, opacity = 1): string {
 
   const normalized =
     hex.length === 3
-      ? hex.split('').map(char => char + char).join('')
+      ? hex
+          .split('')
+          .map((char) => char + char)
+          .join('')
       : hex;
 
   const r = parseInt(normalized.slice(0, 2), 16);

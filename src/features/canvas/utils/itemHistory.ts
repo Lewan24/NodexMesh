@@ -5,11 +5,21 @@ export class ItemHistory {
   private past: BoardItem[][] = [];
   private current: BoardItem[];
   private checkpoint = true;
-  constructor(items: BoardItem[], private limit: number) { this.current = items; }
-  boundary() { this.checkpoint = true; }
+  constructor(
+    items: BoardItem[],
+    private limit: number,
+  ) {
+    this.current = items;
+  }
+  boundary() {
+    this.checkpoint = true;
+  }
   observe(items: BoardItem[]) {
     if (items === this.current) return;
-    if (JSON.stringify(items) === JSON.stringify(this.current)) { this.current = items; return; }
+    if (JSON.stringify(items) === JSON.stringify(this.current)) {
+      this.current = items;
+      return;
+    }
     if (this.checkpoint) {
       this.past.push(this.current);
       if (this.past.length > this.limit) this.past.shift();
@@ -27,5 +37,9 @@ export class ItemHistory {
     this.checkpoint = true;
     return previous;
   }
-  clear(items: BoardItem[]) { this.past = []; this.current = items; this.checkpoint = true; }
+  clear(items: BoardItem[]) {
+    this.past = [];
+    this.current = items;
+    this.checkpoint = true;
+  }
 }

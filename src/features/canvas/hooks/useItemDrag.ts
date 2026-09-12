@@ -1,11 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import type { RefObject } from 'react';
-import type {
-  BoardItem,
-  ColumnItem,
-  FrameItem,
-  LineItem,
-} from '@/entities/board/types';
+import type { BoardItem, ColumnItem, FrameItem, LineItem } from '@/entities/board/types';
 import type { ToolType } from '@/entities/board/toolTypes';
 import { DROPPABLE_ON_COLUMN } from '@/features/canvas/constants';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
@@ -45,15 +40,9 @@ interface UseItemDragOptions {
   onSelectItems: (ids: string[]) => void;
   onSelectTool: (tool: ToolType) => void;
 
-  onUpdateItem: (
-    id: string,
-    updater: (item: BoardItem) => BoardItem,
-  ) => void;
+  onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
 
-  onDropOnColumn: (
-    itemId: string,
-    columnId: string,
-  ) => void;
+  onDropOnColumn: (itemId: string, columnId: string) => void;
 
   clearColumnSelection: () => void;
 }
@@ -72,45 +61,31 @@ export function useItemDrag({
   onDropOnColumn,
   clearColumnSelection,
 }: UseItemDragOptions) {
-  const [dragOverColumnId, setDragOverColumnId] =
-    useState<string | null>(null);
+  const [dragOverColumnId, setDragOverColumnId] = useState<string | null>(null);
   const [settlingIds, setSettlingIds] = useState<string[]>([]);
   const [draggingIds, setDraggingIds] = useState<string[]>([]);
-  const [dropPreview, setDropPreview] =
-    useState<ItemDropPreview | null>(null);
+  const [dropPreview, setDropPreview] = useState<ItemDropPreview | null>(null);
 
-  const [
-    alignmentGuides,
-    setAlignmentGuides,
-  ] = useState<AlignmentGuide[]>([]);
+  const [alignmentGuides, setAlignmentGuides] = useState<AlignmentGuide[]>([]);
 
   const [dragTilt, setDragTilt] = useState(0);
 
   const dragOverColumnIdRef = useRef<string | null>(null);
 
-  const setColumnHover = useCallback(
-    (columnId: string | null) => {
-      dragOverColumnIdRef.current = columnId;
-      setDragOverColumnId(columnId);
-    },
-    [],
-  );
+  const setColumnHover = useCallback((columnId: string | null) => {
+    dragOverColumnIdRef.current = columnId;
+    setDragOverColumnId(columnId);
+  }, []);
 
   const handleItemMouseDown = useCallback(
-    (
-      id: string,
-      event: React.MouseEvent,
-    ) => {
+    (id: string, event: React.MouseEvent) => {
       if (event.button !== 0) {
         return;
       }
 
       const target = event.target as Element;
 
-      if (
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement
-      ) {
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
         return;
       }
 
@@ -126,9 +101,7 @@ export function useItemDrag({
       let newSelected: string[];
 
       if (event.shiftKey) {
-        newSelected = isSelected
-          ? currentSelected.filter(currentId => currentId !== id)
-          : [...currentSelected, id];
+        newSelected = isSelected ? currentSelected.filter((currentId) => currentId !== id) : [...currentSelected, id];
       } else if (!isSelected) {
         newSelected = [id];
       } else {
@@ -137,30 +110,24 @@ export function useItemDrag({
 
       onSelectItems(newSelected);
 
-      const dragIds = newSelected.includes(id)
-        ? newSelected
-        : [id];
+      const dragIds = newSelected.includes(id) ? newSelected : [id];
 
       const items = projectRef.current.items;
-      const clickedItem =
-        items.find(
-          item => item.id === id,
-        );
+      const clickedItem = items.find((item) => item.id === id);
 
-      const movementLocked = (item: BoardItem) => !!item.locked || (item.type === 'frame' && isFrameMovementLocked(item, items, measuredSizes));
+      const movementLocked = (item: BoardItem) =>
+        !!item.locked || (item.type === 'frame' && isFrameMovementLocked(item, items, measuredSizes));
       if (clickedItem && movementLocked(clickedItem)) {
         /*
-        * Selection already happened above,
-        * but locked item cannot start drag.
-        */
+         * Selection already happened above,
+         * but locked item cannot start drag.
+         */
         return;
       }
       const captureMap = new Map<string, DragCapture>();
 
       for (const dragId of dragIds) {
-        const item = items.find(
-          current => current.id === dragId,
-        );
+        const item = items.find((current) => current.id === dragId);
 
         if (!item) {
           continue;
@@ -183,7 +150,7 @@ export function useItemDrag({
         if (item.type === 'frame') {
           const frame = item as FrameItem;
 
-          const children = items.filter(child => {
+          const children = items.filter((child) => {
             if (movementLocked(child)) {
               return false;
             }
@@ -207,9 +174,7 @@ export function useItemDrag({
         }
       }
 
-      const capturedIds = new Set(
-        captureMap.keys(),
-      );
+      const capturedIds = new Set(captureMap.keys());
 
       const startX = event.clientX;
       const startY = event.clientY;
@@ -217,26 +182,16 @@ export function useItemDrag({
 
       let hasMoved = false;
 
-      const singleDragId =
-        dragIds.length === 1 ? dragIds[0] : null;
+      const singleDragId = dragIds.length === 1 ? dragIds[0] : null;
 
-      const singleDragItem = singleDragId
-        ? items.find(item => item.id === singleDragId)
-        : undefined;
+      const singleDragItem = singleDragId ? items.find((item) => item.id === singleDragId) : undefined;
 
-      const canDropOnColumn = singleDragItem
-        ? DROPPABLE_ON_COLUMN.has(singleDragItem.type)
-        : false;
+      const canDropOnColumn = singleDragItem ? DROPPABLE_ON_COLUMN.has(singleDragItem.type) : false;
 
       let lastDx = 0;
       let lastDy = 0;
 
-      let lastPlacement:
-        | {
-            x: number;
-            y: number;
-          }
-        | null = null;
+      let lastPlacement: { x: number; y: number } | null = null;
 
       let previousClientX = event.clientX;
 
@@ -244,9 +199,7 @@ export function useItemDrag({
         if (!hasMoved) {
           pushHistory();
 
-          setDraggingIds(
-            Array.from(captureMap.keys()),
-          );
+          setDraggingIds(Array.from(captureMap.keys()));
         }
 
         hasMoved = true;
@@ -257,87 +210,54 @@ export function useItemDrag({
         lastDx = dx;
         lastDy = dy;
 
-        const movementX =
-          moveEvent.clientX - previousClientX;
+        const movementX = moveEvent.clientX - previousClientX;
 
         previousClientX = moveEvent.clientX;
 
-        const nextTilt = Math.max(
-          -3,
-          Math.min(3, movementX * 0.35),
-        );
+        const nextTilt = Math.max(-3, Math.min(3, movementX * 0.35));
 
         setDragTilt(nextTilt);
 
-        const primaryCapture =
-          captureMap.get(id);
+        const primaryCapture = captureMap.get(id);
 
-        const primaryItem =
-          items.find(item => item.id === id);
+        const primaryItem = items.find((item) => item.id === id);
 
-        if (
-          primaryCapture &&
-          primaryItem &&
-          primaryItem.type !== 'line'
-        ) {
-          const rawX =
-            primaryCapture.x + dx;
+        if (primaryCapture && primaryItem && primaryItem.type !== 'line') {
+          const rawX = primaryCapture.x + dx;
 
-          const rawY =
-            primaryCapture.y + dy;
+          const rawY = primaryCapture.y + dy;
 
-          const size =
-            getItemSize(
-              primaryItem,
-              measuredSizes,
-            );
+          const size = getItemSize(primaryItem, measuredSizes);
 
           /*
-          * Smart alignment is measured in screen-ish pixels,
-          * so compensate for canvas zoom.
-          */
-          const alignment =
-            findAlignmentSnap({
-              x: rawX,
-              y: rawY,
-              width: size.width,
-              height: size.height,
-              items:
-                projectRef.current.items,
-              excludedIds: capturedIds,
-              measuredSizes,
-              threshold:
-                8 / currentZoom,
-            });
-
-          /*
-          * Smart alignment wins over grid snapping.
-          * If there is no matching guide on an axis,
-          * fall back to the normal grid.
-          */
-          const previewX =
-            alignment.x ??
-            snapValue(rawX);
-
-          const previewY =
-            alignment.y ??
-            snapValue(rawY);
-
-          lastPlacement = {
-            x: previewX,
-            y: previewY,
-          };
-
-          setAlignmentGuides(
-            alignment.guides,
-          );
-
-          setDropPreview({
-            x: previewX,
-            y: previewY,
+           * Smart alignment is measured in screen-ish pixels,
+           * so compensate for canvas zoom.
+           */
+          const alignment = findAlignmentSnap({
+            x: rawX,
+            y: rawY,
             width: size.width,
             height: size.height,
+            items: projectRef.current.items,
+            excludedIds: capturedIds,
+            measuredSizes,
+            threshold: 8 / currentZoom,
           });
+
+          /*
+           * Smart alignment wins over grid snapping.
+           * If there is no matching guide on an axis,
+           * fall back to the normal grid.
+           */
+          const previewX = alignment.x ?? snapValue(rawX);
+
+          const previewY = alignment.y ?? snapValue(rawY);
+
+          lastPlacement = { x: previewX, y: previewY };
+
+          setAlignmentGuides(alignment.guides);
+
+          setDropPreview({ x: previewX, y: previewY, width: size.width, height: size.height });
         } else {
           lastPlacement = null;
           setAlignmentGuides([]);
@@ -345,7 +265,7 @@ export function useItemDrag({
         }
 
         captureMap.forEach((capture, capturedId) => {
-          onUpdateItem(capturedId, item => ({
+          onUpdateItem(capturedId, (item) => ({
             ...item,
             x: item.type === 'line' && item.divider ? snapToGrid(capture.x + dx) : capture.x + dx,
             y: item.type === 'line' && item.divider ? snapToGrid(capture.y + dy) : capture.y + dy,
@@ -358,22 +278,15 @@ export function useItemDrag({
           }));
         });
 
-        if (
-          canDropOnColumn &&
-          singleDragItem &&
-          singleDragId
-        ) {
+        if (canDropOnColumn && singleDragItem && singleDragId) {
           const primary = captureMap.get(singleDragId);
 
           if (primary) {
             const nextX = primary.x + dx;
             const nextY = primary.y + dy;
 
-            const hovered = projectRef.current.items.find(item => {
-              if (
-                item.type !== 'column' ||
-                dragIds.includes(item.id)
-              ) {
+            const hovered = projectRef.current.items.find((item) => {
+              if (item.type !== 'column' || dragIds.includes(item.id)) {
                 return false;
               }
 
@@ -393,38 +306,23 @@ export function useItemDrag({
       };
 
       const handleUp = () => {
-        document.removeEventListener(
-          'mousemove',
-          handleMove,
-        );
+        document.removeEventListener('mousemove', handleMove);
 
-        document.removeEventListener(
-          'mouseup',
-          handleUp,
-        );
+        document.removeEventListener('mouseup', handleUp);
 
         setDraggingIds([]);
         setDropPreview(null);
         setDragTilt(0);
         setAlignmentGuides([]);
 
-        const columnId =
-          dragOverColumnIdRef.current;
+        const columnId = dragOverColumnIdRef.current;
 
         /*
-        * Drop inside a Column takes priority over
-        * normal canvas grid snapping.
-        */
-        if (
-          hasMoved &&
-          columnId &&
-          singleDragItem &&
-          canDropOnColumn
-        ) {
-          onDropOnColumn(
-            singleDragItem.id,
-            columnId,
-          );
+         * Drop inside a Column takes priority over
+         * normal canvas grid snapping.
+         */
+        if (hasMoved && columnId && singleDragItem && canDropOnColumn) {
+          onDropOnColumn(singleDragItem.id, columnId);
 
           onSelectItems([]);
           setColumnHover(null);
@@ -434,101 +332,80 @@ export function useItemDrag({
 
         setColumnHover(null);
 
-       if (hasMoved) {
-        const primary =
-          captureMap.get(id);
+        if (hasMoved) {
+          const primary = captureMap.get(id);
 
-        if (primary) {
-          const rawX =
-            primary.x + lastDx;
+          if (primary) {
+            const rawX = primary.x + lastDx;
 
-          const rawY =
-            primary.y + lastDy;
+            const rawY = primary.y + lastDy;
 
-          /*
-          * For normal items use exactly the position
-          * shown by CanvasDropPreview.
-          *
-          * Lines have no rectangular preview,
-          * so they keep normal grid snapping.
-          */
-          const finalX =
-            clickedItem?.type === 'line' && clickedItem.divider ? snapToGrid(rawX) :
-            lastPlacement?.x ??
-            (
-              snapEnabled
-                ? snapValue(rawX)
-                : rawX
-            );
+            /*
+             * For normal items use exactly the position
+             * shown by CanvasDropPreview.
+             *
+             * Lines have no rectangular preview,
+             * so they keep normal grid snapping.
+             */
+            const finalX =
+              clickedItem?.type === 'line' && clickedItem.divider
+                ? snapToGrid(rawX)
+                : (lastPlacement?.x ?? (snapEnabled ? snapValue(rawX) : rawX));
 
-          const finalY =
-            clickedItem?.type === 'line' && clickedItem.divider ? snapToGrid(rawY) :
-            lastPlacement?.y ??
-            (
-              snapEnabled
-                ? snapValue(rawY)
-                : rawY
-            );
+            const finalY =
+              clickedItem?.type === 'line' && clickedItem.divider
+                ? snapToGrid(rawY)
+                : (lastPlacement?.y ?? (snapEnabled ? snapValue(rawY) : rawY));
 
-          const settleDx =
-            finalX - rawX;
+            const settleDx = finalX - rawX;
 
-          const settleDy =
-            finalY - rawY;
+            const settleDy = finalY - rawY;
 
-          if (
-            Math.abs(settleDx) > 0.01 ||
-            Math.abs(settleDy) > 0.01
-          ) {
-            const idsToSettle =
-              Array.from(
-                captureMap.keys(),
-              );
+            if (Math.abs(settleDx) > 0.01 || Math.abs(settleDy) > 0.01) {
+              const idsToSettle = Array.from(captureMap.keys());
 
-            setSettlingIds(
-              idsToSettle,
-            );
+              setSettlingIds(idsToSettle);
 
-            requestAnimationFrame(() => {
-              captureMap.forEach(
-                (
-                  capture,
-                  capturedId,
-                ) => {
-                  onUpdateItem(
-                    capturedId,
-                    current => ({
-                      ...current,
+              requestAnimationFrame(() => {
+                captureMap.forEach((capture, capturedId) => {
+                  onUpdateItem(capturedId, (current) => ({
+                    ...current,
 
-                      x: current.type === 'line' && current.divider ? snapToGrid(capture.x + lastDx + settleDx) : capture.x + lastDx + settleDx,
+                    x:
+                      current.type === 'line' && current.divider
+                        ? snapToGrid(capture.x + lastDx + settleDx)
+                        : capture.x + lastDx + settleDx,
 
-                      y: current.type === 'line' && current.divider ? snapToGrid(capture.y + lastDy + settleDy) : capture.y + lastDy + settleDy,
+                    y:
+                      current.type === 'line' && current.divider
+                        ? snapToGrid(capture.y + lastDy + settleDy)
+                        : capture.y + lastDy + settleDy,
 
-                      ...(capture.isLine
-                        ? {
-                            x2: current.type === 'line' && current.divider ? snapToGrid(capture.x2! + lastDx + settleDx) : capture.x2! + lastDx + settleDx,
+                    ...(capture.isLine
+                      ? {
+                          x2:
+                            current.type === 'line' && current.divider
+                              ? snapToGrid(capture.x2! + lastDx + settleDx)
+                              : capture.x2! + lastDx + settleDx,
 
-                            y2: current.type === 'line' && current.divider ? snapToGrid(capture.y2! + lastDy + settleDy) : capture.y2! + lastDy + settleDy,
-                          }
-                        : {}),
-                    }),
-                  );
-                },
-              );
+                          y2:
+                            current.type === 'line' && current.divider
+                              ? snapToGrid(capture.y2! + lastDy + settleDy)
+                              : capture.y2! + lastDy + settleDy,
+                        }
+                      : {}),
+                  }));
+                });
 
-              window.setTimeout(() => {
-                setSettlingIds([]);
-              }, 160);
-            });
+                window.setTimeout(() => {
+                  setSettlingIds([]);
+                }, 160);
+              });
+            }
           }
         }
-      }
 
-        if (
-          !hasMoved &&
-          !event.shiftKey &&
-          dragIds.length > 1
-        ) {
+        if (!hasMoved && !event.shiftKey && dragIds.length > 1) {
           onSelectItems([id]);
         }
       };
@@ -552,13 +429,5 @@ export function useItemDrag({
     ],
   );
 
-  return {
-    dragOverColumnId,
-    draggingIds,
-    settlingIds,
-    dropPreview,
-    alignmentGuides,
-    dragTilt,
-    handleItemMouseDown,
-  };
+  return { dragOverColumnId, draggingIds, settlingIds, dropPreview, alignmentGuides, dragTilt, handleItemMouseDown };
 }
