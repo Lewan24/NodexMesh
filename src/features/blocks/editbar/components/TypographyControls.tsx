@@ -6,7 +6,6 @@ import type {
 } from '@/entities/board/types';
 
 import {
-  DEFAULT_FONT_FAMILY,
   FONT_FAMILIES,
   FONT_SIZE_PRESETS,
   MAX_FONT_SIZE,
@@ -80,12 +79,12 @@ export default function TypographyControls({
 
       <select
         value={
-          typography?.fontFamily ?? (item.type === 'code' ? 'mono' : DEFAULT_FONT_FAMILY)
+          typography?.fontFamily ?? (item.type === 'code' ? 'mono' : '')
         }
         onChange={event =>
           update({
             fontFamily:
-              event.target.value as FontFamily,
+              (event.target.value || undefined) as FontFamily | undefined,
           })
         }
         onMouseDown={event =>
@@ -102,6 +101,7 @@ export default function TypographyControls({
         }}
         title="Font family"
       >
+        <option value="">Project default</option>
         {FONT_FAMILIES.map(font => (
           <option
             key={font.value}

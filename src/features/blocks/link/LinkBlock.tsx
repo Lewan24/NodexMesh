@@ -27,7 +27,7 @@ export default function LinkBlock({
 
   const typographyStyle = getTypographyStyle(item);
 
-  const { background, light } = useCardAppearance(item.color);
+  const { background, light } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
   const textColor = light ? '#1e293b' : '#e2e8f0';
   const mutedColor = light ? '#64748b' : '#b9aec9';
@@ -86,7 +86,7 @@ export default function LinkBlock({
           height: item.height
           ? '100%'
           : undefined,
-          backgroundColor: background,
+          background,
           borderColor: borderBase,
         }}
         onMouseEnter={event => {

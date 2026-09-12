@@ -4,7 +4,7 @@ export function removeDiagramNodes(nodes: DiagramNode[], edges: DiagramEdge[], i
   return { nodes: nodes.filter(node => !ids.has(node.id)), edges: edges.filter(edge => !ids.has(edge.source) && !ids.has(edge.target)) };
 }
 /** Layer directed acyclic paths, then place cycles in a final row without losing nodes. */
-export function layoutDiagram(nodes: DiagramNode[], edges: DiagramEdge[]): DiagramNode[] {
+export function layoutDiagram(nodes: DiagramNode[], edges: DiagramEdge[], direction: 'vertical' | 'horizontal' = 'vertical'): DiagramNode[] {
   const remaining = new Set(nodes.map(node => node.id));
   const positions = new Map<string, { x: number; y: number }>();
   let row = 0;
@@ -14,7 +14,7 @@ export function layoutDiagram(nodes: DiagramNode[], edges: DiagramEdge[]): Diagr
     layer.forEach((id, index) => { positions.set(id, { x: index * 224, y: row * 176 }); remaining.delete(id); });
     row++;
   }
-  return nodes.map(node => ({ ...node, position: positions.get(node.id)! }));
+  return nodes.map(node => ({ ...node, position: direction === 'horizontal' ? { x: positions.get(node.id)!.y * 2, y: positions.get(node.id)!.x } : positions.get(node.id)! }));
 }
 export function diagramTemplate(): { nodes: DiagramNode[]; edges: DiagramEdge[] } {
   const ids = Array.from({ length: 5 }, () => crypto.randomUUID());

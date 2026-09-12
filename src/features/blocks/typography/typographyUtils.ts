@@ -80,6 +80,7 @@ export const DEFAULT_FONT_FAMILY: FontFamily =
 export function getFontFamilyCss(
   family?: FontFamily,
 ): string {
+  if (!family) return 'var(--project-font, "Short Stack", cursive)';
   const resolvedFamily =
     family ??
     DEFAULT_FONT_FAMILY;

@@ -28,6 +28,7 @@ export interface TimelineTask {
   checklist: ChecklistEntry[];
 }
 export interface TimelineItem extends BaseItem {
+  taskColumnWidth?: number;
   type: 'timeline';
   title: string;
   mode: 'simple' | 'schedule';
@@ -129,6 +130,9 @@ export interface TypographySettings {
 }
 
 export interface BaseItem {
+  colorRole?: 'default' | 'accent1' | 'accent2' | 'accent3' | 'accent4' | 'accent5';
+  gradient?: { from: string; to: string; kind: 'linear' | 'radial'; angle: number };
+
   /** Persistent root-frame ownership; null means explicitly unassigned. */
   frameId?: string | null;
   color?: string;

@@ -42,7 +42,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
     if (addingEntry) addInputRef.current?.focus();
   }, [addingEntry]);
 
-  const { background, light } = useCardAppearance(item.color);
+  const { background, light } = useCardAppearance(item.color, item.gradient, item.colorRole);
   const textColor = light ? '#1e293b' : '#e8f4f4';
   const mutedColor = light ? 'rgba(30,41,59,0.45)' : 'rgba(232,244,244,0.4)';
   const accentColor = light ? 'var(--color-accent)' : '#e8f4f4';
@@ -128,7 +128,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
         data-checklist-id={item.id}
         className="item-rounded shadow-xl overflow-auto" 
         style={{ 
-          backgroundColor: background,
+          background,
           height: item.height ? '100%' : undefined,
         }}>
         {item.topColor && 

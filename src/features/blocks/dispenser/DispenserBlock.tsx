@@ -14,7 +14,7 @@ export default function DispenserBlock({
   onUpdate: BlockUpdateHandler
   onDelete: () => void
 }) {
-  const { background, textColor } = useCardAppearance(item.color);
+  const { background, solid, textColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
   const [editingLabel, setEditingLabel] = useState(false);
   return (
     <ContentBlockShell
@@ -52,7 +52,7 @@ export default function DispenserBlock({
             onChange={(e) =>
               onUpdate((current) =>
                 current.type === "dispenser"
-                  ? { ...current, color: e.target.value }
+                  ? { ...current, color: e.target.value, colorRole: undefined, gradient: undefined }
                   : current,
               )
             }
@@ -65,7 +65,7 @@ export default function DispenserBlock({
           style={{
             background,
             color: textColor,
-            boxShadow: `3px 4px 0 ${background}, 6px 8px 0 ${background}, 8px 11px 8px #0003`,
+            boxShadow: `3px 4px 0 ${solid}, 6px 8px 0 ${solid}, 8px 11px 8px #0003`,
             border: "1px solid #0002",
           }}
           onMouseDown={(e) => {
@@ -73,6 +73,7 @@ export default function DispenserBlock({
             e.preventDefault()
             startToolDrag("note", e, {
               color: item.color,
+              colorRole: item.colorRole, gradient: item.gradient,
               dispenserId: item.id,
             })
           }}

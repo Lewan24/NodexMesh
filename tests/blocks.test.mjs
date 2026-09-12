@@ -37,10 +37,11 @@ const { changeItemLayer } = await server.ssrLoadModule('/src/features/projects/h
 const { getArrowHeadPoints, getLineCurve } = await server.ssrLoadModule('/src/features/blocks/line/utils/lineRenderGeometry.ts')
 const { isFrameMovementLocked, normalizeFrameMembership, getFrameContents } = await server.ssrLoadModule('/src/features/canvas/utils/frameGeometry.ts')
 const { ItemHistory } = await server.ssrLoadModule('/src/features/canvas/utils/itemHistory.ts')
-const { resolveCardColor } = await server.ssrLoadModule('/src/features/blocks/shared/cardAppearance.ts')
+const { resolveCardColor, resolveAppearance } = await server.ssrLoadModule('/src/features/blocks/shared/cardAppearance.ts')
 const { autoGrowthLayout, growsAutomatically } = await server.ssrLoadModule('/src/features/canvas/utils/autoGrowthLayout.ts')
 const { ITEM_WIDTH, CANVAS_GRID_SIZE } = await server.ssrLoadModule('/src/features/canvas/constants.ts')
 const { createDatabaseField, databaseExample, validDatabaseRelations, canAddDatabaseRelation } = await server.ssrLoadModule('/src/features/blocks/database/databaseUtils.ts');
+const { defaultAppearance, activeAppearance, newPreferences, preferenceKey, withAppearanceMode, migratePreferences } = await server.ssrLoadModule('/src/features/appearance/appearanceModel.ts');
 await server.close()
 
 test("new blocks survive JSON persistence and have usable default dimensions", () => {
@@ -635,4 +636,79 @@ test('database supports self-referencing foreign keys but rejects duplicate and 
   assert.equal(canAddDatabaseRelation([users], [], relation), true);
   assert.equal(canAddDatabaseRelation([users], [], { ...relation, targetField: field.id }), false);
   assert.equal(canAddDatabaseRelation([users], [], { ...relation, targetField: 'missing' }), false);
+});
+
+
+test('project appearance falls back to user defaults and isolates user/project preferences', () => {
+  const userA = newPreferences(), userB = newPreferences();
+  userA.projects.project1 = { ...userA.defaults, font: 'mono', light: { ...userA.defaults.light, accent1: '#112233' } };
+  assert.equal(activeAppearance(userA, 'project1').light.accent1, '#112233');
+  assert.equal(activeAppearance(userA, 'project2'), userA.defaults);
+  assert.notEqual(activeAppearance(userB, 'project1').light.accent1, '#112233');
+  assert.notEqual(preferenceKey('a'), preferenceKey('b'));
+  delete userA.projects.project1;
+  assert.equal(activeAppearance(userA, 'project1'), userA.defaults);
+});
+
+test('semantic card colors and gradient stops follow palettes while fixed colors persist', () => {
+  const light = defaultAppearance.light, dark = defaultAppearance.dark;
+  assert.equal(resolveAppearance('#ffffff', light, undefined, 'accent2').background, light.accent2);
+  assert.equal(resolveAppearance('#ffffff', dark, undefined, 'accent2').background, dark.accent2);
+  assert.equal(resolveAppearance('#123456', dark).background, '#123456');
+  const gradient = { from: 'accent1', to: '#123456', kind: 'linear', angle: 90 };
+  assert.equal(resolveAppearance(undefined, dark, gradient).background, `linear-gradient(90deg, ${dark.accent1}, #123456)`);
+  assert.ok(resolveAppearance(undefined, light, { ...gradient, kind: 'radial' }).background.startsWith('radial-gradient(circle at center'));
+});
+
+test('horizontal diagram layout uses columns and leaves source data unchanged', () => {
+  const { nodes, edges } = diagramTemplate();
+  const before = JSON.stringify(nodes);
+  const layout = layoutDiagram(nodes, edges, 'horizontal');
+  const source = layout.find(node => node.id === edges[0].source);
+  const target = layout.find(node => node.id === edges[0].target);
+  assert.ok(target.position.x > source.position.x);
+  assert.equal(JSON.stringify(nodes), before);
+});
+
+
+test('switching theme mode preserves default inheritance until a project override is enabled', () => {
+  const original = newPreferences();
+  const dark = withAppearanceMode(original, 'project1', 'dark');
+  assert.equal(dark.projects.project1, undefined);
+  assert.equal(activeAppearance(dark, 'project1').mode, 'dark');
+  dark.defaults.light.accent2 = '#123456';
+  assert.equal(activeAppearance(dark, 'project1').light.accent2, '#123456');
+  const enabled = { ...dark, projects: { ...dark.projects, project1: structuredClone(dark.defaults) } };
+  const custom = withAppearanceMode(enabled, 'project1', 'light');
+  assert.equal(custom.defaults.mode, 'dark');
+  assert.equal(custom.projects.project1.mode, 'light');
+  assert.equal(original.projects.project1, undefined);
+});
+
+test('legacy mode-only overrides return to defaults while custom palettes survive migration', () => {
+  const preferences = newPreferences();
+  preferences.projects.accidental = { ...structuredClone(defaultAppearance), mode: 'dark' };
+  preferences.projects.custom = structuredClone(defaultAppearance);
+  preferences.projects.custom.dark.accent1 = '#123456';
+  const migrated = migratePreferences(preferences);
+  assert.equal(migrated.projects.accidental, undefined);
+  assert.equal(migrated.projects.custom.dark.accent1, '#123456');
+  assert.ok(preferences.projects.accidental);
+  assert.equal(migrated.inheritanceVersion, 1);
+});
+
+
+test('theme gradients apply to semantic cards, preserve custom fills and survive persistence', () => {
+  const preferences = newPreferences();
+  preferences.defaults.light.gradients = {
+    accent1: { from: '#eeeeff', to: '#ffffff', kind: 'linear', angle: 90 },
+    default: { from: '#ffffff', to: '#eeeeff', kind: 'radial', angle: 0 },
+  };
+  const palette = JSON.parse(JSON.stringify(preferences)).defaults.light;
+  assert.equal(resolveAppearance(undefined, palette, undefined, 'accent1').background, 'linear-gradient(90deg, #eeeeff, #ffffff)');
+  assert.equal(resolveAppearance('#ffffff', palette).background, 'radial-gradient(circle at center, #ffffff, #eeeeff)');
+  assert.equal(resolveAppearance('#123456', palette).background, '#123456');
+  assert.equal(resolveAppearance(undefined, palette, { from: '#000000', to: '#111111', angle: 45, kind: 'linear' }, 'accent1').background, 'linear-gradient(45deg, #000000, #111111)');
+  preferences.projects.custom = structuredClone(preferences.defaults);
+  assert.ok(migratePreferences({ ...preferences, defaults: structuredClone(defaultAppearance) }).projects.custom);
 });

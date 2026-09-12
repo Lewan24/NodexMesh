@@ -32,7 +32,7 @@ export default function NoteBlock({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const { background, light } = useCardAppearance(item.color);
+  const { background, light } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
   const textColor = light ? '#1e293b' : '#e8f4f4';
   const mutedColor = light
@@ -121,7 +121,7 @@ export default function NoteBlock({
         className="item-rounded shadow-xl transition-shadow duration-150 group-hover:shadow-2xl flex flex-col"
         style={{
           height: item.height ? '100%' : undefined,
-          backgroundColor: background,
+          background,
           outline: isSelected
             ? '2px solid var(--color-accent)'
             : 'none',

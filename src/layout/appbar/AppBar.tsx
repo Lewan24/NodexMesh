@@ -12,6 +12,7 @@ import AccountMenu from './components/AccountMenu';
 import ProjectMenu from './components/ProjectMenu';
 
 interface AppBarProps {
+  onAppearance: () => void;
   projects: Project[];
   activeProjectId: string;
   onSelectProject: (id: string) => void;
@@ -30,6 +31,7 @@ interface AppBarProps {
 type OpenMenu = 'projects' | 'account' | null;
 
 export default function AppBar({
+  onAppearance,
   projects,
   activeProjectId,
   onSelectProject,
@@ -68,6 +70,7 @@ export default function AppBar({
         }}
       >
         <AppLogo />
+        <button onClick={onAppearance} className="px-3 py-2 text-sm text-white/90 hover:text-white" title="Personal project appearance">Appearance</button>
 
         <ProjectMenu
           projects={projects}

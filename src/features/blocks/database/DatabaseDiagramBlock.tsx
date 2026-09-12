@@ -4,6 +4,7 @@ import { ReactFlow, Background, Controls, Handle, Position, MarkerType, Connecti
 import type { Node, NodeProps, ReactFlowInstance } from '@xyflow/react';
 import type { DatabaseDiagramItem, DatabaseTable, DatabaseRelation } from '@/entities/board/types';
 import type { BlockUpdateHandler, BlockDeleteHandler } from '../types';
+import DatabasePreview from './DatabasePreview';
 import ContentBlockShell from '../shared/ContentBlockShell';
 import { getTypographyStyle } from '../typography/typographyUtils';
 import { createDatabaseField, createDatabaseTable, databaseExample, validDatabaseRelations, canAddDatabaseRelation } from './databaseUtils';
@@ -61,7 +62,7 @@ export default function DatabaseDiagramBlock({ item, onUpdate, onDelete }: { ite
       </div>
       <div className="relative flex-1 min-h-0" data-wheel-scroll={editing || undefined} onDoubleClick={() => { if (!item.locked) setEditing(true); }} onMouseDown={event => { if (editing) event.stopPropagation(); }}>
         <div className="absolute inset-0" style={{ pointerEvents: editing ? 'auto' : 'none' }}>
-          <ReactFlow<TableNode> connectionMode={ConnectionMode.Loose} nodes={nodes} edges={edges} nodeTypes={nodeTypes} onInit={instance => { flow.current = instance; }}
+          {!editing ? <DatabasePreview tables={item.tables} relations={item.relations} /> : <ReactFlow<TableNode> connectionMode={ConnectionMode.Loose} nodes={nodes} edges={edges} nodeTypes={nodeTypes} onInit={instance => { flow.current = instance; }}
             onNodesChange={changes => setNodes(current => applyNodeChanges(changes, current))}
             onNodeDragStop={(_, node, dragged) => save(item.tables.map(table => { const moved = dragged.find(entry => entry.id === table.id) ?? (table.id === node.id ? node : undefined); return moved ? { ...table, position: moved.position } : table; }))}
             onNodeClick={(_, node) => { setSelected(node.id); setRelationId(null); setMessage(''); }}
@@ -74,7 +75,7 @@ export default function DatabaseDiagramBlock({ item, onUpdate, onDelete }: { ite
             nodesDraggable={editing} nodesConnectable={editing} elementsSelectable={editing} panOnDrag={editing} zoomOnScroll={editing} zoomOnDoubleClick={false}
             deleteKeyCode={null} snapToGrid snapGrid={[16, 16]} fitView minZoom={.15} maxZoom={2} connectionRadius={28}>
             <Background gap={16} />{editing && <Controls showInteractive={false} />}
-          </ReactFlow>
+          </ReactFlow>}
         </div>
         {!item.tables.length && <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <button disabled={item.locked} className="planning-button pointer-events-auto" onMouseDown={event => event.stopPropagation()} onClick={() => { const example = databaseExample(); save(example.tables, example.relations); setEditing(true); fit(); }}>Start with users and posts</button>
@@ -93,7 +94,8 @@ export default function DatabaseDiagramBlock({ item, onUpdate, onDelete }: { ite
           <input aria-label={'Field type ' + (index + 1)} list={item.id + '-types'} className="planning-input w-full" value={field.dataType} onChange={event => updateTable({ fields: table.fields.map(entry => entry.id === field.id ? { ...entry, dataType: event.target.value } : entry) })} />
           <div className="flex flex-wrap gap-2 text-xs">{(['primaryKey', 'nullable', 'unique'] as const).map(key => <label key={key}><input type="checkbox" checked={field[key]} disabled={key === 'nullable' && field.primaryKey} onChange={event => updateTable({ fields: table.fields.map(entry => entry.id === field.id ? { ...entry, [key]: event.target.checked, ...(key === 'primaryKey' && event.target.checked ? { nullable: false } : {}) } : entry) })} /> {key === 'primaryKey' ? 'PK' : key === 'nullable' ? 'Nullable' : 'Unique'}</label>)}</div>
           <input aria-label={'Default value ' + (index + 1)} placeholder="Default value" className="planning-input w-full" value={field.defaultValue} onChange={event => updateTable({ fields: table.fields.map(entry => entry.id === field.id ? { ...entry, defaultValue: event.target.value } : entry) })} />
-          <button className="planning-button text-rose-500" onClick={() => updateTable({ fields: table.fields.filter(entry => entry.id !== field.id) })}>Remove field</button>
+          <div className="flex gap-1">{([-1, 1] as const).map(direction => <button key={direction} aria-label={`Move field ${index + 1} ${direction === -1 ? 'up' : 'down'}`} disabled={!table.fields[index + direction]} className="planning-button disabled:opacity-30" onClick={() => { const fields = [...table.fields]; [fields[index], fields[index + direction]] = [fields[index + direction]!, fields[index]!]; updateTable({ fields }); }}>{direction === -1 ? '↑' : '↓'}</button>)}
+          <button className="planning-button text-rose-500" onClick={() => updateTable({ fields: table.fields.filter(entry => entry.id !== field.id) })}>Remove field</button></div>
         </fieldset>)}
         <button className="planning-button" onClick={() => updateTable({ fields: [...table.fields, createDatabaseField('field_' + (table.fields.length + 1))] })}>+ Field</button>
         <button className="planning-button text-rose-500" onClick={() => { save(item.tables.filter(entry => entry.id !== table.id)); setSelected(null); }}>Delete table</button>

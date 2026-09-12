@@ -1,10 +1,11 @@
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { paletteBackground, paletteKeys } from '@/features/appearance/appearanceModel';
+import { isDefaultCardColor, resolvePaletteColor } from '../../shared/cardAppearance';
 import type { BoardItem } from '@/entities/board/types';
 import ColorSwatch from './ColorSwatch';
 import { EditBarDivider } from './EditBarButton';
 import {
   BACKGROUND_ITEM_TYPES,
-  DARK_BACKGROUNDS,
-  LIGHT_BACKGROUNDS,
   STRIP_COLORS,
 } from '../constants';
 import CustomColorInput from './CustomColorInput';
@@ -16,6 +17,7 @@ interface ColorPanelProps {
 
 function getBackgroundColor(item: BoardItem): string | undefined {
   switch (item.type) {
+    case 'dispenser':
     case 'code':
     case 'document':
     case 'embed':
@@ -41,6 +43,7 @@ function updateBackgroundColor(item: BoardItem, color: string | undefined): Boar
     case 'text':
       return { ...item, color };
 
+    case 'dispenser':
     case 'code':
     case 'document':
     case 'embed':
@@ -61,13 +64,15 @@ function updateBackgroundColor(item: BoardItem, color: string | undefined): Boar
 }
 
 export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
+  const { appearance, theme } = useTheme();
+  const palette = appearance[theme];
   const backgroundColor = getBackgroundColor(item) ?? (item.type === 'text' ? undefined : '#ffffff');
   const stripColor = item.topColor;
   const showBackground = BACKGROUND_ITEM_TYPES.has(item.type);
   const canClearBackground = item.type === 'text';
 
   const setBackgroundColor = (color: string | undefined) => {
-    onUpdate(current => updateBackgroundColor(current, color));
+    onUpdate(current => ({ ...updateBackgroundColor(current, color), colorRole: undefined, gradient: undefined }));
   };
 
   const setStripColor = (color: string | undefined) => {
@@ -94,33 +99,24 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
               />
             )}
 
-            {LIGHT_BACKGROUNDS.map(color => (
-              <ColorSwatch
-                key={color}
-                color={color}
-                active={backgroundColor === color}
-                onClick={() => setBackgroundColor(color)}
-              />
-            ))}
+
+            {paletteKeys.map((role, index) => <button key={role} title={index === 0 ? 'Default' : 'Accent ' + index} aria-label={index === 0 ? 'Default card color' : 'Accent ' + index} onClick={() => onUpdate(current => ({ ...current, colorRole: role, gradient: undefined }))} className="w-5 h-5 rounded-full border-2" style={{ background: paletteBackground(palette, role), borderColor: item.colorRole === role ? 'var(--color-accent)' : 'var(--color-border)' }} />)}
           </div>
-
-          <div className="flex items-center gap-1 px-0.5">
-            {DARK_BACKGROUNDS.map(color => (
-              <ColorSwatch
-                key={color}
-                color={color}
-                active={backgroundColor === color}
-                onClick={() => setBackgroundColor(color)}
-              />
-            ))}
-
-            <CustomColorInput
-              value={backgroundColor}
-              onChange={setBackgroundColor}
-              title="Custom background color"
-            />
-          </div>
-
+          <CustomColorInput value={item.colorRole ? palette[item.colorRole] : backgroundColor} onChange={setBackgroundColor} title="Custom fixed background" />
+          <label className="flex items-center gap-1 text-xs">Fill
+            <select aria-label="Card fill" className="h-8 bg-transparent" value={item.gradient ? item.gradient.kind : 'solid'} onChange={event => onUpdate(current => ({ ...current, gradient: event.target.value === 'solid' ? undefined : { from: current.colorRole ?? (isDefaultCardColor(current.color) ? 'default' : current.color!), to: 'accent1', angle: 135, ...current.gradient, kind: event.target.value as 'linear' | 'radial' } }))}>
+              <option value="solid">Solid</option><option value="linear">Linear gradient</option><option value="radial">Radial gradient</option>
+            </select>
+          </label>
+          {item.gradient && <>
+            {(['from', 'to'] as const).map(key => <div key={key} className="flex gap-1 items-center">
+              <select aria-label={'Gradient ' + key} className="h-8 bg-transparent text-xs" value={paletteKeys.some(role => role === item.gradient![key]) ? item.gradient![key] : 'custom'} onChange={event => { const value = event.target.value; onUpdate(current => ({ ...current, gradient: { ...item.gradient!, [key]: value === 'custom' ? resolvePaletteColor(item.gradient![key], palette) : value } })); }}>
+                {paletteKeys.map(role => <option key={role} value={role}>{role}</option>)}<option value="custom">Custom</option>
+              </select>
+              <input type="color" aria-label={'Custom gradient ' + key} className="w-7 h-7" value={resolvePaletteColor(item.gradient![key], palette)} onChange={event => { const value = event.target.value; onUpdate(current => ({ ...current, gradient: { ...item.gradient!, [key]: value } })); }} />
+            </div>)}
+            {item.gradient.kind === 'linear' && <label className="text-xs flex items-center gap-1">Angle<input aria-label="Gradient angle" type="range" min="0" max="360" step="15" className="w-20" value={item.gradient.angle} onChange={event => { const angle = Number(event.target.value); onUpdate(current => ({ ...current, gradient: { ...item.gradient!, angle } })); }} />{item.gradient.angle}°</label>}
+          </>}
           <EditBarDivider />
         </>
       )}

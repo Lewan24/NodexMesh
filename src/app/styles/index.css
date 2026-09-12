@@ -104,7 +104,7 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Comic Neue', sans-serif;
+  font-family: var(--ui-font, 'DM Sans', sans-serif);
   -webkit-font-smoothing: antialiased;
   background-color: var(--color-app-bg);
   color: var(--color-text-primary);
@@ -206,3 +206,39 @@ body {
   font-weight: var(--block-font-weight, inherit);
 }
 .content-block-shell input:not([type]), .content-block-shell input[type=text] { font-family: inherit; }
+
+[data-app-bar=true], .tool-sidebar { background: var(--chrome-gradient) !important; color: #eee7f8; }
+.tool-sidebar { --color-chrome-text: #e0d5ee; --color-chrome-text-dim: #cfc0e2; --color-chrome-text-faint: #b8a9ce; }
+button, input, select, textarea { font-family: inherit; }
+
+.bg-violet-600 { background-color: var(--color-accent); }
+:root { --font-sans: var(--ui-font, 'DM Sans', sans-serif); }
+
+/* App chrome is personal UI, independent of the active board palette. */
+[data-app-bar=true], .tool-sidebar {
+  --color-accent: var(--ui-accent, #6023b4);
+  --color-accent-hover: var(--ui-accent, #6023b4);
+  --color-accent-soft: color-mix(in srgb, var(--ui-accent, #6023b4) 20%, transparent);
+  --color-accent-soft-strong: color-mix(in srgb, var(--ui-accent, #6023b4) 32%, transparent);
+  --color-secondary: var(--ui-secondary, #176f86);
+  --color-text-primary: #f5f0fc;
+  --color-text-secondary: #d2c4e4;
+  --color-text-muted: #b6a5ca;
+  --color-text-faint: #a695ba;
+  --color-surface: #241b30;
+  --color-surface-alt: #39264f;
+  --color-border: #ffffff1a;
+  --color-border-soft: #ffffff12;
+}
+[role=tab][aria-selected=true] { box-shadow: inset 0 -2px var(--color-accent); font-weight: 600; }
+
+/* Native popups require an explicit foreground/background pair. */
+[data-edit-bar=true] { color: var(--color-text-primary); }
+[data-edit-bar=true] select,
+[data-edit-bar=true] select option,
+[aria-label="Appearance settings"] select,
+[aria-label="Appearance settings"] select option {
+  background: #ffffff;
+  color: #172033;
+  color-scheme: light;
+}
