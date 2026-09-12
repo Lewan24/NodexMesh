@@ -17,7 +17,7 @@ export default function CodeBlock({
   onUpdate: BlockUpdateHandler
   onDelete: () => void
 }) {
-  const { background, textColor, light } = useCardAppearance(isDefaultCardColor(item.color) ? "#0d1117" : item.color);
+  const { background, textColor, light } = useCardAppearance('#0d1117');
   const codeStyle = { ...getTypographyStyle(item), fontFamily: item.typography?.fontFamily ? getTypographyStyle(item).fontFamily : 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' };
   const [editing, setEditing] = useState(false)
   const [copyStatus, setCopyStatus] = useState("Copy")
@@ -34,7 +34,7 @@ export default function CodeBlock({
     )
   return (
     <ContentBlockShell
-      item={{ ...item, color: isDefaultCardColor(item.color) ? "#0d1117" : item.color }}
+      item={{ ...item, color: isDefaultCardColor(item.color) && !item.colorRole ? "#0d1117" : item.color }}
       autoHeight={autoHeight}
       minHeight={160}
       onDelete={onDelete}
@@ -46,7 +46,8 @@ export default function CodeBlock({
           <select
             aria-label="Code language"
             onMouseDown={(e) => e.stopPropagation()}
-            className="bg-transparent text-xs flex-1 min-w-0"
+            className="text-xs flex-1 min-w-0 rounded-sm px-2 py-1"
+            style={{ background: "var(--color-surface)", color: "var(--color-text-primary)", colorScheme: light ? "light" : "dark" }}
             value={language}
             disabled={item.locked}
             onChange={(e) => update({ language: e.target.value })}
@@ -58,7 +59,7 @@ export default function CodeBlock({
                 <option
                   key={name}
                   value={name}
-                  style={{ background: "var(--color-surface)" }}
+                  style={{ background: "var(--color-surface)", color: "var(--color-text-primary)" }}
                 >
                   {name === "xml" ? "HTML / XML" : name}
                 </option>

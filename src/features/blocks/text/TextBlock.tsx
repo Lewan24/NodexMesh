@@ -69,9 +69,9 @@ export default function TextBlock({
     [onUpdate],
   );
 
-  const isCard = Boolean(item.color);
+  const isCard = Boolean(item.color || item.colorRole || item.gradient);
 
-  const { background, light } = useCardAppearance(item.color);
+  const { background, light } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
   const textColor = isCard
     ? light
@@ -119,7 +119,7 @@ export default function TextBlock({
         style={
           isCard
             ? {
-                backgroundColor: background,
+                background,
                 padding: '14px 18px',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                 height: item.height ? '100%' : undefined,

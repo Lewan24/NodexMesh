@@ -29,6 +29,7 @@ const toNodes = (nodes: FlowNode[]): DiagramNode[] => nodes.map(({ id, position,
 const toEdges = (edges: Edge[]): DiagramEdge[] => edges.map(({ id, source, target, sourceHandle, targetHandle, label, type }) => ({ id, source, target, sourceHandle, targetHandle, type: type === 'default' || type === 'straight' ? type : 'smoothstep', label: typeof label === 'string' ? label : '' }));
 
 export default function DiagramBlock({ item, onUpdate, onDelete }: { item: DiagramItem; onUpdate: BlockUpdateHandler; onDelete: BlockDeleteHandler }) {
+  const [layoutDirection, setLayoutDirection] = useState<'vertical' | 'horizontal'>('vertical');
   const [snap, setSnap] = useState(true);
   const [editing, setEditing] = useState(false);
   const [nodes, setNodes] = useState<FlowNode[]>(item.nodes);
@@ -73,7 +74,8 @@ export default function DiagramBlock({ item, onUpdate, onDelete }: { item: Diagr
       <button className="planning-button" aria-pressed={snap} onClick={() => setSnap(value => !value)}>Snap to grid</button>
       {(['x', 'y'] as const).map(axis => <button key={axis} className="planning-button" disabled={nodes.filter(node => node.selected).length < 2} onClick={() => save(alignDiagramNodes(nodes, new Set(nodes.filter(node => node.selected).map(node => node.id)), axis), edges)}>{axis === 'x' ? 'Align left' : 'Align top'}</button>)}
       {shapes.map(shape => <button className="planning-button" key={shape.value} onClick={() => addNode(shape.value)}>+ {shape.label}</button>)}
-      <button className="planning-button ml-auto" disabled={!nodes.length} onClick={() => { save(layoutDiagram(toNodes(nodes), toEdges(edges)), edges); requestAnimationFrame(() => flow.current?.fitView({ padding: .2, duration: 200 })); }}>Auto layout</button>
+      <select aria-label="Layout direction" className="planning-input" value={layoutDirection} onChange={event => setLayoutDirection(event.target.value as 'vertical' | 'horizontal')}><option value="vertical">Vertical layout</option><option value="horizontal">Horizontal layout</option></select>
+      <button className="planning-button ml-auto" disabled={!nodes.length} onClick={() => { save(layoutDiagram(toNodes(nodes), toEdges(edges), layoutDirection), edges); requestAnimationFrame(() => flow.current?.fitView({ padding: .2, duration: 200 })); }}>Auto layout</button>
     </div>}
     <div className="relative flex-1 min-h-0" data-wheel-scroll={editing ? 'true' : undefined} onDoubleClick={() => setEditing(true)} onMouseDown={event => { if (editing) event.stopPropagation(); }} onKeyDown={event => {
       if (editing) {

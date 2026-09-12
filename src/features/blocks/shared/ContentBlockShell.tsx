@@ -18,7 +18,7 @@ export default function ContentBlockShell({
   autoHeight?: boolean
   minHeight?: number
 }) {
-  const { background, textColor } = useCardAppearance(item.color);
+  const { background, textColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
   return (
     <section
       className="content-block-shell item-rounded shadow-xl flex flex-col overflow-hidden"

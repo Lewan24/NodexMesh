@@ -1,10 +1,11 @@
+import type { BaseItem } from '@/entities/board/types';
 import type { ToolType } from '@/entities/board/toolTypes';
 
 export const TOOL_DRAG_MOVE_EVENT = 'nodexmesh:tool-drag-move';
 export const TOOL_DRAG_END_EVENT = 'nodexmesh:tool-drag-end';
 
 export interface ToolDragDetail {
-  extra?: { color: string; dispenserId: string };
+  extra?: { color: string; dispenserId: string; colorRole?: BaseItem['colorRole']; gradient?: BaseItem['gradient'] };
   tool: ToolType;
   clientX: number;
   clientY: number;

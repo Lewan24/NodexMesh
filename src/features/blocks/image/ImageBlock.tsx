@@ -29,7 +29,7 @@ export default function ImageBlock({
 
   const width = item.width ?? DEFAULT_IMAGE_WIDTH;
   const imageHeight = item.imgHeight ?? DEFAULT_IMAGE_HEIGHT;
-  const { background, light } = useCardAppearance(item.color);
+  const { background, light } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
   const textColor = light ? '#1e293b' : '#8aacb8';
   const mutedColor = light ? '#94a3b8' : '#b9aec9';
@@ -87,7 +87,7 @@ export default function ImageBlock({
                 boxShadow: '0 10px 26px rgba(0,0,0,0.22)',
               }
             : {
-                backgroundColor: background,
+                background,
                 borderColor,
               }
         }

@@ -23,14 +23,14 @@ export const nodexMeshDemoProject: Project = {
     {
       "id": "i1ic5c0b",
       "type": "frame",
-      "x": 1871.9999999999998,
-      "y": 252,
+      "x": 1872,
+      "y": 1088,
       "zIndex": 0,
       "title": "Plans for Upcoming Work",
       "width": 1852.0000000000002,
       "height": 644,
       "color": "#FF6B8A",
-      "locked": true,
+      "locked": false,
       "frameId": null
     },
     {
@@ -53,7 +53,7 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "fz0c7s26",
-      "x": 3976,
+      "x": 1884,
       "y": 252,
       "zIndex": 5,
       "typography": {
@@ -127,19 +127,29 @@ export const nodexMeshDemoProject: Project = {
           "color": "#FFBD65",
           "cards": [
             {
+              "id": "freen8p",
+              "text": "Implement horizontal layout for diagram",
+              "done": true
+            },
+            {
+              "id": "s6m2wv5",
+              "text": "Implement column resizing of tasks in timeline",
+              "done": true
+            },
+            {
               "id": "50s1mdp",
               "text": "Implement reordering fields in database block",
-              "done": false
+              "done": true
             },
             {
               "id": "wqf1aae",
               "text": "Fix Database diagram preview, not working properly connections",
-              "done": false
+              "done": true
             },
             {
               "id": "dqce2a3",
               "text": "Change editbar colors to accents and make them theme related",
-              "done": false
+              "done": true
             },
             {
               "id": "xa2w1pl",
@@ -230,6 +240,11 @@ export const nodexMeshDemoProject: Project = {
           "color": "#02A0A0",
           "cards": [
             {
+              "id": "samse29",
+              "text": "Implement theme colors changing and saving that data",
+              "done": true
+            },
+            {
               "id": "w9g7qzz",
               "text": "Implement mobile devices compability",
               "done": false
@@ -308,7 +323,7 @@ export const nodexMeshDemoProject: Project = {
       "tags": [
         "todo"
       ],
-      "locked": true,
+      "locked": false,
       "height": 628,
       "frameId": null
     },
@@ -486,8 +501,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "u9oshol5",
-      "x": 1907.9999999999998,
-      "y": 288,
+      "x": 1908,
+      "y": 1124,
       "zIndex": 16,
       "typography": {
         "fontSize": 16,
@@ -543,25 +558,25 @@ export const nodexMeshDemoProject: Project = {
       "tags": [
         "todo"
       ],
-      "locked": true,
+      "locked": false,
       "comments": [],
       "frameId": "i1ic5c0b"
     },
     {
       "id": "92oyuwgd",
       "x": 2184.261725508746,
-      "y": 761,
+      "y": 1597,
       "zIndex": 17,
       "type": "line",
-      "x2": 1934.599797175519,
-      "y2": 838.5,
+      "x2": 1934.5997971755196,
+      "y2": 1674.5,
       "arrowStart": true,
       "arrowEnd": true,
       "color": "#02A0A0",
       "strokeWidth": 3,
       "startItemId": "i1ic5c0b",
       "endItemId": "fz0c7s26",
-      "locked": true,
+      "locked": false,
       "label": "TODO Lists",
       "labelOffset": 21,
       "labelFontSize": 21,
@@ -610,7 +625,7 @@ export const nodexMeshDemoProject: Project = {
     {
       "id": "ltbomker",
       "x": 2528,
-      "y": 288,
+      "y": 1124,
       "zIndex": 20,
       "type": "checklist",
       "title": "New Tools and Functionalities",
@@ -652,7 +667,7 @@ export const nodexMeshDemoProject: Project = {
       "tags": [
         "todo"
       ],
-      "locked": true,
+      "locked": false,
       "typography": {
         "fontFamily": "short-stack"
       },
@@ -679,8 +694,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "3pvxvzuq",
-      "x": 3192,
-      "y": 288,
+      "x": 3191.999999999999,
+      "y": 1124,
       "zIndex": 22,
       "type": "checklist",
       "title": "Done",
@@ -778,14 +793,14 @@ export const nodexMeshDemoProject: Project = {
           "done": true
         }
       ],
-      "locked": true,
+      "locked": false,
       "height": 544,
       "frameId": "i1ic5c0b"
     },
     {
       "id": "nq1ujv06",
-      "x": 1872,
-      "y": 928,
+      "x": 4560,
+      "y": 252,
       "zIndex": 23,
       "type": "timeline",
       "title": "NodexMesh todo timeline",
@@ -897,10 +912,19 @@ export const nodexMeshDemoProject: Project = {
           ]
         },
         {
+          "id": "789cdbc8-0186-4a0e-8e9f-43febff0e139",
+          "title": "Kanban fixes",
+          "start": "2026-09-12",
+          "end": "2026-09-14",
+          "done": true,
+          "color": "#000000",
+          "checklist": []
+        },
+        {
           "id": "42ee8a21-df57-4469-b780-57ab0b80d59f",
           "title": "Implement new blocks",
-          "start": "2026-09-14",
-          "end": "2026-09-15",
+          "start": "2026-09-15",
+          "end": "2026-09-16",
           "done": false,
           "color": "#000000",
           "checklist": [
@@ -919,8 +943,8 @@ export const nodexMeshDemoProject: Project = {
         {
           "id": "126eea78-41d8-42ce-8060-0a1eaef41d11",
           "title": "Upgrade note (Implement source and open link function)",
-          "start": "2026-09-15",
-          "end": "2026-09-15",
+          "start": "2026-09-16",
+          "end": "2026-09-16",
           "done": false,
           "color": "#000000",
           "checklist": []
@@ -928,8 +952,8 @@ export const nodexMeshDemoProject: Project = {
         {
           "id": "2c951fc5-1c9a-4ef1-9eed-0e8d2336620c",
           "title": "Test #2",
-          "start": "2026-09-16",
-          "end": "2026-09-16",
+          "start": "2026-09-17",
+          "end": "2026-09-17",
           "done": false,
           "color": "#ed4040",
           "checklist": []
@@ -938,7 +962,7 @@ export const nodexMeshDemoProject: Project = {
           "id": "220670a3-6e23-4543-a93a-0ed888fc3ed6",
           "title": "Implement mobile devices compability",
           "start": "2026-09-16",
-          "end": "2026-09-20",
+          "end": "2026-09-21",
           "done": false,
           "color": "#0d39e7",
           "checklist": []
@@ -962,7 +986,7 @@ export const nodexMeshDemoProject: Project = {
           "checklist": []
         }
       ],
-      "width": 1024,
+      "width": 1440,
       "locked": false,
       "tags": [
         "todo"
@@ -992,15 +1016,15 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "ot43ea9e",
-      "x": 3240.0000000000005,
-      "y": 971,
+      "x": 3930.8180137353884,
+      "y": 1068,
       "zIndex": 25,
       "type": "document",
       "title": "Updates info",
       "content": "<h2>        Updates and timeline</h2><p>Updates are made practically everyday. timeline here is the <strong>new block</strong> that should help me <em>(and you for your future projects)</em> to plan the tasks of new features, fixes etc.</p><p>The project is growing and I'm adding new useful things, if you have any new ideas and you think that your new feature would help in creating project, plans etc in this app, just go to my <strong><u>github project</u></strong> <em>(link next to this document) </em>and create the feature improvement issue. Or you can fork the project and create the feature by yourself, so if you would want to have this in official codebase, just create <strong>pull request</strong> and wait for <strong>review</strong>.</p>",
       "width": 480,
       "autoHeight": true,
-      "locked": true,
+      "locked": false,
       "typography": {
         "fontSize": 16
       },
@@ -1008,8 +1032,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "e541ca6e-b0fd-4a73-90d4-2eb14b0077f0",
-      "x": 3420,
-      "y": 1487,
+      "x": 4110.8180137353875,
+      "y": 1584,
       "zIndex": 26,
       "type": "link",
       "url": "https://github.com/Lewan24/NodexMesh",
@@ -1019,7 +1043,7 @@ export const nodexMeshDemoProject: Project = {
       "height": 144,
       "color": "#fdf4ff",
       "topColor": "#7C3AED",
-      "locked": true,
+      "locked": false,
       "frameId": null
     },
     {
@@ -1283,803 +1307,10 @@ export const nodexMeshDemoProject: Project = {
       "frameId": null
     },
     {
-      "id": "aa940a55-8054-417b-b12b-e6086402a1fd",
-      "type": "drawing",
-      "x": 2896,
-      "y": 1143.0001961225812,
-      "width": 321.6388389416902,
-      "height": 195.5645279516807,
-      "viewWidth": 356.00281147091346,
-      "viewHeight": 195.5645279516807,
-      "points": [],
-      "color": "#7C3AED",
-      "strokeWidth": 3,
-      "zIndex": 32,
-      "strokes": [
-        {
-          "points": [
-            {
-              "x": 347.6388389416902,
-              "y": 12.323325793961658,
-              "pressure": 1
-            },
-            {
-              "x": 347.1812465874341,
-              "y": 12.323325793961658,
-              "pressure": 1.1650721154102817
-            },
-            {
-              "x": 346.33679829923676,
-              "y": 12.323325793961658,
-              "pressure": 1.2042269513754325
-            },
-            {
-              "x": 344.81574289856917,
-              "y": 11.813969578278147,
-              "pressure": 1.236306451500139
-            },
-            {
-              "x": 342.9638987449898,
-              "y": 11.52005863759814,
-              "pressure": 1.285414516119204
-            },
-            {
-              "x": 341.34447006139,
-              "y": 10.857568323994883,
-              "pressure": 1.3267109468930265
-            },
-            {
-              "x": 338.82898322640676,
-              "y": 10.43393310306692,
-              "pressure": 1.3407049620951914
-            },
-            {
-              "x": 335.6716249473111,
-              "y": 10.161976989609911,
-              "pressure": 1.32672007434407
-            },
-            {
-              "x": 331.7384872558482,
-              "y": 9.487620654967031,
-              "pressure": 1.3192454095047297
-            },
-            {
-              "x": 327.0613335975181,
-              "y": 9.057821026483452,
-              "pressure": 1.2851860727704751
-            },
-            {
-              "x": 320.9350732912476,
-              "y": 8.244503358856491,
-              "pressure": 1.2491456361849063
-            },
-            {
-              "x": 313.9567964344192,
-              "y": 7.201784914027485,
-              "pressure": 1.2142335020364348
-            },
-            {
-              "x": 307.5515468712788,
-              "y": 6.651094266382415,
-              "pressure": 1.2105403745024275
-            },
-            {
-              "x": 302.4318503835025,
-              "y": 6.345838126396529,
-              "pressure": 1.226675559578777
-            },
-            {
-              "x": 298.06953468299025,
-              "y": 6.1743912684489715,
-              "pressure": 1.2678363897397875
-            },
-            {
-              "x": 294.4033779982392,
-              "y": 6.06921894527386,
-              "pressure": 1.2973159813869455
-            },
-            {
-              "x": 289.33950236762894,
-              "y": 6,
-              "pressure": 1.2806817405154445
-            },
-            {
-              "x": 282.79551190257916,
-              "y": 6.5205260731054295,
-              "pressure": 1.2418057782301672
-            },
-            {
-              "x": 275.3996564379354,
-              "y": 7.417782069324176,
-              "pressure": 1.196635666743839
-            },
-            {
-              "x": 268.92033978972495,
-              "y": 8.420696788494524,
-              "pressure": 1.1923794527572664
-            },
-            {
-              "x": 263.36369957982424,
-              "y": 9.4783933817655,
-              "pressure": 1.218123570279349
-            },
-            {
-              "x": 258.46019845018964,
-              "y": 10.635926672566711,
-              "pressure": 1.232453525161453
-            },
-            {
-              "x": 253.52708284875325,
-              "y": 11.829201934069033,
-              "pressure": 1.2493440132752827
-            },
-            {
-              "x": 249.01849533991117,
-              "y": 13.061551496953143,
-              "pressure": 1.26009270425727
-            },
-            {
-              "x": 244.8600601579069,
-              "y": 14.2893167160139,
-              "pressure": 1.2788262475618983
-            },
-            {
-              "x": 241.42933343883442,
-              "y": 15.503606468485032,
-              "pressure": 1.3091330300438224
-            },
-            {
-              "x": 238.29514984600837,
-              "y": 16.758135795942962,
-              "pressure": 1.3237863838008874
-            },
-            {
-              "x": 235.36111756449418,
-              "y": 18.532589850805834,
-              "pressure": 1.3302536025555014
-            },
-            {
-              "x": 231.9548521209772,
-              "y": 20.688739644574753,
-              "pressure": 1.3158583188762079
-            },
-            {
-              "x": 227.64207167024142,
-              "y": 23.673294062502237,
-              "pressure": 1.2816777462902684
-            },
-            {
-              "x": 222.8353908663271,
-              "y": 26.568858356118653,
-              "pressure": 1.2446103643652446
-            },
-            {
-              "x": 217.45908124559674,
-              "y": 29.800993681654745,
-              "pressure": 1.2292897528040114
-            },
-            {
-              "x": 212.83384480257155,
-              "y": 33.22194406624317,
-              "pressure": 1.2285638588791001
-            },
-            {
-              "x": 208.53468232010755,
-              "y": 36.819359168137,
-              "pressure": 1.2285293133803983
-            },
-            {
-              "x": 204.49400632539846,
-              "y": 40.45766667161615,
-              "pressure": 1.2372008807008943
-            },
-            {
-              "x": 200.38426605522636,
-              "y": 44.865352194613024,
-              "pressure": 1.2261564464960983
-            },
-            {
-              "x": 196.45575678552268,
-              "y": 48.962382269266755,
-              "pressure": 1.226844124712297
-            },
-            {
-              "x": 192.53272563477594,
-              "y": 53.52265834929085,
-              "pressure": 1.2242152416429508
-            },
-            {
-              "x": 189.203612218113,
-              "y": 58.287047716260304,
-              "pressure": 1.2260838570317312
-            },
-            {
-              "x": 185.614477618813,
-              "y": 62.724689528015915,
-              "pressure": 1.2218692230772625
-            },
-            {
-              "x": 183.1452041174557,
-              "y": 66.16666323695813,
-              "pressure": 1.2486560416914199
-            },
-            {
-              "x": 181.25260227972421,
-              "y": 69.0970286704644,
-              "pressure": 1.300702750542262
-            },
-            {
-              "x": 179.53577332799432,
-              "y": 71.97989818907331,
-              "pressure": 1.3175035479350883
-            },
-            {
-              "x": 177.3384184628485,
-              "y": 76.01228667673718,
-              "pressure": 1.2913856714362273
-            },
-            {
-              "x": 174.8618033616176,
-              "y": 81.86728601238474,
-              "pressure": 1.2503080390859953
-            },
-            {
-              "x": 172.99257455394127,
-              "y": 87.1661083219119,
-              "pressure": 1.2410199534982116
-            },
-            {
-              "x": 171.95588406891466,
-              "y": 91.13109465421712,
-              "pressure": 1.2580570332999472
-            },
-            {
-              "x": 170.87219821450708,
-              "y": 94.38240543584698,
-              "pressure": 1.2973056869204906
-            },
-            {
-              "x": 169.69248453073078,
-              "y": 97.92170580814695,
-              "pressure": 1.3145426079460178
-            },
-            {
-              "x": 167.842832099519,
-              "y": 102.93478744598929,
-              "pressure": 1.287555505523621
-            },
-            {
-              "x": 166.22365715273918,
-              "y": 108.01679867895632,
-              "pressure": 1.2670931800045495
-            },
-            {
-              "x": 164.29533187162224,
-              "y": 112.38393925328796,
-              "pressure": 1.2751633378724447
-            },
-            {
-              "x": 163.1660965974097,
-              "y": 115.94567956966603,
-              "pressure": 1.2940067418112366
-            },
-            {
-              "x": 162.5209494686569,
-              "y": 118.45162357096001,
-              "pressure": 1.3486190904722624
-            },
-            {
-              "x": 161.61456097530754,
-              "y": 121.05762397549006,
-              "pressure": 1.3662351239336388
-            },
-            {
-              "x": 160.52030403199387,
-              "y": 124.26698047694254,
-              "pressure": 1.3531259413353565
-            },
-            {
-              "x": 159.32682375444256,
-              "y": 127.8020202953885,
-              "pressure": 1.3327400538993217
-            },
-            {
-              "x": 158.10578209711957,
-              "y": 131.43821020717496,
-              "pressure": 1.3223885617392164
-            },
-            {
-              "x": 156.88966837396674,
-              "y": 135.0707666647004,
-              "pressure": 1.328938374442974
-            },
-            {
-              "x": 155.62509183863767,
-              "y": 138.34533757110353,
-              "pressure": 1.3236044476474178
-            },
-            {
-              "x": 154.38335565823763,
-              "y": 141.2677594487784,
-              "pressure": 1.333916376123404
-            },
-            {
-              "x": 152.6092827636876,
-              "y": 144.5854611519694,
-              "pressure": 1.334873976440606
-            },
-            {
-              "x": 151.05193408393188,
-              "y": 147.56208604792187,
-              "pressure": 1.3450682829895002
-            },
-            {
-              "x": 149.03011470997126,
-              "y": 151.00403670478,
-              "pressure": 1.3304925707076687
-            },
-            {
-              "x": 147.36638156977278,
-              "y": 153.98359604016855,
-              "pressure": 1.3416532749496324
-            },
-            {
-              "x": 145.8310835588277,
-              "y": 156.83779167426792,
-              "pressure": 1.34254464912986
-            },
-            {
-              "x": 143.90422771676322,
-              "y": 159.56502677446701,
-              "pressure": 1.3465687627837386
-            },
-            {
-              "x": 142.1869099171463,
-              "y": 162.8026570924908,
-              "pressure": 1.3360581290444953
-            },
-            {
-              "x": 139.618302133646,
-              "y": 165.78022406811783,
-              "pressure": 1.3277436987692752
-            },
-            {
-              "x": 137.6007815380185,
-              "y": 168.0393590344131,
-              "pressure": 1.3333545719605104
-            },
-            {
-              "x": 136.4060327476027,
-              "y": 169.86199794113622,
-              "pressure": 1.3563757234327545
-            },
-            {
-              "x": 135.231497745679,
-              "y": 170.94673397177894,
-              "pressure": 1.4044226838222829
-            },
-            {
-              "x": 134.0356171303256,
-              "y": 171.6295807011786,
-              "pressure": 1.4501042468764347
-            },
-            {
-              "x": 132.77597476151595,
-              "y": 172.54983269439845,
-              "pressure": 1.4618641539296255
-            },
-            {
-              "x": 130.96917658884604,
-              "y": 173.15780848361396,
-              "pressure": 1.4430136456148155
-            },
-            {
-              "x": 128.32993608812194,
-              "y": 174.04117561195358,
-              "pressure": 1.4165381790320453
-            },
-            {
-              "x": 125.06915678717678,
-              "y": 175.13042659391294,
-              "pressure": 1.3718527523548039
-            },
-            {
-              "x": 121.05119629901856,
-              "y": 176.8186728552514,
-              "pressure": 1.3412875932322086
-            },
-            {
-              "x": 117.16334951398903,
-              "y": 178.3186031369703,
-              "pressure": 1.3283718392722372
-            },
-            {
-              "x": 113.83566811585888,
-              "y": 179.2105228079638,
-              "pressure": 1.324791794339881
-            },
-            {
-              "x": 110.37002817966459,
-              "y": 180.23695787078077,
-              "pressure": 1.333782883139591
-            },
-            {
-              "x": 107.3432119524341,
-              "y": 180.84712790367848,
-              "pressure": 1.3586922659853242
-            },
-            {
-              "x": 104.94345208189861,
-              "y": 181.23228094571982,
-              "pressure": 1.3683573136135183
-            },
-            {
-              "x": 103.01070281830653,
-              "y": 181.4656483916308,
-              "pressure": 1.3893344945294628
-            },
-            {
-              "x": 100.86083476500471,
-              "y": 181.61068936893275,
-              "pressure": 1.410432451221343
-            },
-            {
-              "x": 98.49429000182909,
-              "y": 181.70462681569848,
-              "pressure": 1.407302715924047
-            },
-            {
-              "x": 95.48330711197286,
-              "y": 181.76454514797683,
-              "pressure": 1.3884452344049447
-            },
-            {
-              "x": 90.85626390003927,
-              "y": 181.80353199629258,
-              "pressure": 1.3414134435366456
-            },
-            {
-              "x": 85.99774342959063,
-              "y": 181.82641351200527,
-              "pressure": 1.3065912203091459
-            },
-            {
-              "x": 81.12176776525757,
-              "y": 181.8394857324297,
-              "pressure": 1.2919692261172284
-            },
-            {
-              "x": 76.676314938215,
-              "y": 181.84719233808437,
-              "pressure": 1.28312845828206
-            },
-            {
-              "x": 72.00743368689064,
-              "y": 181.85170035800593,
-              "pressure": 1.2833807604920984
-            },
-            {
-              "x": 67.02610198109278,
-              "y": 181.85446193947087,
-              "pressure": 1.2708340647010155
-            },
-            {
-              "x": 62.012261552562904,
-              "y": 181.3291280901051,
-              "pressure": 1.2651677540889985
-            },
-            {
-              "x": 57.62291027586116,
-              "y": 181.02944940477346,
-              "pressure": 1.2785613530959439
-            },
-            {
-              "x": 54.100486419035406,
-              "y": 180.8558215916628,
-              "pressure": 1.311625600228385
-            },
-            {
-              "x": 51.5042536154906,
-              "y": 180.75132468856737,
-              "pressure": 1.3531379201598694
-            },
-            {
-              "x": 49.40716821279193,
-              "y": 180.212549053771,
-              "pressure": 1.3864352166199754
-            },
-            {
-              "x": 47.61966668797095,
-              "y": 179.87426400246886,
-              "pressure": 1.4137590895556444
-            },
-            {
-              "x": 44.97210617602832,
-              "y": 179.6513132573332,
-              "pressure": 1.4060477448897717
-            },
-            {
-              "x": 42.90348900714116,
-              "y": 179.04098314234125,
-              "pressure": 1.4193011951097552
-            },
-            {
-              "x": 40.542057687430315,
-              "y": 178.63866750107059,
-              "pressure": 1.3986915594683949
-            },
-            {
-              "x": 38.615285886393394,
-              "y": 178.39469456662982,
-              "pressure": 1.3893088109159182
-            },
-            {
-              "x": 36.52237723832877,
-              "y": 178.25030117009783,
-              "pressure": 1.4075161676411427
-            },
-            {
-              "x": 34.716073113791026,
-              "y": 177.67898580653173,
-              "pressure": 1.4152073207649385
-            },
-            {
-              "x": 32.599648255960346,
-              "y": 176.83116151163063,
-              "pressure": 1.4126053033587835
-            },
-            {
-              "x": 30.83860494704504,
-              "y": 175.8412142190366,
-              "pressure": 1.4262854822055542
-            },
-            {
-              "x": 28.63463517832315,
-              "y": 175.1733054450401,
-              "pressure": 1.393331344393203
-            },
-            {
-              "x": 26.950194305022706,
-              "y": 174.80372227755515,
-              "pressure": 1.4279751128526765
-            },
-            {
-              "x": 25.861814345025323,
-              "y": 174.09413186432653,
-              "pressure": 1.4428370169185352
-            },
-            {
-              "x": 24.68806033267265,
-              "y": 173.63940160612606,
-              "pressure": 1.4449859118429746
-            },
-            {
-              "x": 23.518788187904647,
-              "y": 173.36401588312378,
-              "pressure": 1.4750615668615108
-            },
-            {
-              "x": 22.268553653956133,
-              "y": 172.70754148409446,
-              "pressure": 1.4715917006402413
-            },
-            {
-              "x": 20.992668380368286,
-              "y": 172.28882428548604,
-              "pressure": 1.4619746556534197
-            },
-            {
-              "x": 19.776651458536435,
-              "y": 172.0390348361134,
-              "pressure": 1.4933337152680735
-            },
-            {
-              "x": 18.504945447967202,
-              "y": 171.8736169933245,
-              "pressure": 1.4954778314568822
-            },
-            {
-              "x": 17.215920781035948,
-              "y": 171.76722167203297,
-              "pressure": 1.4896488532242143
-            },
-            {
-              "x": 16.391042168559125,
-              "y": 171.2230756069962,
-              "pressure": 1.4780779383407747
-            },
-            {
-              "x": 15.417764851246375,
-              "y": 170.8881634099689,
-              "pressure": 1.4861683183064323
-            },
-            {
-              "x": 14.311556052093692,
-              "y": 170.6706925722176,
-              "pressure": 1.478358363355043
-            },
-            {
-              "x": 13.11244031111346,
-              "y": 170.5303433371132,
-              "pressure": 1.4573508543485298
-            },
-            {
-              "x": 11.446153717516609,
-              "y": 170.4455705215255,
-              "pressure": 1.4630709711519132
-            },
-            {
-              "x": 10.295177460409832,
-              "y": 169.8732716543891,
-              "pressure": 1.4128261503945745
-            },
-            {
-              "x": 9.220539576952433,
-              "y": 169.56686981631606,
-              "pressure": 1.4525930810121033
-            },
-            {
-              "x": 8.058741828733673,
-              "y": 168.90439422200916,
-              "pressure": 1.4720383999590372
-            },
-            {
-              "x": 6,
-              "y": 167.73046681630944,
-              "pressure": 1.4720383999590372
-            }
-          ],
-          "x": 2.363972529223247,
-          "y": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "color": "#7C3AED",
-          "strokeWidth": 3
-        },
-        {
-          "points": [
-            {
-              "x": 25.0606075150954,
-              "y": 6,
-              "pressure": 1
-            },
-            {
-              "x": 25.0606075150954,
-              "y": 6.461922051966894,
-              "pressure": 1.1575812274175268
-            },
-            {
-              "x": 24.55844516421257,
-              "y": 6.783480453097127,
-              "pressure": 1.2116992644927942
-            },
-            {
-              "x": 22.778082477925636,
-              "y": 6.9758624036492165,
-              "pressure": 1.2601967844150288
-            },
-            {
-              "x": 21.182891960195775,
-              "y": 8.084682884256608,
-              "pressure": 1.2920946895421985
-            },
-            {
-              "x": 18.629771078256,
-              "y": 9.303043986961256,
-              "pressure": 1.2943522301608306
-            },
-            {
-              "x": 16.101910693012996,
-              "y": 11.038718476292843,
-              "pressure": 1.302767475961859
-            },
-            {
-              "x": 13.573135151139468,
-              "y": 13.09044849403017,
-              "pressure": 1.3120663877268612
-            },
-            {
-              "x": 10.511157627931425,
-              "y": 14.849700538996785,
-              "pressure": 1.3159075428371374
-            },
-            {
-              "x": 8.467601752766313,
-              "y": 16.580375300722153,
-              "pressure": 1.2717602799859962
-            },
-            {
-              "x": 7.024910686157909,
-              "y": 17.405579400402075,
-              "pressure": 1.3373750531745028
-            },
-            {
-              "x": 6.142862176812287,
-              "y": 18.36072289003755,
-              "pressure": 1.414055309532806
-            },
-            {
-              "x": 6,
-              "y": 21.19847334062615,
-              "pressure": 1.3645639964452927
-            },
-            {
-              "x": 6.960204537957452,
-              "y": 24.93710031465298,
-              "pressure": 1.3358312247138953
-            },
-            {
-              "x": 7.4825801486699675,
-              "y": 27.448947921681338,
-              "pressure": 1.3676772774058823
-            },
-            {
-              "x": 7.802726111250649,
-              "y": 29.45488616136572,
-              "pressure": 1.407374094149564
-            },
-            {
-              "x": 8.475828365553753,
-              "y": 30.73741127699668,
-              "pressure": 1.4321299510110777
-            },
-            {
-              "x": 8.891533159560367,
-              "y": 31.984855543039203,
-              "pressure": 1.4715578671162048
-            },
-            {
-              "x": 9.16230577613942,
-              "y": 33.25691583019716,
-              "pressure": 1.4917719229234303
-            },
-            {
-              "x": 9.790893276553106,
-              "y": 34.523635290786615,
-              "pressure": 1.5121177766773015
-            },
-            {
-              "x": 10.202877650957817,
-              "y": 35.817284352511024,
-              "pressure": 1.513542684661846
-            },
-            {
-              "x": 10.462771363323554,
-              "y": 37.090737422062375,
-              "pressure": 1.5249365537282398
-            },
-            {
-              "x": 11.116635926041454,
-              "y": 37.94895409967103,
-              "pressure": 1.4989399626097677
-            },
-            {
-              "x": 11.524513766959444,
-              "y": 38.96036697198747,
-              "pressure": 1.4845817149106622
-            },
-            {
-              "x": 12.21704214134752,
-              "y": 40.67762650911891,
-              "pressure": 1.4845817149106622
-            }
-          ],
-          "x": 0,
-          "y": 148.8869014425618,
-          "scaleX": 1,
-          "scaleY": 1,
-          "color": "#7C3AED",
-          "strokeWidth": 3
-        }
-      ],
-      "locked": true,
-      "frameId": null
-    },
-    {
       "id": "78656c30-2f9d-4451-a8f0-9e795a3feaca",
       "type": "drawing",
-      "x": 3086.5260304188864,
-      "y": 1352.2518548217574,
+      "x": 3801.517836496122,
+      "y": 1453.4326551891743,
       "width": 278.4821635038779,
       "height": 289.13468962165143,
       "viewWidth": 278.4821635038779,
@@ -2525,8 +1756,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "oxhv2p6f",
-      "x": 3976,
-      "y": 971,
+      "x": 3168,
+      "y": 252,
       "zIndex": 37,
       "color": "#ffffff",
       "typography": {
@@ -2677,7 +1908,7 @@ export const nodexMeshDemoProject: Project = {
         }
       ],
       "height": 742.9998038774188,
-      "locked": true,
+      "locked": false,
       "frameId": null
     },
     {
@@ -2722,8 +1953,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "jw1muxjd",
-      "x": 3728,
-      "y": 1856,
+      "x": 3733.6360274707768,
+      "y": 1984,
       "zIndex": 40,
       "color": "#ffffff",
       "type": "link",
@@ -2736,7 +1967,7 @@ export const nodexMeshDemoProject: Project = {
     {
       "id": "qyiu9i6n",
       "x": 3057.63883894169,
-      "y": 1904,
+      "y": 2007.9999999999998,
       "zIndex": 41,
       "color": "#ffffff",
       "type": "link",
@@ -2749,7 +1980,7 @@ export const nodexMeshDemoProject: Project = {
     {
       "id": "7ww3ydsc",
       "x": 3061.6360274707768,
-      "y": 2160,
+      "y": 2264,
       "zIndex": 42,
       "color": "#ffffff",
       "type": "image",
@@ -2765,9 +1996,9 @@ export const nodexMeshDemoProject: Project = {
       "id": "3u053vou",
       "type": "line",
       "x": 3216,
-      "y": 2117.25,
+      "y": 2221.25,
       "x2": 3289.6000395887945,
-      "y2": 2160,
+      "y2": 2264,
       "zIndex": 43,
       "arrowStart": false,
       "arrowEnd": true,
@@ -2784,7 +2015,7 @@ export const nodexMeshDemoProject: Project = {
     {
       "id": "gf6ms9im",
       "x": 3420,
-      "y": 2026,
+      "y": 2130,
       "zIndex": 44,
       "typography": {
         "verticalAlign": "top",
@@ -2798,8 +2029,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "s97xly2v",
-      "x": 4048,
-      "y": 2544,
+      "x": 4208,
+      "y": 2495,
       "zIndex": 45,
       "color": "#ffffff",
       "type": "link",
@@ -2811,8 +2042,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "7vxmhes3",
-      "x": 4080,
-      "y": 1856,
+      "x": 4144,
+      "y": 1867,
       "zIndex": 46,
       "color": "#ffffff",
       "type": "note",
@@ -2825,8 +2056,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "tsdo8gm6",
-      "x": 3061.6360274707768,
-      "y": 2744,
+      "x": 3210.8180137353884,
+      "y": 2842,
       "zIndex": 47,
       "color": "#ffffff",
       "type": "embed",
@@ -2907,8 +2138,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "a2ccffb8-d988-4c55-b1b7-a3c75b96ccc1",
-      "x": 4650.818013735388,
-      "y": 3488,
+      "x": 3057.63883894169,
+      "y": 4208,
       "zIndex": 52,
       "color": "#ffffff",
       "type": "code",
@@ -2941,8 +2172,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "119042d0-4205-4691-8874-527f50352f93",
-      "x": 5482.818013735388,
-      "y": 3488,
+      "x": 3898.8180137353884,
+      "y": 4208,
       "zIndex": 54,
       "color": "#ffffff",
       "type": "code",
@@ -2958,9 +2189,9 @@ export const nodexMeshDemoProject: Project = {
       "id": "a6j5xe2f",
       "type": "line",
       "x": 3728,
-      "y": 1968,
+      "y": 2072,
       "x2": 4080,
-      "y2": 2157.485779701884,
+      "y2": 2261.485779701884,
       "zIndex": 55,
       "arrowStart": true,
       "arrowEnd": true,
@@ -2977,8 +2208,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "m2scw64s",
-      "x": 3122.8180137353884,
-      "y": 3232,
+      "x": 3119.999999999999,
+      "y": 3276,
       "zIndex": 56,
       "typography": {
         "textAlign": "center"
@@ -3011,8 +2242,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "4qqcbprg",
-      "x": 4650.818013735388,
-      "y": 1856,
+      "x": 4778.818013735388,
+      "y": 2018,
       "zIndex": 58,
       "color": "#ffffff",
       "type": "document",
@@ -3024,8 +2255,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "lc6a9mh2",
-      "x": 5152,
-      "y": 2408,
+      "x": 5376,
+      "y": 2618,
       "zIndex": 59,
       "color": "#1c1917",
       "type": "database",
@@ -3129,7 +2360,7 @@ export const nodexMeshDemoProject: Project = {
           "name": "Projects",
           "position": {
             "x": 16,
-            "y": 0
+            "y": 16
           },
           "fields": [
             {
@@ -3314,6 +2545,89 @@ export const nodexMeshDemoProject: Project = {
               "defaultValue": ""
             }
           ]
+        },
+        {
+          "id": "8bca42dd-9292-4047-aea8-2bf47746b131",
+          "name": "UsersProjectsSettings",
+          "position": {
+            "x": -352,
+            "y": -288
+          },
+          "fields": [
+            {
+              "id": "232b284a-47e4-4026-a290-70c37ba28f55",
+              "name": "Project_ID",
+              "dataType": "Guid",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "0fb2046f-f7e7-433f-9e98-7e09b119397d",
+              "name": "User_ID",
+              "dataType": "Guid",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "5eee34fb-ccc5-4528-9704-7cd568275db4",
+              "name": "Settings_ID",
+              "dataType": "Guid",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            }
+          ]
+        },
+        {
+          "id": "7ddaf113-9726-4853-b58c-791e9565dcd5",
+          "name": "ProjectSettings",
+          "position": {
+            "x": 128,
+            "y": -256
+          },
+          "fields": [
+            {
+              "id": "13f63485-022d-46db-ab61-2d39cfff077f",
+              "name": "id",
+              "dataType": "Guid",
+              "primaryKey": true,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "98ad3099-7815-4c2e-bafa-39a68197e8bc",
+              "name": "ThemeSettings",
+              "dataType": "JSONB",
+              "primaryKey": false,
+              "nullable": true,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "22c9406f-f737-4e8f-ba26-405f2f31ea8c",
+              "name": "UIFont",
+              "dataType": "string",
+              "primaryKey": false,
+              "nullable": true,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "1a69721b-3cdc-4c36-9341-48c66013476e",
+              "name": "BoardItemsFont",
+              "dataType": "string",
+              "primaryKey": false,
+              "nullable": true,
+              "unique": false,
+              "defaultValue": ""
+            }
+          ]
         }
       ],
       "relations": [
@@ -3348,6 +2662,30 @@ export const nodexMeshDemoProject: Project = {
           "sourceField": "c62fa175-0d07-4376-b29d-a59bfce171f5",
           "targetField": "9752b188-2ed7-4a22-a2eb-3a0fe993f416",
           "cardinality": "1:N"
+        },
+        {
+          "id": "b0dc8a02-fa06-4a53-a4f5-feff27dcace3",
+          "source": "8bca42dd-9292-4047-aea8-2bf47746b131",
+          "target": "352fe5aa-272f-4f5e-b4df-8b3b016e1642",
+          "sourceField": "232b284a-47e4-4026-a290-70c37ba28f55",
+          "targetField": "9752b188-2ed7-4a22-a2eb-3a0fe993f416",
+          "cardinality": "1:1"
+        },
+        {
+          "id": "f2d16fd0-547c-4109-a49e-13f45546f88a",
+          "source": "8bca42dd-9292-4047-aea8-2bf47746b131",
+          "target": "c620b13f-3913-4d39-8183-acb189258c01",
+          "sourceField": "0fb2046f-f7e7-433f-9e98-7e09b119397d",
+          "targetField": "c6f0c35d-01e7-4017-b20c-becdd3abf16d",
+          "cardinality": "1:1"
+        },
+        {
+          "id": "23f2a4da-a3c2-4a3d-bac3-d75b32bda927",
+          "source": "8bca42dd-9292-4047-aea8-2bf47746b131",
+          "target": "7ddaf113-9726-4853-b58c-791e9565dcd5",
+          "sourceField": "5eee34fb-ccc5-4528-9704-7cd568275db4",
+          "targetField": "13f63485-022d-46db-ab61-2d39cfff077f",
+          "cardinality": "1:1"
         }
       ],
       "width": 1920,
@@ -3376,8 +2714,8 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "wjciisxx",
-      "x": 5152,
-      "y": 1856,
+      "x": 5472,
+      "y": 2007.9999999999998,
       "zIndex": 61,
       "color": "#ffffff",
       "type": "code",
@@ -3389,13 +2727,13 @@ export const nodexMeshDemoProject: Project = {
     },
     {
       "id": "8kmj9xst",
-      "x": 4576,
+      "x": 4704,
       "y": 1888,
       "zIndex": 62,
       "color": "#000000",
       "type": "line",
       "divider": true,
-      "x2": 4576,
+      "x2": 4704,
       "y2": 3392,
       "arrowStart": false,
       "arrowEnd": false,
@@ -3407,32 +2745,12 @@ export const nodexMeshDemoProject: Project = {
       "frameId": null
     },
     {
-      "id": "d9b20105-4aaf-4bd2-9d4f-ec9f89cfb3ad",
-      "x": 7072,
-      "y": 3392,
-      "zIndex": 63,
-      "color": "#000000",
-      "type": "line",
-      "divider": true,
-      "x2": 4576,
-      "y2": 3392,
-      "arrowStart": false,
-      "arrowEnd": false,
-      "strokeWidth": 3,
-      "label": "",
-      "labelMode": "horizontal",
-      "labelOffset": 14,
-      "labelFontSize": 11,
-      "frameId": null,
-      "locked": false
-    },
-    {
       "id": "6at7mp5r",
       "type": "line",
       "x": 3520,
-      "y": 2128,
+      "y": 2232,
       "x2": 3522.6357937538464,
-      "y2": 2156,
+      "y2": 2260,
       "zIndex": 64,
       "arrowStart": false,
       "arrowEnd": true,
@@ -3450,9 +2768,9 @@ export const nodexMeshDemoProject: Project = {
       "id": "ofc9bpfn",
       "type": "line",
       "x": 3888,
-      "y": 1973.25,
+      "y": 1989.2500000000002,
       "x2": 4274.484561084746,
-      "y2": 2544,
+      "y2": 2560,
       "zIndex": 65,
       "arrowStart": false,
       "arrowEnd": true,
@@ -3470,21 +2788,343 @@ export const nodexMeshDemoProject: Project = {
       "id": "wq2vad7k",
       "type": "line",
       "x": 5120,
-      "y": 2261.234375,
+      "y": 2256,
       "x2": 5152,
-      "y2": 2264.0898602638345,
+      "y2": 2258.8554852638345,
       "zIndex": 66,
       "arrowStart": false,
       "arrowEnd": true,
       "color": "#7C3AED",
-      "strokeWidth": 2,
+      "strokeWidth": 3,
       "startItemId": "4qqcbprg",
+      "label": "Example data C# boxing",
+      "labelMode": "follow-line",
+      "labelOffset": 15,
+      "frameId": null,
+      "endItemId": "wjciisxx",
+      "curve": 0,
+      "typography": {
+        "fontSize": 13
+      },
+      "labelFontSize": 13
+    },
+    {
+      "id": "32f31e8e-4585-41e5-be6b-cab0cefdeaf4",
+      "type": "drawing",
+      "x": 4430.8180137353875,
+      "y": 1167.9230869802286,
+      "width": 417.1193998589233,
+      "height": 180.15382603954276,
+      "frameId": null,
+      "viewWidth": 417.1193998589233,
+      "viewHeight": 180.15382603954276,
+      "points": [],
+      "color": "#7C3AED",
+      "strokeWidth": 3,
+      "zIndex": 68,
+      "strokes": [
+        {
+          "points": [
+            {
+              "x": 6,
+              "y": 165.33232169954476,
+              "pressure": 1
+            },
+            {
+              "x": 6.538560836654142,
+              "y": 165.33232169954476,
+              "pressure": 1.1682163187869112
+            },
+            {
+              "x": 7.620308399243186,
+              "y": 165.33232169954476,
+              "pressure": 1.1683764231508378
+            },
+            {
+              "x": 11.596504819245638,
+              "y": 166.00259329911455,
+              "pressure": 1.1606566819890693
+            },
+            {
+              "x": 22.690265125538644,
+              "y": 166.43534822842798,
+              "pressure": 1.1073377262176904
+            },
+            {
+              "x": 42.24919173444141,
+              "y": 166.6781382281199,
+              "pressure": 1.0380035411742639
+            },
+            {
+              "x": 69.11528941895358,
+              "y": 165.83054500525395,
+              "pressure": 0.9760474528708146
+            },
+            {
+              "x": 98.90331052038891,
+              "y": 163.5496142084462,
+              "pressure": 0.9285199673373736
+            },
+            {
+              "x": 130.00676036752066,
+              "y": 159.68380944127398,
+              "pressure": 0.8903019660834965
+            },
+            {
+              "x": 163.40212091624744,
+              "y": 153.1891784958416,
+              "pressure": 0.8600168816709971
+            },
+            {
+              "x": 192.17536307155933,
+              "y": 144.34481945637367,
+              "pressure": 0.8467462386749021
+            },
+            {
+              "x": 218.5849327898395,
+              "y": 134.51102733764924,
+              "pressure": 0.8401629446115294
+            },
+            {
+              "x": 249.10525748955024,
+              "y": 121.56183869801362,
+              "pressure": 0.8269614944976327
+            },
+            {
+              "x": 282.1413313234725,
+              "y": 107.44860191730231,
+              "pressure": 0.8105029474495462
+            },
+            {
+              "x": 309.53885950325093,
+              "y": 91.37415262270406,
+              "pressure": 0.8071966260755825
+            },
+            {
+              "x": 329.7489548822623,
+              "y": 77.33376486153497,
+              "pressure": 0.821297168798571
+            },
+            {
+              "x": 350.53156942323767,
+              "y": 60.809157243287245,
+              "pressure": 0.8316560424732109
+            },
+            {
+              "x": 369.4695557581481,
+              "y": 45.33676348385529,
+              "pressure": 0.8417818211320809
+            },
+            {
+              "x": 379.4453836808643,
+              "y": 34.28782595238249,
+              "pressure": 0.8973487465851364
+            },
+            {
+              "x": 386.07171350805856,
+              "y": 25.825985479117435,
+              "pressure": 0.9714797093678036
+            },
+            {
+              "x": 391.06308932418597,
+              "y": 18.493834507658676,
+              "pressure": 1.0274717386138092
+            },
+            {
+              "x": 394.21249406779407,
+              "y": 13.548511625635228,
+              "pressure": 1.1136459422328573
+            },
+            {
+              "x": 399.0197268588772,
+              "y": 6,
+              "pressure": 1.1136459422328573
+            }
+          ],
+          "x": 0,
+          "y": 7.475687811422858,
+          "scaleX": 1,
+          "scaleY": 1,
+          "color": "#7C3AED",
+          "strokeWidth": 3
+        },
+        {
+          "points": [
+            {
+              "x": 6,
+              "y": 19.54549054283416,
+              "pressure": 1
+            },
+            {
+              "x": 6.537894191067608,
+              "y": 19.54549054283416,
+              "pressure": 1.1692374350097772
+            },
+            {
+              "x": 7.485415481602104,
+              "y": 18.969674484337247,
+              "pressure": 1.2380886632997155
+            },
+            {
+              "x": 8.626613643910787,
+              "y": 18.054656005056586,
+              "pressure": 1.2993070388379384
+            },
+            {
+              "x": 11.80138250102209,
+              "y": 16.839027158511954,
+              "pressure": 1.3021919483413837
+            },
+            {
+              "x": 16.413861328938765,
+              "y": 14.129184033092997,
+              "pressure": 1.2721112869158917
+            },
+            {
+              "x": 21.787520399999266,
+              "y": 11.863660645264417,
+              "pressure": 1.2393180631539733
+            },
+            {
+              "x": 26.343934573457773,
+              "y": 9.501678385189734,
+              "pressure": 1.2626780820070158
+            },
+            {
+              "x": 30.9169385745181,
+              "y": 8.067672177440045,
+              "pressure": 1.2768185826385559
+            },
+            {
+              "x": 36.287411579449326,
+              "y": 7.1687365930740725,
+              "pressure": 1.2667040423297475
+            },
+            {
+              "x": 40.520313392224125,
+              "y": 6.060267597560141,
+              "pressure": 1.2805777971178522
+            },
+            {
+              "x": 42.78284202377381,
+              "y": 6,
+              "pressure": 1.3745929060571755
+            },
+            {
+              "x": 43.8684708625442,
+              "y": 7.805043109052349,
+              "pressure": 1.342491061272395
+            },
+            {
+              "x": 43.89633460854384,
+              "y": 11.382958877647525,
+              "pressure": 1.314469022727504
+            },
+            {
+              "x": 42.66206899092322,
+              "y": 15.997566589309145,
+              "pressure": 1.2935174528498958
+            },
+            {
+              "x": 41.92577488979441,
+              "y": 20.654095306748104,
+              "pressure": 1.2718646560193172
+            },
+            {
+              "x": 41.53090510853963,
+              "y": 24.321197741801143,
+              "pressure": 1.3001357677235426
+            },
+            {
+              "x": 40.70843997195516,
+              "y": 28.30475137546796,
+              "pressure": 1.3237335949402
+            },
+            {
+              "x": 40.217714335047276,
+              "y": 31.24375047280023,
+              "pressure": 1.3622563736104394
+            },
+            {
+              "x": 39.39080244527668,
+              "y": 32.99998562964424,
+              "pressure": 1.4294311649342863
+            },
+            {
+              "x": 37.866464339908816,
+              "y": 36.237448054215065,
+              "pressure": 1.4294311649342863
+            }
+          ],
+          "x": 367.2230652503795,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "color": "#7C3AED",
+          "strokeWidth": 3
+        }
+      ],
+      "locked": true
+    },
+    {
+      "id": "5fkma8p3",
+      "x": 3061.6360274707768,
+      "y": 1856,
+      "zIndex": 0,
+      "color": "#7C3AED",
+      "type": "frame",
+      "title": "Backend Plan",
+      "width": 128,
+      "height": 80,
+      "frameId": null
+    },
+    {
+      "id": "051jka0t",
+      "x": 4778.818013735388,
+      "y": 1867,
+      "zIndex": 0,
+      "color": "#34008F",
+      "type": "frame",
+      "title": "NodexMesh Database Scheme Plan",
+      "width": 325.1819862646116,
+      "height": 80,
+      "frameId": null
+    },
+    {
+      "id": "t58foblo",
+      "x": 3261.6360274707768,
+      "y": 1867,
+      "zIndex": 69,
+      "typography": {
+        "textAlign": "center",
+        "fontSize": 24
+      },
+      "type": "text",
+      "content": "Just for global markdown",
+      "size": "lg",
+      "width": 224,
+      "frameId": null,
+      "height": 84
+    },
+    {
+      "id": "rkbwm6i9",
+      "type": "line",
+      "x": 3261.6360274707768,
+      "y": 1909,
+      "x2": 3189.6360274707768,
+      "y2": 1906.598611468244,
+      "zIndex": 70,
+      "arrowStart": false,
+      "arrowEnd": true,
+      "color": "#7C3AED",
+      "strokeWidth": 2,
+      "startItemId": "t58foblo",
       "label": "",
       "labelMode": "horizontal",
       "labelOffset": 14,
       "frameId": null,
-      "endItemId": "wjciisxx",
-      "curve": 0
+      "endItemId": "5fkma8p3",
+      "curve": -0.25
     }
   ]
 };

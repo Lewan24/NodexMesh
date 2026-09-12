@@ -72,7 +72,7 @@ export default function KanbanBlock({
   const columnsRef = useRef(item.columns);
   columnsRef.current = item.columns;
 
-  const { background, light: isLight } = useCardAppearance(item.color);
+  const { background, light: isLight } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
   const textColor = isLight ? '#1e293b' : '#ffffff';
   const mutedColor = isLight ? '#64748b' : '#b9aec9';
@@ -319,7 +319,7 @@ export default function KanbanBlock({
           height: item.height
             ? '100%'
             : undefined,
-          backgroundColor: background,
+          background,
           borderColor,
         }}
       >
@@ -338,7 +338,7 @@ export default function KanbanBlock({
         <div
           className="flex items-center justify-between px-4 py-3 border-b cursor-grab active:cursor-grabbing rounded-t-sm"
           style={{
-            backgroundColor: background,
+            background,
             borderColor,
           }}
         >

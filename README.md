@@ -50,6 +50,8 @@ https://nodexmesh.lewanmordor.workers.dev
 
 The pencil stays active until Escape or selecting another tool. Joined drawings retain separate strokes, colors and geometry.
 
+The Timeline schedule has a **Task column** width control for longer task names.
+
 ### Tasks and Kanban columns
 
 Checklist tasks and Kanban cards can be moved between blocks without losing completion state. Dropping a task onto empty canvas creates a checklist containing it. Cards can be added above or below existing cards.
@@ -64,7 +66,7 @@ Existing boards initialize membership on load, choosing the smallest containing 
 
 ### Diagrams and connections
 
-Open **Edit diagram** for the dedicated editor. Drag nodes on the grid, Shift-click or drag a selection rectangle to select several, then use **Align left** or **Align top**. **Snap to grid** toggles snapping; **Auto layout** arranges the graph. Right/middle-button dragging pans the editor.
+Open **Edit diagram** for the dedicated editor. Drag nodes on the grid, Shift-click or drag a selection rectangle to select several, then use **Align left** or **Align top**. **Snap to grid** toggles snapping; **Auto layout** arranges the graph vertically or horizontally using the direction selector. Right/middle-button dragging pans the editor.
 
 Drag a port to connect nodes; drag an existing connection endpoint to reconnect it. Selected connections support labels, deletion and rounded-elbow, curved or straight routing. Nodes can disconnect all their connections.
 
@@ -74,9 +76,17 @@ Canvas lines and arrows have a separate **Curve** slider: bend in either directi
 
 Choose **Planning → Database diagram** and open **Edit database**. Add tables, select a table to edit its name and fields, and use suggested or custom data types. Multiple PK fields can describe a composite primary key.
 
-Drag a port of a foreign-key field onto a port of its referenced field. Connections route between facing table sides. Relationships display cardinality (1:1, 1:N, N:1 or conceptual N:N). A physical many-to-many design can use an explicit junction table. Deleting fields/tables removes related connections, and board undo restores them. This is a schema planning tool; it does not connect to a live database or execute migrations.
+Drag a port of a foreign-key field onto a port of its referenced field. Connections route between facing table sides. Relationships display cardinality (1:1, 1:N, N:1 or conceptual N:N). A physical many-to-many design can use an explicit junction table. Use the up/down controls to reorder fields. The canvas preview uses SVG geometry independent of canvas zoom. Deleting fields/tables removes related connections, and board undo restores them. This is a schema planning tool; it does not connect to a live database or execute migrations.
 
 Code blocks use a dark background when the default/white color is selected so syntax highlighting remains readable in either application theme.
+
+### Personal appearance and gradients
+
+**Appearance** in the app bar configures your view of the current project or your defaults for all projects. Preferences are stored separately for each user and project, including light/dark palettes, primary/secondary colors, canvas background and Default/Accent 1–5 card colors. **Use my defaults** removes a project override.
+
+The default board font applies to items without an explicit font override. Interface font is a separate account-wide preference. These preferences are local to the current browser until backend synchronization is implemented.
+
+The edit bar supports semantic palette colors, fixed custom colors, linear gradients with an angle, and radial gradients from the center. Gradient stops can reference palette roles so they adapt when switching mode. Existing custom hex colors remain fixed. Top strips retain their existing controls. Code content uses a stable dark syntax surface while its header controls maintain independent readable colors.
 
 ### Projects and persistence
 
@@ -787,3 +797,9 @@ The project follows several implementation principles:
 
 Check out the [MIT License](https://github.com/Lewan24/NodexMesh/blob/main/LICENSE)
 
+
+### Appearance scopes
+
+Appearance settings separate **UI** (one personal app bar/sidebar palette and interface font across all projects and modes) from **Canvas**. Canvas defaults apply to new and uncustomized projects. Select any active project in the settings list to customize its light/dark palettes, cards, dialogs and board font. Project controls are disabled until **Use custom project theme** is checked. Unchecking it removes the override and restores live inheritance from general defaults. Switching light/dark mode never creates a project palette override. Save applies all pending changes; Cancel discards them. Preferences remain local and isolated by user.
+
+Canvas palettes support solid, linear and radial fills for default cards, accents and the canvas background, independently for light and dark modes. Theme gradients are inherited by semantic card colors; explicit card fills take precedence. Primary/secondary UI action colors remain solid for controls and icons.

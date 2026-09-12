@@ -55,6 +55,8 @@ export function createCanvasItem(
         type: 'note',
         content: '',
         color: typeof extra?.color === 'string' ? extra.color : '#ffffff',
+        colorRole: extra?.colorRole as NoteItem['colorRole'],
+        gradient: extra?.gradient as NoteItem['gradient'],
         dispenserId: typeof extra?.dispenserId === 'string' ? extra.dispenserId : undefined,
         height: extra?.dispenserId ? 160 : undefined,
         typography: extra?.dispenserId ? { textAlign: 'center', verticalAlign: 'middle' } : undefined,

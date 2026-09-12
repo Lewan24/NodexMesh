@@ -151,7 +151,7 @@ export default function ColumnBlock({
     );
   };
 
-  const { background, light: columnLight } = useCardAppearance(item.color);
+  const { background, light: columnLight } = useCardAppearance(item.color, item.gradient, item.colorRole);
   const headerTextColor = columnLight ? '#1e293b' : '#f1f5f9';
   const headerMutedColor = columnLight ? '#64748b' : '#94a3b8';
 
@@ -371,7 +371,7 @@ export default function ColumnBlock({
       <div
         className="item-rounded shadow-xl flex flex-col overflow-hidden"
         style={{
-          backgroundColor: background,
+          background,
           borderColor: isSelected || isDragOver
             ? 'var(--color-accent)'
             : columnLight
@@ -400,7 +400,7 @@ export default function ColumnBlock({
                 onClick={() => setShowBackgroundMenu(previous => !previous)}
                 className="w-4 h-4 rounded-full border-2 transition-transform hover:scale-125 cursor-pointer"
                 style={{
-                  backgroundColor: background,
+                  background,
                   borderColor: columnLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)',
                 }}
                 title="Column background color"

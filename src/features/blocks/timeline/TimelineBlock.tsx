@@ -89,6 +89,9 @@ export default function TimelineBlock({ item, onUpdate, onDelete }: { item: Time
         Schedule
       </button>
 
+      {item.mode === 'schedule' && <label className="text-xs flex items-center gap-2">Task column
+        <input aria-label="Task column width" type="range" min="160" max="600" step="16" value={item.taskColumnWidth ?? 180} disabled={item.locked} onChange={event => update(current => ({ ...current, taskColumnWidth: Number(event.target.value) }))} />
+      </label>}
       <div className="ml-auto flex items-center gap-2">
         {item.height && (
           <button
@@ -141,7 +144,7 @@ export default function TimelineBlock({ item, onUpdate, onDelete }: { item: Time
         <div className="text-xs font-medium text-theme-muted mb-1">{task.start || 'Unscheduled'}{task.end && task.end !== task.start ? ` → ${task.end}` : ''}</div>
         <div className="flex gap-2 items-center"><input type="checkbox" aria-label={`Complete ${task.title}`} checked={task.done} onMouseDown={event => event.stopPropagation()} onChange={() => updateTask(task.id, current => ({ ...current, done: !current.done }))} /><h3 className={`font-semibold text-sm ${task.done ? 'line-through opacity-50' : ''}`}>{task.title || 'Untitled task'}</h3>{<button className="planning-button ml-auto" onMouseDown={event => event.stopPropagation()} onClick={() => setDraft({ ...task, checklist: task.checklist.map(entry => ({ ...entry })) })}>Edit task</button>}</div>
         {task.checklist.map(entry => <label key={entry.id} className="flex gap-2 mt-2 text-xs" onMouseDown={event => event.stopPropagation()}><input type="checkbox" checked={entry.done} onChange={() => updateTask(task.id, current => ({ ...current, checklist: current.checklist.map(check => check.id === entry.id ? { ...check, done: !check.done } : check) }))} /><span className={entry.done ? 'line-through opacity-50' : ''}>{entry.text || 'Checklist item'}</span></label>)}
-      </article>)}</div> : item.tasks.length > 0 && <div className="timeline-grid" style={{ width: 180 + range.days * dayWidth }}>
+      </article>)}</div> : item.tasks.length > 0 && <div className="timeline-grid" style={{ width: (item.taskColumnWidth ?? 180) + range.days * dayWidth, gridTemplateColumns: `${item.taskColumnWidth ?? 180}px 1fr` }}>
         <div className="timeline-label font-semibold">Task / outcome</div>
         <div className="flex">{Array.from({ length: Math.ceil(range.days / 7) }, (_, index) => <div key={index} className="py-3 px-2 border-b border-r text-theme-muted shrink-0 overflow-hidden" style={{ width: dayWidth * 7, borderColor: 'var(--color-border)' }}>{dayDate(range.start + index * 7)}</div>)}</div>
         {item.tasks.map(task => { const dates = taskRange(task); return <div className="contents" key={task.id}>

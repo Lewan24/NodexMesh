@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import type { BoardItem } from '@/entities/board/types';
 
-import EditBar from '@/features/blocks/editbar/EditBar';
+import { lazy, Suspense } from 'react';
+const EditBar = lazy(() => import('@/features/blocks/editbar/EditBar'));
 
 import type { SelectedColumnItem } from '@/features/canvas/hooks/useColumnSelection';
 
@@ -69,7 +70,7 @@ export default function CanvasEditBar({
   }
 
   return (
-    <EditBar
+    <Suspense fallback={null}><EditBar
       selectedItems={selectedItems}
       frameControls={selectedColumnItem ? undefined : frameControls}
       onJoinDrawings={onJoinDrawings}
@@ -114,6 +115,6 @@ export default function CanvasEditBar({
               )
           : undefined
       }
-    />
+    /></Suspense>
   );
 }

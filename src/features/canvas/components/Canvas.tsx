@@ -1091,7 +1091,7 @@ export default function Canvas({
       ref={containerRef}
       className={`flex-1 min-w-0 min-h-0 relative overflow-clip select-none ${cursorClass}`}
       style={{
-        backgroundColor: 'var(--color-app-bg)',
+        background: 'var(--canvas-background, var(--color-app-bg))',
 
         backgroundImage: `
           radial-gradient(

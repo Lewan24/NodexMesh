@@ -1,4 +1,6 @@
-import { useCallback, useState } from 'react';
+const AppearanceDialog = lazy(() => import('@/features/appearance/AppearanceDialog'));
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { useCallback, useState, useEffect, lazy, Suspense } from 'react';
 
 import type {
   BoardItem,
@@ -40,6 +42,11 @@ export default function BoardPage({
     restoreProject,
     emptyTrash,
   } = useProjects(userId);
+
+  const { setScope } = useTheme();
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  useEffect(() => { setScope(userId, activeProjectId); }, [userId, activeProjectId, setScope]);
+  useEffect(() => () => setScope('', ''), [setScope]);
 
   const {
     selectedTool,
@@ -264,13 +271,13 @@ export default function BoardPage({
     setSelectedIds,
   ]);
 
-  const appBar = <AppBar projects={projects} activeProjectId={activeProjectId}
+  const appBar = <><AppBar onAppearance={() => setAppearanceOpen(true)} projects={projects} activeProjectId={activeProjectId}
     onSelectProject={handleSelectProject} onAddProject={handleAddProject}
     onRenameProject={renameProject}
     onTrashProject={id => { trashProject(id); resetBoardView(); }}
     onEmptyTrash={emptyTrash}
     onRestoreProject={id => { restoreProject(id); resetBoardView(); }}
-    onResetDemo={resetDemo} searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />;
+    onResetDemo={resetDemo} searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />{appearanceOpen && <Suspense fallback={null}><AppearanceDialog projects={projects} onClose={() => setAppearanceOpen(false)} /></Suspense>}</>;
 
   if (!activeProject) {
     return (
