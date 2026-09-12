@@ -17,7 +17,8 @@ export const nodexMeshDemoProject: Project = {
       "width": 1336,
       "height": 720,
       "color": "#059669",
-      "locked": false
+      "locked": false,
+      "frameId": null
     },
     {
       "id": "i1ic5c0b",
@@ -29,7 +30,8 @@ export const nodexMeshDemoProject: Project = {
       "width": 1852.0000000000002,
       "height": 644,
       "color": "#FF6B8A",
-      "locked": true
+      "locked": true,
+      "frameId": null
     },
     {
       "id": "vrnbdk31",
@@ -46,7 +48,8 @@ export const nodexMeshDemoProject: Project = {
         "textAlign": "left"
       },
       "opacity": 0.3,
-      "locked": true
+      "locked": true,
+      "frameId": null
     },
     {
       "id": "fz0c7s26",
@@ -58,7 +61,7 @@ export const nodexMeshDemoProject: Project = {
       },
       "type": "kanban",
       "title": "NodexMesh TODO now",
-      "width": 1560,
+      "width": 1208,
       "columns": [
         {
           "id": "waafkgha",
@@ -69,56 +72,22 @@ export const nodexMeshDemoProject: Project = {
               "id": "yt3uz0x",
               "text": "Check and add appropriate cursors where needed (buttons, etc.)",
               "done": false
-            }
-          ],
-          "width": 362
-        },
-        {
-          "id": "z008qcwm",
-          "title": "Important",
-          "color": "#FFBD65",
-          "cards": [
-            {
-              "id": "xa2w1pl",
-              "text": "Add column expansion to match the Kanban width",
-              "done": false
             },
             {
-              "id": "49z3gfy",
-              "text": "Implement DbDiagramBlock",
-              "done": false
+              "id": "tzqmat3",
+              "text": "Implement arrows flexibility",
+              "done": true
             },
             {
-              "id": "zzpz9d8",
-              "text": "Implement IconBlock",
-              "done": false
+              "id": "yiw3ydt",
+              "text": "Increase the default item width",
+              "done": true
             },
             {
-              "id": "2u90eht",
-              "text": "Implement MindMapBlock",
-              "done": false
-            }
-          ],
-          "width": 395
-        },
-        {
-          "id": "5g5el7q",
-          "title": "Must have",
-          "color": "#02A0A0",
-          "cards": [
-            {
-              "id": "k8vmx7x",
-              "text": "Plan backend",
-              "done": false
-            }
-          ],
-          "width": 362
-        },
-        {
-          "id": "zgnt2ozl",
-          "title": "Done OLD",
-          "color": "#7C3AED",
-          "cards": [
+              "id": "dtkgah5",
+              "text": "Change the dark mode background to a grayer shade",
+              "done": true
+            },
             {
               "id": "ag14xie",
               "text": "Check that appropriate animations are used everywhere and add them where needed",
@@ -130,18 +99,8 @@ export const nodexMeshDemoProject: Project = {
               "done": true
             },
             {
-              "id": "zc8c1pm",
-              "text": "Add compability to moving checklist items to kanban, and from kanban to checklist (.items are basicaly the same)",
-              "done": true
-            },
-            {
               "id": "mb8wakd",
               "text": "Implement multi selected drawing to change color and width for all of them",
-              "done": true
-            },
-            {
-              "id": "43390s8",
-              "text": "Fix data-scroll in timeline",
               "done": true
             },
             {
@@ -155,8 +114,101 @@ export const nodexMeshDemoProject: Project = {
               "done": true
             },
             {
-              "id": "se0mgci",
-              "text": "Implement drawing on canvas",
+              "id": "jcwk1cz",
+              "text": "Add a new Divider item",
+              "done": true
+            }
+          ],
+          "width": 362
+        },
+        {
+          "id": "z008qcwm",
+          "title": "Important",
+          "color": "#FFBD65",
+          "cards": [
+            {
+              "id": "50s1mdp",
+              "text": "Implement reordering fields in database block",
+              "done": false
+            },
+            {
+              "id": "wqf1aae",
+              "text": "Fix Database diagram preview, not working properly connections",
+              "done": false
+            },
+            {
+              "id": "dqce2a3",
+              "text": "Change editbar colors to accents and make them theme related",
+              "done": false
+            },
+            {
+              "id": "xa2w1pl",
+              "text": "Add column expansion to match the Kanban width",
+              "done": false
+            },
+            {
+              "id": "zzpz9d8",
+              "text": "Implement IconBlock",
+              "done": false
+            },
+            {
+              "id": "2u90eht",
+              "text": "Implement MindMapBlock",
+              "done": false
+            },
+            {
+              "id": "2s6ddz0",
+              "text": "Fix task height in checklists",
+              "done": true
+            },
+            {
+              "id": "49z3gfy",
+              "text": "Implement DbDiagramBlock",
+              "done": true
+            },
+            {
+              "id": "wxcfqbw",
+              "text": "Implement manual cleaning projects trash",
+              "done": true
+            },
+            {
+              "id": "6w2tdll",
+              "text": "Update readme",
+              "done": true
+            },
+            {
+              "id": "5g5xe83",
+              "text": "Add auto-fit to checklists",
+              "done": true
+            },
+            {
+              "id": "uxtrljz",
+              "text": "Add vertical text alignment to item alignment options",
+              "done": true
+            },
+            {
+              "id": "yq3wber",
+              "text": "Adjust diagramblock",
+              "done": true
+            },
+            {
+              "id": "l299uq1",
+              "text": "Fix timeline after reordering schedule the milestones should also reorder",
+              "done": true
+            },
+            {
+              "id": "jvxy7r4",
+              "text": "Fix youtube embed video to edit video settings and captions",
+              "done": true
+            },
+            {
+              "id": "zc8c1pm",
+              "text": "Add compability to moving checklist items to kanban, and from kanban to checklist (.items are basicaly the same)",
+              "done": true
+            },
+            {
+              "id": "43390s8",
+              "text": "Fix data-scroll in timeline",
               "done": true
             },
             {
@@ -168,20 +220,58 @@ export const nodexMeshDemoProject: Project = {
               "id": "17z37a1",
               "text": "Fix kanban add cards buttons to be under last task instead of botton of item",
               "done": true
+            }
+          ],
+          "width": 395
+        },
+        {
+          "id": "5g5el7q",
+          "title": "Must have",
+          "color": "#02A0A0",
+          "cards": [
+            {
+              "id": "w9g7qzz",
+              "text": "Implement mobile devices compability",
+              "done": false
             },
             {
-              "id": "l299uq1",
-              "text": "Fix timeline after reordering schedule the milestones should also reorder",
+              "id": "kpjus07",
+              "text": "Plan database scheme",
+              "done": false
+            },
+            {
+              "id": "k8vmx7x",
+              "text": "Plan backend",
+              "done": false
+            },
+            {
+              "id": "3dpm65t",
+              "text": "Show the item center while dragging for easier positioning relative to other items on the board",
+              "done": true
+            },
+            {
+              "id": "a91280v",
+              "text": "Add long alignment guides while dragging so items can be aligned vertically and horizontally with distant items",
+              "done": true
+            },
+            {
+              "id": "0fleed0",
+              "text": "Fix the drag preview so it shows the item’s current size instead of its default size",
+              "done": true
+            },
+            {
+              "id": "j989dq3",
+              "text": "Add the ability to rename a project",
+              "done": true
+            },
+            {
+              "id": "se0mgci",
+              "text": "Implement drawing on canvas",
               "done": true
             },
             {
               "id": "9vzcmlx",
               "text": "Change default font family to better one",
-              "done": true
-            },
-            {
-              "id": "yq3wber",
-              "text": "Adjust diagramblock",
               "done": true
             },
             {
@@ -205,62 +295,12 @@ export const nodexMeshDemoProject: Project = {
               "done": true
             },
             {
-              "id": "jcwk1cz",
-              "text": "Add a new Divider item",
-              "done": true
-            },
-            {
               "id": "mzg9w9m",
               "text": "Implement a project trash bin with project deletion and restoration",
               "done": true
-            },
-            {
-              "id": "j989dq3",
-              "text": "Add the ability to rename a project",
-              "done": true
-            },
-            {
-              "id": "uxtrljz",
-              "text": "Add vertical text alignment to item alignment options",
-              "done": true
-            },
-            {
-              "id": "0fleed0",
-              "text": "Fix the drag preview so it shows the item’s current size instead of its default size",
-              "done": true
-            },
-            {
-              "id": "dtkgah5",
-              "text": "Change the dark mode background to a grayer shade",
-              "done": true
-            },
-            {
-              "id": "a91280v",
-              "text": "Add long alignment guides while dragging so items can be aligned vertically and horizontally with distant items",
-              "done": true
-            },
-            {
-              "id": "3dpm65t",
-              "text": "Show the item center while dragging for easier positioning relative to other items on the board",
-              "done": true
-            },
-            {
-              "id": "5g5xe83",
-              "text": "Add auto-fit to checklists",
-              "done": true
-            },
-            {
-              "id": "2s6ddz0",
-              "text": "Fix task height in checklists",
-              "done": true
-            },
-            {
-              "id": "yiw3ydt",
-              "text": "Increase the default item width",
-              "done": true
             }
           ],
-          "width": 351
+          "width": 362
         }
       ],
       "color": "#1c1917",
@@ -269,7 +309,8 @@ export const nodexMeshDemoProject: Project = {
         "todo"
       ],
       "locked": true,
-      "height": 628
+      "height": 628,
+      "frameId": null
     },
     {
       "id": "c7hevjx8",
@@ -287,7 +328,8 @@ export const nodexMeshDemoProject: Project = {
       "width": 720,
       "textAlign": "center",
       "height": 60,
-      "color": "#eff6ff"
+      "color": "#eff6ff",
+      "frameId": null
     },
     {
       "id": "knd7gvxt",
@@ -305,7 +347,8 @@ export const nodexMeshDemoProject: Project = {
       "width": 336,
       "textAlign": "center",
       "height": 74,
-      "color": "#fefce8"
+      "color": "#fefce8",
+      "frameId": null
     },
     {
       "id": "dviwz17p",
@@ -322,7 +365,8 @@ export const nodexMeshDemoProject: Project = {
       "width": 320,
       "locked": false,
       "tags": [],
-      "comments": []
+      "comments": [],
+      "frameId": "vrnbdk31"
     },
     {
       "id": "7linteq0",
@@ -339,7 +383,8 @@ export const nodexMeshDemoProject: Project = {
       "color": "#fce7f3",
       "width": 320,
       "locked": false,
-      "tags": []
+      "tags": [],
+      "frameId": "vrnbdk31"
     },
     {
       "id": "t2kf54un",
@@ -354,7 +399,8 @@ export const nodexMeshDemoProject: Project = {
       "height": 144,
       "color": "#F7CAE3",
       "topColor": "#7C3AED",
-      "locked": false
+      "locked": false,
+      "frameId": "vrnbdk31"
     },
     {
       "id": "k2i1bpy4",
@@ -369,7 +415,8 @@ export const nodexMeshDemoProject: Project = {
       "color": "#fce7f3",
       "width": 320,
       "topColor": "#7C3AED",
-      "locked": false
+      "locked": false,
+      "frameId": "vrnbdk31"
     },
     {
       "id": "5zgnx7u7",
@@ -383,7 +430,8 @@ export const nodexMeshDemoProject: Project = {
       "content": "All required information, commands, and setup recommendations are available on the project page",
       "color": "#FDF4FF",
       "width": 320,
-      "locked": false
+      "locked": false,
+      "frameId": "vrnbdk31"
     },
     {
       "id": "wnlimxmh",
@@ -399,7 +447,8 @@ export const nodexMeshDemoProject: Project = {
       "strokeWidth": 3,
       "startItemId": "5zgnx7u7",
       "endItemId": "t2kf54un",
-      "locked": false
+      "locked": false,
+      "frameId": "vrnbdk31"
     },
     {
       "id": "ma7sbdlx",
@@ -413,7 +462,8 @@ export const nodexMeshDemoProject: Project = {
       "content": "NodexMesh is still under active development and continuous improvement. A working demo is currently available to everyone for free and can be opened directly in a browser using the link in the project’s GitHub repository.\n\nAll demo data is stored exclusively in the browser’s local storage, so changes and data created in the DEMO version may disappear after some updates.\n\nTo reset the data, clear local storage in your browser’s developer tools (F12).\nAlternatively, open the user menu in the top-right corner and use the\nReset DEMO\nbutton.",
       "color": "#fff7ed",
       "width": 320,
-      "locked": false
+      "locked": false,
+      "frameId": "vrnbdk31"
     },
     {
       "id": "zk08gdfv",
@@ -431,7 +481,8 @@ export const nodexMeshDemoProject: Project = {
       "color": "#ffffff",
       "variant": "card",
       "height": 620,
-      "locked": false
+      "locked": false,
+      "frameId": "jhoo2wm3"
     },
     {
       "id": "u9oshol5",
@@ -493,7 +544,8 @@ export const nodexMeshDemoProject: Project = {
         "todo"
       ],
       "locked": true,
-      "comments": []
+      "comments": [],
+      "frameId": "i1ic5c0b"
     },
     {
       "id": "92oyuwgd",
@@ -513,7 +565,8 @@ export const nodexMeshDemoProject: Project = {
       "label": "TODO Lists",
       "labelOffset": 21,
       "labelFontSize": 21,
-      "labelMode": "follow-line"
+      "labelMode": "follow-line",
+      "frameId": "i1ic5c0b"
     },
     {
       "id": "8hmoxq25",
@@ -531,7 +584,8 @@ export const nodexMeshDemoProject: Project = {
       "tags": [
         "todo"
       ],
-      "locked": false
+      "locked": false,
+      "frameId": "vrnbdk31"
     },
     {
       "id": "uiusigoi",
@@ -550,7 +604,8 @@ export const nodexMeshDemoProject: Project = {
       "textAlign": "center",
       "topColor": "#7C3AED",
       "color": "#eff6ff",
-      "locked": false
+      "locked": false,
+      "frameId": "vrnbdk31"
     },
     {
       "id": "ltbomker",
@@ -573,11 +628,6 @@ export const nodexMeshDemoProject: Project = {
           "done": false
         },
         {
-          "id": "21ythq7",
-          "text": "DbDiagramBlock - item to plan and prepare version of database like tables, relations etc",
-          "done": false
-        },
-        {
           "id": "qr6jjla",
           "text": "Improve Note by adding a source link with automatic opening",
           "done": false
@@ -591,6 +641,11 @@ export const nodexMeshDemoProject: Project = {
           "id": "m6h1l06",
           "text": "Sub-board node / portal for opening a new canvas or navigating to another project",
           "done": false
+        },
+        {
+          "id": "21ythq7",
+          "text": "DbDiagramBlock - item to plan and prepare version of database like tables, relations etc",
+          "done": true
         }
       ],
       "topColor": "#059669",
@@ -600,7 +655,8 @@ export const nodexMeshDemoProject: Project = {
       "locked": true,
       "typography": {
         "fontFamily": "short-stack"
-      }
+      },
+      "frameId": "i1ic5c0b"
     },
     {
       "id": "kpmbh2p6",
@@ -618,7 +674,8 @@ export const nodexMeshDemoProject: Project = {
       "width": 1336,
       "height": 98,
       "color": "#0d2a35",
-      "locked": false
+      "locked": false,
+      "frameId": null
     },
     {
       "id": "3pvxvzuq",
@@ -722,12 +779,13 @@ export const nodexMeshDemoProject: Project = {
         }
       ],
       "locked": true,
-      "height": 544
+      "height": 544,
+      "frameId": "i1ic5c0b"
     },
     {
       "id": "nq1ujv06",
-      "x": 1867.9999999999998,
-      "y": 971,
+      "x": 1872,
+      "y": 928,
       "zIndex": 23,
       "type": "timeline",
       "title": "NodexMesh todo timeline",
@@ -792,17 +850,44 @@ export const nodexMeshDemoProject: Project = {
           "checklist": []
         },
         {
+          "id": "61b1f135-0e6b-49d7-89b7-c04448b3d750",
+          "title": "Test #1",
+          "start": "2026-09-10",
+          "end": "2026-09-10",
+          "done": true,
+          "color": "#ff0000",
+          "checklist": []
+        },
+        {
+          "id": "c77d18ea-d6fb-473d-bb4c-129865e6c1f7",
+          "title": "Test #1 Fixes",
+          "start": "2026-09-11",
+          "end": "2026-09-14",
+          "done": false,
+          "color": "#000000",
+          "checklist": []
+        },
+        {
+          "id": "ae44f9e4-5bdc-40cb-90ac-1c2af1abf69b",
+          "title": "Implement Database Diagram",
+          "start": "2026-09-11",
+          "end": "2026-09-12",
+          "done": true,
+          "color": "#000000",
+          "checklist": []
+        },
+        {
           "id": "04a8ca0c-1eb2-47e4-9581-c925cd6021f4",
           "title": "hotfixes from kanban",
           "start": "2026-09-11",
           "end": "2026-09-11",
-          "done": false,
+          "done": true,
           "color": "#000000",
           "checklist": [
             {
               "id": "59dc0e1c-2bc5-430f-a98d-73ab5188687d",
               "text": "Implement editbar for drawing to change colors and size when multi selected",
-              "done": false
+              "done": true
             },
             {
               "id": "f679bcf2-70fa-4415-86c9-4e06908bd054",
@@ -814,8 +899,8 @@ export const nodexMeshDemoProject: Project = {
         {
           "id": "42ee8a21-df57-4469-b780-57ab0b80d59f",
           "title": "Implement new blocks",
-          "start": "2026-09-11",
-          "end": "2026-09-12",
+          "start": "2026-09-14",
+          "end": "2026-09-15",
           "done": false,
           "color": "#000000",
           "checklist": [
@@ -834,37 +919,56 @@ export const nodexMeshDemoProject: Project = {
         {
           "id": "126eea78-41d8-42ce-8060-0a1eaef41d11",
           "title": "Upgrade note (Implement source and open link function)",
-          "start": "2026-09-13",
-          "end": "2026-09-13",
+          "start": "2026-09-15",
+          "end": "2026-09-15",
           "done": false,
           "color": "#000000",
           "checklist": []
         },
         {
           "id": "2c951fc5-1c9a-4ef1-9eed-0e8d2336620c",
-          "title": "Open Tests",
-          "start": "2026-09-14",
-          "end": "2026-09-18",
+          "title": "Test #2",
+          "start": "2026-09-16",
+          "end": "2026-09-16",
           "done": false,
           "color": "#ed4040",
           "checklist": []
         },
         {
+          "id": "220670a3-6e23-4543-a93a-0ed888fc3ed6",
+          "title": "Implement mobile devices compability",
+          "start": "2026-09-16",
+          "end": "2026-09-20",
+          "done": false,
+          "color": "#0d39e7",
+          "checklist": []
+        },
+        {
           "id": "d6bdf52e-398a-4e04-845f-09f4512c61cb",
-          "title": "API Implementation",
-          "start": "2026-09-19",
-          "end": "2026-10-04",
+          "title": "API Planning",
+          "start": "2026-09-10",
+          "end": "2026-09-22",
           "done": false,
           "color": "#7c40ed",
           "checklist": []
+        },
+        {
+          "id": "92f25192-dcf0-4d73-aa2f-16cc7ca10e4c",
+          "title": "API Implementation",
+          "start": "2026-09-20",
+          "end": "2026-10-06",
+          "done": false,
+          "color": "#7c3aed",
+          "checklist": []
         }
       ],
-      "width": 968.0000000000002,
-      "locked": true,
+      "width": 1024,
+      "locked": false,
       "tags": [
         "todo"
       ],
-      "color": "#ffffff"
+      "color": "#ffffff",
+      "frameId": null
     },
     {
       "id": "pt0s0vqq",
@@ -883,7 +987,8 @@ export const nodexMeshDemoProject: Project = {
       "labelMode": "horizontal",
       "labelOffset": 14,
       "labelFontSize": 11,
-      "locked": true
+      "locked": true,
+      "frameId": null
     },
     {
       "id": "ot43ea9e",
@@ -898,7 +1003,8 @@ export const nodexMeshDemoProject: Project = {
       "locked": true,
       "typography": {
         "fontSize": 16
-      }
+      },
+      "frameId": null
     },
     {
       "id": "e541ca6e-b0fd-4a73-90d4-2eb14b0077f0",
@@ -913,7 +1019,8 @@ export const nodexMeshDemoProject: Project = {
       "height": 144,
       "color": "#fdf4ff",
       "topColor": "#7C3AED",
-      "locked": true
+      "locked": true,
+      "frameId": null
     },
     {
       "id": "hoa4eb8k",
@@ -1152,7 +1259,8 @@ export const nodexMeshDemoProject: Project = {
       "width": 800,
       "height": 1168,
       "locked": true,
-      "color": "#ffffff"
+      "color": "#ffffff",
+      "frameId": null
     },
     {
       "id": "vwmgpl6g",
@@ -1171,14 +1279,15 @@ export const nodexMeshDemoProject: Project = {
       "labelMode": "horizontal",
       "labelOffset": 0,
       "labelFontSize": 24,
-      "locked": true
+      "locked": true,
+      "frameId": null
     },
     {
       "id": "aa940a55-8054-417b-b12b-e6086402a1fd",
       "type": "drawing",
-      "x": 2861.6360274707768,
+      "x": 2896,
       "y": 1143.0001961225812,
-      "width": 356.00281147091346,
+      "width": 321.6388389416902,
       "height": 195.5645279516807,
       "viewWidth": 356.00281147091346,
       "viewHeight": 195.5645279516807,
@@ -1963,7 +2072,8 @@ export const nodexMeshDemoProject: Project = {
           "strokeWidth": 3
         }
       ],
-      "locked": true
+      "locked": true,
+      "frameId": null
     },
     {
       "id": "78656c30-2f9d-4451-a8f0-9e795a3feaca",
@@ -2410,7 +2520,8 @@ export const nodexMeshDemoProject: Project = {
           "strokeWidth": 3
         }
       ],
-      "locked": true
+      "locked": true,
+      "frameId": null
     },
     {
       "id": "oxhv2p6f",
@@ -2431,38 +2542,38 @@ export const nodexMeshDemoProject: Project = {
           "color": "#5a8a94",
           "cards": [
             {
-              "id": "y40friq",
-              "text": "Implement manual deleting trash with projects",
-              "done": false
+              "id": "6e9add0",
+              "text": "Change editing kanban columns to dialog",
+              "done": true
             },
             {
-              "id": "xulj7wc",
-              "text": "Dropping a checklist item or Kanban card onto the canvas creates a new checklist",
-              "done": false
+              "id": "y40friq",
+              "text": "Implement manual deleting trash with projects",
+              "done": true
             },
             {
               "id": "dxmhev5",
               "text": "Show checklist completion percentage based on completed tasks",
-              "done": false
+              "done": true
             },
             {
               "id": "py8u27l",
-              "text": "Improve arrow flexibility",
-              "done": false
+              "text": "Implement arrow flexibility",
+              "done": true
             },
             {
               "id": "lzatvlo",
               "text": "Fix and improve DiagramBlock so it reacts better to moving items and handles arrows and connections more reliably",
-              "done": false
-            },
-            {
-              "id": "lmcydly",
-              "text": "Update this column after adding new features",
-              "done": false
+              "done": true
             },
             {
               "id": "8e95zbe",
               "text": "Edit timeline tasks in a dialog",
+              "done": true
+            },
+            {
+              "id": "xulj7wc",
+              "text": "Dropping a checklist item or Kanban card onto the canvas creates a new checklist",
               "done": true
             },
             {
@@ -2499,14 +2610,14 @@ export const nodexMeshDemoProject: Project = {
           "color": "#FFBD65",
           "cards": [
             {
-              "id": "b1g04rb",
-              "text": "Snap to item",
+              "id": "lmcydly",
+              "text": "Update this column after adding new features",
               "done": false
             },
             {
               "id": "zuivw2r",
               "text": "When an item is resized and starts overlapping other items, push those items away and cascade the movement if they overlap additional items",
-              "done": false
+              "done": true
             },
             {
               "id": "bxx2949",
@@ -2544,16 +2655,16 @@ export const nodexMeshDemoProject: Project = {
             {
               "id": "f8s0y47",
               "text": "Handle overlapping frames so when one frame overlaps another and tries to capture its items, the newer frame does not take items that already belong to the existing frame",
-              "done": false
-            },
-            {
-              "id": "myi6igu",
-              "text": "Fix inconsistent item dimensions and sizing",
-              "done": false
+              "done": true
             },
             {
               "id": "lizmrj5",
               "text": "Review and improve Ctrl+Z support, including the existing issue with Kanban cards and tasks",
+              "done": true
+            },
+            {
+              "id": "myi6igu",
+              "text": "Fix inconsistent item dimensions and sizing",
               "done": true
             },
             {
@@ -2566,7 +2677,8 @@ export const nodexMeshDemoProject: Project = {
         }
       ],
       "height": 742.9998038774188,
-      "locked": true
+      "locked": true,
+      "frameId": null
     },
     {
       "id": "db67e899-16cc-4585-81d2-dc3039b9f8bf",
@@ -2585,7 +2697,8 @@ export const nodexMeshDemoProject: Project = {
       "labelMode": "horizontal",
       "labelOffset": 14,
       "labelFontSize": 11,
-      "locked": true
+      "locked": true,
+      "frameId": null
     },
     {
       "id": "b16f19e4-557e-427c-9b61-8e37b791155a",
@@ -2604,11 +2717,12 @@ export const nodexMeshDemoProject: Project = {
       "labelMode": "horizontal",
       "labelOffset": 0,
       "labelFontSize": 24,
-      "locked": true
+      "locked": true,
+      "frameId": null
     },
     {
       "id": "jw1muxjd",
-      "x": 3056,
+      "x": 3728,
       "y": 1856,
       "zIndex": 40,
       "color": "#ffffff",
@@ -2616,19 +2730,21 @@ export const nodexMeshDemoProject: Project = {
       "url": "https://dotnet.microsoft.com/en-us/",
       "title": ".NET",
       "description": "",
-      "width": 320
+      "width": 320,
+      "frameId": null
     },
     {
       "id": "qyiu9i6n",
-      "x": 3056,
-      "y": 2000,
+      "x": 3057.63883894169,
+      "y": 1904,
       "zIndex": 41,
       "color": "#ffffff",
       "type": "link",
       "url": "https://top10.owasp.org/2025/",
       "title": "OWASP TOP 10 2025",
       "description": "",
-      "width": 320
+      "width": 320,
+      "frameId": null
     },
     {
       "id": "7ww3ydsc",
@@ -2642,7 +2758,8 @@ export const nodexMeshDemoProject: Project = {
       "width": 970.3639725292232,
       "imgHeight": 528,
       "variant": "sticker",
-      "height": 528
+      "height": 528,
+      "frameId": null
     },
     {
       "id": "3u053vou",
@@ -2660,12 +2777,14 @@ export const nodexMeshDemoProject: Project = {
       "label": "",
       "labelMode": "horizontal",
       "labelOffset": 14,
-      "endItemId": "7ww3ydsc"
+      "endItemId": "7ww3ydsc",
+      "frameId": null,
+      "curve": 0.2
     },
     {
       "id": "gf6ms9im",
-      "x": 3360,
-      "y": 2090,
+      "x": 3420,
+      "y": 2026,
       "zIndex": 44,
       "typography": {
         "verticalAlign": "top",
@@ -2674,19 +2793,21 @@ export const nodexMeshDemoProject: Project = {
       "type": "text",
       "content": "Upcoming changes 2025 => 2026",
       "size": "lg",
-      "width": 320
+      "width": 320,
+      "frameId": null
     },
     {
       "id": "s97xly2v",
-      "x": 3408,
-      "y": 1856,
+      "x": 4048,
+      "y": 2544,
       "zIndex": 45,
       "color": "#ffffff",
       "type": "link",
       "url": "https://github.com/Lewan24/SampleWarehouseApi",
       "title": "Secure .NET project template",
       "description": "My custom project created as template for new .NET projects with already implemented OWASP TOP 10 security features",
-      "width": 320
+      "width": 320,
+      "frameId": null
     },
     {
       "id": "7vxmhes3",
@@ -2696,7 +2817,674 @@ export const nodexMeshDemoProject: Project = {
       "color": "#ffffff",
       "type": "note",
       "content": "There will be all prepared information needed to prepare and implement backend in .NET 10.\n\nAfter frontend and app upcoming updates, there will be also database diagram with example of data in database how its gonna be stored.",
-      "width": 448
+      "width": 448,
+      "frameId": null,
+      "typography": {
+        "bold": true
+      }
+    },
+    {
+      "id": "tsdo8gm6",
+      "x": 3061.6360274707768,
+      "y": 2744,
+      "zIndex": 47,
+      "color": "#ffffff",
+      "type": "embed",
+      "title": "",
+      "url": "https://www.youtube.com/watch?v=Jzr0Jdnq_EI",
+      "showLabel": false,
+      "width": 672,
+      "height": 384,
+      "frameId": null
+    },
+    {
+      "id": "wik5gau5",
+      "x": 3061.6360274707768,
+      "y": 3488,
+      "zIndex": 48,
+      "color": "#ffffff",
+      "typography": {
+        "fontSize": 14
+      },
+      "type": "code",
+      "content": "builder.Services.AddIdentityCore<ApplicationUser>(options =>\n    {\n        // Password policy (OWASP ASVS-aligned: length over complexity \n        // gymnastics, but we do both here for the demo)\n        options.Password.RequiredLength = 12;\n        options.Password.RequireDigit = true;\n        options.Password.RequireUppercase = true;\n        options.Password.RequireLowercase = true;\n        options.Password.RequireNonAlphanumeric = true;\n\n        // Account lockout after repeated failed attempts — \n        // mitigates credential stuffing / brute force.\n        options.Lockout.MaxFailedAccessAttempts = 5;\n        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);\n        options.Lockout.AllowedForNewUsers = true;\n\n        options.User.RequireUniqueEmail = true;\n    })\n        .AddRoles<IdentityRole>()\n        .AddEntityFrameworkStores<AppDbContext>()\n        .AddSignInManager()\n        .AddDefaultTokenProviders();",
+      "language": "csharp",
+      "width": 624,
+      "frameId": null,
+      "autoHeight": true
+    },
+    {
+      "id": "lie4z8qf",
+      "type": "line",
+      "x": 4552,
+      "y": 2709,
+      "x2": 4552,
+      "y2": 3047.5,
+      "zIndex": 49,
+      "arrowStart": false,
+      "arrowEnd": true,
+      "color": "#7C3AED",
+      "strokeWidth": 2,
+      "startItemId": "wik5gau5",
+      "label": "",
+      "labelMode": "horizontal",
+      "labelOffset": 14,
+      "frameId": null,
+      "endItemId": "f375126b-35ee-4121-b2b9-04e621aa8a00"
+    },
+    {
+      "id": "f375126b-35ee-4121-b2b9-04e621aa8a00",
+      "x": 3738.8180137353884,
+      "y": 3488,
+      "zIndex": 50,
+      "color": "#ffffff",
+      "type": "code",
+      "content": "builder.Services.AddAuthentication(options =>\n    {\n        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;\n        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;\n    })\n        .AddJwtBearer(options =>\n        {\n            options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();\n            options.SaveToken = false;\n            options.TokenValidationParameters = new TokenValidationParameters\n            {\n                ValidateIssuer = true,\n                ValidIssuer = jwtSection[\"Issuer\"],\n                ValidateAudience = true,\n                ValidAudience = jwtSection[\"Audience\"],\n                ValidateLifetime = true,\n                ClockSkew = TimeSpan.FromSeconds(30),\n                ValidateIssuerSigningKey = true,\n                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))\n            };\n        });\n\n    builder.Services.AddAuthorizationBuilder()\n        .AddPolicy(Policies.AdminOnly, p => p.RequireRole(Roles.Admin))\n        .AddPolicy(Policies.ManagerOrAdmin, p => p.RequireRole(Roles.Manager, Roles.Admin))\n        .AddPolicy(Policies.ViewerOrAbove, p => p.RequireRole(Roles.Viewer, Roles.Manager, Roles.Admin));",
+      "language": "csharp",
+      "width": 864,
+      "frameId": null,
+      "autoHeight": true,
+      "locked": false
+    },
+    {
+      "id": "mgxbrqjo",
+      "type": "line",
+      "x": 5024,
+      "y": 3114.5,
+      "x2": 5560,
+      "y2": 3042.5,
+      "zIndex": 51,
+      "arrowStart": false,
+      "arrowEnd": true,
+      "color": "#7C3AED",
+      "strokeWidth": 2,
+      "startItemId": "f375126b-35ee-4121-b2b9-04e621aa8a00",
+      "label": "",
+      "labelMode": "horizontal",
+      "labelOffset": 14,
+      "frameId": null,
+      "endItemId": "a2ccffb8-d988-4c55-b1b7-a3c75b96ccc1"
+    },
+    {
+      "id": "a2ccffb8-d988-4c55-b1b7-a3c75b96ccc1",
+      "x": 4650.818013735388,
+      "y": 3488,
+      "zIndex": 52,
+      "color": "#ffffff",
+      "type": "code",
+      "content": "builder.Services.AddRateLimiter(options =>\n    {\n        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;\n\n        options.OnRejected = async (context, token) =>\n        {\n            context.HttpContext.Response.Headers.RetryAfter = \"60\";\n            await context.HttpContext.Response.WriteAsJsonAsync(\n                new { error = \"Too many requests. Please try again later.\" }, token);\n        };\n\n        // Global limiter applied to every request: partitioned per authenticated user and per ip\n        // (so one noisy user can't starve others) or per IP for anonymous traffic.\n        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>\n        {\n            var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);\n\n            var key = !string.IsNullOrWhiteSpace(userId)\n                ? $\"user:{userId}\"\n                : $\"ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? \"unknown\"}\";\n\n            return RateLimitPartition.GetSlidingWindowLimiter(\n                key,\n                _ => new SlidingWindowRateLimiterOptions\n                {\n                    PermitLimit = 300,\n                    Window = TimeSpan.FromMinutes(1),\n                    SegmentsPerWindow = 6,\n                    QueueLimit = 0\n                });\n        });",
+      "language": "csharp",
+      "width": 784,
+      "height": 813,
+      "frameId": null,
+      "autoHeight": false,
+      "locked": false
+    },
+    {
+      "id": "52qdlm0b",
+      "type": "line",
+      "x": 5560,
+      "y": 3581,
+      "x2": 5560,
+      "y2": 3919.5,
+      "zIndex": 53,
+      "arrowStart": false,
+      "arrowEnd": true,
+      "color": "#7C3AED",
+      "strokeWidth": 2,
+      "startItemId": "a2ccffb8-d988-4c55-b1b7-a3c75b96ccc1",
+      "label": "",
+      "labelMode": "horizontal",
+      "labelOffset": 14,
+      "frameId": null,
+      "endItemId": "119042d0-4205-4691-8874-527f50352f93"
+    },
+    {
+      "id": "119042d0-4205-4691-8874-527f50352f93",
+      "x": 5482.818013735388,
+      "y": 3488,
+      "zIndex": 54,
+      "color": "#ffffff",
+      "type": "code",
+      "content": "options.AddPolicy(\"auth-strict\", httpContext =>\n        {\n            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? \"unknown\";\n            return RateLimitPartition.GetSlidingWindowLimiter(\n                partitionKey: $\"ip:{ip}\",\n                _ => new SlidingWindowRateLimiterOptions\n            {\n                PermitLimit = 5,\n                Window = TimeSpan.FromMinutes(1),\n                SegmentsPerWindow = 6,\n                QueueLimit = 0\n            });\n        });\n        \n        options.AddPolicy(\"auth-refresh\", httpContext =>\n        {\n            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? \"unknown\";\n\n            return RateLimitPartition.GetTokenBucketLimiter(\n                partitionKey: $\"ip:{ip}\",\n                factory: _ => new TokenBucketRateLimiterOptions\n                {\n                    TokenLimit = 30,\n                    TokensPerPeriod = 30,\n                    ReplenishmentPeriod = TimeSpan.FromMinutes(1),\n                    AutoReplenishment = true,\n                    QueueLimit = 0\n                });\n        });\n    });",
+      "language": "csharp",
+      "width": 704,
+      "height": 789,
+      "frameId": null,
+      "autoHeight": false,
+      "locked": false
+    },
+    {
+      "id": "a6j5xe2f",
+      "type": "line",
+      "x": 3728,
+      "y": 1968,
+      "x2": 4080,
+      "y2": 2157.485779701884,
+      "zIndex": 55,
+      "arrowStart": true,
+      "arrowEnd": true,
+      "color": "#7C3AED",
+      "strokeWidth": 3,
+      "startItemId": "s97xly2v",
+      "label": "",
+      "labelMode": "horizontal",
+      "labelOffset": 14,
+      "frameId": null,
+      "endItemId": "wik5gau5",
+      "curve": -0.25,
+      "lineCap": "round"
+    },
+    {
+      "id": "m2scw64s",
+      "x": 3122.8180137353884,
+      "y": 3232,
+      "zIndex": 56,
+      "typography": {
+        "textAlign": "center"
+      },
+      "type": "text",
+      "content": "Example code of \nidentity\nauth\nrate limiter\nlimiter policies",
+      "size": "lg",
+      "width": 320,
+      "frameId": null
+    },
+    {
+      "id": "jocuo1x5",
+      "type": "line",
+      "x": 4712.121894794581,
+      "y": 2248,
+      "x2": 3395.1930328540147,
+      "y2": 3712,
+      "zIndex": 57,
+      "arrowStart": false,
+      "arrowEnd": true,
+      "color": "#7C3AED",
+      "strokeWidth": 2,
+      "startItemId": "m2scw64s",
+      "label": "",
+      "labelMode": "horizontal",
+      "labelOffset": 14,
+      "frameId": null,
+      "curve": 0.7,
+      "endItemId": "wik5gau5"
+    },
+    {
+      "id": "4qqcbprg",
+      "x": 4650.818013735388,
+      "y": 1856,
+      "zIndex": 58,
+      "color": "#ffffff",
+      "type": "document",
+      "title": "Database preview plan",
+      "content": "<h2>               Database plan #1</h2><p></p><p><u>Below is the first fun preview of upcoming database.</u></p><p>It is still in <strong>planning</strong> and preparing until most of <strong><em>functionallities</em></strong> are already <strong><em>implemented</em></strong> in frontend.</p><p></p><p><strong>Projects</strong></p><p>- Id<br>- Name<br>- Color<br>- OwnerId<br>- CreatedAt<br>- UpdatedAt<br>- Version</p><p><strong>BoardItems</strong></p><p>- Id<br>- ProjectId<br>- Type<br>- X<br>- Y<br>- ZIndex<br>- Width<br>- Height<br>- Locked<br>- Data JSONB (specific data of item)<br>- UpdatedAt<br>- Version</p>",
+      "width": 480,
+      "autoHeight": true,
+      "frameId": null
+    },
+    {
+      "id": "lc6a9mh2",
+      "x": 5152,
+      "y": 2408,
+      "zIndex": 59,
+      "color": "#1c1917",
+      "type": "database",
+      "title": "NodexMesh Database preview schema",
+      "tables": [
+        {
+          "id": "c620b13f-3913-4d39-8183-acb189258c01",
+          "name": "Users",
+          "position": {
+            "x": -688,
+            "y": 0
+          },
+          "fields": [
+            {
+              "id": "c6f0c35d-01e7-4017-b20c-becdd3abf16d",
+              "name": "id",
+              "dataType": "Guid",
+              "primaryKey": true,
+              "nullable": false,
+              "unique": true,
+              "defaultValue": ""
+            },
+            {
+              "id": "3fc6e76f-0906-44c8-b00d-c1d1c4920887",
+              "name": "Email",
+              "dataType": "string",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": true,
+              "defaultValue": ""
+            },
+            {
+              "id": "3598fa20-71ba-4592-92b9-3fb346caeba8",
+              "name": "PasswordHash",
+              "dataType": "string",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            }
+          ]
+        },
+        {
+          "id": "f5feeec9-bef7-4a01-a0c1-e0b77ba3d2f1",
+          "name": "Roles",
+          "position": {
+            "x": -688,
+            "y": 288
+          },
+          "fields": [
+            {
+              "id": "4e894bb4-3932-405e-a0d7-5717eb365d94",
+              "name": "id",
+              "dataType": "Guid",
+              "primaryKey": true,
+              "nullable": false,
+              "unique": true,
+              "defaultValue": ""
+            },
+            {
+              "id": "7f95f241-d141-4d4d-820d-0ec12d2709f4",
+              "name": "RoleName",
+              "dataType": "string",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": true,
+              "defaultValue": ""
+            }
+          ]
+        },
+        {
+          "id": "6614fee6-8fdc-4d62-8eb1-849c1eadce93",
+          "name": "UsersRoles",
+          "position": {
+            "x": -304,
+            "y": 256
+          },
+          "fields": [
+            {
+              "id": "92e093ca-9e55-43a9-be8a-cf061c8b6647",
+              "name": "User_ID",
+              "dataType": "Guid",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "b6d1b7f4-3c86-4d76-b194-5872af97b956",
+              "name": "Role_ID",
+              "dataType": "Guid",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            }
+          ]
+        },
+        {
+          "id": "352fe5aa-272f-4f5e-b4df-8b3b016e1642",
+          "name": "Projects",
+          "position": {
+            "x": 16,
+            "y": 0
+          },
+          "fields": [
+            {
+              "id": "9752b188-2ed7-4a22-a2eb-3a0fe993f416",
+              "name": "id",
+              "dataType": "Guid",
+              "primaryKey": true,
+              "nullable": false,
+              "unique": true,
+              "defaultValue": ""
+            },
+            {
+              "id": "f0b2d439-9223-4526-9ee9-c8461b739e84",
+              "name": "Name",
+              "dataType": "string",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "fb410f7d-14b7-426c-9507-c6b8faa9a034",
+              "name": "Color",
+              "dataType": "string",
+              "primaryKey": false,
+              "nullable": true,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "1b73d2d9-ee4a-4c9a-b0d5-576106f80e98",
+              "name": "OwnerUser_ID",
+              "dataType": "Guid",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "089cc902-2142-4ac4-8849-d512ceb9addb",
+              "name": "CreatedAt",
+              "dataType": "DateTime",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "ea4d52ef-675b-43bf-9660-788394681209",
+              "name": "UpdatedAt",
+              "dataType": "DateTime",
+              "primaryKey": false,
+              "nullable": true,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "ed42ff33-3222-4135-b868-a41c25eeae60",
+              "name": "Version",
+              "dataType": "string",
+              "primaryKey": false,
+              "nullable": true,
+              "unique": false,
+              "defaultValue": ""
+            }
+          ]
+        },
+        {
+          "id": "2339aa36-7a9e-484c-9269-ee31bd8df818",
+          "name": "BoardItems",
+          "position": {
+            "x": 400,
+            "y": 0
+          },
+          "fields": [
+            {
+              "id": "9e1500e2-99ad-4ef3-afe8-73c2e98fded7",
+              "name": "id",
+              "dataType": "Guid",
+              "primaryKey": true,
+              "nullable": false,
+              "unique": true,
+              "defaultValue": ""
+            },
+            {
+              "id": "c62fa175-0d07-4376-b29d-a59bfce171f5",
+              "name": "Project_ID",
+              "dataType": "Guid",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "69847d19-73bd-4f4c-9d89-4940b38047e5",
+              "name": "Type",
+              "dataType": "enum",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "24bdef3a-5d5d-400d-98b0-e1b1c24a3663",
+              "name": "Pos_X",
+              "dataType": "float",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "e1dea5fe-2efd-4fa6-9738-38f119b1c6b5",
+              "name": "Pos_Y",
+              "dataType": "float",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "fae81ef0-4eda-4b43-a9ac-1ae76d9f35d5",
+              "name": "ZIndex",
+              "dataType": "integer",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "0301f873-7ac8-437f-b6f8-79ca6beb4d07",
+              "name": "Width",
+              "dataType": "integer",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "41f50e64-1311-4c0c-9472-96bf3bd2be63",
+              "name": "Height",
+              "dataType": "integer",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "db53cb05-5061-462f-a98d-12a670316db3",
+              "name": "Locked",
+              "dataType": "boolean",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "c6dbcaae-8b97-4ff9-837c-fe59c635b6a7",
+              "name": "Item_Data",
+              "dataType": "JSONB",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "86dbecf1-85a3-4212-8990-222148eb7593",
+              "name": "UpdatedAt",
+              "dataType": "DateTime",
+              "primaryKey": false,
+              "nullable": true,
+              "unique": false,
+              "defaultValue": ""
+            },
+            {
+              "id": "45b5e61c-7e0d-4a14-a8c2-b9b93aa5e2fc",
+              "name": "Version",
+              "dataType": "string",
+              "primaryKey": false,
+              "nullable": false,
+              "unique": false,
+              "defaultValue": ""
+            }
+          ]
+        }
+      ],
+      "relations": [
+        {
+          "id": "5979589d-b48c-4d65-95ec-e4286575e53b",
+          "source": "6614fee6-8fdc-4d62-8eb1-849c1eadce93",
+          "target": "f5feeec9-bef7-4a01-a0c1-e0b77ba3d2f1",
+          "sourceField": "b6d1b7f4-3c86-4d76-b194-5872af97b956",
+          "targetField": "4e894bb4-3932-405e-a0d7-5717eb365d94",
+          "cardinality": "1:1"
+        },
+        {
+          "id": "c5f16725-5d3a-4a34-8959-4cd30e3466fb",
+          "source": "6614fee6-8fdc-4d62-8eb1-849c1eadce93",
+          "target": "c620b13f-3913-4d39-8183-acb189258c01",
+          "sourceField": "92e093ca-9e55-43a9-be8a-cf061c8b6647",
+          "targetField": "c6f0c35d-01e7-4017-b20c-becdd3abf16d",
+          "cardinality": "1:1"
+        },
+        {
+          "id": "2e023a2b-ac29-4725-a642-9d4f0b38057f",
+          "source": "352fe5aa-272f-4f5e-b4df-8b3b016e1642",
+          "target": "c620b13f-3913-4d39-8183-acb189258c01",
+          "sourceField": "1b73d2d9-ee4a-4c9a-b0d5-576106f80e98",
+          "targetField": "c6f0c35d-01e7-4017-b20c-becdd3abf16d",
+          "cardinality": "N:1"
+        },
+        {
+          "id": "6e920d6d-3eea-4604-b11c-2f921f035002",
+          "source": "2339aa36-7a9e-484c-9269-ee31bd8df818",
+          "target": "352fe5aa-272f-4f5e-b4df-8b3b016e1642",
+          "sourceField": "c62fa175-0d07-4376-b29d-a59bfce171f5",
+          "targetField": "9752b188-2ed7-4a22-a2eb-3a0fe993f416",
+          "cardinality": "1:N"
+        }
+      ],
+      "width": 1920,
+      "height": 928,
+      "frameId": null
+    },
+    {
+      "id": "h44mckmy",
+      "type": "line",
+      "x": 5584,
+      "y": 2130.5,
+      "x2": 5751.385087796792,
+      "y2": 2368,
+      "zIndex": 60,
+      "arrowStart": false,
+      "arrowEnd": true,
+      "color": "#7C3AED",
+      "strokeWidth": 3,
+      "startItemId": "4qqcbprg",
+      "label": "",
+      "labelMode": "horizontal",
+      "labelOffset": 14,
+      "frameId": null,
+      "endItemId": "lc6a9mh2",
+      "curve": -0.25
+    },
+    {
+      "id": "wjciisxx",
+      "x": 5152,
+      "y": 1856,
+      "zIndex": 61,
+      "color": "#ffffff",
+      "type": "code",
+      "content": "public abstract class BoardItemData\n{\n}\n\npublic sealed class NoteData : BoardItemData\n{\n    public string Content { get; set; } = \"\";\n    public string? Color { get; set; }\n    public TypographyOptions? Typography { get; set; }\n}\n\npublic sealed class ChecklistData : BoardItemData\n{\n    public string Title { get; set; } = \"\";\n    public List<ChecklistEntry> Entries { get; set; } = [];\n}",
+      "language": "csharp",
+      "width": 480,
+      "frameId": null,
+      "autoHeight": true
+    },
+    {
+      "id": "8kmj9xst",
+      "x": 4576,
+      "y": 1888,
+      "zIndex": 62,
+      "color": "#000000",
+      "type": "line",
+      "divider": true,
+      "x2": 4576,
+      "y2": 3392,
+      "arrowStart": false,
+      "arrowEnd": false,
+      "strokeWidth": 3,
+      "label": "",
+      "labelMode": "horizontal",
+      "labelOffset": 14,
+      "labelFontSize": 11,
+      "frameId": null
+    },
+    {
+      "id": "d9b20105-4aaf-4bd2-9d4f-ec9f89cfb3ad",
+      "x": 7072,
+      "y": 3392,
+      "zIndex": 63,
+      "color": "#000000",
+      "type": "line",
+      "divider": true,
+      "x2": 4576,
+      "y2": 3392,
+      "arrowStart": false,
+      "arrowEnd": false,
+      "strokeWidth": 3,
+      "label": "",
+      "labelMode": "horizontal",
+      "labelOffset": 14,
+      "labelFontSize": 11,
+      "frameId": null,
+      "locked": false
+    },
+    {
+      "id": "6at7mp5r",
+      "type": "line",
+      "x": 3520,
+      "y": 2128,
+      "x2": 3522.6357937538464,
+      "y2": 2156,
+      "zIndex": 64,
+      "arrowStart": false,
+      "arrowEnd": true,
+      "color": "#7C3AED",
+      "strokeWidth": 2,
+      "startItemId": "gf6ms9im",
+      "label": "",
+      "labelMode": "horizontal",
+      "labelOffset": 14,
+      "frameId": null,
+      "endItemId": "7ww3ydsc",
+      "curve": -0.4
+    },
+    {
+      "id": "ofc9bpfn",
+      "type": "line",
+      "x": 3888,
+      "y": 1973.25,
+      "x2": 4274.484561084746,
+      "y2": 2544,
+      "zIndex": 65,
+      "arrowStart": false,
+      "arrowEnd": true,
+      "color": "#7C3AED",
+      "strokeWidth": 2,
+      "startItemId": "jw1muxjd",
+      "label": "",
+      "labelMode": "horizontal",
+      "labelOffset": 14,
+      "frameId": null,
+      "endItemId": "s97xly2v",
+      "curve": -0.25
+    },
+    {
+      "id": "wq2vad7k",
+      "type": "line",
+      "x": 5120,
+      "y": 2261.234375,
+      "x2": 5152,
+      "y2": 2264.0898602638345,
+      "zIndex": 66,
+      "arrowStart": false,
+      "arrowEnd": true,
+      "color": "#7C3AED",
+      "strokeWidth": 2,
+      "startItemId": "4qqcbprg",
+      "label": "",
+      "labelMode": "horizontal",
+      "labelOffset": 14,
+      "frameId": null,
+      "endItemId": "wjciisxx",
+      "curve": 0
     }
   ]
 };
