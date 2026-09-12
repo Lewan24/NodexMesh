@@ -7,6 +7,7 @@ import { EditBarDivider } from './EditBarButton';
 import {
   BACKGROUND_ITEM_TYPES,
   STRIP_COLORS,
+  FRAME_COLORS,
 } from '../constants';
 import CustomColorInput from './CustomColorInput';
 
@@ -80,6 +81,12 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
   const setStripColor = (color: string | undefined) => {
     onUpdate(current => ({ ...current, topColor: color }));
   };
+
+  if (item.type === 'section-title') return <div className="flex items-center gap-2 px-1">
+    <span className="text-xs">Label color</span>
+    {FRAME_COLORS.map(color => <ColorSwatch key={color} color={color} active={item.color === color} size={14} onClick={() => setBackgroundColor(color)} />)}
+    <CustomColorInput value={item.colorRole ? palette[item.colorRole] : item.color ?? '#7C3AED'} onChange={setBackgroundColor} title="Section label color" />
+  </div>;
 
   return (
     <>

@@ -1,25 +1,13 @@
-import { useState } from 'react';
+import SectionLabel, { sectionTitleScale } from '@/features/blocks/shared/SectionLabel';
 
 import type { BoardItem, FrameItem } from '@/entities/board/types';
 
 import BlockRenderer from '@/features/blocks/BlockRenderer';
-import { getTypographyStyle } from '@/features/blocks/typography/typographyUtils';
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 import type { ResizeDirection } from '@/features/canvas/types';
 import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
 import ItemLockBadge from './ItemLockBadge';
 import ItemCommentBadge from '@/features/comments/ItemCommentBadge';
-
-function getFrameLabelScale(zoom: number): number {
-  if (zoom >= 1) return 1;
-  return Math.min(3.2, 1 / zoom);
-}
-
-function getFrameLabelMode(zoom: number): 'normal' | 'overview' | 'far' {
-  if (zoom >= 0.65) return 'normal';
-  if (zoom >= 0.3) return 'overview';
-  return 'far';
-}
 
 interface CanvasFrameProps {
   item: FrameItem;
@@ -94,11 +82,9 @@ export default function CanvasFrame({
   onQuickConnectStart,
   movementLocked = false
 }: CanvasFrameProps) {
-  const [editingTitle, setEditingTitle] = useState(false);
 
-  const labelScale = getFrameLabelScale(zoom);
-  const labelMode = getFrameLabelMode(zoom);
-  const typographyStyle = getTypographyStyle(item);
+
+  const labelScale = sectionTitleScale(zoom);
 
   return (
     <div
@@ -166,96 +152,7 @@ export default function CanvasFrame({
         }}
         onMouseDown={event => event.stopPropagation()}
       >
-        <div
-          className="flex items-center gap-2 rounded-xl"
-          style={{
-            padding: labelMode === 'far' ? '6px 11px' : '4px 9px',
-            backgroundColor:
-              labelMode === 'far'
-                ? item.color
-                : 'var(--color-surface-translucent)',
-            border:
-              labelMode === 'far'
-                ? 'none'
-                : `1px solid ${item.color}66`,
-            boxShadow:
-              labelMode === 'far'
-                ? '0 4px 14px rgba(0,0,0,0.18)'
-                : '0 2px 8px rgba(0,0,0,0.08)',
-            backdropFilter:
-              labelMode === 'far'
-                ? undefined
-                : 'blur(8px)',
-            maxWidth: Math.max(160, Math.min(item.width, 420)),
-          }}
-        >
-          <div
-            className="rounded-full flex-shrink-0"
-            style={{
-              width: labelMode === 'far' ? 7 : 6,
-              height: labelMode === 'far' ? 7 : 6,
-              backgroundColor:
-                labelMode === 'far'
-                  ? '#fff'
-                  : item.color,
-            }}
-          />
-
-          {editingTitle ? (
-            <input
-              autoFocus
-              value={item.title}
-              onChange={event =>
-                onUpdateItem(
-                  item.id,
-                  current =>
-                    current.type === 'frame'
-                      ? {
-                          ...current,
-                          title: event.target.value,
-                        }
-                      : current,
-                )
-              }
-              onBlur={() => setEditingTitle(false)}
-              onKeyDown={event => {
-                if (event.key === 'Enter' || event.key === 'Escape') {
-                  setEditingTitle(false);
-                }
-              }}
-              onMouseDown={event => event.stopPropagation()}
-              className="bg-transparent outline-none min-w-0"
-              style={{
-                color: labelMode === 'far' ? '#fff' : item.color,
-                minWidth: 100,
-                maxWidth: 300,
-                ...typographyStyle,
-                fontSize: item.typography?.fontSize
-                  ? `${item.typography.fontSize}px`
-                  : '14px',
-                fontWeight: item.typography?.bold ? 700 : 650,
-              }}
-            />
-          ) : (
-            <span
-              className="truncate cursor-text select-none whitespace-nowrap"
-              style={{
-                color: labelMode === 'far' ? '#fff' : item.color,
-                ...typographyStyle,
-                fontSize: item.typography?.fontSize
-                  ? `${item.typography.fontSize}px`
-                  : '14px',
-                fontWeight: item.typography?.bold ? 700 : 650,
-                textTransform: labelMode === 'far' ? 'uppercase' : undefined,
-                letterSpacing: labelMode === 'far' ? '0.06em' : undefined,
-              }}
-              title={item.title}
-              onDoubleClick={() => setEditingTitle(true)}
-            >
-              {item.title || 'Untitled frame'}
-            </span>
-          )}
-        </div>
+        <SectionLabel item={item} title={item.title} color={item.color} zoom={zoom} onChange={title => onUpdateItem(item.id, current => current.type === 'frame' ? { ...current, title } : current)} />
       </div>
 
       {/* Selection */}
