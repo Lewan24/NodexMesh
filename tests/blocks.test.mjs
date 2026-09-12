@@ -29,12 +29,12 @@ const { getSearchableText } = await server.ssrLoadModule(
 )
 const { dateDay, taskRange, shiftTask, scheduleRange, reorderTasks } = await server.ssrLoadModule('/src/features/blocks/timeline/timelineUtils.ts')
 const { cloneItems, copyOrigin } = await server.ssrLoadModule('/src/features/canvas/utils/cloneItems.ts')
-const { diagramTemplate, layoutDiagram, removeDiagramNodes } = await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts')
+const { diagramTemplate, layoutDiagram, removeDiagramNodes, alignDiagramNodes, canConnectDiagram } = await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts')
 const { loadProjects, saveProjects } = await server.ssrLoadModule('/src/features/projects/storage/projectStorage.ts')
 const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure, joinDrawings, drawingStrokes } = await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts')
 const { insertTask, createTaskChecklist } = await server.ssrLoadModule('/src/features/canvas/hooks/useCrossItemDrop.ts')
 const { changeItemLayer } = await server.ssrLoadModule('/src/features/projects/hooks/useProjectItems.ts')
-const { getArrowHeadPoints } = await server.ssrLoadModule('/src/features/blocks/line/utils/lineRenderGeometry.ts')
+const { getArrowHeadPoints, getLineCurve } = await server.ssrLoadModule('/src/features/blocks/line/utils/lineRenderGeometry.ts')
 const { isFrameMovementLocked, normalizeFrameMembership, getFrameContents } = await server.ssrLoadModule('/src/features/canvas/utils/frameGeometry.ts')
 const { ItemHistory } = await server.ssrLoadModule('/src/features/canvas/utils/itemHistory.ts')
 const { resolveCardColor } = await server.ssrLoadModule('/src/features/blocks/shared/cardAppearance.ts')
@@ -559,4 +559,42 @@ test('overlapping frames preserve ownership through movement, transfer, deletion
   assert.equal(isFrameMovementLocked(a, [a, b, { ...owned, locked: true }]), false);
   assert.equal(isFrameMovementLocked(b, [a, b, { ...owned, x: 2000, locked: true }]), true);
   assert.equal(normalizeFrameMembership([a, { ...note, frameId: null }])[1].frameId, null);
+});
+
+
+test('curved lines preserve endpoint tangents and midpoint under translation and reverse bend', () => {
+  const straight = getLineCurve(0, 0, 200, 0, 0);
+  assert.equal(straight.centerY, 0); assert.equal(straight.startAngle, 0);
+  const curve = getLineCurve(0, 0, 200, 0, .5);
+  assert.equal(curve.centerX, 100); assert.equal(curve.centerY, 50);
+  assert.ok(curve.startAngle > 0); assert.ok(curve.endAngle < 0);
+  assert.equal(getLineCurve(0, 0, 200, 0, -.5).centerY, -50);
+  const moved = getLineCurve(-32, 40, 168, 40, .5);
+  assert.equal(moved.centerX, curve.centerX - 32); assert.equal(moved.centerY, curve.centerY + 40);
+  assert.equal(moved.endAngle, curve.endAngle);
+  assert.ok(Number.isFinite(getLineCurve(0, 0, 0, 0, 1).endAngle));
+});
+
+test('diagram alignment affects only selection and layout positions follow the grid', () => {
+  const { nodes, edges } = diagramTemplate();
+  const selected = new Set([nodes[0].id, nodes[2].id]);
+  const aligned = alignDiagramNodes(nodes, selected, 'x');
+  assert.equal(aligned[0].position.x, aligned[2].position.x);
+  assert.equal(aligned[1], nodes[1]);
+  assert.deepEqual(nodes[0].position, { x: 220, y: 0 });
+  for (const node of layoutDiagram(nodes, edges)) {
+    assert.equal(node.position.x % 16, 0); assert.equal(node.position.y % 16, 0);
+  }
+});
+
+test('diagram reconnect rejects self links and duplicates while preserving edge style in history', () => {
+  const connection = { id: 'edge', source: 'a', target: 'b', sourceHandle: 'right', targetHandle: 'left', type: 'default', label: 'Success' };
+  assert.equal(canConnectDiagram([connection], connection), false);
+  assert.equal(canConnectDiagram([connection], connection, 'edge'), true);
+  assert.equal(canConnectDiagram([], { source: 'a', target: 'a' }), false);
+  assert.equal(canConnectDiagram([connection], { ...connection, target: 'c' }), true);
+  const item = { ...createCanvasItem('diagram', 0, 0), edges: [connection] };
+  const changed = { ...item, edges: [{ ...connection, target: 'c' }] };
+  const history = new ItemHistory(); history.observe([item]); history.boundary(); history.observe([changed]);
+  assert.deepEqual(history.undo([changed])[0].edges, [connection]);
 });

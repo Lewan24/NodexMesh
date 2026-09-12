@@ -19,6 +19,7 @@ interface AppBarProps {
   onResetDemo: () => void;
   onRenameProject: (id: string, name: string) => void;
   onTrashProject: (id: string) => void;
+  onEmptyTrash: () => void;
   onRestoreProject: (id: string) => void;
   searchQuery: string;
   onSearchQueryChange: (
@@ -37,6 +38,7 @@ export default function AppBar({
   onRenameProject,
   onTrashProject,
   onRestoreProject,
+  onEmptyTrash,
   searchQuery,
   onSearchQueryChange,
 }: AppBarProps) {
@@ -78,6 +80,7 @@ export default function AppBar({
           onRenameProject={onRenameProject}
           onTrashProject={onTrashProject}
           onRestoreProject={onRestoreProject}
+          onEmptyTrash={onEmptyTrash}
         />
 
         <div className="flex-1 flex justify-center px-4">

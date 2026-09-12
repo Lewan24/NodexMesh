@@ -38,6 +38,13 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
         />
       </div>
 
+      <label className="flex items-center gap-2 text-xs whitespace-nowrap">Curve
+        <input aria-label="Line curvature" type="range" min="-1" max="1" step="0.05" value={item.curve ?? 0} onChange={event => update({ curve: Number(event.target.value) })} className="w-24" />
+      </label>
+      <EditBarButton title="Straight line" onClick={() => update({ curve: 0 })}>Straight</EditBarButton>
+      <select aria-label="Line cap" className="h-8 text-xs bg-transparent" value={item.lineCap ?? 'round'} onChange={event => update({ lineCap: event.target.value as LineItem['lineCap'] })}>
+        <option value="round">Round ends</option><option value="butt">Flat ends</option><option value="square">Square ends</option>
+      </select>
       <EditBarDivider />
 
       {[1, 2, 3, 4, 5, 6].map(thickness => (

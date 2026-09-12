@@ -21,5 +21,7 @@
 .diagram-shape[data-shape=database] { border-radius:50% / 18%; border-top-width:6px; border-bottom-width:6px; }
 .diagram-shape[data-shape=decision] { clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%); min-height:110px; padding:24px 32px; border:0; }
 .diagram-node[data-selected=true] { filter:drop-shadow(0 0 4px var(--color-accent)); }
-.diagram-node .react-flow__handle { width:9px; height:9px; background:var(--color-accent); border:2px solid white; }
+.diagram-node .react-flow__handle { width:12px; height:12px; background:var(--color-accent); border:2px solid white; }
 .diagram-editor { display:flex; flex-direction:column; width:min(1200px,96vw); height:90dvh; min-height:300px; overflow:hidden; border-radius:2px; background:var(--color-surface); color:var(--color-text-primary); box-shadow:0 20px 80px #0006; outline:none; }
+
+.diagram-node .react-flow__handle:hover { box-shadow: 0 0 0 5px #8b5cf640; }

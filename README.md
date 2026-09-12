@@ -1,6 +1,6 @@
 # NodexMesh
 
-NodexMesh is a visual workspace for organizing notes, text, links, images, checklists, kanban boards, columns, frames, and connections on an interactive canvas.
+NodexMesh is a visual workspace for notes, rich documents, tasks, timelines, diagrams, code, media and drawings on an interactive canvas.
 
 The application is designed around flexible project boards where users can freely position content, group related items, build structured columns, connect elements with lines, and organize information without being limited to a fixed document layout.
 
@@ -14,141 +14,72 @@ https://nodexmesh.lewanmordor.workers.dev
 
 ## Features
 
-### Interactive canvas
+### Canvas and editing
 
-NodexMesh provides a zoomable and pannable workspace with support for:
-
-* free positioning of items,
-* drag and drop,
-* grid snapping,
-* zoom controls,
-* multi-selection,
-* grouping selected items into frames,
-* undo support,
-* automatic z-index management,
-* resizing supported elements,
-* item selection and editing,
-* automatic tool switching when selecting existing content.
+* Pan, zoom, grid snapping (16 px), resizing and multi-selection.
+* Context menu and shortcuts: Ctrl/Cmd+C to copy, Ctrl/Cmd+V to paste, Ctrl/Cmd+D to duplicate, Ctrl/Cmd+Z to undo board changes.
+* Typography, handwriting fonts, alignment, card colors and top strips through the edit bar.
+* Default white cards follow the light/dark theme; custom colors remain unchanged.
+* Locked items display a yellow lock. A frame with a locked member cannot move.
+* Content-driven growth pushes lower items in the same frame down; manual resizing preserves deliberate overlaps.
+* Click a connection handle to create an empty sibling for supported block types, or drag it to connect existing items.
+* Categorized tool menu, search, comments and tags.
 
 ### Supported blocks
 
-The canvas currently supports:
+| Block | Capabilities |
+| --- | --- |
+| Note | Editable text, horizontal/vertical alignment, auto fit |
+| Text | Multiline text and typography |
+| Image | Image with optional caption |
+| Link | Website link card |
+| Checklist | Reorderable tasks, completion count and percentage |
+| Kanban | Reorderable columns/cards, task completion count and percentage, column settings dialog for name, title color and width |
+| Column | Nested blocks, reorder and eject to canvas |
+| Frame | Persistent membership, fit to contents, explicit reassignment |
+| Line / arrow | Colors, thickness, filled arrowheads, endpoint attachments, labels, adjustable curve and round/flat/square ends |
+| Divider | Grid-snapped line without item attachments |
+| Note dispenser | Drag out centered flashcards in the selected color |
+| Document | Rich text, headings and inline formatting, auto fit/automatic height |
+| Embed | Interactive websites and YouTube; hover controls outside the video, optional full player interaction |
+| Code | Language selection, syntax highlighting, copy code and auto fit |
+| Timeline | Milestones and schedule modes, task dialog, dates/checklists, task reordering and draggable/resizable schedule bars |
+| Diagram | Process/decision/database and other shapes, editable connections, grid snapping, multi-node alignment and automatic layout |
+| Drawing | Smoothed pressure-like freehand strokes, resize/move, bulk color/thickness changes and joining strokes |
 
-* Sticky notes
-* Text
-* Images
-* Link cards
-* Checklists
-* Kanban boards
-* Columns
-* Frames
-* Lines and arrows
+The pencil stays active until Escape or selecting another tool. Joined drawings retain separate strokes, colors and geometry.
 
-Each block type has its own editing behavior and visual controls.
+### Tasks and Kanban columns
 
-### Columns
+Checklist tasks and Kanban cards can be moved between blocks without losing completion state. Dropping a task onto empty canvas creates a checklist containing it. Cards can be added above or below existing cards.
 
-Columns can contain nested items such as:
-
-* notes,
-* text,
-* images,
-* links,
-* checklists.
-
-Nested items automatically adapt to the available column width.
-
-Items can be reordered inside a column and moved back onto the main canvas.
-
-### Checklists
-
-Checklist blocks support:
-
-* adding entries,
-* editing entries,
-* marking entries as completed,
-* deleting entries,
-* reordering entries,
-* dragging entries outside of supported parent containers.
-
-### Kanban boards
-
-Kanban boards provide:
-
-* multiple columns,
-* editable column titles,
-* cards,
-* card completion state,
-* card editing,
-* reordering,
-* moving cards between columns,
-* dragging cards outside the board.
+Click a column title or its settings button to edit the name, title color and width in a dialog. Save commits the changes; Cancel leaves the column unchanged. Column drag handles and left/right controls reorder columns.
 
 ### Frames
 
-Frames can be used to visually group canvas content.
+Each root item belongs to at most one frame. Overlapping frames do not steal members when moved or resized. The edit bar's **Frame** selector assigns selected items or detaches them with **No frame**. **Take over enclosed items** explicitly transfers enclosed unlocked items.
 
-They support:
+Existing boards initialize membership on load, choosing the smallest containing frame when several overlap. Frame deletion detaches its members without deleting them; copying a frame remaps membership to the copy.
 
-* custom colors,
-* manual resizing,
-* automatic fitting to contained items,
-* visual grouping without changing the underlying item structure.
+### Diagrams and connections
 
-### Lines and arrows
+Open **Edit diagram** for the dedicated editor. Drag nodes on the grid, Shift-click or drag a selection rectangle to select several, then use **Align left** or **Align top**. **Snap to grid** toggles snapping; **Auto layout** arranges the graph. Right/middle-button dragging pans the editor.
 
-Canvas elements can be connected using lines.
+Drag a port to connect nodes; drag an existing connection endpoint to reconnect it. Selected connections support labels, deletion and rounded-elbow, curved or straight routing. Nodes can disconnect all their connections.
 
-Lines support:
+Canvas lines and arrows have a separate **Curve** slider: bend in either direction or use **Straight** to reset. Arrowheads follow the curve tangent, and labels follow the curve midpoint.
 
-* configurable colors,
-* multiple stroke widths,
-* optional arrow heads,
-* draggable endpoints,
-* attachment to canvas items.
+### Projects and persistence
 
-Attached endpoints follow their target items when those items move.
+Create, rename and switch projects from the project menu. Deleted projects go to **Trash** and can be restored. **Empty trash** permanently removes all trashed projects after confirmation; it cannot be undone. There is no automatic expiry.
 
-### Editing controls
+Project and demo authentication data are stored in browser local storage, not synchronized with a backend. Undo history is scoped to the current board session. Native text editing keeps its own undo behavior while focused.
 
-Selected elements can be edited through a contextual edit bar.
+### Authentication and themes
 
-Depending on the selected block type, available controls include:
+The frontend includes local demo authentication, user/admin roles and an administrator user-management UI. These are not server-side security controls. The planned backend remains described below.
 
-* background colors,
-* accent colors,
-* text alignment,
-* font size,
-* bold and italic formatting,
-* line thickness,
-* arrow direction,
-* frame fitting,
-* grouping,
-* deletion.
-
-### Projects
-
-The application supports multiple projects with independent canvas state.
-
-Users can:
-
-* switch between projects,
-* create new projects,
-* maintain separate board content for each project.
-
-### Authentication and roles
-
-The current frontend includes an authentication layer with user and administrator roles.
-
-Administrator-specific UI includes user management functionality.
-
-The current authentication and persistence implementation is intended to be replaced by the planned server-side API described in the roadmap below.
-
-### Themes
-
-NodexMesh supports light and dark themes.
-
-The selected theme is managed globally through the application theme provider.
+Light and dark themes apply globally, including default card colors.
 
 ---
 
@@ -178,6 +109,9 @@ This separation is intended to make the frontend suitable for replacing the curr
 * TypeScript
 * Vite
 * Tailwind CSS
+* Tiptap for rich documents
+* React Flow for diagrams
+* highlight.js for code highlighting
 * Browser local storage for the current local persistence layer
 
 ### Planned backend
@@ -220,7 +154,7 @@ src/
 │   └── projects/
 │
 ├── layout/
-│   ├── app-bar/
+│   ├── appbar/
 │   └── sidebar/
 │
 ├── shared/
@@ -757,7 +691,7 @@ Install:
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/NodexMesh.git
+git clone https://github.com/Lewan24/NodexMesh.git
 cd NodexMesh
 ```
 
@@ -789,6 +723,15 @@ npm run dev
 
 Polling uses more CPU, so it is disabled by default. If using a reverse proxy,
 make sure it forwards WebSocket connections for Vite HMR as well as HTTP requests.
+
+### Verification
+
+```bash
+npm test
+npm run build
+```
+
+Tests cover block data, history, frame membership, task transfers, diagram operations and line geometry.
 
 ### Production build
 
@@ -834,3 +777,4 @@ The project follows several implementation principles:
 ## License
 
 Check out the [MIT License](https://github.com/Lewan24/NodexMesh/blob/main/LICENSE)
+

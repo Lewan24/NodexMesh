@@ -230,7 +230,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
               <span 
                 className="text-[11px] font-mono flex-shrink-0"
                 style={{ color: mutedColor }}
-              >{doneCount}/{totalCount}</span>
+              >{doneCount}/{totalCount} · {Math.round(progress)}%</span>
             </div>
           </div>
         }

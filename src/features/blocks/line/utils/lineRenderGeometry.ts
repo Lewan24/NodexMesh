@@ -91,3 +91,19 @@ export function getArrowHeadPoints(
     secondY,
   };
 }
+
+/** Quadratic curve: signed bend is relative to endpoint distance, so resizing preserves its shape. */
+export function getLineCurve(x: number, y: number, x2: number, y2: number, bend = 0) {
+  const dx = x2 - x, dy = y2 - y;
+  const amount = Math.max(-1, Math.min(1, Number.isFinite(bend) ? bend : 0));
+  const cx = (x + x2) / 2 - dy * amount;
+  const cy = (y + y2) / 2 + dx * amount;
+  return {
+    path: `M ${x} ${y} Q ${cx} ${cy} ${x2} ${y2}`,
+    controlX: cx, controlY: cy,
+    startAngle: Math.atan2(cy - y, cx - x),
+    endAngle: Math.atan2(y2 - cy, x2 - cx),
+    centerX: (x + 2 * cx + x2) / 4,
+    centerY: (y + 2 * cy + y2) / 4,
+  };
+}

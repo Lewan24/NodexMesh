@@ -24,6 +24,7 @@ interface UseProjectsResult {
   resetDemo: () => void;
   renameProject: (id: string, name: string) => void;
   trashProject: (id: string) => void;
+  emptyTrash: () => void;
   restoreProject: (id: string) => void;
 }
 
@@ -56,6 +57,10 @@ export function useProjects(
   const restoreProject = useCallback((id: string) => {
     setProjects(previous => previous.map(project => project.id === id ? { ...project, deletedAt: undefined } : project));
     setActiveProjectId(id);
+  }, []);
+
+  const emptyTrash = useCallback(() => {
+    setProjects(previous => previous.filter(project => !project.deletedAt));
   }, []);
 
   const resetDemo = useCallback(() => {
@@ -105,5 +110,6 @@ export function useProjects(
     renameProject,
     trashProject,
     restoreProject,
+    emptyTrash,
   };
 }

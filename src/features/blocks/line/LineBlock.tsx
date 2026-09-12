@@ -7,6 +7,7 @@ import LineEndpointHandle from '@/features/blocks/line/LineEndpointHandle';
 
 import {
   getArrowHeadPoints,
+  getLineCurve,
   getLineRenderGeometry,
 } from '@/features/blocks/line/utils/lineRenderGeometry';
 
@@ -69,10 +70,11 @@ export default function LineBlock({
     endY,
     svgLeft,
     svgTop,
-    centerX,
-    centerY,
+
   } = getLineRenderGeometry(item.x, item.y, item.x2, item.y2);
 
+  const curve = getLineCurve(originX, originY, endX, endY, item.curve);
+  const { centerX, centerY } = curve;
   const showHandles = hovered || isSelected;
   const lineColor = isSelected ? '#7C3AED' : item.color;
 
@@ -131,11 +133,9 @@ export default function LineBlock({
       >
         {/* Larger invisible hit area */}
 
-        <line
-          x1={originX}
-          y1={originY}
-          x2={endX}
-          y2={endY}
+        <path
+          d={curve.path}
+          fill="none"
           stroke="transparent"
           strokeWidth={16}
           style={{
@@ -146,14 +146,12 @@ export default function LineBlock({
 
         {/* Stop the shaft inside filled heads so its round cap cannot protrude. */}
 
-        <line
-          x1={originX + (item.arrowStart ? Math.cos(angle) * item.strokeWidth : 0)}
-          y1={originY + (item.arrowStart ? Math.sin(angle) * item.strokeWidth : 0)}
-          x2={endX - (item.arrowEnd ? Math.cos(angle) * item.strokeWidth : 0)}
-          y2={endY - (item.arrowEnd ? Math.sin(angle) * item.strokeWidth : 0)}
+        <path
+          d={`M ${originX + (item.arrowStart ? Math.cos(curve.startAngle) * item.strokeWidth : 0)} ${originY + (item.arrowStart ? Math.sin(curve.startAngle) * item.strokeWidth : 0)} Q ${curve.controlX} ${curve.controlY} ${endX - (item.arrowEnd ? Math.cos(curve.endAngle) * item.strokeWidth : 0)} ${endY - (item.arrowEnd ? Math.sin(curve.endAngle) * item.strokeWidth : 0)}`}
+          fill="none"
           stroke={lineColor}
           strokeWidth={item.strokeWidth}
-          strokeLinecap="round"
+          strokeLinecap={item.lineCap ?? 'round'}
           style={{ pointerEvents: 'none' }}
         />
 
@@ -163,7 +161,7 @@ export default function LineBlock({
           <ArrowHead
             x={endX}
             y={endY}
-            angle={angle}
+            angle={curve.endAngle}
             color={lineColor}
             strokeWidth={item.strokeWidth}
           />
@@ -175,7 +173,7 @@ export default function LineBlock({
           <ArrowHead
             x={originX}
             y={originY}
-            angle={angle + Math.PI}
+            angle={curve.startAngle + Math.PI}
             color={lineColor}
             strokeWidth={item.strokeWidth}
           />

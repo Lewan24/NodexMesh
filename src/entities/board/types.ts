@@ -41,6 +41,7 @@ export interface DiagramNode {
   type: 'shape';
 }
 export interface DiagramEdge {
+  type?: 'smoothstep' | 'default' | 'straight';
   id: string;
   source: string;
   target: string;
@@ -226,6 +227,8 @@ export interface ChecklistEntry {
 }
 
 export interface LineItem extends BaseItem {
+  curve?: number;
+  lineCap?: 'round' | 'butt' | 'square';
   type: 'line';
   x2: number;
   y2: number;

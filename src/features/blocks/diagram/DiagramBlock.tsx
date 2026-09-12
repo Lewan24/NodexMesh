@@ -2,12 +2,12 @@ import type { CSSProperties } from 'react';
 import { getTypographyStyle } from '../typography/typographyUtils';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ReactFlow, Background, Controls, Handle, Position, ConnectionMode, MarkerType, applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
+import { ReactFlow, Background, Controls, Handle, Position, ConnectionMode, MarkerType, SelectionMode, ConnectionLineType, reconnectEdge, applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
 import type { Node, NodeProps, Edge, ReactFlowInstance } from '@xyflow/react';
 import type { DiagramItem, DiagramNode, DiagramEdge, DiagramShape } from '@/entities/board/types';
 import type { BlockDeleteHandler, BlockUpdateHandler } from '../types';
 import ContentBlockShell from '../shared/ContentBlockShell';
-import { diagramTemplate, layoutDiagram, removeDiagramNodes } from './diagramUtils';
+import { diagramTemplate, layoutDiagram, removeDiagramNodes, alignDiagramNodes, canConnectDiagram } from './diagramUtils';
 import '@xyflow/react/dist/style.css';
 import '../shared/planning.css';
 
@@ -24,15 +24,17 @@ const shapes: { value: DiagramShape; label: string }[] = [
   { value: 'terminal', label: 'Start / End' }, { value: 'database', label: 'Database' },
   { value: 'input', label: 'Input / Output' }, { value: 'document', label: 'Document' }, { value: 'service', label: 'Service' },
 ];
-const edgeOptions = { type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed }, style: { stroke: '#8b7daa', strokeWidth: 2 } };
+const edgeOptions = { type: 'smoothstep', interactionWidth: 24, pathOptions: { borderRadius: 16, offset: 24 }, markerEnd: { type: MarkerType.ArrowClosed }, style: { stroke: '#8b7daa', strokeWidth: 2 } };
 const toNodes = (nodes: FlowNode[]): DiagramNode[] => nodes.map(({ id, position, data }) => ({ id, position, data, type: 'shape' }));
-const toEdges = (edges: Edge[]): DiagramEdge[] => edges.map(({ id, source, target, sourceHandle, targetHandle, label }) => ({ id, source, target, sourceHandle, targetHandle, label: typeof label === 'string' ? label : '' }));
+const toEdges = (edges: Edge[]): DiagramEdge[] => edges.map(({ id, source, target, sourceHandle, targetHandle, label, type }) => ({ id, source, target, sourceHandle, targetHandle, type: type === 'default' || type === 'straight' ? type : 'smoothstep', label: typeof label === 'string' ? label : '' }));
 
 export default function DiagramBlock({ item, onUpdate, onDelete }: { item: DiagramItem; onUpdate: BlockUpdateHandler; onDelete: BlockDeleteHandler }) {
+  const [snap, setSnap] = useState(true);
   const [editing, setEditing] = useState(false);
   const [nodes, setNodes] = useState<FlowNode[]>(item.nodes);
   const [edges, setEdges] = useState<Edge[]>(item.edges);
   const [selection, setSelection] = useState<{ node?: string; edge?: string }>({});
+  const clickedSelection = useRef(new Set<string>());
   const flow = useRef<ReactFlowInstance<FlowNode> | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -41,7 +43,7 @@ export default function DiagramBlock({ item, onUpdate, onDelete }: { item: Diagr
     dialogRef.current?.focus();
     return () => { if (previous instanceof HTMLElement && previous.isConnected) previous.focus({ preventScroll: true }); };
   }, [editing]);
-  useEffect(() => { setNodes(item.nodes); }, [item.nodes]);
+  useEffect(() => { setNodes(current => item.nodes.map(node => ({ ...node, selected: current.find(existing => existing.id === node.id)?.selected }))); }, [item.nodes]);
   useEffect(() => { setEdges(item.edges); }, [item.edges]);
   const save = (nextNodes: FlowNode[], nextEdges: Edge[]) => {
     setNodes(nextNodes); setEdges(nextEdges);
@@ -52,32 +54,38 @@ export default function DiagramBlock({ item, onUpdate, onDelete }: { item: Diagr
   const addNode = (shape: DiagramShape) => {
     const id = crypto.randomUUID();
     const viewport = flow.current?.getViewport() ?? { x: 0, y: 0, zoom: 1 };
-    save([...nodes, { id, type: 'shape', position: { x: (120 - viewport.x) / viewport.zoom, y: (100 - viewport.y) / viewport.zoom }, data: { label: shapes.find(option => option.value === shape)!.label, shape, color: '#7c3aed' } }], edges);
+    save([...nodes, { id, type: 'shape', position: { x: Math.round((120 - viewport.x) / viewport.zoom / 16) * 16, y: Math.round((100 - viewport.y) / viewport.zoom / 16) * 16 }, data: { label: shapes.find(option => option.value === shape)!.label, shape, color: '#7c3aed' } }], edges);
     setSelection({ node: id });
   };
   const deleteSelection = () => {
-    if (selection.node) { const next = removeDiagramNodes(toNodes(nodes), toEdges(edges), new Set([selection.node])); save(next.nodes, next.edges); }
+    if (selection.node || nodes.some(node => node.selected)) { const next = removeDiagramNodes(toNodes(nodes), toEdges(edges), new Set(nodes.some(node => node.selected) ? nodes.filter(node => node.selected).map(node => node.id) : selection.node ? [selection.node] : [])); save(next.nodes, next.edges); }
     else if (selection.edge) save(nodes, edges.filter(edge => edge.id !== selection.edge));
     setSelection({});
   };
   const content = <>
     <div className="planning-toolbar" onMouseDown={event => event.stopPropagation()}>
-      <span className="text-xs text-theme-muted">{editing ? 'Drag ports to connect' : 'Double-click to edit diagram'}</span>
+      <span className="text-xs text-theme-muted">{editing ? 'Shift-click to select several · Drag ports to connect · Right-drag to pan' : 'Double-click to edit diagram'}</span>
       <button className="planning-button ml-auto" onClick={() => flow.current?.fitView({ padding: .2, duration: 200 })}>Fit view</button>
       <button className="planning-button" aria-pressed={editing} onClick={() => { setEditing(!editing); setSelection({}); }}>{editing ? 'Done editing' : 'Edit diagram'}</button>
     </div>
     {editing && <div className="planning-toolbar" onMouseDown={event => event.stopPropagation()}>
+      <button className="planning-button" onClick={() => { clickedSelection.current = new Set(nodes.map(node => node.id)); setNodes(current => current.map(node => ({ ...node, selected: true }))); }}>Select all nodes</button>
+      <button className="planning-button" aria-pressed={snap} onClick={() => setSnap(value => !value)}>Snap to grid</button>
+      {(['x', 'y'] as const).map(axis => <button key={axis} className="planning-button" disabled={nodes.filter(node => node.selected).length < 2} onClick={() => save(alignDiagramNodes(nodes, new Set(nodes.filter(node => node.selected).map(node => node.id)), axis), edges)}>{axis === 'x' ? 'Align left' : 'Align top'}</button>)}
       {shapes.map(shape => <button className="planning-button" key={shape.value} onClick={() => addNode(shape.value)}>+ {shape.label}</button>)}
       <button className="planning-button ml-auto" disabled={!nodes.length} onClick={() => { save(layoutDiagram(toNodes(nodes), toEdges(edges)), edges); requestAnimationFrame(() => flow.current?.fitView({ padding: .2, duration: 200 })); }}>Auto layout</button>
     </div>}
     <div className="relative flex-1 min-h-0" data-wheel-scroll={editing ? 'true' : undefined} onDoubleClick={() => setEditing(true)} onMouseDown={event => { if (editing) event.stopPropagation(); }} onKeyDown={event => {
       if (editing) {
-        event.stopPropagation();
+        if (event.key !== 'Shift') event.stopPropagation();
         if (event.target instanceof HTMLElement && !event.target.closest('input,textarea,select') && ['Delete', 'Backspace'].includes(event.key)) { event.preventDefault(); deleteSelection(); }
       }
     }}>
       <div className="absolute inset-0" style={{ pointerEvents: editing ? 'auto' : 'none' }}>
         <ReactFlow<FlowNode> id={`diagram-${item.id}`} nodes={nodes} edges={edges} nodeTypes={nodeTypes} defaultEdgeOptions={edgeOptions} connectionMode={ConnectionMode.Loose}
+          connectionRadius={28} reconnectRadius={16} edgesReconnectable={editing} connectionLineType={ConnectionLineType.SmoothStep}
+          onReconnect={(edge, connection) => { if (canConnectDiagram(toEdges(edges), connection, edge.id)) save(nodes, reconnectEdge(edge, connection, edges)); }}
+          isValidConnection={connection => canConnectDiagram([], connection)}
           onInit={instance => { flow.current = instance; }}
           onNodesChange={changes => {
             const next = applyNodeChanges(changes, nodes); setNodes(next);
@@ -86,12 +94,21 @@ export default function DiagramBlock({ item, onUpdate, onDelete }: { item: Diagr
           onEdgesChange={changes => setEdges(applyEdgeChanges(changes, edges))}
           onConnect={connection => {
             if (!editing || connection.source === connection.target) return;
-            if (edges.some(edge => edge.source === connection.source && edge.target === connection.target && edge.sourceHandle === connection.sourceHandle && edge.targetHandle === connection.targetHandle)) return;
+            if (!canConnectDiagram(toEdges(edges), connection)) return;
             save(nodes, [...edges, { ...connection, id: crypto.randomUUID(), label: '' }]);
           }}
-          onNodeClick={(_, node) => setSelection({ node: node.id })} onEdgeClick={(_, edge) => setSelection({ edge: edge.id })} onPaneClick={() => setSelection({})}
-          nodesDraggable={editing} nodesConnectable={editing} elementsSelectable={editing} panOnDrag={editing} zoomOnScroll={editing} zoomOnDoubleClick={false} deleteKeyCode={null}
-          snapToGrid snapGrid={[16, 16]} fitView minZoom={.15} maxZoom={2}>
+          onNodeClick={(event, node) => {
+            const ids = event.shiftKey ? new Set(clickedSelection.current) : new Set<string>();
+            if (event.shiftKey && ids.has(node.id)) ids.delete(node.id); else ids.add(node.id);
+            clickedSelection.current = ids;
+            setNodes(current => current.map(entry => ({ ...entry, selected: ids.has(entry.id) })));
+            setSelection({ node: node.id });
+          }}
+          onSelectionDragStop={(_, selected) => { clickedSelection.current = new Set(selected.map(node => node.id)); }}
+          onEdgeClick={(_, edge) => setSelection({ edge: edge.id })}
+          onPaneClick={() => { clickedSelection.current.clear(); setSelection({}); }}
+          nodesDraggable={editing} nodesConnectable={editing} elementsSelectable={editing} panOnDrag={editing ? [1, 2] : false} selectionOnDrag={editing} selectionMode={SelectionMode.Partial} multiSelectionKeyCode="Shift" selectionKeyCode={null} zoomOnScroll={editing} zoomOnDoubleClick={false} deleteKeyCode={null}
+          snapToGrid={snap} snapGrid={[16, 16]} fitView minZoom={.15} maxZoom={2}>
           <Background gap={16} color="#8b7daa30" />
           {editing && <Controls showInteractive={false} />}
         </ReactFlow>
@@ -108,6 +125,11 @@ export default function DiagramBlock({ item, onUpdate, onDelete }: { item: Diagr
         <input type="color" aria-label="Node color" value={selectedNode.data.color} className="h-8 w-8" onChange={event => save(nodes.map(node => node.id === selectedNode.id ? { ...node, data: { ...node.data, color: event.target.value } } : node), edges)} />
       </> : selectedEdge ? <input className="planning-input flex-1" aria-label="Connection label" placeholder="e.g. Yes / No / Success" value={typeof selectedEdge.label === 'string' ? selectedEdge.label : ''} onChange={event => save(nodes, edges.map(edge => edge.id === selectedEdge.id ? { ...edge, label: event.target.value } : edge))} /> : <input className="planning-input flex-1" aria-label="Diagram title" value={item.title} onChange={event => onUpdate(current => current.type === 'diagram' ? { ...current, title: event.target.value } : current)} />}
       {(selectedNode || selectedEdge) && <button className="planning-button text-rose-500" onClick={deleteSelection}>Delete selected</button>}
+    </div>}
+    {editing && selectedEdge && <div className="planning-toolbar">
+      <label className="text-sm">Connection style <select className="planning-input" aria-label="Connection style" value={selectedEdge.type ?? 'smoothstep'} onChange={event => save(nodes, edges.map(edge => edge.id === selectedEdge.id ? { ...edge, type: event.target.value } : edge))}>
+        <option value="smoothstep">Rounded elbow</option><option value="default">Curve</option><option value="straight">Straight</option>
+      </select></label><span className="text-xs text-theme-muted">Drag either endpoint to reconnect.</span>
     </div>}
     {editing && selectedNode && <div className="planning-toolbar max-h-28 overflow-auto" data-wheel-scroll="true" onMouseDown={event => event.stopPropagation()}>
       <span className="text-xs text-theme-muted">Connections</span>
