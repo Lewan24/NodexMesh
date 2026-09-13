@@ -12,17 +12,22 @@ import { useProjects } from '@/features/projects/hooks/useProjects';
 import Canvas from '@/features/canvas/components/Canvas';
 import AppBar from '@/layout/appbar/AppBar';
 import Sidebar from '@/layout/sidebar/Sidebar';
+import SaveStatus from '@/features/projects/components/SaveStatus';
 
 interface BoardPageProps {
   userId: string;
 }
 
 function createId(): string {
-  return Math.random().toString(36).slice(2, 10);
+  return crypto.randomUUID();
 }
 
 export default function BoardPage({ userId }: BoardPageProps) {
   const {
+    status,
+    error,
+    retry,
+    reload,
     projects,
     activeProject,
     activeProjectId,
@@ -139,7 +144,7 @@ export default function BoardPage({ userId }: BoardPageProps) {
           const newItem: BoardItem = {
             ...ejectedItem,
 
-            id: createId(),
+            id: ejectedItem.id,
 
             x: position?.x ?? column.x + column.width + 24,
 
@@ -234,6 +239,7 @@ export default function BoardPage({ userId }: BoardPageProps) {
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
       />
+      <SaveStatus status={status} error={error} projects={projects} retry={retry} reload={reload} />
       {appearanceOpen && (
         <Suspense fallback={null}>
           <AppearanceDialog projects={projects} onClose={() => setAppearanceOpen(false)} />
@@ -241,6 +247,14 @@ export default function BoardPage({ userId }: BoardPageProps) {
       )}
     </>
   );
+
+  if (status === 'loading') {
+    return (
+      <div className="flex h-dvh items-center justify-center" role="status">
+        Loading projects…
+      </div>
+    );
+  }
 
   if (!activeProject) {
     return (

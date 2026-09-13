@@ -2,7 +2,7 @@ import type { CommentStatus, ItemComment } from '@/entities/board/types';
 
 export function createComment(text: string, status: CommentStatus): ItemComment {
   return {
-    id: Math.random().toString(36).slice(2, 10),
+    id: crypto.randomUUID(),
 
     text: text.trim(),
     status,

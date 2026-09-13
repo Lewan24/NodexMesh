@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { normalizeItemNumbers } from '@/entities/board/normalizeNumbers';
 import { normalizeFrameMembership, isItemInsideFrame } from '@/features/canvas/utils/frameGeometry';
+import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
 
 import type { Dispatch, SetStateAction } from 'react';
 
@@ -17,21 +18,27 @@ type LayerAction = 'forward' | 'backward' | 'front' | 'back';
 function detachLines(items: BoardItem[], removedIds: string[]): BoardItem[] {
   const removed = new Set(removedIds);
 
-  return items.map((item) => {
-    if (item.type !== 'line') return item;
+  return items
+    .filter((item) => !removed.has(item.id))
+    .map((item) => {
+      if (item.type === 'column') return { ...item, items: detachLines(item.items, removedIds) };
+      if (item.type === 'note' && item.dispenserId && removed.has(item.dispenserId)) {
+        return { ...item, dispenserId: undefined };
+      }
+      if (item.type !== 'line') return item;
 
-    let nextItem = item;
+      let nextItem = resolveLineItem(item, items);
 
-    if (item.startItemId && removed.has(item.startItemId)) {
-      nextItem = { ...nextItem, startItemId: undefined };
-    }
+      if (item.startItemId && removed.has(item.startItemId)) {
+        nextItem = { ...nextItem, startItemId: undefined };
+      }
 
-    if (item.endItemId && removed.has(item.endItemId)) {
-      nextItem = { ...nextItem, endItemId: undefined };
-    }
+      if (item.endItemId && removed.has(item.endItemId)) {
+        nextItem = { ...nextItem, endItemId: undefined };
+      }
 
-    return nextItem;
-  });
+      return nextItem;
+    });
 }
 
 function getNextZIndex(items: BoardItem[]): number {
@@ -139,26 +146,14 @@ export function useProjectItems({ activeProjectId, setProjects }: UseProjectItem
 
   const deleteItem = useCallback(
     (id: string) => {
-      updateItems((items) =>
-        detachLines(
-          items.filter((item) => item.id !== id),
-          [id],
-        ),
-      );
+      updateItems((items) => detachLines(items, [id]));
     },
     [updateItems],
   );
 
   const deleteItems = useCallback(
     (ids: string[]) => {
-      const removed = new Set(ids);
-
-      updateItems((items) =>
-        detachLines(
-          items.filter((item) => !removed.has(item.id)),
-          ids,
-        ),
-      );
+      updateItems((items) => detachLines(items, ids));
     },
     [updateItems],
   );

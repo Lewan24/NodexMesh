@@ -16,6 +16,7 @@ export function useAddUserForm() {
 
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setName('');
@@ -24,10 +25,13 @@ export function useAddUserForm() {
     setRole('user');
   };
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
 
-    const result = addUser({ name, username, password, role });
+    const result = await addUser({ name, username, password, role });
+    setSubmitting(false);
 
     if (!result.ok) {
       setError(result.error);
@@ -42,6 +46,7 @@ export function useAddUserForm() {
   };
 
   return {
+    submitting,
     name,
     username,
     password,

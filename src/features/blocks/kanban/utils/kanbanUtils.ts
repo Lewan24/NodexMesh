@@ -9,7 +9,7 @@ export const MAX_KANBAN_COLUMN_WIDTH = 600;
 export const DEFAULT_KANBAN_BACKGROUND = '#ffffff';
 
 export function createId(): string {
-  return Math.random().toString(36).slice(2, 9);
+  return crypto.randomUUID();
 }
 
 export function createKanbanCard(text: string): KanbanCard {

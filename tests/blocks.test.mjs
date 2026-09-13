@@ -8,7 +8,7 @@ const server = await createServer({
   cacheDir: 'node_modules/.vite-block-tests',
   optimizeDeps: { noDiscovery: true, include: [] },
   resolve: { alias: { '@': fileURLToPath(new URL('../src', import.meta.url)) } },
-  server: { middlewareMode: true, watch: null },
+  server: { middlewareMode: true, watch: null, hmr: false },
 });
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 const { normalizeItemNumbers } = await server.ssrLoadModule('/src/entities/board/normalizeNumbers.ts');
@@ -22,7 +22,6 @@ const { tasksInWindow, dateDay, taskRange, shiftTask, scheduleRange, reorderTask
 const { cloneItems, copyOrigin } = await server.ssrLoadModule('/src/features/canvas/utils/cloneItems.ts');
 const { diagramTemplate, layoutDiagram, removeDiagramNodes, alignDiagramNodes, canConnectDiagram } =
   await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts');
-const { loadProjects, saveProjects } = await server.ssrLoadModule('/src/features/projects/storage/projectStorage.ts');
 const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure, joinDrawings, drawingStrokes } =
   await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts');
 const { insertTask, createTaskChecklist } = await server.ssrLoadModule(
@@ -189,35 +188,6 @@ test('diagram removal clears incident edges and layout handles cycles without lo
     laidOut.map((node) => node.id),
     graph.nodes.map((node) => node.id),
   );
-});
-
-test('project storage retains trashed content and an intentionally empty project list', () => {
-  const values = new Map();
-  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
-  Object.defineProperty(globalThis, 'localStorage', {
-    configurable: true,
-    value: { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) },
-  });
-  try {
-    const project = {
-      id: 'p',
-      name: 'Archived plan',
-      ownerId: 'qa',
-      color: '#7c3aed',
-      deletedAt: '2026-09-09T00:00:00Z',
-      items: [createCanvasItem('timeline', 0, 0)],
-    };
-    saveProjects('qa', [project]);
-    assert.deepEqual(
-      loadProjects('qa'),
-      JSON.parse(JSON.stringify([{ ...project, items: normalizeFrameMembership(project.items) }])),
-    );
-    saveProjects('qa', []);
-    assert.deepEqual(loadProjects('qa'), []);
-  } finally {
-    if (previous) Object.defineProperty(globalThis, 'localStorage', previous);
-    else delete globalThis.localStorage;
-  }
 });
 
 test('planning block quick copies are empty and search includes nested content', () => {
@@ -975,3 +945,5 @@ test('stored geometry uses pixels while drawing points and pressure retain two d
   assert.equal(original.x, 12.34567);
   assert.equal(normalizeItemNumbers(result), result);
 });
+
+

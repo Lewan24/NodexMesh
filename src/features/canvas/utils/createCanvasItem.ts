@@ -16,7 +16,7 @@ import { ITEM_WIDTH } from '@/features/canvas/constants';
 import type { ToolType } from '@/entities/board/toolTypes';
 
 function createId(): string {
-  return Math.random().toString(36).slice(2, 10);
+  return crypto.randomUUID();
 }
 
 export function createCanvasItem(
