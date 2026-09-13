@@ -1,11 +1,19 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 
 import type { Project } from '@/entities/project/types';
 import { createDefaultProjectFor } from '@/entities/project/projectFactory';
 
-import { loadProjects, saveProjects, resetProjects } from '@/features/projects/storage/projectStorage';
+import { createWorkspaceServices } from '@/app/services';
+import { WorkspaceController, type WorkspaceState } from '../services/workspaceController';
+import { registerSaveGuard } from '@/shared/api/pendingChanges';
+import { seedProjectsFor } from '@/entities/project/projectSeeder';
+import { renewProjectIds } from '../services/boardAdapter';
 
 interface UseProjectsResult {
+  status: WorkspaceState['status'];
+  error: string;
+  retry: () => Promise<void>;
+  reload: () => Promise<void>;
   projects: Project[];
   activeProject: Project | undefined;
   activeProjectId: string;
@@ -21,30 +29,52 @@ interface UseProjectsResult {
 }
 
 export function useProjects(userId: string): UseProjectsResult {
-  const [projects, setProjects] = useState<Project[]>(() => loadProjects(userId));
+  const [controller] = useState(() => new WorkspaceController(createWorkspaceServices(userId)));
+  const { projects, status, error } = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  const setProjects = controller.update;
 
   const [activeProjectId, setActiveProjectId] = useState<string>(
     () => projects.find((project) => !project.deletedAt)?.id ?? '',
   );
 
   useEffect(() => {
-    saveProjects(userId, projects);
-  }, [projects, userId]);
+    const abort = new AbortController();
+    void controller.load(abort.signal);
+    const unregister = registerSaveGuard(async () => {
+      await controller.flush();
+      return controller.getSnapshot().status === 'saved';
+    });
+    const beforeUnload = (event: BeforeUnloadEvent) => {
+      if (['pending', 'saving', 'error', 'conflict'].includes(controller.getSnapshot().status)) event.preventDefault();
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+    return () => {
+      abort.abort();
+      unregister();
+      window.removeEventListener('beforeunload', beforeUnload);
+    };
+  }, [controller]);
 
   const activeProject =
     projects.find((project) => project.id === activeProjectId && !project.deletedAt) ??
     projects.find((project) => !project.deletedAt);
 
-  const renameProject = useCallback((id: string, name: string) => {
-    if (!name.trim()) return;
-    setProjects((previous) =>
-      previous.map((project) => (project.id === id ? { ...project, name: name.trim() } : project)),
-    );
-  }, []);
-  const trashProject = useCallback((id: string) => {
-    const deletedAt = new Date().toISOString();
-    setProjects((previous) => previous.map((project) => (project.id === id ? { ...project, deletedAt } : project)));
-  }, []);
+  const renameProject = useCallback(
+    (id: string, name: string) => {
+      if (!name.trim()) return;
+      setProjects((previous) =>
+        previous.map((project) => (project.id === id ? { ...project, name: name.trim() } : project)),
+      );
+    },
+    [setProjects],
+  );
+  const trashProject = useCallback(
+    (id: string) => {
+      const deletedAt = new Date().toISOString();
+      setProjects((previous) => previous.map((project) => (project.id === id ? { ...project, deletedAt } : project)));
+    },
+    [setProjects],
+  );
   const restoreProject = useCallback((id: string) => {
     setProjects((previous) =>
       previous.map((project) => (project.id === id ? { ...project, deletedAt: undefined } : project)),
@@ -54,14 +84,14 @@ export function useProjects(userId: string): UseProjectsResult {
 
   const emptyTrash = useCallback(() => {
     setProjects((previous) => previous.filter((project) => !project.deletedAt));
-  }, []);
+  }, [setProjects]);
 
   const resetDemo = useCallback(() => {
-    const freshProjects = resetProjects(userId);
+    const freshProjects = seedProjectsFor(userId).map(renewProjectIds);
 
     setProjects(freshProjects);
     setActiveProjectId(freshProjects[0]?.id ?? '');
-  }, [userId]);
+  }, [userId, setProjects]);
 
   const addProject = useCallback(
     (name: string): string => {
@@ -74,7 +104,7 @@ export function useProjects(userId: string): UseProjectsResult {
 
       return newProject.id;
     },
-    [userId],
+    [userId, setProjects],
   );
 
   const selectProject = useCallback((id: string) => {
@@ -86,9 +116,13 @@ export function useProjects(userId: string): UseProjectsResult {
 
     setProjects((previous) => [...previous, project]);
     setActiveProjectId(project.id);
-  }, [userId]);
+  }, [userId, setProjects]);
 
   return {
+    status,
+    error,
+    retry: controller.retry,
+    reload: () => controller.load(),
     projects,
     activeProject,
     activeProjectId: activeProject?.id ?? '',

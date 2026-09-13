@@ -13,8 +13,9 @@ export function useLoginForm() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (submitting) return;
 
     if (!username.trim() || !password) {
       setError('Enter your username and password.');
@@ -24,15 +25,13 @@ export function useLoginForm() {
     setSubmitting(true);
     setError('');
 
-    setTimeout(() => {
-      const result = login(username, password);
+    const result = await login(username, password);
 
-      if (!result.ok) {
-        setError(result.error);
-      }
+    if (!result.ok) {
+      setError(result.error);
+    }
 
-      setSubmitting(false);
-    }, 250);
+    setSubmitting(false);
   };
 
   return {

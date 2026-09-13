@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 const server = await createServer({
   configFile: false,
@@ -10,13 +12,25 @@ const server = await createServer({
   server: { middlewareMode: true, watch: null, hmr: false },
 });
 const { attachCanvasTouch } = await server.ssrLoadModule('/src/features/canvas/hooks/useCanvasTouch.ts');
+const { useLineDrag } = await server.ssrLoadModule('/src/features/canvas/hooks/useLineDrag.ts');
+const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 await server.close();
 
 class TouchSurface extends EventTarget {
   attributes = new Map();
   isConnected = true;
+  scrollLeft = 0;
+  scrollTop = 0;
+  scrollWidth = 500;
+  scrollHeight = 500;
+  clientWidth = 100;
+  clientHeight = 100;
+  scrollable = false;
+  handle = false;
 
   closest(selector) {
+    if (selector.includes('[data-touch-drag]') && this.handle) return this;
+    if (selector.includes('[data-wheel-scroll="true"]') && this.scrollable) return this;
     return selector === '[data-board-item]' ? this : null;
   }
 
@@ -49,6 +63,7 @@ function setup(t, locked = false) {
   globalThis.MouseEvent = class extends Event {
     constructor(type, options) {
       super(type, options);
+      for (const key of ['clientX', 'clientY', 'button', 'buttons', 'shiftKey']) this[key] = options[key];
     }
   };
   globalThis.window = new EventTarget();
@@ -91,6 +106,104 @@ test('quick swipe over a large item pans and cannot become a delayed item drag',
   touch('touchend', []);
   assert.deepEqual(options.panRef.current, { x: 80, y: 30 });
   assert.deepEqual(mouseEvents, []);
+});
+
+test('scrollable block content supports scrolling and hold-to-move', (t) => {
+  const { touch, surface, options, mouseEvents } = setup(t);
+  surface.scrollable = true;
+  touch('touchstart', [[80, 80]]);
+  touch('touchmove', [[30, 20]]);
+  touch('touchend', []);
+  assert.equal(surface.scrollLeft, 50);
+  assert.equal(surface.scrollTop, 60);
+  assert.deepEqual(mouseEvents, []);
+  assert.equal(options.onPanChange.mock.callCount(), 0);
+
+  touch('touchstart');
+  t.mock.timers.tick(400);
+  touch('touchmove', [[30, 20]]);
+  touch('touchend', []);
+  assert.deepEqual(mouseEvents, ['mousedown', 'mousemove', 'mouseup']);
+  assert.equal(surface.scrollTop, 60);
+});
+
+test('a scroll container with no overflow still allows panning the board', (t) => {
+  const { touch, surface, options } = setup(t);
+  surface.scrollable = true;
+  surface.scrollWidth = surface.clientWidth;
+  surface.scrollHeight = surface.clientHeight;
+  touch('touchstart');
+  touch('touchmove', [[40, 20]]);
+  touch('touchend', []);
+  assert.deepEqual(options.panRef.current, { x: 40, y: 20 });
+});
+
+test('connection handle tap tolerates finger jitter and releases the mouse pipeline', (t) => {
+  const { touch, surface, mouseEvents } = setup(t);
+  surface.handle = true;
+  touch('touchstart');
+  t.mock.timers.tick(500);
+  touch('touchmove', [[7, 3]]);
+  touch('touchend', []);
+  assert.deepEqual(mouseEvents, ['mousedown', 'mouseup', 'click']);
+});
+
+test('connection handle drag begins immediately after the touch threshold', (t) => {
+  const { touch, surface, mouseEvents } = setup(t);
+  surface.handle = true;
+  touch('touchstart');
+  touch('touchmove', [[25, 0]]);
+  touch('touchend', []);
+  assert.deepEqual(mouseEvents, ['mousedown', 'mousemove', 'mouseup']);
+});
+
+test('tapping a connection handle creates a sibling and attaches the line to it', (t) => {
+  const { touch, surface } = setup(t);
+  surface.handle = true;
+  const source = createCanvasItem('note', 0, 0);
+  const projectRef = { current: { items: [source] } };
+  let gestures;
+  function Harness() {
+    gestures = useLineDrag({
+      projectRef,
+      zoomRef: { current: 1 },
+      measuredSizes: new Map(),
+      pushHistory() {},
+      onAddItem(item) {
+        projectRef.current.items.push(item);
+      },
+      onUpdateItem(id, update) {
+        projectRef.current.items = projectRef.current.items.map((item) => (item.id === id ? update(item) : item));
+      },
+      onDeleteItem(id) {
+        projectRef.current.items = projectRef.current.items.filter((item) => item.id !== id);
+      },
+      onSelectItems() {},
+    });
+    return null;
+  }
+  renderToStaticMarkup(createElement(Harness));
+  surface.addEventListener('mousedown', (event) => gestures.handleQuickConnectStart(source.id, event, 'right'));
+  touch('touchstart');
+  touch('touchmove', [[7, 3]]);
+  touch('touchend', []);
+  const sibling = projectRef.current.items.find((item) => item.type === 'note' && item.id !== source.id);
+  const line = projectRef.current.items.find((item) => item.type === 'line');
+  assert.ok(sibling);
+  assert.equal(line.startItemId, source.id);
+  assert.equal(line.endItemId, sibling.id);
+});
+
+test('context menu is suppressed during a hold but remains available to the mouse', (t) => {
+  const { touch, surface } = setup(t);
+  touch('touchstart');
+  const heldMenu = new Event('contextmenu', { cancelable: true });
+  surface.dispatchEvent(heldMenu);
+  assert.equal(heldMenu.defaultPrevented, true);
+  touch('touchend', []);
+  const mouseMenu = new Event('contextmenu', { cancelable: true });
+  surface.dispatchEvent(mouseMenu);
+  assert.equal(mouseMenu.defaultPrevented, false);
 });
 
 test('holding an unlocked item arms movement and then uses the existing drag pipeline', (t) => {

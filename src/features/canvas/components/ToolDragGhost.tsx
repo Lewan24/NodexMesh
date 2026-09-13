@@ -1,4 +1,5 @@
 import type { ToolType } from '@/entities/board/toolTypes';
+import { Star } from 'lucide-react';
 
 interface ToolDragGhostProps {
   color?: string;
@@ -25,6 +26,7 @@ const GHOST_CONFIG: Partial<Record<ToolType, GhostConfig>> = {
   divider: { label: 'Divider', width: 180, height: 36 },
   note: { label: 'Note', width: 180, height: 110 },
   kanban: { label: 'Kanban', width: 260, height: 150 },
+  icon: { label: 'Icon / Emoji', width: 96, height: 96 },
   image: { label: 'Image', width: 200, height: 125 },
   link: { label: 'Link', width: 200, height: 100 },
   text: { label: 'Text', width: 150, height: 48 },
@@ -38,6 +40,17 @@ export default function ToolDragGhost({ color, tool, clientX, clientY, overCanva
   const config = GHOST_CONFIG[tool];
 
   if (!config || tool === 'select') return null;
+
+  if (tool === 'icon') {
+    return (
+      <div
+        className="fixed pointer-events-none"
+        style={{ left: clientX + 10, top: clientY + 10, zIndex: 9999, opacity: 0.7 }}
+      >
+        <Star size={96} color="var(--color-accent)" />
+      </div>
+    );
+  }
 
   if (tool === 'line' || tool === 'divider') {
     return (

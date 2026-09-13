@@ -48,6 +48,7 @@ export const ITEM_TYPE_LABELS: Partial<Record<BoardItem['type'], string>> = {
   dispenser: 'Note dispenser',
   note: 'Note',
   kanban: 'Kanban',
+  icon: 'Icon',
   image: 'Image',
   link: 'Link',
   'section-title': 'Section title',

@@ -7,6 +7,7 @@ import type { ResizeDirection } from '@/features/canvas/types';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 
 import { MIN_BLOCK_WIDTH, MIN_FRAME_HEIGHT, MIN_FRAME_WIDTH, MIN_IMAGE_HEIGHT } from '@/features/canvas/constants';
+import { getKanbanMinWidth } from '@/features/blocks/kanban/utils/kanbanUtils';
 
 interface ProjectLike {
   items: BoardItem[];
@@ -32,6 +33,8 @@ interface MinSize {
 
 function getMinSize(item: BoardItem): MinSize {
   switch (item.type) {
+    case 'icon':
+      return { width: 24, height: 24 };
     case 'drawing':
       return { width: 12, height: 12 };
     case 'timeline':
@@ -54,7 +57,7 @@ function getMinSize(item: BoardItem): MinSize {
       return { width: 224, height: 120 };
 
     case 'kanban':
-      return { width: 288, height: 180 };
+      return { width: getKanbanMinWidth(item.columns.length), height: 180 };
 
     case 'image':
       return { width: MIN_BLOCK_WIDTH, height: MIN_IMAGE_HEIGHT };
@@ -95,7 +98,8 @@ export function useItemResize({
 
       onResizeStart?.(id);
       const measured = measuredSizes.get(id);
-      const startWidth = item.width ?? measured?.width ?? 220;
+      const minimum = getMinSize(item);
+      const startWidth = Math.max(item.width ?? measured?.width ?? 220, minimum.width);
       const startHeight = item.height ?? measured?.height ?? 120;
 
       const startLeft = item.x;
@@ -106,8 +110,6 @@ export function useItemResize({
       const startClientX = event.clientX;
       const startClientY = event.clientY;
       const zoom = zoomRef.current;
-
-      const minimum = getMinSize(item);
 
       let moved = false;
       let framePreviewIds: string[] = [];

@@ -6,7 +6,7 @@ export function createDefaultProjectFor(userId: string): Project {
 }
 
 function createProjectId() {
-  return `proj-${Math.random().toString(36).slice(2, 10)}`;
+  return crypto.randomUUID();
 }
 
 function getRandomProjectColor() {

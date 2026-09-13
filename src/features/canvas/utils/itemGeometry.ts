@@ -41,6 +41,8 @@ export function getApproxItemSize(item: BoardItem): ItemSize {
     case 'kanban':
       return { width: item.width ?? ITEM_WIDTH.kanban, height: item.height ?? 340 };
 
+    case 'icon':
+      return { width: item.width ?? ITEM_WIDTH.icon, height: item.height ?? ITEM_WIDTH.icon };
     case 'image':
       return { width: item.width ?? ITEM_WIDTH.image, height: (item.imgHeight ?? 178) + 56 };
 
@@ -127,6 +129,8 @@ export function getToolDefaultSize(type: ToolType): ItemSize {
     case 'kanban':
       return { width: ITEM_WIDTH.kanban, height: 336 };
 
+    case 'icon':
+      return { width: ITEM_WIDTH.icon, height: ITEM_WIDTH.icon };
     case 'image':
       return { width: ITEM_WIDTH.image, height: 248 };
 

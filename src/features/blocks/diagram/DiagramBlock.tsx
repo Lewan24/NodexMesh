@@ -178,7 +178,9 @@ export default function DiagramBlock({
         <span className="text-xs text-theme-muted">
           {editing
             ? 'Shift-click to select several · Drag ports to connect · Right-drag to pan'
-            : mobile ? 'Diagram editing is available on desktop' : 'Double-click to edit diagram'}
+            : mobile
+              ? 'Diagram editing is available on desktop'
+              : 'Double-click to edit diagram'}
         </span>
         <button
           className="planning-button ml-auto"

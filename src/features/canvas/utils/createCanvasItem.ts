@@ -16,7 +16,7 @@ import { ITEM_WIDTH } from '@/features/canvas/constants';
 import type { ToolType } from '@/entities/board/toolTypes';
 
 function createId(): string {
-  return Math.random().toString(36).slice(2, 10);
+  return crypto.randomUUID();
 }
 
 export function createCanvasItem(
@@ -92,6 +92,18 @@ export function createCanvasItem(
           { id: createId(), title: 'Done', color: '#7C3AED', cards: [] },
         ],
       } as KanbanItem;
+
+    case 'icon':
+      return {
+        ...base,
+        type,
+        iconMode: 'preset',
+        source: 'star',
+        label: 'Star',
+        color: '#7C3AED',
+        width: ITEM_WIDTH.icon,
+        height: ITEM_WIDTH.icon,
+      };
 
     case 'image':
       return { ...base, type: 'image', url: '', caption: '', width: ITEM_WIDTH.image, imgHeight: 192 } as ImageItem;

@@ -12,7 +12,7 @@ const groups = [
     id: 'common',
     label: 'Common',
     icon: LayoutGrid,
-    tools: ['drawing', 'note', 'dispenser', 'text', 'document', 'code'],
+    tools: ['drawing', 'note', 'dispenser', 'text', 'icon', 'document', 'code'],
   },
   {
     id: 'organize',

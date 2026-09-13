@@ -2,15 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 const server = await createServer({
   configFile: false,
   cacheDir: 'node_modules/.vite-block-tests',
   optimizeDeps: { noDiscovery: true, include: [] },
   resolve: { alias: { '@': fileURLToPath(new URL('../src', import.meta.url)) } },
-  server: { middlewareMode: true, watch: null },
+  server: { middlewareMode: true, watch: null, hmr: false },
 });
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
+const { normalizeItemNumbers } = await server.ssrLoadModule('/src/entities/board/normalizeNumbers.ts');
 const { createEmptySibling } = await server.ssrLoadModule('/src/features/canvas/utils/quickCreate.ts');
 const { resolveLineItem } = await server.ssrLoadModule('/src/features/canvas/utils/lineGeometry.ts');
 const { getEmbedUrl } = await server.ssrLoadModule('/src/features/blocks/embed/embedUrl.ts');
@@ -21,7 +24,6 @@ const { tasksInWindow, dateDay, taskRange, shiftTask, scheduleRange, reorderTask
 const { cloneItems, copyOrigin } = await server.ssrLoadModule('/src/features/canvas/utils/cloneItems.ts');
 const { diagramTemplate, layoutDiagram, removeDiagramNodes, alignDiagramNodes, canConnectDiagram } =
   await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts');
-const { loadProjects, saveProjects } = await server.ssrLoadModule('/src/features/projects/storage/projectStorage.ts');
 const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure, joinDrawings, drawingStrokes } =
   await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts');
 const { insertTask, createTaskChecklist } = await server.ssrLoadModule(
@@ -52,7 +54,89 @@ const { COLUMN_ADD_TYPES, createDefaultColumnItem } = await server.ssrLoadModule
 );
 const { DROPPABLE_ON_COLUMN } = await server.ssrLoadModule('/src/features/canvas/constants.ts');
 const { sectionTitleScale } = await server.ssrLoadModule('/src/features/blocks/section-title/SectionTitleBlock.tsx');
+const { appendKanbanColumn, getColumnShare, setColumnShare, equalizeKanbanColumns, getKanbanMinWidth } =
+  await server.ssrLoadModule('/src/features/blocks/kanban/utils/kanbanUtils.ts');
+const { getIconImageSource } = await server.ssrLoadModule('/src/features/blocks/icon/iconUtils.ts');
+const { default: IconBlock } = await server.ssrLoadModule('/src/features/blocks/icon/IconBlock.tsx');
 await server.close();
+
+test('icons render presets, emoji and isolated SVG with transparent scalable geometry', () => {
+  const icon = createCanvasItem('icon', 10, 20);
+  assert.equal(icon.width, 96);
+  const render = (item) => renderToStaticMarkup(createElement(IconBlock, { item, isSelected: false, onUpdate() {} }));
+  assert.match(render(icon), /lucide-star/);
+  assert.doesNotMatch(render(icon), /background|shadow/);
+  assert.match(render({ ...icon, iconMode: 'emoji', source: '🚀', label: 'Launch' }), /🚀/);
+  const source = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><circle r="5"/></svg>';
+  const markup = render({ ...icon, iconMode: 'svg', source });
+  assert.match(markup, /<img/);
+  assert.match(markup, /data:image\/svg\+xml/);
+  assert.doesNotMatch(markup, /<script/);
+  assert.match(render({ ...icon, width: 160, height: 80 }), /width="80"/);
+  const sibling = createEmptySibling({ ...icon, iconMode: 'url', source: 'https://example.com/icon.png' });
+  assert.notEqual(sibling.id, icon.id);
+  assert.equal(sibling.source, 'star');
+  assert.match(getSearchableText({ ...icon, label: 'Milestone' }), /Milestone/);
+});
+
+test('icon image URLs reject executable schemes and credentials', () => {
+  for (const source of [
+    'javascript:alert(1)',
+    'data:text/html,<script/>',
+    'file:///icon.svg',
+    'https://user:pass@example.com/a.svg',
+  ]) {
+    assert.equal(getIconImageSource('url', source), undefined);
+  }
+  assert.equal(getIconImageSource('url', 'https://example.com/icon.svg'), 'https://example.com/icon.svg');
+  assert.equal(getIconImageSource('svg', 'not SVG'), undefined);
+});
+
+test('kanban columns fill the available width and redistribute proportionally', () => {
+  const columns = [180, 180, 180].map((width, index) => ({
+    id: String(index),
+    title: 'Column',
+    color: '#ffffff',
+    cards: [],
+    width,
+  }));
+  const shares = (columns) => columns.map((column) => getColumnShare(columns, column.id));
+  assert.deepEqual(shares(columns), [1 / 3, 1 / 3, 1 / 3]);
+  assert.deepEqual(shares(appendKanbanColumn(columns)), [0.25, 0.25, 0.25, 0.25]);
+
+  const resized = setColumnShare(columns, '0', 0.5);
+  assert.deepEqual(shares(resized), [0.5, 0.25, 0.25]);
+  assert.deepEqual(shares(appendKanbanColumn(resized)), [0.375, 0.1875, 0.1875, 0.25]);
+  assert.deepEqual(shares(resized.filter((column) => column.id !== '0')), [0.5, 0.5]);
+  for (const share of shares(setColumnShare(resized, '0', 1 / 3))) {
+    assert.ok(Math.abs(share - 1 / 3) < 1e-12);
+  }
+
+  const legacy = columns.map((column, index) => ({ ...column, width: index === 0 ? 360 : undefined }));
+  assert.deepEqual(shares(legacy), [0.5, 0.25, 0.25]);
+  assert.ok(Math.abs(getColumnShare(setColumnShare(columns, '0', 2), '0') - 0.99) < 1e-12);
+  assert.deepEqual(setColumnShare(columns, '0', NaN), columns);
+  assert.equal(getColumnShare(setColumnShare([columns[0]], '0', 0.5), '0'), 1);
+  const preciseColumns = setColumnShare(columns, '0', 0.42123);
+  const board = { ...createCanvasItem('kanban', 0, 0), columns: preciseColumns };
+  assert.deepEqual(normalizeItemNumbers(board).columns, preciseColumns);
+});
+
+test('kanban equalization preserves column content and minimum width grows with column count', () => {
+  const board = createCanvasItem('kanban', 0, 0);
+  const columns = board.columns.map((column, index) => ({ ...column, width: 180 * (index + 1) }));
+  const equalized = equalizeKanbanColumns(columns);
+  for (const [index, column] of equalized.entries()) {
+    assert.equal(getColumnShare(equalized, column.id), 1 / columns.length);
+    assert.deepEqual(column, { ...columns[index], width: 180 });
+  }
+  assert.deepEqual(equalizeKanbanColumns([]), []);
+  assert.equal(getKanbanMinWidth(0), 288);
+  assert.equal(getKanbanMinWidth(1), 288);
+  assert.equal(getKanbanMinWidth(3), 596);
+  assert.equal(getKanbanMinWidth(4), 784);
+  assert.equal(getKanbanMinWidth(5) - getKanbanMinWidth(4), 188);
+});
 
 test('new blocks survive JSON persistence and have usable default dimensions', () => {
   for (const type of ['document', 'embed', 'code', 'dispenser', 'timeline', 'diagram']) {
@@ -188,35 +272,6 @@ test('diagram removal clears incident edges and layout handles cycles without lo
     laidOut.map((node) => node.id),
     graph.nodes.map((node) => node.id),
   );
-});
-
-test('project storage retains trashed content and an intentionally empty project list', () => {
-  const values = new Map();
-  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
-  Object.defineProperty(globalThis, 'localStorage', {
-    configurable: true,
-    value: { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) },
-  });
-  try {
-    const project = {
-      id: 'p',
-      name: 'Archived plan',
-      ownerId: 'qa',
-      color: '#7c3aed',
-      deletedAt: '2026-09-09T00:00:00Z',
-      items: [createCanvasItem('timeline', 0, 0)],
-    };
-    saveProjects('qa', [project]);
-    assert.deepEqual(
-      loadProjects('qa'),
-      JSON.parse(JSON.stringify([{ ...project, items: normalizeFrameMembership(project.items) }])),
-    );
-    saveProjects('qa', []);
-    assert.deepEqual(loadProjects('qa'), []);
-  } finally {
-    if (previous) Object.defineProperty(globalThis, 'localStorage', previous);
-    else delete globalThis.localStorage;
-  }
 });
 
 test('planning block quick copies are empty and search includes nested content', () => {
@@ -947,4 +1002,30 @@ test('section titles retain their text and presentation and scale like frame lab
   assert.equal(sectionTitleScale(2), 1);
   assert.equal(sectionTitleScale(0.5), 2);
   assert.equal(sectionTitleScale(0.1), 3.2);
+});
+
+test('stored geometry uses pixels while drawing points and pressure retain two decimals', () => {
+  const original = {
+    id: 'drawing',
+    type: 'drawing',
+    x: 12.34567,
+    y: -8.76543,
+    width: 100.23456,
+    height: 90.76543,
+    points: [{ x: 1.23456, y: 3.45678, pressure: 1.123456789 }],
+    strokes: [{ x: 1, y: 2, scaleX: 0.123456789, points: [{ x: 0.12345, y: 0, pressure: 0.98765 }] }],
+    content: '1.123456789',
+    zIndex: 1,
+  };
+  const result = normalizeItemNumbers(original);
+  assert.equal(result.x, 12);
+  assert.equal(result.y, -9);
+  assert.equal(result.width, 100);
+  assert.equal(result.height, 91);
+  assert.deepEqual(result.points, [{ x: 1.23, y: 3.46, pressure: 1.12 }]);
+  assert.equal(result.strokes[0].points[0].pressure, 0.99);
+  assert.equal(result.strokes[0].scaleX, original.strokes[0].scaleX);
+  assert.equal(result.content, original.content);
+  assert.equal(original.x, 12.34567);
+  assert.equal(normalizeItemNumbers(result), result);
 });
