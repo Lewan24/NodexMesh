@@ -15,7 +15,7 @@ interface LinkBlockProps {
 }
 
 export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) {
-  const [editing, setEditing] = useState(!item.url || item.url === 'https://');
+  const [editing, setEditing] = useState(false);
 
   const typographyStyle = getTypographyStyle(item);
 

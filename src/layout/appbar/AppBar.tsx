@@ -87,7 +87,7 @@ export default function AppBar({
           onEmptyTrash={onEmptyTrash}
         />
 
-        <div className="flex-1 flex justify-center px-4">
+        <div className="app-search flex-1 flex justify-center px-4">
           <div className="relative w-full max-w-md">
             <div
               className="h-9 flex items-center gap-2 rounded-xl border px-3 transition-colors"

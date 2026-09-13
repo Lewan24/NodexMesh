@@ -45,7 +45,12 @@ export function useCanvasZoom({
     const handleWheel = (event: WheelEvent) => {
       const target = event.target;
 
-      if (target instanceof Element && target.closest('[data-wheel-scroll="true"]')) {
+      if (
+        target instanceof Element &&
+        target.closest(
+          '[data-wheel-scroll="true"], [data-canvas-ui], [data-edit-bar], [data-item-inspector], [role="dialog"]',
+        )
+      ) {
         return;
       }
 

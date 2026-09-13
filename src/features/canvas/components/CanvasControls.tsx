@@ -6,6 +6,11 @@ interface CanvasControlsProps {
   onZoomChange: (zoom: number) => void;
   onPanChange: (pan: { x: number; y: number }) => void;
   onToggleSnap: () => void;
+  onFitView: () => void;
+  selectionMode: boolean;
+  onToggleSelectionMode: () => void;
+  onUndo: () => void;
+  onOpenMenu: () => void;
 }
 
 export default function CanvasControls({
@@ -14,6 +19,11 @@ export default function CanvasControls({
   onZoomChange,
   onPanChange,
   onToggleSnap,
+  onFitView,
+  selectionMode,
+  onToggleSelectionMode,
+  onUndo,
+  onOpenMenu,
 }: CanvasControlsProps) {
   const zoomOut = () => {
     const nextZoom = Math.max(ZOOM_MIN, Number((zoom - 0.1).toFixed(2)));
@@ -33,7 +43,30 @@ export default function CanvasControls({
   };
 
   return (
-    <div className="absolute right-6 pointer-events-auto flex items-center gap-2">
+    <div
+      data-canvas-ui="true"
+      className="canvas-controls absolute right-6 bottom-4 pointer-events-auto flex items-center gap-2"
+      onMouseDown={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="touch-selection-toggle"
+        aria-pressed={selectionMode}
+        aria-label="Select multiple items"
+        title="Toggle between panning empty space and selecting multiple items"
+        onClick={onToggleSelectionMode}
+      >
+        {selectionMode ? 'Select +' : 'Pan'}
+      </button>
+      <button type="button" className="touch-selection-toggle" onClick={onOpenMenu} aria-label="Board and item actions">
+        ⋯
+      </button>
+      <button type="button" className="touch-selection-toggle" onClick={onUndo} aria-label="Undo">
+        ↶
+      </button>
+      <button type="button" className="canvas-fit-button" onClick={onFitView} title="Fit board to screen">
+        Fit
+      </button>
       <button
         onClick={onToggleSnap}
         className="w-9 h-9 flex items-center justify-center rounded-xl border shadow-md transition-colors"
@@ -80,6 +113,8 @@ export default function CanvasControls({
             event.currentTarget.style.backgroundColor = 'transparent';
           }}
           title="Zoom out"
+          aria-label="Zoom out"
+          disabled={zoom <= ZOOM_MIN}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M5 12h14" />
@@ -112,6 +147,8 @@ export default function CanvasControls({
             event.currentTarget.style.backgroundColor = 'transparent';
           }}
           title="Zoom in"
+          aria-label="Zoom in"
+          disabled={zoom >= ZOOM_MAX}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M12 5v14M5 12h14" />

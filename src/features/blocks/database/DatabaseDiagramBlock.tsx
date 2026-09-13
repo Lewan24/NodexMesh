@@ -1,3 +1,4 @@
+import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -86,7 +87,14 @@ export default function DatabaseDiagramBlock({
   onUpdate: BlockUpdateHandler;
   onDelete: BlockDeleteHandler;
 }) {
-  const [editing, setEditing] = useState(false);
+  const mobile = useMobileLayout();
+  const [editingRequested, setEditingRequested] = useState(false);
+  const editing = editingRequested && !mobile;
+  const setEditing = (value: boolean) => setEditingRequested(value && !mobile);
+
+  useEffect(() => {
+    if (mobile) setEditingRequested(false);
+  }, [mobile]);
   const [selected, setSelected] = useState<string | null>(null);
   const [relationId, setRelationId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
@@ -198,8 +206,8 @@ export default function DatabaseDiagramBlock({
               </button>
             </>
           ) : (
-            <button className="planning-button ml-auto" disabled={item.locked} onClick={() => setEditing(true)}>
-              Edit database
+            <button className="planning-button ml-auto" disabled={item.locked || mobile} onClick={() => setEditing(true)}>
+              {mobile ? 'Edit on desktop' : 'Edit database'}
             </button>
           )}
         </div>
@@ -282,7 +290,7 @@ export default function DatabaseDiagramBlock({
           {!item.tables.length && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <button
-                disabled={item.locked}
+                disabled={item.locked || mobile}
                 className="planning-button pointer-events-auto"
                 onMouseDown={(event) => event.stopPropagation()}
                 onClick={() => {

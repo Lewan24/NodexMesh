@@ -15,7 +15,8 @@ interface ImageBlockProps {
 }
 
 export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps) {
-  const [editingUrl, setEditingUrl] = useState(!item.url);
+  const [editingUrl, setEditingUrl] = useState(false);
+  const [editingCaption, setEditingCaption] = useState(false);
   const [urlInput, setUrlInput] = useState(item.url);
 
   const typographyStyle = getTypographyStyle(item);
@@ -229,14 +230,24 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
         {/* Caption */}
 
         {!isSticker && (
-          <div className="px-3 py-2.5" onMouseDown={(event) => event.stopPropagation()}>
-            <input
+          <div className="px-3 py-2.5">
+            {editingCaption ? <input
+              autoFocus
+              onMouseDown={(event) => event.stopPropagation()}
+              onBlur={() => setEditingCaption(false)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === 'Escape') setEditingCaption(false);
+              }}
               value={item.caption}
               onChange={(event) => update({ caption: event.target.value })}
               placeholder="Add caption…"
               className="w-full bg-transparent text-sm outline-none transition-colors"
               style={{ color: textColor, ...typographyStyle }}
-            />
+            /> : <div
+              onDoubleClick={() => setEditingCaption(true)}
+              className="text-sm whitespace-pre-wrap break-words"
+              style={{ color: textColor, ...typographyStyle }}
+            >{item.caption || 'Double-click to add caption…'}</div>}
           </div>
         )}
       </div>

@@ -100,7 +100,7 @@ export function useCanvasMouse({
 
       const target = event.target as Element;
 
-      if (target.closest('[data-board-item]')) {
+      if (target.closest('[data-board-item], [data-canvas-ui], dialog, [role="dialog"], [role="menu"]')) {
         return;
       }
 

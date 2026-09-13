@@ -100,6 +100,7 @@ export default function CanvasItem({
     <div
       data-board-item="true"
       data-board-item-id={item.id}
+      data-movement-locked={Boolean(item.locked)}
       className={`absolute ${isAnimating ? 'board-item-enter' : ''} ${showDragEffect ? 'board-item-dragging' : ''} ${
         isSettling ? 'board-item-settling' : ''
       }`}
@@ -130,6 +131,17 @@ export default function CanvasItem({
       onMouseDown={(event) => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
     >
+      {isSelected && item.type !== 'line' && !item.locked && (
+        <button
+          type="button"
+          data-touch-drag="true"
+          className="canvas-item-move-handle"
+          aria-label="Move selected item"
+          style={{ transform: `scale(${1 / zoom})`, transformOrigin: 'bottom left' }}
+        >
+          Move ⠿
+        </button>
+      )}
       {item.locked && <ItemLockBadge />}
       <ItemCommentBadge comments={item.comments} />
 

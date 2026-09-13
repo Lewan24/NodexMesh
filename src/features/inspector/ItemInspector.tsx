@@ -1,3 +1,4 @@
+import MobilePanel from '@/shared/components/dialogs/MobilePanel';
 import { useEffect, useMemo, useState } from 'react';
 
 import type { BoardItem } from '@/entities/board/types';
@@ -99,7 +100,7 @@ export default function ItemInspector({ items, onUpdateAll, onClose }: ItemInspe
   const unresolvedCount = getUnresolvedCommentCount(comments);
 
   return (
-    <>
+    <MobilePanel title="Tags & comments" slot="details">
       <aside
         data-item-inspector="true"
         className="absolute right-3 top-50 z-40 w-72 rounded-2xl shadow-2xl overflow-hidden"
@@ -342,7 +343,7 @@ export default function ItemInspector({ items, onUpdateAll, onClose }: ItemInspe
       {single && commentsOpen && (
         <CommentsDialog item={single} onUpdate={onUpdateAll} onClose={() => setCommentsOpen(false)} />
       )}
-    </>
+    </MobilePanel>
   );
 }
 

@@ -74,6 +74,7 @@ export default function CanvasFrame({
     <div
       data-board-item="true"
       data-board-item-id={item.id}
+      data-movement-locked={Boolean(item.locked || movementLocked)}
       data-frame-id={item.id}
       className={`absolute ${isAnimating ? 'board-item-enter' : ''} ${isDragging ? 'board-item-dragging' : ''} ${
         isSettling ? 'board-item-settling' : ''

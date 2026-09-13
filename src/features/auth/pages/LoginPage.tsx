@@ -5,7 +5,7 @@ export default function LoginPage() {
 
   return (
     <div
-      className="flex h-screen w-screen items-center justify-center relative overflow-hidden"
+      className="flex min-h-dvh w-full items-center justify-center relative overflow-x-clip py-6"
       style={{ backgroundColor: 'var(--color-chrome-bg)' }}
     >
       {/* Ambient background accents */}

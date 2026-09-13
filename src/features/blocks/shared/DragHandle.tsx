@@ -15,6 +15,7 @@ export default function DragHandle({
   return (
     <button
       type="button"
+      data-touch-drag="true"
       onMouseDown={(event) => {
         event.stopPropagation();
         onMouseDown(event);
