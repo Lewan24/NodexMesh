@@ -51,7 +51,9 @@ export class WorkspaceController {
   update = (action: Project[] | ((previous: Project[]) => Project[])) => {
     if (this.state.status === 'loading') return;
     const next = typeof action === 'function' ? action(this.state.projects) : action;
-    const projects = next.map((project) => project.name === project.name.trim() ? project : { ...project, name: project.name.trim() });
+    const projects = next.map((project) =>
+      project.name === project.name.trim() ? project : { ...project, name: project.name.trim() },
+    );
     if (projects === this.state.projects) return;
     const blocked = this.state.status === 'error' || this.state.status === 'conflict';
     this.publish({ projects, ...(blocked ? {} : { status: 'pending' }) });

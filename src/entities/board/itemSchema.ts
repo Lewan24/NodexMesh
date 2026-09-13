@@ -73,7 +73,17 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
   'section-title': { version: 1, canNest: false, validate: object({ content: text }) },
   note: { version: 1, canNest: true, validate: object({ content: text }) },
   text: { version: 1, canNest: true, validate: object({ content: text, size: choice('sm', 'md', 'lg', 'xl') }) },
-  document: { version: 1, canNest: true, validate: object({ ...title, content: text, contentFormat: choice('tiptap-html'), contentVersion: choice(1), autoHeight: optional(bool) }) },
+  document: {
+    version: 1,
+    canNest: true,
+    validate: object({
+      ...title,
+      content: text,
+      contentFormat: choice('tiptap-html'),
+      contentVersion: choice(1),
+      autoHeight: optional(bool),
+    }),
+  },
   code: { version: 1, canNest: true, validate: object({ content: text, language: text, autoHeight: optional(bool) }) },
   image: {
     version: 1,

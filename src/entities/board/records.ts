@@ -22,7 +22,8 @@ export type ItemAppearance = Pick<BaseItem, 'color' | 'colorRole' | 'gradient' |
 type DataFor<T extends BoardItem> = Omit<
   T,
   keyof BaseItem | keyof ItemAppearance | 'type' | 'items' | 'dispenserId' | 'startItemId' | 'endItemId'
-> & (T extends { type: 'document' } ? { contentFormat: 'tiptap-html'; contentVersion: 1 } : object);
+> &
+  (T extends { type: 'document' } ? { contentFormat: 'tiptap-html'; contentVersion: 1 } : object);
 
 export type ItemDataMap = { [T in BoardItem as T['type']]: DataFor<T> };
 

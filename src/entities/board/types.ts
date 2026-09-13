@@ -199,6 +199,7 @@ export interface KanbanColumn {
   title: string;
   color: string;
   cards: KanbanCard[];
+  /** Relative width weight; legacy pixel widths retain their proportions. */
   width?: number;
 }
 

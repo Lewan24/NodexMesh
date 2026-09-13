@@ -40,5 +40,3 @@ export function validateBoard(board: BoardSnapshot): void {
     linkKeys.add(key);
   }
 }
-
-

@@ -219,22 +219,37 @@ test('project trash preserves content, blocks edits, restores and purges to an e
   const { api, snapshot } = await setup();
   const board = await mutate(api, snapshot, [createCanvasItem('timeline', 0, 0)]);
   let project = await api.projects.update(snapshot.project.id, {
-    name: snapshot.project.name, color: snapshot.project.color, deletedAt: new Date().toISOString(),
-    expectedRevision: '1', clientMutationId: crypto.randomUUID(),
+    name: snapshot.project.name,
+    color: snapshot.project.color,
+    deletedAt: new Date().toISOString(),
+    expectedRevision: '1',
+    clientMutationId: crypto.randomUUID(),
   });
   assert.equal((await api.projects.list())[0].board.items.length, 1);
-  await assert.rejects(api.boards.mutate(project.id, board.board.id, {
-    clientMutationId: crypto.randomUUID(), expectedBoardRevision: board.board.revision, upserts: [], deletes: [],
-  }), (error) => error.problem.code === 'project_trashed');
+  await assert.rejects(
+    api.boards.mutate(project.id, board.board.id, {
+      clientMutationId: crypto.randomUUID(),
+      expectedBoardRevision: board.board.revision,
+      upserts: [],
+      deletes: [],
+    }),
+    (error) => error.problem.code === 'project_trashed',
+  );
   project = await api.projects.update(project.id, {
-    name: project.name, color: project.color, deletedAt: null,
-    expectedRevision: project.revision, clientMutationId: crypto.randomUUID(),
+    name: project.name,
+    color: project.color,
+    deletedAt: null,
+    expectedRevision: project.revision,
+    clientMutationId: crypto.randomUUID(),
   });
   assert.equal(project.deletedAt, null);
   await assert.rejects(api.projects.purge(project.id, project.revision, crypto.randomUUID()));
   project = await api.projects.update(project.id, {
-    name: project.name, color: project.color, deletedAt: new Date().toISOString(),
-    expectedRevision: project.revision, clientMutationId: crypto.randomUUID(),
+    name: project.name,
+    color: project.color,
+    deletedAt: new Date().toISOString(),
+    expectedRevision: project.revision,
+    clientMutationId: crypto.randomUUID(),
   });
   const mutationId = crypto.randomUUID();
   await api.projects.purge(project.id, project.revision, mutationId);
@@ -250,7 +265,10 @@ test('column transfer retains identity and tags normalize without endless writes
   let board = await mutate(api, snapshot, [column]);
   assert.equal(board.tags.length, 1);
   assert.equal(diffBoard(board, [column]), null);
-  board = await mutate(api, { ...snapshot, board }, [{ ...column, items: [] }, { ...note, x: 600 }]);
+  board = await mutate(api, { ...snapshot, board }, [
+    { ...column, items: [] },
+    { ...note, x: 600 },
+  ]);
   const savedNote = board.items.find((item) => item.id === note.id);
   assert.equal(savedNote.parentItemId, null);
   assert.equal(savedNote.revision, '2');
@@ -266,7 +284,9 @@ test('controller exposes conflicts and preserves local draft instead of overwrit
   const remote = toProjectView(snapshot);
   remote.items[0].content = 'Remote';
   await mutate(api, snapshot, remote.items);
-  controller.update((projects) => projects.map((p) => ({ ...p, items: p.items.map((i) => ({ ...i, content: 'Local' })) })));
+  controller.update((projects) =>
+    projects.map((p) => ({ ...p, items: p.items.map((i) => ({ ...i, content: 'Local' })) })),
+  );
   await controller.flush();
   assert.equal(controller.getSnapshot().status, 'conflict');
   assert.equal(controller.getSnapshot().projects[0].items[0].content, 'Local');
@@ -276,10 +296,15 @@ test('controller exposes conflicts and preserves local draft instead of overwrit
 test('a forged author is rejected and an unsupported persisted version is retained', async () => {
   const { api, store, snapshot } = await setup();
   const entry = flattenItems([createCanvasItem('note', 0, 0)], snapshot.board.board.id)[0];
-  await assert.rejects(api.boards.mutate(snapshot.project.id, snapshot.board.board.id, {
-    clientMutationId: crypto.randomUUID(), expectedBoardRevision: '1',
-    upserts: [{ ...entry, item: { ...entry.item, createdBy: 'forged' } }], deletes: [],
-  }), (error) => error.problem.code === 'read_only_field');
+  await assert.rejects(
+    api.boards.mutate(snapshot.project.id, snapshot.board.board.id, {
+      clientMutationId: crypto.randomUUID(),
+      expectedBoardRevision: '1',
+      upserts: [{ ...entry, item: { ...entry.item, createdBy: 'forged' } }],
+      deletes: [],
+    }),
+    (error) => error.problem.code === 'read_only_field',
+  );
   await mutate(api, snapshot, [createCanvasItem('note', 0, 0)]);
   const db = JSON.parse(store.getItem(mockWorkspaceKey('qa')));
   db.projects[0].board.items[0].schemaVersion = 99;

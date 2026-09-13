@@ -37,7 +37,8 @@ export function normalizeItemNumbers(item: BoardItem): BoardItem {
 
     const next = Object.fromEntries(
       Object.entries(value).map(([field, entry]) => {
-        const normalized = visit(entry, field, inPoints);
+        const isColumnWeight = item.type === 'kanban' && field === 'width' && 'cards' in value;
+        const normalized = isColumnWeight ? entry : visit(entry, field, inPoints);
         changed ||= normalized !== entry;
         return [field, normalized];
       }),

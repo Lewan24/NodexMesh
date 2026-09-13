@@ -16,15 +16,15 @@ Konta mock: `admin / admin123`, `demo / demo123`. Hasła mock istnieją wyłącz
 
 ## Model danych
 
-| Model | Odpowiedzialność |
-| --- | --- |
-| `ProjectRecord` | UUID, właściciel, nazwa, kolor, kosz, rewizja, audyt |
-| `BoardRecord` | UUID, `projectId`, nazwa, kolejność, rewizja, audyt |
-| `ItemRecord` | UUID, `boardId`, typ i wersja, geometria, `appearance`, typowane `data`, audyt |
-| `ItemLink` | `line_start`, `line_end`, `created_from`; bez kopii referencji w `data` |
-| `CommentRecord` | Osobny rekord z itemem, autorem, datami, statusem, rewizją i koszem |
-| `TagRecord` / `itemTags` | Tagi normalizowane przez NFKC i małe litery; powiązania z itemami |
-| `Project` / `BoardItem` | Model widoku canvasu składany przez adapter; nie jest DTO zapisu |
+| Model                    | Odpowiedzialność                                                               |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| `ProjectRecord`          | UUID, właściciel, nazwa, kolor, kosz, rewizja, audyt                           |
+| `BoardRecord`            | UUID, `projectId`, nazwa, kolejność, rewizja, audyt                            |
+| `ItemRecord`             | UUID, `boardId`, typ i wersja, geometria, `appearance`, typowane `data`, audyt |
+| `ItemLink`               | `line_start`, `line_end`, `created_from`; bez kopii referencji w `data`        |
+| `CommentRecord`          | Osobny rekord z itemem, autorem, datami, statusem, rewizją i koszem            |
+| `TagRecord` / `itemTags` | Tagi normalizowane przez NFKC i małe litery; powiązania z itemami              |
+| `Project` / `BoardItem`  | Model widoku canvasu składany przez adapter; nie jest DTO zapisu               |
 
 Definicje: [records.ts](../src/entities/board/records.ts), [project/types.ts](../src/entities/project/types.ts). Adapter: [boardAdapter.ts](../src/features/projects/services/boardAdapter.ts).
 
@@ -65,21 +65,21 @@ Mock wykonuje walidację na kopii danych przed jednym `setItem`, więc błąd ni
 
 JSON używa camelCase i stringowych wartości enum. Błędy używają `application/problem+json`: `type`, `title`, `status`, `code`, opcjonalne `traceId` oraz `errors`. Klient nie prezentuje surowych szczegółów wyjątków serwera.
 
-| Metoda i ścieżka `/api/v1` | Żądanie / odpowiedź |
-| --- | --- |
-| `GET /auth/csrf` | `{ token }`; backend ustawia cookie antiforgery, również dla anonimowego logowania |
-| `POST /auth/login` | `{ username, password }` → publiczny `User`, cookie sesji |
-| `GET /auth/me` | publiczny `User` lub 401 |
-| `POST /auth/logout` | unieważnienie sesji, 204 |
-| `GET /users` | publiczne profile; wyłącznie admin |
-| `POST /users` | `AddUserInput`; wyłącznie admin |
-| `DELETE /users/{id}` | wyłącznie admin; serwer musi zdefiniować los projektów użytkownika |
-| `GET /projects` | `ProjectSnapshot[]`, również kosz; początkowy agregowany odczyt jednej tablicy na projekt |
-| `POST /projects` | `{ id, name, color, clientMutationId }` → `ProjectSnapshot`; właściciel z sesji |
-| `PATCH /projects/{id}` | `{ name, color, deletedAt, expectedRevision, clientMutationId }` → `ProjectRecord` |
-| `POST /projects/{id}/purge` | `{ expectedRevision, clientMutationId }` → 204 |
-| `GET /projects/{id}/boards/{boardId}` | `BoardSnapshot` |
-| `POST /projects/{id}/boards/{boardId}/mutations` | `BoardMutation` → potwierdzony `BoardSnapshot` |
+| Metoda i ścieżka `/api/v1`                       | Żądanie / odpowiedź                                                                       |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `GET /auth/csrf`                                 | `{ token }`; backend ustawia cookie antiforgery, również dla anonimowego logowania        |
+| `POST /auth/login`                               | `{ username, password }` → publiczny `User`, cookie sesji                                 |
+| `GET /auth/me`                                   | publiczny `User` lub 401                                                                  |
+| `POST /auth/logout`                              | unieważnienie sesji, 204                                                                  |
+| `GET /users`                                     | publiczne profile; wyłącznie admin                                                        |
+| `POST /users`                                    | `AddUserInput`; wyłącznie admin                                                           |
+| `DELETE /users/{id}`                             | wyłącznie admin; serwer musi zdefiniować los projektów użytkownika                        |
+| `GET /projects`                                  | `ProjectSnapshot[]`, również kosz; początkowy agregowany odczyt jednej tablicy na projekt |
+| `POST /projects`                                 | `{ id, name, color, clientMutationId }` → `ProjectSnapshot`; właściciel z sesji           |
+| `PATCH /projects/{id}`                           | `{ name, color, deletedAt, expectedRevision, clientMutationId }` → `ProjectRecord`        |
+| `POST /projects/{id}/purge`                      | `{ expectedRevision, clientMutationId }` → 204                                            |
+| `GET /projects/{id}/boards/{boardId}`            | `BoardSnapshot`                                                                           |
+| `POST /projects/{id}/boards/{boardId}/mutations` | `BoardMutation` → potwierdzony `BoardSnapshot`                                            |
 
 `deletedAt` w żądaniu projektu jest obecnie nullable wartością modelu widoku. Backend powinien traktować ją jako żądanie kosza/przywrócenia, nie wiarygodny czas audytu. Kontroler porównuje stan kosza, a nie równość znaczników czasu, więc backend może nadać własny czas. Obecny mock zachowuje przesłany znacznik kosza.
 
@@ -95,18 +95,18 @@ Agregowany odczyt i pełna odpowiedź tablicy są prostym kontraktem pierwszej w
 
 OWASP Top 10 jest katalogiem ryzyk, nie biblioteką do jednorazowego „zaimplementowania”. Obecna wersja to [OWASP Top 10:2025](https://top10.owasp.org/2025/). Poniższa tabela jest zakresem prac i dowodów wymaganych przed wdrożeniem, a nie deklaracją spełnienia wymagań.
 
-| Ryzyko 2025 | Wymagana implementacja i weryfikacja backendu |
-| --- | --- |
-| A01 Broken Access Control | Autoryzacja zasobów na każdym endpointcie i w batchu; sesja wyznacza tożsamość; admin kont nie uzyskuje automatycznie dostępu do projektów. Testy A→B i wszystkich ról. |
-| A02 Security Misconfiguration | HTTPS, ścisłe originy, CSP dopasowane do Tiptap/embedów i fontów, wyłączone debug/stacktrace, sekrety w środowisku backendu. Test konfiguracji staging/production. |
-| A03 Software Supply Chain Failures | Przegląd zależności NuGet/npm, wersje i lockfile, skan podatności, kontrola artefaktów i procesu CI/CD. |
-| A04 Cryptographic Failures | Hasła hashowane przez sprawdzony mechanizm, TLS, ochrona kluczy i backupów, losowe sesje, rotacja/revokacja. Żadnych haseł demo importowanych do produkcji. |
-| A05 Injection | Parametryzowane zapytania/EF Core, walidacja JSON dla wszystkich typów, polityka sanitizacji treści, brak wykonywania kodu z itemów. Testy XSS/SQL injection. |
-| A06 Insecure Design | Model zagrożeń, limity tablic/rysunków/uploadów, macierz dostępu, transakcje, kosz/retencja, zasady blokady `locked`, kontrola SSRF przed jakimkolwiek serwerowym pobieraniem URL. |
-| A07 Authentication Failures | Wygasanie i unieważnianie sesji, rate limiting logowania, polityka haseł/resetów, bezpieczny bootstrap admina, cookie HttpOnly/Secure/SameSite i CSRF. |
-| A08 Software or Data Integrity Failures | Walidowane i wersjonowane DTO, odrzucanie nieznanych pól, ograniczone importy, sprawdzanie uploadów, idempotencja i integralność relacji w transakcjach. |
-| A09 Security Logging and Alerting Failures | Zdarzenia autoryzacji i administracji, identyfikatory żądań, alarmy; bez sekretów i prywatnej treści itemów w logach. |
-| A10 Mishandling of Exceptional Conditions | Jednolite ProblemDetails, rollback, timeouty i anulowanie, limity zasobów, brak fail-open i testy błędów zależności/bazy/magazynu plików. |
+| Ryzyko 2025                                | Wymagana implementacja i weryfikacja backendu                                                                                                                                      |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A01 Broken Access Control                  | Autoryzacja zasobów na każdym endpointcie i w batchu; sesja wyznacza tożsamość; admin kont nie uzyskuje automatycznie dostępu do projektów. Testy A→B i wszystkich ról.            |
+| A02 Security Misconfiguration              | HTTPS, ścisłe originy, CSP dopasowane do Tiptap/embedów i fontów, wyłączone debug/stacktrace, sekrety w środowisku backendu. Test konfiguracji staging/production.                 |
+| A03 Software Supply Chain Failures         | Przegląd zależności NuGet/npm, wersje i lockfile, skan podatności, kontrola artefaktów i procesu CI/CD.                                                                            |
+| A04 Cryptographic Failures                 | Hasła hashowane przez sprawdzony mechanizm, TLS, ochrona kluczy i backupów, losowe sesje, rotacja/revokacja. Żadnych haseł demo importowanych do produkcji.                        |
+| A05 Injection                              | Parametryzowane zapytania/EF Core, walidacja JSON dla wszystkich typów, polityka sanitizacji treści, brak wykonywania kodu z itemów. Testy XSS/SQL injection.                      |
+| A06 Insecure Design                        | Model zagrożeń, limity tablic/rysunków/uploadów, macierz dostępu, transakcje, kosz/retencja, zasady blokady `locked`, kontrola SSRF przed jakimkolwiek serwerowym pobieraniem URL. |
+| A07 Authentication Failures                | Wygasanie i unieważnianie sesji, rate limiting logowania, polityka haseł/resetów, bezpieczny bootstrap admina, cookie HttpOnly/Secure/SameSite i CSRF.                             |
+| A08 Software or Data Integrity Failures    | Walidowane i wersjonowane DTO, odrzucanie nieznanych pól, ograniczone importy, sprawdzanie uploadów, idempotencja i integralność relacji w transakcjach.                           |
+| A09 Security Logging and Alerting Failures | Zdarzenia autoryzacji i administracji, identyfikatory żądań, alarmy; bez sekretów i prywatnej treści itemów w logach.                                                              |
+| A10 Mishandling of Exceptional Conditions  | Jednolite ProblemDetails, rollback, timeouty i anulowanie, limity zasobów, brak fail-open i testy błędów zależności/bazy/magazynu plików.                                          |
 
 W ASP.NET Core 10 skonfiguruj token antiforgery dla rzeczywistych mutacji JSON, włącznie z logowaniem. Nie zakładaj, że obecność middleware automatycznie chroni każdy endpoint JSON. Zasady i dostępne mechanizmy opisuje [dokumentacja Microsoft dotycząca antiforgery](https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0).
 
@@ -117,4 +117,3 @@ Zachowaj model PostgreSQL z dokumentu wyjściowego: relacyjne projekty/tablice/i
 Testy `tests/api-readiness.test.mjs` sprawdzają normalizację, typy itemów, kolumny, różnice, konflikty, idempotencję, odrzucanie nieprawidłowych zapisów, izolację kontekstu, uszkodzony storage, utraconą odpowiedź, kolejne zmiany podczas zapisu, undo, publiczny profil i transport CSRF. Pozostałe testy bloków/canvasu nadal chronią dotychczasowe zachowanie. Wyłączono HMR w serwerach testowych, aby nie konkurowały o port 24678.
 
 Przed produkcją pozostają: rzeczywisty backend i migracje, pełna walidacja semantyczna wszystkich treści, sanitizacja dokumentów, role i udostępnianie, polityka `locked`, zarządzanie kontami i sesjami, uploady, scenariusze HTTP 401/403/409/422/429, testy integracyjne z PostgreSQL, E2E z dwiema sesjami, CSP, testy obciążeniowe, backup/restore i monitoring. `npm run lint` obecnie nie działa, ponieważ repozytorium nie ma konfiguracji ESLint; nie jest to zaliczona kontrola.
-

@@ -8,14 +8,18 @@ import KanbanCardItem from '@/features/blocks/kanban/KanbanCardItem';
 
 import {
   createKanbanCard,
-  createKanbanColumn,
-  DEFAULT_KANBAN_COLUMN_WIDTH,
+  appendKanbanColumn,
+  getColumnWeight,
+  getColumnShare,
+  setColumnShare,
+  equalizeKanbanColumns,
+  getKanbanMinWidth,
   MIN_KANBAN_COLUMN_WIDTH,
-  MAX_KANBAN_COLUMN_WIDTH,
 } from '@/features/blocks/kanban/utils/kanbanUtils';
 
 import { useKanbanDrag } from '@/features/blocks/kanban/hooks/useKanbanDrag';
 import { getTypographyStyle } from '../typography/typographyUtils';
+import { ITEM_WIDTH } from '@/features/canvas/constants';
 
 interface KanbanBlockProps {
   item: KanbanItem;
@@ -79,9 +83,17 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
 
   const updateColumns = useCallback(
     (updater: (columns: KanbanColumn[]) => KanbanColumn[]) => {
-      updateKanban({ columns: updater(columnsRef.current) });
+      onUpdate((current) => {
+        if (current.type !== 'kanban') return current;
+        const columns = updater(current.columns);
+        return {
+          ...current,
+          columns,
+          width: Math.max(current.width ?? ITEM_WIDTH.kanban, getKanbanMinWidth(columns.length)),
+        };
+      });
     },
-    [updateKanban],
+    [onUpdate],
   );
 
   const addCard = useCallback(
@@ -177,15 +189,21 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
       if (!column) return;
 
       const startX = event.clientX;
-      const startWidth = column.width ?? DEFAULT_KANBAN_COLUMN_WIDTH;
+      const startColumns = columnsRef.current;
+      const startShare = getColumnShare(startColumns, columnId);
+      const availableWidth = startColumns.reduce(
+        (sum, column) => sum + (columnRefs.current.get(column.id)?.getBoundingClientRect().width ?? 0) / zoom,
+        0,
+      );
+      if (availableWidth <= 0) return;
 
       const handleMove = (moveEvent: MouseEvent) => {
         const deltaX = (moveEvent.clientX - startX) / zoom;
 
-        const width = Math.max(MIN_KANBAN_COLUMN_WIDTH, Math.min(MAX_KANBAN_COLUMN_WIDTH, startWidth + deltaX));
-
+        const resizedColumns = setColumnShare(startColumns, columnId, startShare + deltaX / availableWidth);
+        const weights = new Map(resizedColumns.map((column) => [column.id, column.width]));
         updateColumns((columns) =>
-          columns.map((column) => (column.id === columnId ? { ...column, width: Math.round(width) } : column)),
+          columns.map((column) => (weights.has(column.id) ? { ...column, width: weights.get(column.id) } : column)),
         );
       };
 
@@ -202,9 +220,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
 
   const resetColumnWidth = useCallback(
     (columnId: string) => {
-      updateColumns((columns) =>
-        columns.map((column) => (column.id === columnId ? { ...column, width: DEFAULT_KANBAN_COLUMN_WIDTH } : column)),
-      );
+      updateColumns((columns) => setColumnShare(columns, columnId, 1 / columns.length));
     },
     [updateColumns],
   );
@@ -220,7 +236,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
     });
 
   const addColumn = useCallback(() => {
-    updateColumns((columns) => [...columns, createKanbanColumn(columns.length)]);
+    updateColumns(appendKanbanColumn);
   }, [updateColumns]);
 
   const resetHeight = useCallback(() => {
@@ -228,18 +244,19 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
   }, [updateKanban]);
 
   return (
-    <div className="group relative" style={{ width: item.width, height: item.height }}>
+    <div
+      className="group relative"
+      style={{
+        width: Math.max(item.width ?? ITEM_WIDTH.kanban, getKanbanMinWidth(item.columns.length)),
+        height: item.height,
+      }}
+    >
       <div
         ref={boardRef}
         data-wheel-scroll={item.height ? 'true' : 'false'}
         data-kanban-id={item.id}
         className="item-rounded shadow-xl overflow-scroll"
-        style={{
-          width: item.width ? '100%' : undefined,
-          height: item.height ? '100%' : undefined,
-          background,
-          borderColor,
-        }}
+        style={{ width: '100%', height: item.height ? '100%' : undefined, background, borderColor }}
       >
         {item.topColor && <div style={{ height: 5, backgroundColor: item.topColor, borderRadius: '16px 16px 0 0' }} />}
 
@@ -304,6 +321,42 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
           </div>
 
           <div className="flex items-center gap-1" onMouseDown={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => updateColumns(equalizeKanbanColumns)}
+              disabled={item.columns.length < 2}
+              className="w-8 h-8 flex items-center justify-center rounded-xl cursor-pointer hover:bg-violet-500/10 disabled:opacity-30 disabled:cursor-default"
+              style={{ color: mutedColor }}
+              title="Equalize column widths"
+              aria-label="Equalize column widths"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <rect x="3" y="4" width="6" height="16" rx="1" />
+                <rect x="15" y="4" width="6" height="16" rx="1" />
+                <path d="M12 4v16" />
+              </svg>
+            </button>
+            {/* Add column */}
+
+            <button
+              onMouseDown={(event) => event.stopPropagation()}
+              onClick={addColumn}
+              className="w-8 h-8 flex items-center justify-center rounded-xl transition-colors flex-shrink-0"
+              style={{ color: mutedColor }}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.color = accentColor;
+                event.currentTarget.style.backgroundColor = cardBackground;
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.color = mutedColor;
+                event.currentTarget.style.backgroundColor = 'transparent';
+              }}
+              title="Add column"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
             {item.height !== undefined && (
               <button
                 type="button"
@@ -392,9 +445,10 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                   columnRefs.current.delete(column.id);
                 }
               }}
-              className="relative flex flex-col group/col flex-shrink-0"
+              className="relative flex flex-col group/col min-w-0"
               style={{
-                width: column.width ?? DEFAULT_KANBAN_COLUMN_WIDTH,
+                flex: `${getColumnWeight(column)} 1 0%`,
+                minWidth: MIN_KANBAN_COLUMN_WIDTH,
                 outline: dropColumn === column.id ? `2px solid ${accentColor}` : undefined,
                 opacity: draggedColumn === column.id ? 0.5 : 1,
               }}
@@ -456,7 +510,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                 </button>
 
                 <button
-                  className="flex-1 text-left font-bold uppercase tracking-widest"
+                  className="flex-1 min-w-0 break-words text-left font-bold uppercase tracking-widest"
                   style={{ color: column.color, ...typographyStyle }}
                   onMouseDown={(event) => event.stopPropagation()}
                   onClick={() => setColumnSettings(column.id)}
@@ -627,7 +681,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                   event.stopPropagation();
                   resetColumnWidth(column.id);
                 }}
-                title={`Resize column (${Math.round(column.width ?? DEFAULT_KANBAN_COLUMN_WIDTH)}px) · Double-click to reset`}
+                title={`Resize column (${(getColumnShare(item.columns, column.id) * 100).toFixed(1)}%) · Double-click to reset`}
               >
                 <div
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-8 rounded-full opacity-0 group-hover/col:opacity-50 group-hover/resize:opacity-100 transition-all"
@@ -636,38 +690,20 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
               </div>
             </div>
           ))}
-
-          {/* Add column */}
-
-          <button
-            onMouseDown={(event) => event.stopPropagation()}
-            onClick={addColumn}
-            className="self-start mt-5 w-8 h-8 flex items-center justify-center rounded-xl transition-colors flex-shrink-0"
-            style={{ color: mutedColor }}
-            onMouseEnter={(event) => {
-              event.currentTarget.style.color = accentColor;
-              event.currentTarget.style.backgroundColor = cardBackground;
-            }}
-            onMouseLeave={(event) => {
-              event.currentTarget.style.color = mutedColor;
-              event.currentTarget.style.backgroundColor = 'transparent';
-            }}
-            title="Add column"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </button>
         </div>
       </div>
       {columnSettings && item.columns.find((column) => column.id === columnSettings) && (
         <KanbanColumnDialog
           key={columnSettings}
           column={item.columns.find((column) => column.id === columnSettings)!}
+          share={getColumnShare(item.columns, columnSettings)}
+          singleColumn={item.columns.length === 1}
           onClose={() => setColumnSettings(null)}
-          onSave={(patch) => {
+          onSave={({ share, ...patch }) => {
             updateColumns((columns) =>
-              columns.map((column) => (column.id === columnSettings ? { ...column, ...patch } : column)),
+              setColumnShare(columns, columnSettings, share).map((column) =>
+                column.id === columnSettings ? { ...column, ...patch } : column,
+              ),
             );
             setColumnSettings(null);
           }}

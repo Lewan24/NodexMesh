@@ -1,20 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { KanbanColumn } from '@/entities/board/types';
-import { MIN_KANBAN_COLUMN_WIDTH, MAX_KANBAN_COLUMN_WIDTH, DEFAULT_KANBAN_COLUMN_WIDTH } from './utils/kanbanUtils';
 
 export default function KanbanColumnDialog({
   column,
+  share,
+  singleColumn,
   onSave,
   onClose,
 }: {
   column: KanbanColumn;
-  onSave: (patch: Pick<KanbanColumn, 'title' | 'color' | 'width'>) => void;
+  share: number;
+  singleColumn: boolean;
+  onSave: (patch: Pick<KanbanColumn, 'title' | 'color'> & { share: number }) => void;
   onClose: () => void;
 }) {
   const [title, setTitle] = useState(column.title);
   const [color, setColor] = useState(column.color);
-  const [width, setWidth] = useState(column.width ?? DEFAULT_KANBAN_COLUMN_WIDTH);
+  const [width, setWidth] = useState(share * 100);
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
     const previous = document.activeElement;
@@ -39,7 +42,7 @@ export default function KanbanColumnDialog({
         style={{ background: 'var(--color-surface)', color: 'var(--color-text-primary)' }}
         onSubmit={(event) => {
           event.preventDefault();
-          if (title.trim()) onSave({ title: title.trim(), color, width });
+          if (title.trim()) onSave({ title: title.trim(), color, share: width / 100 });
         }}
         onKeyDown={(event) => {
           event.stopPropagation();
@@ -76,12 +79,14 @@ export default function KanbanColumnDialog({
           <input type="color" value={color} onChange={(event) => setColor(event.target.value)} />
         </label>
         <label className="block">
-          Width (px)
+          Width (%)
           <input
             type="number"
             required
-            min={MIN_KANBAN_COLUMN_WIDTH}
-            max={MAX_KANBAN_COLUMN_WIDTH}
+            min={1}
+            max={singleColumn ? 100 : 99}
+            step="any"
+            disabled={singleColumn}
             value={width}
             onChange={(event) => setWidth(Number(event.target.value))}
             className="block w-full mt-1 p-2 bg-transparent border rounded-sm"

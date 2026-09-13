@@ -72,7 +72,14 @@ function applyItem(board: BoardSnapshot, entry: ItemMutation, userId: string): v
       : audit(userId);
     board.comments = board.comments
       .filter((c) => c.id !== comment.id)
-      .concat({ ...metadata, id: comment.id, text: comment.text, status: comment.status, itemId: item.id, deletedAt: null });
+      .concat({
+        ...metadata,
+        id: comment.id,
+        text: comment.text,
+        status: comment.status,
+        itemId: item.id,
+        deletedAt: null,
+      });
   }
   board.itemTags = board.itemTags.filter((t) => t.itemId !== item.id);
   if (entry.tags.length > 100) fail(422, 'invalid_tags', 'Too many tags.');
@@ -271,4 +278,3 @@ export function createMockWorkspace(
   };
   return services;
 }
-

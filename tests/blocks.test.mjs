@@ -52,7 +52,55 @@ const { COLUMN_ADD_TYPES, createDefaultColumnItem } = await server.ssrLoadModule
 );
 const { DROPPABLE_ON_COLUMN } = await server.ssrLoadModule('/src/features/canvas/constants.ts');
 const { sectionTitleScale } = await server.ssrLoadModule('/src/features/blocks/section-title/SectionTitleBlock.tsx');
+const { appendKanbanColumn, getColumnShare, setColumnShare, equalizeKanbanColumns, getKanbanMinWidth } =
+  await server.ssrLoadModule('/src/features/blocks/kanban/utils/kanbanUtils.ts');
 await server.close();
+
+test('kanban columns fill the available width and redistribute proportionally', () => {
+  const columns = [180, 180, 180].map((width, index) => ({
+    id: String(index),
+    title: 'Column',
+    color: '#ffffff',
+    cards: [],
+    width,
+  }));
+  const shares = (columns) => columns.map((column) => getColumnShare(columns, column.id));
+  assert.deepEqual(shares(columns), [1 / 3, 1 / 3, 1 / 3]);
+  assert.deepEqual(shares(appendKanbanColumn(columns)), [0.25, 0.25, 0.25, 0.25]);
+
+  const resized = setColumnShare(columns, '0', 0.5);
+  assert.deepEqual(shares(resized), [0.5, 0.25, 0.25]);
+  assert.deepEqual(shares(appendKanbanColumn(resized)), [0.375, 0.1875, 0.1875, 0.25]);
+  assert.deepEqual(shares(resized.filter((column) => column.id !== '0')), [0.5, 0.5]);
+  for (const share of shares(setColumnShare(resized, '0', 1 / 3))) {
+    assert.ok(Math.abs(share - 1 / 3) < 1e-12);
+  }
+
+  const legacy = columns.map((column, index) => ({ ...column, width: index === 0 ? 360 : undefined }));
+  assert.deepEqual(shares(legacy), [0.5, 0.25, 0.25]);
+  assert.ok(Math.abs(getColumnShare(setColumnShare(columns, '0', 2), '0') - 0.99) < 1e-12);
+  assert.deepEqual(setColumnShare(columns, '0', NaN), columns);
+  assert.equal(getColumnShare(setColumnShare([columns[0]], '0', 0.5), '0'), 1);
+  const preciseColumns = setColumnShare(columns, '0', 0.42123);
+  const board = { ...createCanvasItem('kanban', 0, 0), columns: preciseColumns };
+  assert.deepEqual(normalizeItemNumbers(board).columns, preciseColumns);
+});
+
+test('kanban equalization preserves column content and minimum width grows with column count', () => {
+  const board = createCanvasItem('kanban', 0, 0);
+  const columns = board.columns.map((column, index) => ({ ...column, width: 180 * (index + 1) }));
+  const equalized = equalizeKanbanColumns(columns);
+  for (const [index, column] of equalized.entries()) {
+    assert.equal(getColumnShare(equalized, column.id), 1 / columns.length);
+    assert.deepEqual(column, { ...columns[index], width: 180 });
+  }
+  assert.deepEqual(equalizeKanbanColumns([]), []);
+  assert.equal(getKanbanMinWidth(0), 288);
+  assert.equal(getKanbanMinWidth(1), 288);
+  assert.equal(getKanbanMinWidth(3), 596);
+  assert.equal(getKanbanMinWidth(4), 784);
+  assert.equal(getKanbanMinWidth(5) - getKanbanMinWidth(4), 188);
+});
 
 test('new blocks survive JSON persistence and have usable default dimensions', () => {
   for (const type of ['document', 'embed', 'code', 'dispenser', 'timeline', 'diagram']) {
@@ -945,5 +993,3 @@ test('stored geometry uses pixels while drawing points and pressure retain two d
   assert.equal(original.x, 12.34567);
   assert.equal(normalizeItemNumbers(result), result);
 });
-
-

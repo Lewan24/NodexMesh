@@ -290,4 +290,3 @@ test('a swipe between taps breaks the double-tap editing sequence', (t) => {
   touch('touchend', []);
   assert.equal(mouseEvents.includes('dblclick'), false);
 });
-
