@@ -48,6 +48,7 @@ function ConnectionHandle({ side, style, onStart }: ConnectionHandleProps) {
   return (
     <button
       type="button"
+      data-touch-drag="true"
       className="absolute z-[70] w-6 h-6 rounded-full flex items-center justify-center transition-transform hover:scale-115"
       style={{
         ...style,

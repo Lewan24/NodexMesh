@@ -1,3 +1,4 @@
+import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import type { CSSProperties } from 'react';
 import { getTypographyStyle } from '../typography/typographyUtils';
 import { useEffect, useRef, useState } from 'react';
@@ -91,7 +92,14 @@ export default function DiagramBlock({
 }) {
   const [layoutDirection, setLayoutDirection] = useState<'vertical' | 'horizontal'>('vertical');
   const [snap, setSnap] = useState(true);
-  const [editing, setEditing] = useState(false);
+  const mobile = useMobileLayout();
+  const [editingRequested, setEditingRequested] = useState(false);
+  const editing = editingRequested && !mobile;
+  const setEditing = (value: boolean) => setEditingRequested(value && !mobile);
+
+  useEffect(() => {
+    if (mobile) setEditingRequested(false);
+  }, [mobile]);
   const [nodes, setNodes] = useState<FlowNode[]>(item.nodes);
   const [edges, setEdges] = useState<Edge[]>(item.edges);
   const [selection, setSelection] = useState<{ node?: string; edge?: string }>({});
@@ -170,7 +178,7 @@ export default function DiagramBlock({
         <span className="text-xs text-theme-muted">
           {editing
             ? 'Shift-click to select several · Drag ports to connect · Right-drag to pan'
-            : 'Double-click to edit diagram'}
+            : mobile ? 'Diagram editing is available on desktop' : 'Double-click to edit diagram'}
         </span>
         <button
           className="planning-button ml-auto"
@@ -181,6 +189,8 @@ export default function DiagramBlock({
         <button
           className="planning-button"
           aria-pressed={editing}
+          disabled={mobile}
+          title={mobile ? 'Diagram editing is available on desktop' : undefined}
           onClick={() => {
             setEditing(!editing);
             setSelection({});
@@ -337,6 +347,7 @@ export default function DiagramBlock({
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none">
             <p className="text-sm text-theme-muted">Map a process, a decision or your system architecture.</p>
             <button
+              disabled={mobile}
               className="planning-button pointer-events-auto"
               onMouseDown={(event) => event.stopPropagation()}
               onClick={() => {

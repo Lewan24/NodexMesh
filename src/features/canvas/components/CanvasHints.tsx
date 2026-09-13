@@ -9,7 +9,7 @@ export default function CanvasHints({ selectedTool, hasSelection }: CanvasHintsP
   return (
     <>
       {selectedTool !== 'select' && (
-        <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none hint-pulse">
+        <div className="canvas-hint absolute left-1/2 -translate-x-1/2 pointer-events-none hint-pulse">
           <div
             className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm shadow-lg"
             style={{
@@ -31,7 +31,7 @@ export default function CanvasHints({ selectedTool, hasSelection }: CanvasHintsP
       )}
 
       {selectedTool === 'select' && !hasSelection && (
-        <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none">
+        <div className="canvas-hint canvas-desktop-hint absolute left-1/2 -translate-x-1/2 pointer-events-none">
           <div
             className="flex items-center gap-2 px-4 py-2 rounded-full text-xs shadow-sm opacity-40"
             style={{
@@ -42,6 +42,11 @@ export default function CanvasHints({ selectedTool, hasSelection }: CanvasHintsP
           >
             Middle-click drag to pan · Scroll to zoom
           </div>
+        </div>
+      )}
+      {selectedTool === 'select' && !hasSelection && (
+        <div className="canvas-touch-hint pointer-events-none">
+          Swipe to pan · Pinch to zoom · Tap to select · Hold an unlocked item to move
         </div>
       )}
     </>

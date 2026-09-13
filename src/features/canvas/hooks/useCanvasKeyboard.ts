@@ -41,7 +41,8 @@ export function useCanvasKeyboard({
           event.target.matches(
             'textarea,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=button]):not([type=number]):not([type=date]):not([type=time]):not([type=datetime-local])',
           ));
-      const modal = event.target instanceof Element ? event.target.closest('[role="dialog"], [role="menu"]') : null;
+      const modal =
+        event.target instanceof Element ? event.target.closest('dialog, [role="dialog"], [role="menu"]') : null;
       if (
         !event.defaultPrevented &&
         !textField &&
@@ -59,7 +60,7 @@ export function useCanvasKeyboard({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         event.defaultPrevented ||
-        (event.target instanceof Element && event.target.closest('[role="dialog"], [role="menu"]'))
+        (event.target instanceof Element && event.target.closest('dialog, [role="dialog"], [role="menu"]'))
       )
         return;
       const inField =

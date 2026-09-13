@@ -15,7 +15,7 @@ interface NoteBlockProps {
 }
 
 export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: NoteBlockProps) {
-  const [editing, setEditing] = useState(!item.content);
+  const [editing, setEditing] = useState(false);
   const typographyStyle = {
     ...getTypographyStyle(item),
     ...(item.dispenserId && !item.typography?.textAlign ? { textAlign: 'center' as const } : {}),
@@ -48,11 +48,11 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
   );
 
   /*
-   * Selection controls edit mode.
+   * Deselecting ends editing; selecting only prepares the note for moving.
    */
 
   useEffect(() => {
-    setEditing(isSelected);
+    if (!isSelected) setEditing(false);
   }, [isSelected]);
 
   /*
@@ -133,6 +133,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
 
         <div
           ref={contentRef}
+          data-touch-content={!editing}
           data-wheel-scroll={item.height ? 'true' : 'false'}
           className="p-3 flex-1 min-h-0 flex flex-col"
           style={{ overflow: editing ? 'hidden' : 'auto', justifyContent: verticalJustify }}
@@ -165,11 +166,11 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
             />
           ) : (
             <div
-              onClick={() => setEditing(true)}
+              onDoubleClick={() => setEditing(true)}
               className={`leading-relaxed whitespace-pre-wrap wrap-break-word cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{ color: textColor, ...typographyStyle }}
             >
-              {item.content || 'Click to edit…'}
+              {item.content || 'Double-click to edit…'}
             </div>
           )}
         </div>

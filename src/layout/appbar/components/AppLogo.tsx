@@ -1,7 +1,7 @@
 export default function AppLogo() {
   return (
     <div
-      className="h-full flex items-center gap-2.5 px-4"
+      className="app-logo h-full flex items-center gap-2.5 px-4"
       style={{ borderRight: '1px solid var(--color-chrome-border)' }}
     >
       <div

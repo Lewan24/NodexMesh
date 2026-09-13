@@ -1,3 +1,4 @@
+import { useCanvasTouch } from '../hooks/useCanvasTouch';
 import PasteStyleDialog from './PasteStyleDialog';
 import { copyItemStyle, pasteItemStyle } from '../utils/itemStyle';
 import type { ItemStyle } from '../utils/itemStyle';
@@ -114,6 +115,7 @@ export default function Canvas({
   searchQuery,
 }: CanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [touchSelectionMode, setTouchSelectionMode] = useState(false);
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [contextMenu, setContextMenu] = useState<CanvasMenuState | null>(null);
   const pointerPosition = useRef<{ x: number; y: number } | null>(null);
@@ -136,6 +138,16 @@ export default function Canvas({
 
   const zoomRef = useRef(zoom);
   zoomRef.current = zoom;
+
+  useCanvasTouch({
+    containerRef,
+    panRef,
+    zoomRef,
+    selectedTool,
+    selectionMode: touchSelectionMode,
+    onPanChange,
+    onZoomChange,
+  });
 
   const projectRef = useRef(project);
   projectRef.current = project;
@@ -598,7 +610,7 @@ export default function Canvas({
 
     const boardHeight = bottom - top;
 
-    const padding = 100;
+    const padding = viewportSize.width <= 900 ? 32 : 100;
 
     const availableWidth = Math.max(1, viewportSize.width - padding * 2);
 
@@ -685,6 +697,7 @@ export default function Canvas({
 
       const target = event.target;
       if (!(target instanceof Element)) return;
+      if (target.closest('[data-canvas-ui], dialog, [role="dialog"], [role="menu"]')) return;
 
       const clickedColumnItem = target.closest('[data-column-item="true"]');
       const clickedEditBar = target.closest('[data-edit-bar="true"]');
@@ -836,6 +849,7 @@ export default function Canvas({
         };
       }}
       onContextMenu={(event) => {
+        if (event.defaultPrevented) return;
         const target = event.target;
         if (
           !(target instanceof Element) ||
@@ -1198,10 +1212,35 @@ export default function Canvas({
       <CanvasEmptyState visible={project.items.length === 0 && selectedTool === 'select'} />
 
       <CanvasControls
+        onOpenMenu={() => {
+          const rect = containerRef.current?.getBoundingClientRect();
+          if (!rect) return;
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          setContextMenu({
+            x: rect.right - 240,
+            y: rect.bottom - 420,
+            canvasX: snapValue((centerX - pan.x) / zoom),
+            canvasY: snapValue((centerY - pan.y) / zoom),
+            hasSelection: inspectorItems.length > 0,
+          });
+        }}
         zoom={zoom}
         snapEnabled={snapEnabled}
-        onZoomChange={onZoomChange}
+        onZoomChange={(nextZoom) => {
+          const centerX = viewportSize.width / 2;
+          const centerY = viewportSize.height / 2;
+          onPanChange({
+            x: centerX - (centerX - pan.x) * (nextZoom / zoom),
+            y: centerY - (centerY - pan.y) * (nextZoom / zoom),
+          });
+          onZoomChange(nextZoom);
+        }}
         onPanChange={onPanChange}
+        onFitView={handleReturnToBoard}
+        selectionMode={touchSelectionMode}
+        onToggleSelectionMode={() => setTouchSelectionMode((current) => !current)}
+        onUndo={undo}
         onToggleSnap={() => setSnapEnabled((previous) => !previous)}
       />
     </div>

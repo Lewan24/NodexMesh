@@ -1,3 +1,4 @@
+import MobilePanel from '@/shared/components/dialogs/MobilePanel';
 import type { ReactNode } from 'react';
 import type { BoardItem } from '@/entities/board/types';
 
@@ -59,37 +60,39 @@ export default function CanvasEditBar({
   }
 
   return (
-    <Suspense fallback={null}>
-      <EditBar
-        selectedItems={selectedItems}
-        frameControls={selectedColumnItem ? undefined : frameControls}
-        onJoinDrawings={onJoinDrawings}
-        onUpdateItem={onUpdateItem}
-        onDeleteItems={(ids) =>
-          requestDelete(() => {
-            onDeleteItems(ids);
+    <MobilePanel title="Item style" slot="edit">
+      <Suspense fallback={null}>
+        <EditBar
+          selectedItems={selectedItems}
+          frameControls={selectedColumnItem ? undefined : frameControls}
+          onJoinDrawings={onJoinDrawings}
+          onUpdateItem={onUpdateItem}
+          onDeleteItems={(ids) =>
+            requestDelete(() => {
+              onDeleteItems(ids);
+              onSelectItems([]);
+            }, ids.length)
+          }
+          onBringForward={onBringForward}
+          onSendBackward={onSendBackward}
+          onBringToFront={onBringToFront}
+          onSendToBack={onSendToBack}
+          onGroupItems={() => {
+            pushHistory();
+            onGroupSelected();
+          }}
+          onFitFrame={onFitFrame}
+          onClose={() => {
             onSelectItems([]);
-          }, ids.length)
-        }
-        onBringForward={onBringForward}
-        onSendBackward={onSendBackward}
-        onBringToFront={onBringToFront}
-        onSendToBack={onSendToBack}
-        onGroupItems={() => {
-          pushHistory();
-          onGroupSelected();
-        }}
-        onFitFrame={onFitFrame}
-        onClose={() => {
-          onSelectItems([]);
-          clearColumnSelection();
-        }}
-        columnItem={selectedColumnItem?.item}
-        onUpdateColumnItem={
-          selectedColumnItem ? (updater) => onUpdateColumnItem(selectedColumnItem.columnId, updater) : undefined
-        }
-        onDeleteColumnItem={selectedColumnItem ? () => requestDelete(deleteSelectedColumnItem) : undefined}
-      />
-    </Suspense>
+            clearColumnSelection();
+          }}
+          columnItem={selectedColumnItem?.item}
+          onUpdateColumnItem={
+            selectedColumnItem ? (updater) => onUpdateColumnItem(selectedColumnItem.columnId, updater) : undefined
+          }
+          onDeleteColumnItem={selectedColumnItem ? () => requestDelete(deleteSelectedColumnItem) : undefined}
+        />
+      </Suspense>
+    </MobilePanel>
   );
 }

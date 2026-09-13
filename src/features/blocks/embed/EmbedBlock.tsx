@@ -17,7 +17,7 @@ export default function EmbedBlock({
   onDelete: () => void;
 }) {
   const { background, textColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
-  const [editing, setEditing] = useState(!item.url);
+  const [editing, setEditing] = useState(false);
   const [interactive, setInteractive] = useState(false);
   const [draft, setDraft] = useState(item.url);
   const [error, setError] = useState('');

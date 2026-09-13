@@ -15,7 +15,7 @@ interface TextBlockProps {
 }
 
 export default function TextBlock({ item, onUpdate, fillWidth = false }: TextBlockProps) {
-  const [editing, setEditing] = useState(!item.content || item.content === 'Heading');
+  const [editing, setEditing] = useState(false);
 
   const typographyStyle = getTypographyStyle(item);
 
