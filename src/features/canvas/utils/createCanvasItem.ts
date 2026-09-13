@@ -93,6 +93,18 @@ export function createCanvasItem(
         ],
       } as KanbanItem;
 
+    case 'icon':
+      return {
+        ...base,
+        type,
+        iconMode: 'preset',
+        source: 'star',
+        label: 'Star',
+        color: '#7C3AED',
+        width: ITEM_WIDTH.icon,
+        height: ITEM_WIDTH.icon,
+      };
+
     case 'image':
       return { ...base, type: 'image', url: '', caption: '', width: ITEM_WIDTH.image, imgHeight: 192 } as ImageItem;
 

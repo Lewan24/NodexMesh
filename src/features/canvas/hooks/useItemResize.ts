@@ -33,6 +33,8 @@ interface MinSize {
 
 function getMinSize(item: BoardItem): MinSize {
   switch (item.type) {
+    case 'icon':
+      return { width: 24, height: 24 };
     case 'drawing':
       return { width: 12, height: 12 };
     case 'timeline':

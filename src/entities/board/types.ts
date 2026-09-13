@@ -7,6 +7,7 @@ export type BoardItem =
   | SectionTitleItem
   | NoteItem
   | KanbanItem
+  | IconItem
   | ImageItem
   | LinkItem
   | TextItem
@@ -22,6 +23,13 @@ export type BoardItem =
   | DiagramItem
   | DatabaseDiagramItem
   | DrawingItem;
+
+export interface IconItem extends BaseItem {
+  type: 'icon';
+  iconMode: 'preset' | 'emoji' | 'svg' | 'url';
+  source: string;
+  label: string;
+}
 
 export interface DrawingStroke {
   points: { x: number; y: number; pressure?: number }[];

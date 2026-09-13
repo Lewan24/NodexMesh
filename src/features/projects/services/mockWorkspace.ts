@@ -138,6 +138,31 @@ export function createMockWorkspace(
     if (typeof window !== 'undefined' && navigator.locks) return navigator.locks.request(key, async () => operation());
     return operation();
   }
+  function persist(db: Database, currentReceiptId?: string): void {
+    const expiredReceipts = Object.keys(db.receipts).filter((id) => id !== currentReceiptId);
+    while (true) {
+      try {
+        storage.setItem(key, JSON.stringify(db));
+        return;
+      } catch (error) {
+        const quotaExceeded = error instanceof Error && error.name === 'QuotaExceededError';
+        if (!quotaExceeded) throw error;
+
+        // Receipt results contain full board snapshots. Evict only retry history,
+        // never project data or the current receipt needed after a lost response.
+        const oldest = expiredReceipts.shift();
+        if (oldest !== undefined) {
+          delete db.receipts[oldest];
+          continue;
+        }
+        fail(
+          507,
+          'storage_full',
+          'Browser storage is full. Your changes are still open. Download a local draft before closing this page.',
+        );
+      }
+    }
+  }
   async function transaction<T>(id: string, request: unknown, operation: (db: Database) => T): Promise<T> {
     return locked(() => {
       const db = read();
@@ -153,7 +178,7 @@ export function createMockWorkspace(
       // A bounded mock receipt window; the backend defines time-based retention.
       const receipts = Object.keys(db.receipts);
       for (const old of receipts.slice(0, Math.max(0, receipts.length - 100))) delete db.receipts[old];
-      storage.setItem(key, JSON.stringify(db));
+      persist(db, id);
       return result === undefined ? result : (JSON.parse(JSON.stringify(result)) as T);
     });
   }
@@ -182,7 +207,7 @@ export function createMockWorkspace(
                 board,
               });
             }
-            storage.setItem(key, JSON.stringify(db));
+            persist(db);
           }
           return structuredClone(db.projects);
         });

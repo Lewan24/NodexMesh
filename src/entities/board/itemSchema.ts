@@ -85,6 +85,11 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
     }),
   },
   code: { version: 1, canNest: true, validate: object({ content: text, language: text, autoHeight: optional(bool) }) },
+  icon: {
+    version: 1,
+    canNest: false,
+    validate: object({ iconMode: choice('preset', 'emoji', 'svg', 'url'), source: text, label: text }),
+  },
   image: {
     version: 1,
     canNest: true,

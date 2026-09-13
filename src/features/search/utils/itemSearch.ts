@@ -55,6 +55,8 @@ export function getSearchableText(item: BoardItem): string {
         ...item.columns.flatMap((column) => [column.title, ...column.cards.map((card) => card.text)]),
       ].join(' ');
 
+    case 'icon':
+      return `${item.label} ${item.iconMode === 'svg' ? '' : item.source}`;
     case 'image':
       return item.caption;
 

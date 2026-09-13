@@ -63,13 +63,13 @@ test('all registered item types round-trip and columns become independent record
       2,
     ),
   );
-  assert.equal(items.length, 18);
+  assert.equal(items.length, Object.keys(itemSchemas).length);
   const column = items.find((item) => item.type === 'column');
   column.items = [createCanvasItem('note', 14, 26)];
   column.items[0].comments = [{ id: crypto.randomUUID(), text: 'Review', createdAt: new Date().toISOString() }];
   column.items[0].tags = ['Backend'];
   const board = await mutate(api, snapshot, items);
-  assert.equal(board.items.length, 19);
+  assert.equal(board.items.length, items.length + 1);
   assert.equal(board.items.find((item) => item.id === column.id).data.items, undefined);
   const child = board.items.find((item) => item.parentItemId === column.id);
   assert.equal(child.x, 14);
@@ -77,6 +77,84 @@ test('all registered item types round-trip and columns become independent record
   const view = toProjectView({ ...snapshot, board });
   assert.equal(view.items.find((item) => item.id === column.id).items[0].id, child.id);
   assert.equal(diffBoard(board, view.items), null);
+});
+
+test('all icon sources survive persistence and edits', async () => {
+  const { api, snapshot } = await setup();
+  const items = [
+    ['preset', 'rocket'],
+    ['emoji', '🚀'],
+    ['svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>'],
+    ['url', 'https://example.com/icon.svg'],
+  ].map(([iconMode, source]) => ({ ...createCanvasItem('icon', 0, 0), iconMode, source, label: 'Launch' }));
+  const board = await mutate(api, snapshot, items);
+  const view = toProjectView({ ...snapshot, board });
+  assert.equal(diffBoard(board, view.items), null);
+  for (const item of items) {
+    const restored = view.items.find((entry) => entry.id === item.id);
+    assert.equal(restored.iconMode, item.iconMode);
+    assert.equal(restored.source, item.source);
+  }
+});
+
+test('repeated icon edits fit browser storage without losing the latest retry receipt', async () => {
+  const base = storage();
+  let limit = Infinity;
+  const store = {
+    getItem: base.getItem,
+    setItem(key, value) {
+      if (value.length > limit) throw new DOMException('Storage quota exceeded', 'QuotaExceededError');
+      base.setItem(key, value);
+    },
+  };
+  const api = createMockWorkspace('icon-quota', store, () => 'icon-quota');
+  const [snapshot] = await api.projects.list();
+  const items = toProjectView(snapshot).items;
+  const icon = createCanvasItem('icon', 0, 0);
+  items.push(icon);
+  let board = await mutate(api, snapshot, items);
+  limit = base.getItem(mockWorkspaceKey('icon-quota')).length * 2;
+  let lastMutation;
+  for (let index = 0; index < 12; index++) {
+    icon.source = index % 2 ? 'heart' : 'rocket';
+    lastMutation = diffBoard(board, items);
+    board = await api.boards.mutate(snapshot.project.id, board.board.id, lastMutation);
+  }
+  assert.equal(board.items.find((item) => item.id === icon.id).data.source, 'heart');
+  assert.deepEqual(await api.boards.mutate(snapshot.project.id, board.board.id, lastMutation), board);
+  assert.equal(diffBoard(board, items), null);
+});
+
+test('storage exhaustion preserves confirmed data and local icon edits for retry', async () => {
+  const base = storage();
+  let full = false;
+  const store = {
+    getItem: base.getItem,
+    setItem(key, value) {
+      if (full) throw new DOMException('Storage quota exceeded', 'QuotaExceededError');
+      base.setItem(key, value);
+    },
+  };
+  const api = createMockWorkspace('icon-retry', store, () => 'icon-retry');
+  const controller = new WorkspaceController(api);
+  await controller.load();
+  const key = mockWorkspaceKey('icon-retry');
+  const before = base.getItem(key);
+  const icon = { ...createCanvasItem('icon', 0, 0), iconMode: 'emoji', source: '🚀' };
+  full = true;
+  controller.update((projects) =>
+    projects.map((project, index) => (index ? project : { ...project, items: [...project.items, icon] })),
+  );
+  await controller.flush();
+  assert.equal(controller.getSnapshot().status, 'error');
+  assert.match(controller.getSnapshot().error, /Browser storage is full/);
+  assert.equal(base.getItem(key), before);
+  assert.equal(controller.getSnapshot().projects[0].items.find((item) => item.id === icon.id).source, '🚀');
+  full = false;
+  await controller.retry();
+  assert.equal(controller.getSnapshot().status, 'saved');
+  const [saved] = await api.projects.list();
+  assert.equal(saved.board.items.find((item) => item.id === icon.id).data.source, '🚀');
 });
 
 test('single item edits generate a single upsert and stale writes are atomic conflicts', async () => {

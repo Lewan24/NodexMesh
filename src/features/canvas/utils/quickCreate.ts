@@ -34,6 +34,8 @@ export function createEmptySibling(source: BoardItem): BoardItem | null {
         title: 'New Board',
         columns: base.columns.map((column) => ({ ...column, id: crypto.randomUUID(), cards: [] })),
       };
+    case 'icon':
+      return { ...base, iconMode: 'preset', source: 'star', label: 'Star' };
     case 'image':
       return { ...base, url: '', caption: '' };
     case 'embed':

@@ -26,7 +26,7 @@ export default function SaveStatus({
   const failed = status === 'error' || status === 'conflict';
   return (
     <div
-      className="flex flex-wrap items-center justify-end gap-3 px-4 py-1 text-xs text-theme-muted"
+      className={status === 'saved' ? 'sr-only' : 'save-status flex flex-wrap items-center gap-3 text-xs'}
       role={failed ? 'alert' : 'status'}
     >
       <span>

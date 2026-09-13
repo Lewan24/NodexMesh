@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 const server = await createServer({
   configFile: false,
@@ -54,7 +56,41 @@ const { DROPPABLE_ON_COLUMN } = await server.ssrLoadModule('/src/features/canvas
 const { sectionTitleScale } = await server.ssrLoadModule('/src/features/blocks/section-title/SectionTitleBlock.tsx');
 const { appendKanbanColumn, getColumnShare, setColumnShare, equalizeKanbanColumns, getKanbanMinWidth } =
   await server.ssrLoadModule('/src/features/blocks/kanban/utils/kanbanUtils.ts');
+const { getIconImageSource } = await server.ssrLoadModule('/src/features/blocks/icon/iconUtils.ts');
+const { default: IconBlock } = await server.ssrLoadModule('/src/features/blocks/icon/IconBlock.tsx');
 await server.close();
+
+test('icons render presets, emoji and isolated SVG with transparent scalable geometry', () => {
+  const icon = createCanvasItem('icon', 10, 20);
+  assert.equal(icon.width, 96);
+  const render = (item) => renderToStaticMarkup(createElement(IconBlock, { item, isSelected: false, onUpdate() {} }));
+  assert.match(render(icon), /lucide-star/);
+  assert.doesNotMatch(render(icon), /background|shadow/);
+  assert.match(render({ ...icon, iconMode: 'emoji', source: '🚀', label: 'Launch' }), /🚀/);
+  const source = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script><circle r="5"/></svg>';
+  const markup = render({ ...icon, iconMode: 'svg', source });
+  assert.match(markup, /<img/);
+  assert.match(markup, /data:image\/svg\+xml/);
+  assert.doesNotMatch(markup, /<script/);
+  assert.match(render({ ...icon, width: 160, height: 80 }), /width="80"/);
+  const sibling = createEmptySibling({ ...icon, iconMode: 'url', source: 'https://example.com/icon.png' });
+  assert.notEqual(sibling.id, icon.id);
+  assert.equal(sibling.source, 'star');
+  assert.match(getSearchableText({ ...icon, label: 'Milestone' }), /Milestone/);
+});
+
+test('icon image URLs reject executable schemes and credentials', () => {
+  for (const source of [
+    'javascript:alert(1)',
+    'data:text/html,<script/>',
+    'file:///icon.svg',
+    'https://user:pass@example.com/a.svg',
+  ]) {
+    assert.equal(getIconImageSource('url', source), undefined);
+  }
+  assert.equal(getIconImageSource('url', 'https://example.com/icon.svg'), 'https://example.com/icon.svg');
+  assert.equal(getIconImageSource('svg', 'not SVG'), undefined);
+});
 
 test('kanban columns fill the available width and redistribute proportionally', () => {
   const columns = [180, 180, 180].map((width, index) => ({

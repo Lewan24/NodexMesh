@@ -2,7 +2,17 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 /** Native modal stacking keeps confirmations usable above mobile tool panels. */
-export default function Modal({ children, onClose }: { children: ReactNode; onClose: () => void }) {
+export default function Modal({
+  children,
+  onClose,
+  centered = false,
+  label = 'Dialog',
+}: {
+  children: ReactNode;
+  onClose: () => void;
+  centered?: boolean;
+  label?: string;
+}) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -14,8 +24,8 @@ export default function Modal({ children, onClose }: { children: ReactNode; onCl
   return createPortal(
     <dialog
       ref={dialogRef}
-      className="app-modal"
-      aria-label="Dialog"
+      className={`app-modal${centered ? ' app-modal-centered' : ''}`}
+      aria-label={label}
       onCancel={(event) => {
         event.preventDefault();
         event.stopPropagation();

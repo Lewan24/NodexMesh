@@ -12,6 +12,7 @@ export type ToolType =
   | 'divider'
   | 'note'
   | 'kanban'
+  | 'icon'
   | 'image'
   | 'link'
   | 'text'

@@ -30,6 +30,7 @@ export const ITEM_WIDTH = {
   note: 320,
   checklist: 320,
   link: 320,
+  icon: 96,
   image: 320,
   text: 320,
   column: 416,

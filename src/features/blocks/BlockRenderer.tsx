@@ -1,3 +1,4 @@
+import IconBlock from './icon/IconBlock';
 import SectionTitleBlock from './section-title/SectionTitleBlock';
 import type { BoardItem } from '@/entities/board/types';
 import { lazy, Suspense } from 'react';
@@ -144,6 +145,9 @@ export default function BlockRenderer({
           />
         </Suspense>
       );
+
+    case 'icon':
+      return <IconBlock item={item} isSelected={isSelected} onUpdate={onUpdate} />;
 
     case 'image':
       return <ImageBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;
