@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { normalizeItemNumbers } from '@/entities/board/normalizeNumbers';
 import { normalizeFrameMembership, isItemInsideFrame } from '@/features/canvas/utils/frameGeometry';
 
 import type { Dispatch, SetStateAction } from 'react';
@@ -93,7 +94,7 @@ export function useProjectItems({ activeProjectId, setProjects }: UseProjectItem
           project.id === activeProjectId
             ? {
                 ...project,
-                items: normalizeFrameMembership(update(project.items)).map((item) =>
+                items: normalizeFrameMembership(update(project.items).map(normalizeItemNumbers)).map((item) =>
                   item.type === 'frame' ? { ...item, zIndex: 0 } : item,
                 ),
               }

@@ -1,7 +1,8 @@
 import { normalizeFrameMembership } from '@/features/canvas/utils/frameGeometry';
+import { normalizeItemNumbers } from '@/entities/board/normalizeNumbers';
 
 const migrate = (projects: Project[]) =>
-  projects.map((project) => ({ ...project, items: normalizeFrameMembership(project.items) }));
+  projects.map((project) => ({ ...project, items: normalizeFrameMembership(project.items.map(normalizeItemNumbers)) }));
 
 import type { Project } from '@/entities/project/types';
 import { seedProjectsFor } from '@/entities/project/projectSeeder';

@@ -206,7 +206,11 @@ export default function DatabaseDiagramBlock({
               </button>
             </>
           ) : (
-            <button className="planning-button ml-auto" disabled={item.locked || mobile} onClick={() => setEditing(true)}>
+            <button
+              className="planning-button ml-auto"
+              disabled={item.locked || mobile}
+              onClick={() => setEditing(true)}
+            >
               {mobile ? 'Edit on desktop' : 'Edit database'}
             </button>
           )}

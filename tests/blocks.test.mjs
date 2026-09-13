@@ -11,6 +11,7 @@ const server = await createServer({
   server: { middlewareMode: true, watch: null },
 });
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
+const { normalizeItemNumbers } = await server.ssrLoadModule('/src/entities/board/normalizeNumbers.ts');
 const { createEmptySibling } = await server.ssrLoadModule('/src/features/canvas/utils/quickCreate.ts');
 const { resolveLineItem } = await server.ssrLoadModule('/src/features/canvas/utils/lineGeometry.ts');
 const { getEmbedUrl } = await server.ssrLoadModule('/src/features/blocks/embed/embedUrl.ts');
@@ -947,4 +948,30 @@ test('section titles retain their text and presentation and scale like frame lab
   assert.equal(sectionTitleScale(2), 1);
   assert.equal(sectionTitleScale(0.5), 2);
   assert.equal(sectionTitleScale(0.1), 3.2);
+});
+
+test('stored geometry uses pixels while drawing points and pressure retain two decimals', () => {
+  const original = {
+    id: 'drawing',
+    type: 'drawing',
+    x: 12.34567,
+    y: -8.76543,
+    width: 100.23456,
+    height: 90.76543,
+    points: [{ x: 1.23456, y: 3.45678, pressure: 1.123456789 }],
+    strokes: [{ x: 1, y: 2, scaleX: 0.123456789, points: [{ x: 0.12345, y: 0, pressure: 0.98765 }] }],
+    content: '1.123456789',
+    zIndex: 1,
+  };
+  const result = normalizeItemNumbers(original);
+  assert.equal(result.x, 12);
+  assert.equal(result.y, -9);
+  assert.equal(result.width, 100);
+  assert.equal(result.height, 91);
+  assert.deepEqual(result.points, [{ x: 1.23, y: 3.46, pressure: 1.12 }]);
+  assert.equal(result.strokes[0].points[0].pressure, 0.99);
+  assert.equal(result.strokes[0].scaleX, original.strokes[0].scaleX);
+  assert.equal(result.content, original.content);
+  assert.equal(original.x, 12.34567);
+  assert.equal(normalizeItemNumbers(result), result);
 });

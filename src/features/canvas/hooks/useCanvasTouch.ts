@@ -16,10 +16,10 @@ interface TouchOptions {
 
 const nativeControls =
   '[data-canvas-ui], [data-edit-bar], [data-item-inspector], [role="dialog"], [role="menu"], ' +
-  'button, input, textarea, select, a, [contenteditable="true"], [data-wheel-scroll="true"]';
+  'button, input, textarea, select, a, [contenteditable="true"]';
 
 const HOLD_TO_MOVE_MS = 400;
-const MOVEMENT_THRESHOLD = 6;
+const MOVEMENT_THRESHOLD = 12;
 
 /**
  * Adapts a single touch to the existing mouse drag pipeline (including nested
@@ -51,6 +51,10 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
   let startedAt = 0;
   let holdTimer: ReturnType<typeof setTimeout> | null = null;
   let heldItem: Element | null = null;
+  let dragTarget: Element | null = null;
+  let explicitHandle = false;
+  let scrollTarget: HTMLElement | null = null;
+  let startScroll = start;
   let distance = 1;
   let initialZoom = 1;
   let anchor = start;
@@ -120,6 +124,17 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
     if (pinching) return;
     event.preventDefault();
     target = eventTarget;
+    dragTarget = isDragHandle ?? target.closest('[data-board-item]') ?? target;
+    explicitHandle = Boolean(isDragHandle);
+    scrollTarget = !isDragHandle ? target.closest<HTMLElement>('[data-wheel-scroll="true"]') : null;
+    if (
+      scrollTarget &&
+      scrollTarget.scrollWidth <= scrollTarget.clientWidth &&
+      scrollTarget.scrollHeight <= scrollTarget.clientHeight
+    ) {
+      scrollTarget = null;
+    }
+    startScroll = { x: scrollTarget?.scrollLeft ?? 0, y: scrollTarget?.scrollTop ?? 0 };
     const touch = event.touches[0]!;
     start = { x: touch.clientX, y: touch.clientY };
     last = start;
@@ -172,12 +187,17 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
     moved = true;
     lastTap = { target: null, time: 0 };
     if (panning) {
+      if (scrollTarget) {
+        scrollTarget.scrollLeft = startScroll.x - (last.x - start.x);
+        scrollTarget.scrollTop = startScroll.y - (last.y - start.y);
+        return;
+      }
       const pan = { x: startPan.x + last.x - start.x, y: startPan.y + last.y - start.y };
       latest.current.panRef.current = pan;
       latest.current.onPanChange(pan);
     } else {
       if (!dragging) {
-        mouse('mousedown', start, target);
+        mouse('mousedown', start, held ? (dragTarget ?? target) : target);
         dragging = true;
       }
       mouse('mousemove', last);
@@ -194,7 +214,7 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
       !dragging &&
       !moved &&
       !held &&
-      event.timeStamp - startedAt < HOLD_TO_MOVE_MS &&
+      (explicitHandle || event.timeStamp - startedAt < HOLD_TO_MOVE_MS) &&
       event.type !== 'touchcancel' &&
       Math.hypot(last.x - start.x, last.y - start.y) < MOVEMENT_THRESHOLD
     ) {
@@ -224,7 +244,10 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
   };
 
   const preventNativeHoldMenu = (event: Event) => {
-    if (target) event.preventDefault();
+    if (target) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
   };
 
   element.addEventListener('touchstart', begin, { passive: false });
@@ -232,7 +255,7 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
   element.addEventListener('touchend', end, { passive: false });
   element.addEventListener('touchcancel', end, { passive: false });
   window.addEventListener('blur', cancel);
-  element.addEventListener('contextmenu', preventNativeHoldMenu);
+  element.addEventListener('contextmenu', preventNativeHoldMenu, true);
   return () => {
     cancel();
     element.removeEventListener('touchstart', begin);
@@ -240,6 +263,6 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
     element.removeEventListener('touchend', end);
     element.removeEventListener('touchcancel', end);
     window.removeEventListener('blur', cancel);
-    element.removeEventListener('contextmenu', preventNativeHoldMenu);
+    element.removeEventListener('contextmenu', preventNativeHoldMenu, true);
   };
 }

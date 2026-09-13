@@ -158,7 +158,7 @@ export default function Canvas({
   const snapValue = useCallback(
     (value: number): number => {
       if (!snapEnabled) {
-        return value;
+        return Math.round(value);
       }
 
       return Math.round(value / CANVAS_GRID_SIZE) * CANVAS_GRID_SIZE;
