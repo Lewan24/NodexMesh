@@ -81,6 +81,8 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
             <>
               <img
                 src={item.url}
+                loading="lazy"
+                decoding="async"
                 alt={item.caption || 'Board image'}
                 className="w-full h-full object-cover"
                 draggable={false}

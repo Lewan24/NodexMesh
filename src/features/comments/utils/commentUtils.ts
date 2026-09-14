@@ -1,8 +1,9 @@
+import { createId } from '@/shared/lib/createId';
 import type { CommentStatus, ItemComment } from '@/entities/board/types';
 
 export function createComment(text: string, status: CommentStatus): ItemComment {
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
 
     text: text.trim(),
     status,

@@ -17,7 +17,12 @@ export default function YouTubeVideo({
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [requested, setRequested] = useState(false);
+  const activated = requested || interactive;
   useEffect(() => {
+    if (!activated) return;
+    // Keep an activated player mounted when returning to drag-to-move mode.
+    setRequested(true);
     let cancelled = false;
     let instance: YouTubePlayer | null = null;
     const timeout = window.setTimeout(() => {
@@ -64,8 +69,12 @@ export default function YouTubeVideo({
       instance?.destroy();
       player.current = null;
     };
-  }, [videoId]);
+  }, [videoId, activated]);
   const toggle = () => {
+    if (!activated) {
+      setRequested(true);
+      return;
+    }
     if (!ready || !player.current) return;
     if (player.current.getPlayerState() === 1) player.current.pauseVideo();
     else player.current.playVideo();
@@ -73,12 +82,27 @@ export default function YouTubeVideo({
   return (
     <div className="relative h-full w-full bg-black">
       <div ref={host} className="absolute inset-0" />
+      {!activated && (
+        <>
+          <img
+            src={`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover pointer-events-none"
+          />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="rounded-xl bg-black/75 px-5 py-3 text-white">▶ Load video</span>
+          </div>
+        </>
+      )}
       {!interactive && (
         <div
           role="button"
           tabIndex={0}
-          aria-label={`${playing ? 'Pause' : 'Play'} ${title || 'video'}`}
-          aria-disabled={!ready}
+          aria-label={`${!activated ? 'Load' : playing ? 'Pause' : 'Play'} ${title || 'video'}`}
+          aria-disabled={activated && !ready}
           className="absolute inset-x-0 top-0 cursor-grab active:cursor-grabbing outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
           style={{ bottom: ready ? 44 : 0 }}
           title="Click to play or pause · Drag to move"
@@ -112,7 +136,7 @@ export default function YouTubeVideo({
           }}
         />
       )}
-      {(!ready || failed) && (
+      {activated && (!ready || failed) && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-white text-sm px-8 text-center">
           {failed ? (
             <a

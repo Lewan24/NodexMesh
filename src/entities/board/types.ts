@@ -21,6 +21,7 @@ export type BoardItem =
   | DispenserItem
   | TimelineItem
   | DiagramItem
+  | MindmapItem
   | DatabaseDiagramItem
   | DrawingItem;
 
@@ -90,6 +91,26 @@ export interface DiagramItem extends BaseItem {
   title: string;
   nodes: DiagramNode[];
   edges: DiagramEdge[];
+}
+
+export interface MindmapNode {
+  id: string;
+  parentId: string | null;
+  label: string;
+  side: 'negative' | 'positive';
+  branchColor: string;
+  background: string;
+  textColor: string;
+}
+
+export interface MindmapItem extends BaseItem {
+  type: 'mindmap';
+  title: string;
+  nodes: MindmapNode[];
+  layout: 'horizontal' | 'vertical';
+  lineStyle: 'curve' | 'elbow' | 'straight';
+  lineWidth: number;
+  dashed: boolean;
 }
 
 export interface DocumentItem extends BaseItem {

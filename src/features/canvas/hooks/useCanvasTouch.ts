@@ -60,6 +60,30 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
   let anchor = start;
   let lastTap = { target: null as Element | null, time: 0 };
 
+  let cameraFrame: number | null = null;
+  let pendingCamera: { pan: Point; zoom?: number } | null = null;
+
+  const flushCamera = () => {
+    if (cameraFrame !== null) window.cancelAnimationFrame(cameraFrame);
+    cameraFrame = null;
+    if (!pendingCamera) return;
+    const { pan, zoom } = pendingCamera;
+    pendingCamera = null;
+    latest.current.panRef.current = pan;
+    if (zoom !== undefined) latest.current.zoomRef.current = zoom;
+    latest.current.onPanChange(pan);
+    if (zoom !== undefined) latest.current.onZoomChange(zoom);
+  };
+
+  // Touch events can arrive faster than the display refreshes. Publish only
+  // the newest camera position per frame, but keep gesture coordinates current.
+  const scheduleCamera = (pan: Point, zoom?: number) => {
+    latest.current.panRef.current = pan;
+    if (zoom !== undefined) latest.current.zoomRef.current = zoom;
+    pendingCamera = { pan, zoom };
+    if (cameraFrame === null) cameraFrame = window.requestAnimationFrame(flushCamera);
+  };
+
   const clearHold = () => {
     if (holdTimer !== null) clearTimeout(holdTimer);
     holdTimer = null;
@@ -103,6 +127,7 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
     if (!(eventTarget instanceof Element)) return;
     const isCanvasControl = eventTarget.closest('[data-canvas-ui], dialog, [role="dialog"], [role="menu"]');
     if (isCanvasControl) return;
+    flushCamera();
     const isDragHandle = eventTarget.closest('[data-touch-drag], [data-manual-resize]');
     if (event.touches.length === 1 && eventTarget.closest(nativeControls) && !isDragHandle && !target) return;
 
@@ -173,10 +198,7 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
       const center = geometry(event.touches);
       const zoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, (initialZoom * center.distance) / distance));
       const pan = { x: center.x - anchor.x * zoom, y: center.y - anchor.y * zoom };
-      latest.current.panRef.current = pan;
-      latest.current.zoomRef.current = zoom;
-      latest.current.onPanChange(pan);
-      latest.current.onZoomChange(zoom);
+      scheduleCamera(pan, zoom);
       return;
     }
 
@@ -193,8 +215,7 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
         return;
       }
       const pan = { x: startPan.x + last.x - start.x, y: startPan.y + last.y - start.y };
-      latest.current.panRef.current = pan;
-      latest.current.onPanChange(pan);
+      scheduleCamera(pan);
     } else {
       if (!dragging) {
         mouse('mousedown', start, held ? (dragTarget ?? target) : target);
@@ -207,6 +228,7 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
   const end = (event: TouchEvent) => {
     if (!target) return;
     event.preventDefault();
+    flushCamera();
     clearHold();
     if (pinching && event.touches.length > 0 && event.type !== 'touchcancel') return;
     if (
@@ -236,6 +258,7 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
   };
 
   const cancel = () => {
+    flushCamera();
     lastTap = { target: null, time: 0 };
     clearHold();
     finishDrag();
@@ -257,6 +280,10 @@ export function attachCanvasTouch(latest: RefObject<TouchOptions>) {
   window.addEventListener('blur', cancel);
   element.addEventListener('contextmenu', preventNativeHoldMenu, true);
   return () => {
+    // Unmount must not publish a stale camera into the next board.
+    if (cameraFrame !== null) window.cancelAnimationFrame(cameraFrame);
+    cameraFrame = null;
+    pendingCamera = null;
     cancel();
     element.removeEventListener('touchstart', begin);
     element.removeEventListener('touchmove', move);

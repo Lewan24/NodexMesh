@@ -1,4 +1,4 @@
-import { drawingStrokes } from '@/features/blocks/drawing/drawingUtils';
+import { drawingStrokes, smoothDrawingItem } from '@/features/blocks/drawing/drawingUtils';
 import ColorSwatch from './ColorSwatch';
 import { LINE_COLORS } from '../constants';
 import CustomColorInput from './CustomColorInput';
@@ -28,6 +28,20 @@ export default function DrawingControls({
   return (
     <>
       <span className="text-xs whitespace-nowrap">{items.length > 1 ? `${items.length} drawings` : 'Ink'}</span>
+      <button
+        className="px-2 py-1 rounded hover:bg-violet-500/10 text-xs whitespace-nowrap disabled:opacity-40"
+        title="Smooth mouse jitter and reduce points in selected drawings"
+        disabled={items.every((item) => item.locked)}
+        onClick={() =>
+          items
+            .filter((item) => !item.locked)
+            .forEach((item) =>
+              onUpdate(item.id, (current) => (current.type === 'drawing' ? smoothDrawingItem(current) : current)),
+            )
+        }
+      >
+        SmoothIt
+      </button>
       {LINE_COLORS.map((color) => (
         <ColorSwatch
           key={color}

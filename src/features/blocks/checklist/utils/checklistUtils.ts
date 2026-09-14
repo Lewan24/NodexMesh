@@ -1,7 +1,8 @@
+import { createId } from '@/shared/lib/createId';
 import type { ChecklistEntry } from '@/entities/board/types';
 
 export function createChecklistEntry(text: string): ChecklistEntry {
-  return { id: crypto.randomUUID(), text, done: false };
+  return { id: createId(), text, done: false };
 }
 
 export function isLightColor(hex: string): boolean {

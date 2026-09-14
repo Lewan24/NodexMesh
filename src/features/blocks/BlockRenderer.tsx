@@ -20,6 +20,7 @@ const DocumentBlock = lazy(() => import('./document/DocumentBlock'));
 const CodeBlock = lazy(() => import('./code/CodeBlock'));
 const TimelineBlock = lazy(() => import('./timeline/TimelineBlock'));
 const DatabaseDiagramBlock = lazy(() => import('./database/DatabaseDiagramBlock'));
+const MindmapBlock = lazy(() => import('./mindmap/MindmapBlock'));
 const DiagramBlock = lazy(() => import('./diagram/DiagramBlock'));
 
 function LoadingBlock({ item }: { item: BoardItem }) {
@@ -107,6 +108,12 @@ export default function BlockRenderer({
       return (
         <Suspense fallback={<LoadingBlock item={item} />}>
           <DatabaseDiagramBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />
+        </Suspense>
+      );
+    case 'mindmap':
+      return (
+        <Suspense fallback={<LoadingBlock item={item} />}>
+          <MindmapBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />
         </Suspense>
       );
     case 'diagram':

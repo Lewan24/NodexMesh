@@ -18,6 +18,54 @@ const { createEmptySibling } = await server.ssrLoadModule('/src/features/canvas/
 const { resolveLineItem } = await server.ssrLoadModule('/src/features/canvas/utils/lineGeometry.ts');
 const { getEmbedUrl } = await server.ssrLoadModule('/src/features/blocks/embed/embedUrl.ts');
 const { getSearchableText } = await server.ssrLoadModule('/src/features/search/utils/itemSearch.ts');
+const { getSearchTargets } = await server.ssrLoadModule('/src/features/search/utils/itemSearch.ts');
+const {
+  smoothSimplifiedPoints,
+  smoothDrawingItem,
+  createDrawing: createInk,
+} = await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts');
+
+test('SmoothIt reduces dense mouse jitter and preserves endpoints, transforms and locked ink', () => {
+  const points = Array.from({ length: 10000 }, (_, index) => ({
+    x: index / 10,
+    y: index % 2 ? 0.2 : -0.2,
+    pressure: 0.8,
+  }));
+  const result = smoothSimplifiedPoints(points);
+  assert.ok(result.length < 256);
+  assert.deepEqual(result[0], points[0]);
+  assert.deepEqual(result.at(-1), points.at(-1));
+  const drawing = createInk(points, 1);
+  const stroke = { points, x: 15, y: 22, scaleX: 2, scaleY: 0.5, color: '#abcdef', strokeWidth: 4 };
+  const joined = { ...drawing, strokes: [stroke] };
+  const smoothed = smoothDrawingItem(joined);
+  assert.deepEqual({ ...smoothed.strokes[0], points }, stroke);
+  assert.equal(smoothed.width, joined.width);
+  assert.equal(points.length, 10000);
+  const locked = { ...joined, locked: true };
+  assert.equal(smoothDrawingItem(locked), locked);
+  assert.deepEqual(smoothSimplifiedPoints([]), []);
+  assert.deepEqual(smoothSimplifiedPoints(points.slice(0, 2)), points.slice(0, 2));
+});
+
+test('search navigation includes nested tag matches without duplicate parent results', () => {
+  const child = { id: 'child', type: 'note', content: 'Fix this', tags: ['todo'] };
+  const column = { id: 'column', type: 'column', title: 'Work', items: [child], comments: [{}] };
+  const note = { id: 'note', type: 'note', content: 'todo later', tags: ['todo'] };
+  assert.deepEqual(
+    getSearchTargets([column, note], '#todo').map(({ item, columnId }) => [item.id, columnId]),
+    [
+      ['child', 'column'],
+      ['note', undefined],
+    ],
+  );
+  assert.deepEqual(
+    getSearchTargets([column], 'Fix').map(({ item }) => item.id),
+    ['child'],
+  );
+  assert.equal(getSearchTargets([column], 'status:done').length, 0);
+  assert.equal(getSearchTargets([column], ' ').length, 0);
+});
 const { tasksInWindow, dateDay, taskRange, shiftTask, scheduleRange, reorderTasks } = await server.ssrLoadModule(
   '/src/features/blocks/timeline/timelineUtils.ts',
 );
@@ -58,6 +106,16 @@ const { appendKanbanColumn, getColumnShare, setColumnShare, equalizeKanbanColumn
   await server.ssrLoadModule('/src/features/blocks/kanban/utils/kanbanUtils.ts');
 const { getIconImageSource } = await server.ssrLoadModule('/src/features/blocks/icon/iconUtils.ts');
 const { default: IconBlock } = await server.ssrLoadModule('/src/features/blocks/icon/IconBlock.tsx');
+const {
+  addMindmapNode,
+  mindmapSiblings,
+  nextBranchColor,
+  layoutMindmap,
+  moveMindmapNode,
+  subtreeIds,
+  validMindmapTree,
+} = await server.ssrLoadModule('/src/features/blocks/mindmap/mindmapUtils.ts');
+const { flattenItems, renewProjectIds } = await server.ssrLoadModule('/src/features/projects/services/boardAdapter.ts');
 await server.close();
 
 test('icons render presets, emoji and isolated SVG with transparent scalable geometry', () => {
@@ -1028,4 +1086,123 @@ test('stored geometry uses pixels while drawing points and pressure retain two d
   assert.equal(result.content, original.content);
   assert.equal(original.x, 12.34567);
   assert.equal(normalizeItemNumbers(result), result);
+});
+
+test('mind maps preserve valid trees, content and references through saving and cloning', () => {
+  const item = createCanvasItem('mindmap', 10, 20);
+  assert.equal(validMindmapTree(item.nodes), true);
+  assert.match(getSearchableText(item), /Main idea/);
+  const writes = flattenItems([item], crypto.randomUUID());
+  assert.deepEqual(writes[0].item.data.nodes, item.nodes);
+  const [clone] = cloneItems([item], 30, 40, 2);
+  assert.equal(validMindmapTree(clone.nodes), true);
+  assert.notEqual(clone.nodes[0].id, item.nodes[0].id);
+  assert.equal(clone.nodes[1].parentId, clone.nodes[0].id);
+  assert.equal(createEmptySibling(item).nodes.length, 1);
+  const renewed = renewProjectIds({
+    id: crypto.randomUUID(),
+    name: 'Map',
+    color: '#ffffff',
+    ownerId: 'demo',
+    items: [item],
+  });
+  assert.equal(validMindmapTree(renewed.items[0].nodes), true);
+  assert.notEqual(renewed.items[0].nodes[1].parentId, item.nodes[0].id);
+  assert.doesNotThrow(() => flattenItems(renewed.items, crypto.randomUUID()));
+  assert.equal(validMindmapTree([...item.nodes, item.nodes[0]]), false);
+  assert.equal(
+    validMindmapTree(item.nodes.map((node, index) => (index === 1 ? { ...node, parentId: 'missing' } : node))),
+    false,
+  );
+});
+
+test('mind map subtree moves reject cycles and inherit the destination branch color and side', () => {
+  const item = createCanvasItem('mindmap', 0, 0);
+  const [root, first, second, third] = item.nodes;
+  const child = { ...first, id: crypto.randomUUID(), parentId: first.id };
+  const nodes = [...item.nodes, child];
+  assert.equal(moveMindmapNode(nodes, first.id, child.id), nodes);
+  assert.equal(moveMindmapNode(nodes, root.id, second.id), nodes);
+  const moved = moveMindmapNode(nodes, first.id, third.id);
+  assert.equal(validMindmapTree(moved), true);
+  assert.deepEqual(subtreeIds(moved, first.id), new Set([first.id, child.id]));
+  const graph = layoutMindmap(moved, 'horizontal');
+  const inherited = graph.nodes.find((node) => node.id === child.id);
+  assert.equal(inherited.color, third.branchColor);
+  assert.equal(inherited.direction, -1);
+  const reordered = moveMindmapNode(nodes, second.id, root.id, first.id);
+  assert.equal(reordered.filter((node) => node.parentId === root.id)[0].id, second.id);
+  assert.equal(nodes[1].id, first.id);
+});
+
+test('mind map layouts keep nodes separated in both orientations and history restores changes', () => {
+  const item = createCanvasItem('mindmap', 0, 0);
+  const nodes = [...item.nodes];
+  for (let i = 0; i < 40; i++) nodes.push({ ...nodes[1], id: crypto.randomUUID(), parentId: nodes[1 + (i % 3)].id });
+  for (const layout of ['horizontal', 'vertical']) {
+    const graph = layoutMindmap(nodes, layout);
+    assert.equal(graph.nodes.length, nodes.length);
+    for (const [index, node] of graph.nodes.entries()) {
+      assert.ok(Number.isFinite(node.x) && Number.isFinite(node.y));
+      for (const other of graph.nodes.slice(index + 1))
+        assert.ok(Math.abs(node.x - other.x) >= 180 || Math.abs(node.y - other.y) >= 64);
+    }
+  }
+  const history = new ItemHistory([item], 50);
+  history.observe([{ ...item, nodes }]);
+  assert.deepEqual(history.undo([{ ...item, nodes }]), [item]);
+});
+
+test('mind map additions balance root branches and insert siblings in visual order', () => {
+  const item = createCanvasItem('mindmap', 0, 0);
+  const [root, first, second, third] = item.nodes;
+  const balanced = addMindmapNode(item.nodes, root.id);
+  const newBranch = balanced.at(-1);
+  assert.equal(newBranch.side, 'negative');
+  assert.ok(!item.nodes.slice(1).some((node) => node.branchColor === newBranch.branchColor));
+  assert.deepEqual(
+    mindmapSiblings(item.nodes, first).map((node) => node.id),
+    [first.id, second.id],
+  );
+  assert.deepEqual(
+    mindmapSiblings(item.nodes, third).map((node) => node.id),
+    [third.id],
+  );
+  const inserted = addMindmapNode(balanced, third.id, true);
+  const siblings = mindmapSiblings(inserted, third);
+  assert.equal(siblings.length, 3);
+  assert.equal(siblings[0].id, third.id);
+  assert.equal(siblings[2].id, newBranch.id);
+  assert.equal(validMindmapTree(inserted), true);
+  assert.equal(addMindmapNode(item.nodes, root.id, true), item.nodes);
+  assert.equal(addMindmapNode(item.nodes, 'missing'), item.nodes);
+});
+
+test('promoted mind map subtrees retain their visible side and receive a distinct color', () => {
+  const item = createCanvasItem('mindmap', 0, 0);
+  const [root, first, , third] = item.nodes;
+  const child = { ...first, id: crypto.randomUUID(), parentId: third.id };
+  const nodes = [...item.nodes, child];
+  const promoted = moveMindmapNode(nodes, child.id, root.id);
+  const branch = promoted.find((node) => node.id === child.id);
+  assert.equal(branch.side, 'negative');
+  assert.notEqual(branch.branchColor, third.branchColor);
+  assert.equal(moveMindmapNode(nodes, first.id, root.id, first.id), nodes);
+  const colors = [];
+  for (let index = 0; index < 30; index++) {
+    const branchColor = nextBranchColor(colors);
+    assert.match(branchColor, /^#[0-9a-f]{6}$/);
+    assert.ok(!colors.some((node) => node.branchColor === branchColor));
+    colors.push({ ...first, branchColor });
+  }
+});
+
+test('mind map validation rejects disconnected cycles and empty identities', () => {
+  const { nodes } = createCanvasItem('mindmap', 0, 0);
+  assert.equal(validMindmapTree([{ ...nodes[0], id: '' }]), false);
+  assert.equal(validMindmapTree([{ ...nodes[0], id: ' ' }]), false);
+  assert.equal(
+    validMindmapTree([nodes[0], { ...nodes[1], parentId: nodes[2].id }, { ...nodes[2], parentId: nodes[1].id }]),
+    false,
+  );
 });

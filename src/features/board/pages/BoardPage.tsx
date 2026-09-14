@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 const AppearanceDialog = lazy(() => import('@/features/appearance/AppearanceDialog'));
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { useCallback, useState, useEffect, lazy, Suspense } from 'react';
@@ -16,10 +17,6 @@ import SaveStatus from '@/features/projects/components/SaveStatus';
 
 interface BoardPageProps {
   userId: string;
-}
-
-function createId(): string {
-  return crypto.randomUUID();
 }
 
 export default function BoardPage({ userId }: BoardPageProps) {

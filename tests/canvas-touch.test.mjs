@@ -67,6 +67,18 @@ function setup(t, locked = false) {
     }
   };
   globalThis.window = new EventTarget();
+  const frames = new Map();
+  let nextFrame = 0;
+  window.requestAnimationFrame = (callback) => {
+    frames.set(++nextFrame, callback);
+    return nextFrame;
+  };
+  window.cancelAnimationFrame = (id) => frames.delete(id);
+  const renderFrame = () => {
+    const callbacks = [...frames.values()];
+    frames.clear();
+    for (const callback of callbacks) callback();
+  };
   globalThis.document = new EventTarget();
 
   const surface = new TouchSurface();
@@ -94,7 +106,7 @@ function setup(t, locked = false) {
     event.touches = points.map(([clientX, clientY]) => ({ clientX, clientY }));
     surface.dispatchEvent(event);
   };
-  return { surface, options, mouseEvents, touch };
+  return { surface, options, mouseEvents, touch, renderFrame, cleanup, frames };
 }
 
 test('quick swipe over a large item pans and cannot become a delayed item drag', (t) => {
@@ -289,4 +301,49 @@ test('a swipe between taps breaks the double-tap editing sequence', (t) => {
   touch('touchstart');
   touch('touchend', []);
   assert.equal(mouseEvents.includes('dblclick'), false);
+});
+
+test('rapid camera moves publish once per frame and flush their final position on release', (t) => {
+  const { touch, options, renderFrame } = setup(t);
+  touch('touchstart');
+  for (let x = 20; x <= 100; x += 20) touch('touchmove', [[x, 30]]);
+  assert.equal(options.onPanChange.mock.callCount(), 0);
+  renderFrame();
+  assert.equal(options.onPanChange.mock.callCount(), 1);
+  assert.deepEqual(options.onPanChange.mock.calls[0].arguments[0], { x: 100, y: 30 });
+  touch('touchmove', [[120, 40]]);
+  touch('touchend', []);
+  assert.equal(options.onPanChange.mock.callCount(), 2);
+  assert.deepEqual(options.onPanChange.mock.calls[1].arguments[0], { x: 120, y: 40 });
+  renderFrame();
+  assert.equal(options.onPanChange.mock.callCount(), 2);
+});
+
+test('pinch batches pan and zoom together and cancels queued updates on unmount', (t) => {
+  const { touch, options, renderFrame, cleanup, frames } = setup(t);
+  touch('touchstart', [
+    [0, 0],
+    [100, 0],
+  ]);
+  touch('touchmove', [
+    [0, 0],
+    [150, 0],
+  ]);
+  touch('touchmove', [
+    [0, 0],
+    [200, 0],
+  ]);
+  assert.equal(options.onZoomChange.mock.callCount(), 0);
+  renderFrame();
+  assert.equal(options.onZoomChange.mock.callCount(), 1);
+  assert.equal(options.onZoomChange.mock.calls[0].arguments[0], 2);
+  assert.deepEqual(options.onPanChange.mock.calls[0].arguments[0], { x: 0, y: 0 });
+  touch('touchmove', [
+    [0, 0],
+    [250, 0],
+  ]);
+  cleanup();
+  assert.equal(frames.size, 0);
+  renderFrame();
+  assert.equal(options.onZoomChange.mock.callCount(), 1);
 });

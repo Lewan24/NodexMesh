@@ -4,6 +4,7 @@ export type ToolType =
   | 'drawing'
   | 'timeline'
   | 'diagram'
+  | 'mindmap'
   | 'database'
   | 'document'
   | 'embed'

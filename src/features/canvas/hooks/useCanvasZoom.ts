@@ -14,25 +14,17 @@ interface UseCanvasZoomOptions {
   panRef: RefObject<CanvasPoint>;
   zoomRef: RefObject<number>;
 
-  pan: CanvasPoint;
-  zoom: number;
-
   onPanChange: (pan: CanvasPoint) => void;
   onZoomChange: (zoom: number) => void;
 }
 
-export function useCanvasZoom({
-  containerRef,
-  panRef,
-  zoomRef,
-  pan,
-  zoom,
-  onPanChange,
-  onZoomChange,
-}: UseCanvasZoomOptions) {
+export function useCanvasZoom({ containerRef, panRef, zoomRef, onPanChange, onZoomChange }: UseCanvasZoomOptions) {
   const screenToCanvas = useCallback(
-    (screenX: number, screenY: number) => ({ x: (screenX - pan.x) / zoom, y: (screenY - pan.y) / zoom }),
-    [pan, zoom],
+    (screenX: number, screenY: number) => ({
+      x: (screenX - panRef.current.x) / zoomRef.current,
+      y: (screenY - panRef.current.y) / zoomRef.current,
+    }),
+    [panRef, zoomRef],
   );
 
   useEffect(() => {

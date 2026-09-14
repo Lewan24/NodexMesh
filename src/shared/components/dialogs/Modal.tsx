@@ -7,11 +7,13 @@ export default function Modal({
   onClose,
   centered = false,
   label = 'Dialog',
+  boardHistory = false,
 }: {
   children: ReactNode;
   onClose: () => void;
   centered?: boolean;
   label?: string;
+  boardHistory?: boolean;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -26,6 +28,7 @@ export default function Modal({
       ref={dialogRef}
       className={`app-modal${centered ? ' app-modal-centered' : ''}`}
       aria-label={label}
+      data-board-history={boardHistory || undefined}
       onCancel={(event) => {
         event.preventDefault();
         event.stopPropagation();

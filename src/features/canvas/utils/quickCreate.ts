@@ -1,13 +1,17 @@
+import { createId } from '@/shared/lib/createId';
+import { mindmapTemplate } from '@/features/blocks/mindmap/mindmapUtils';
 import type { BoardItem } from '@/entities/board/types';
 
 /** Preserve presentation, never copy content, identifiers or discussion. */
 export function createEmptySibling(source: BoardItem): BoardItem | null {
-  const base = { ...source, id: crypto.randomUUID(), tags: undefined, comments: undefined, locked: false };
+  const base = { ...source, id: createId(), tags: undefined, comments: undefined, locked: false };
   switch (base.type) {
     case 'timeline':
       return { ...base, title: 'Project timeline', tasks: [] };
     case 'database':
       return { ...base, title: 'Database schema', tables: [], relations: [] };
+    case 'mindmap':
+      return { ...base, title: 'Mind map', nodes: mindmapTemplate(false) };
     case 'diagram':
       return { ...base, title: 'System diagram', nodes: [], edges: [] };
     case 'note':
@@ -32,7 +36,7 @@ export function createEmptySibling(source: BoardItem): BoardItem | null {
       return {
         ...base,
         title: 'New Board',
-        columns: base.columns.map((column) => ({ ...column, id: crypto.randomUUID(), cards: [] })),
+        columns: base.columns.map((column) => ({ ...column, id: createId(), cards: [] })),
       };
     case 'icon':
       return { ...base, iconMode: 'preset', source: 'star', label: 'Star' };

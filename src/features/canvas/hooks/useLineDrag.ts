@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import { useCallback, useRef, useState } from 'react';
 
 import type { RefObject } from 'react';
@@ -31,10 +32,6 @@ interface UseLineDragOptions {
   onDeleteItem: (id: string) => void;
 
   onSelectItems: (ids: string[]) => void;
-}
-
-function createId(): string {
-  return crypto.randomUUID();
 }
 
 export function useLineDrag({

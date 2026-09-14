@@ -2,9 +2,9 @@ import { useCanvasTouch } from '../hooks/useCanvasTouch';
 import PasteStyleDialog from './PasteStyleDialog';
 import { copyItemStyle, pasteItemStyle } from '../utils/itemStyle';
 import type { ItemStyle } from '../utils/itemStyle';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { BoardItem, LineItem } from '@/entities/board/types';
+import type { BoardItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
 import type { ToolType } from '@/entities/board/toolTypes';
 
@@ -50,7 +50,7 @@ import CanvasDropPreview from './CanvasDropPreview';
 import { useCanvasLostState } from '../hooks/useCanvasLostState';
 import CanvasLostPrompt from './CanvasLostPrompt';
 import CanvasAlignmentGuides from './CanvasAlignmentGuides';
-import { getColumnSearchResult, matchesItemSearch } from '@/features/search/utils/itemSearch';
+import { getColumnSearchResult, getSearchTargets, matchesItemSearch } from '@/features/search/utils/itemSearch';
 
 import { isItemInsideFrame, isFrameMovementLocked } from '@/features/canvas/utils/frameGeometry';
 
@@ -116,6 +116,7 @@ export default function Canvas({
 }: CanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
+  const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [contextMenu, setContextMenu] = useState<CanvasMenuState | null>(null);
   const pointerPosition = useRef<{ x: number; y: number } | null>(null);
@@ -278,7 +279,7 @@ export default function Canvas({
     onUpdateItem,
   });
 
-  const { screenToCanvas } = useCanvasZoom({ containerRef, panRef, zoomRef, pan, zoom, onPanChange, onZoomChange });
+  const { screenToCanvas } = useCanvasZoom({ containerRef, panRef, zoomRef, onPanChange, onZoomChange });
 
   const handleEjectFromColumn = useCallback(
     (columnId: string, ejectedItem: BoardItem, clientX?: number, clientY?: number) => {
@@ -745,52 +746,126 @@ export default function Canvas({
   const normalizedSearch = searchQuery.trim();
 
   const searchActive = normalizedSearch.length > 0;
-
-  const matchingIds = new Set<string>();
-
-  const nestedColumnMatches = new Map<string, Set<string>>();
-
-  for (const item of project.items) {
-    if (item.type === 'column') {
-      const result = getColumnSearchResult(item, normalizedSearch);
-
-      if (result.matches) {
-        matchingIds.add(item.id);
+  const searchTargets = useMemo(
+    () => getSearchTargets(project.items, normalizedSearch),
+    [project.items, normalizedSearch],
+  );
+  const searchIndex =
+    searchCursor.query === normalizedSearch ? searchTargets.findIndex(({ item }) => item.id === searchCursor.id) : -1;
+  const goToSearchResult = (direction: number) => {
+    if (!searchTargets.length) return;
+    const index =
+      searchIndex < 0
+        ? direction > 0
+          ? 0
+          : searchTargets.length - 1
+        : (searchIndex + direction + searchTargets.length) % searchTargets.length;
+    const target = searchTargets[index]!;
+    const parent = target.columnId ? project.items.find((item) => item.id === target.columnId) : undefined;
+    let rect = getItemRect(parent ?? target.item, measuredSizes);
+    if (target.columnId) {
+      const element = containerRef.current?.querySelector(`[data-nested-item-id="${CSS.escape(target.item.id)}"]`);
+      const container = containerRef.current?.getBoundingClientRect();
+      if (element && container) {
+        const bounds = element.getBoundingClientRect();
+        rect = {
+          ...rect,
+          x: (bounds.left - container.left - pan.x) / zoom,
+          y: (bounds.top - container.top - pan.y) / zoom,
+          width: bounds.width / zoom,
+          height: bounds.height / zoom,
+        };
       }
-
-      nestedColumnMatches.set(item.id, result.nestedMatchIds);
-
-      continue;
+      handleSelectColumnItem(target.columnId, target.item);
+    } else {
+      clearColumnSelection();
+      onSelectItems([target.item.id]);
     }
+    const nextZoom = Math.max(
+      ZOOM_MIN,
+      Math.min(
+        1.5,
+        ZOOM_MAX,
+        Math.max(1, viewportSize.width - 120) / Math.max(1, rect.width),
+        Math.max(1, viewportSize.height - 160) / Math.max(1, rect.height),
+      ),
+    );
+    onZoomChange(nextZoom);
+    onPanChange({
+      x: viewportSize.width / 2 - (rect.x + rect.width / 2) * nextZoom,
+      y: viewportSize.height / 2 - (rect.y + rect.height / 2) * nextZoom,
+    });
+    setSearchCursor({ query: normalizedSearch, id: target.item.id });
+  };
 
-    if (matchesItemSearch(item, normalizedSearch)) {
-      matchingIds.add(item.id);
-    }
-  }
+  const { matchingIds, nestedColumnMatches, contextFrameIds } = useMemo(() => {
+    const matchingIds = new Set<string>();
 
-  const contextFrameIds = new Set<string>();
+    const nestedColumnMatches = new Map<string, Set<string>>();
 
-  if (searchActive) {
-    const matchedItems = project.items.filter((item) => matchingIds.has(item.id));
+    for (const item of project.items) {
+      if (item.type === 'column') {
+        const result = getColumnSearchResult(item, normalizedSearch);
 
-    for (const frame of project.items) {
-      if (frame.type !== 'frame') {
+        if (result.matches) {
+          matchingIds.add(item.id);
+        }
+
+        nestedColumnMatches.set(item.id, result.nestedMatchIds);
+
         continue;
       }
 
-      const containsMatch = matchedItems.some(
-        (matchedItem) => matchedItem.id !== frame.id && matchedItem.frameId === frame.id,
-      );
-
-      if (containsMatch) {
-        contextFrameIds.add(frame.id);
+      if (matchesItemSearch(item, normalizedSearch)) {
+        matchingIds.add(item.id);
       }
     }
-  }
 
-  const frames = project.items.filter((item) => item.type === 'frame');
+    const contextFrameIds = new Set<string>();
 
-  const regularItems = project.items.filter((item) => item.type !== 'frame').sort((a, b) => a.zIndex - b.zIndex);
+    if (searchActive) {
+      const matchedItems = project.items.filter((item) => matchingIds.has(item.id));
+
+      for (const frame of project.items) {
+        if (frame.type !== 'frame') {
+          continue;
+        }
+
+        const containsMatch = matchedItems.some(
+          (matchedItem) => matchedItem.id !== frame.id && matchedItem.frameId === frame.id,
+        );
+
+        if (containsMatch) {
+          contextFrameIds.add(frame.id);
+        }
+      }
+    }
+
+    return { matchingIds, nestedColumnMatches, contextFrameIds };
+  }, [project.items, normalizedSearch, searchActive]);
+
+  const frames = useMemo(() => project.items.filter((item) => item.type === 'frame'), [project.items]);
+  const regularItems = useMemo(
+    () => project.items.filter((item) => item.type !== 'frame').sort((a, b) => a.zIndex - b.zIndex),
+    [project.items],
+  );
+  const renderedItems = useMemo(
+    () =>
+      new Map(
+        regularItems.map((item) => [
+          item.id,
+          item.type === 'line' ? resolveLineItem(item, project.items, measuredSizes) : item,
+        ]),
+      ),
+    [regularItems, project.items, measuredSizes],
+  );
+  const lockedFrameIds = useMemo(
+    () =>
+      new Set(
+        frames.filter((frame) => isFrameMovementLocked(frame, project.items, measuredSizes)).map((frame) => frame.id),
+      ),
+    [frames, project.items, measuredSizes],
+  );
 
   const minorGridInterval = CANVAS_GRID_SIZE * zoom;
 
@@ -889,6 +964,26 @@ export default function Canvas({
         });
       }}
     >
+      {searchActive && (
+        <div
+          data-canvas-ui="true"
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 rounded-lg border px-3 py-2 shadow-md text-xs"
+          style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+          onMouseDown={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+          onContextMenu={(event) => event.stopPropagation()}
+        >
+          <span role="status">
+            {searchTargets.length ? `${searchIndex + 1} / ${searchTargets.length}` : 'No results'}
+          </span>
+          <button disabled={!searchTargets.length} onClick={() => goToSearchResult(-1)} className="disabled:opacity-40">
+            Previous
+          </button>
+          <button disabled={!searchTargets.length} onClick={() => goToSearchResult(1)} className="disabled:opacity-40">
+            Go to next
+          </button>
+        </div>
+      )}
       {pasteStyleOpen && (
         <PasteStyleDialog
           onClose={() => setPasteStyleOpen(false)}
@@ -968,7 +1063,7 @@ export default function Canvas({
           <CanvasFrame
             key={frame.id}
             item={frame}
-            movementLocked={isFrameMovementLocked(frame, project.items, measuredSizes)}
+            movementLocked={lockedFrameIds.has(frame.id)}
             onItemResize={handleItemResize}
             isSettling={settlingIds.includes(frame.id)}
             zoom={zoom}
@@ -993,8 +1088,7 @@ export default function Canvas({
         ))}
 
         {regularItems.map((item) => {
-          const renderedItem =
-            item.type === 'line' ? resolveLineItem(item as LineItem, project.items, measuredSizes) : item;
+          const renderedItem = renderedItems.get(item.id) ?? item;
 
           return (
             <CanvasItem

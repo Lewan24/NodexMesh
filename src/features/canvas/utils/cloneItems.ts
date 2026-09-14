@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import type { BoardItem } from '@/entities/board/types';
 
 /** Clone all nested identities first, then reconnect references within the copied graph. */
@@ -10,7 +11,7 @@ export function cloneItems(items: BoardItem[], dx: number, dy: number, firstZInd
     }
     if (!value || typeof value !== 'object') return;
     const record = value as Record<string, unknown>;
-    if (typeof record.id === 'string') ids.set(record.id, crypto.randomUUID());
+    if (typeof record.id === 'string') ids.set(record.id, createId());
     Object.values(record).forEach(collect);
   };
   collect(items);
@@ -22,7 +23,16 @@ export function cloneItems(items: BoardItem[], dx: number, dy: number, firstZInd
         if (key === 'frameId') return [key, typeof entry === 'string' ? (ids.get(entry) ?? null) : null];
         if (key === 'id' && typeof entry === 'string') return [key, ids.get(entry)];
         if (
-          ['startItemId', 'endItemId', 'dispenserId', 'source', 'target', 'sourceField', 'targetField'].includes(key) &&
+          [
+            'startItemId',
+            'endItemId',
+            'dispenserId',
+            'source',
+            'target',
+            'sourceField',
+            'targetField',
+            'parentId',
+          ].includes(key) &&
           typeof entry === 'string'
         )
           return [key, ids.get(entry)];

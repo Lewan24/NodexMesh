@@ -25,6 +25,8 @@ export function getApproxItemSize(item: BoardItem): ItemSize {
       return { width: item.width ?? ITEM_WIDTH.timeline, height: item.height ?? 520 };
     case 'database':
       return { width: item.width ?? ITEM_WIDTH.database, height: item.height ?? 600 };
+    case 'mindmap':
+      return { width: item.width ?? ITEM_WIDTH.mindmap, height: item.height ?? 560 };
     case 'diagram':
       return { width: item.width ?? ITEM_WIDTH.diagram, height: item.height ?? 560 };
     case 'document':
@@ -111,6 +113,8 @@ export function getToolDefaultSize(type: ToolType): ItemSize {
       return { width: ITEM_WIDTH.timeline, height: 520 };
     case 'database':
       return { width: ITEM_WIDTH.database, height: 600 };
+    case 'mindmap':
+      return { width: ITEM_WIDTH.mindmap, height: 560 };
     case 'diagram':
       return { width: ITEM_WIDTH.diagram, height: 560 };
     case 'document':

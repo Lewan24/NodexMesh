@@ -1,0 +1,102 @@
+.mindmap-preview,
+.mindmap-canvas {
+  background-color: #f8fafc;
+  background-image: radial-gradient(#cbd5e1 0.8px, transparent 0.8px);
+  background-size: 20px 20px;
+}
+.mindmap-preview {
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+}
+.mindmap-preview .mindmap-svg {
+  pointer-events: none;
+}
+.mindmap-svg {
+  display: block;
+  flex-shrink: 0;
+}
+.mindmap-node {
+  width: 100%;
+  height: 100%;
+  padding: 8px 12px;
+  border: 2px solid transparent;
+  font-size: 14px;
+  line-height: 20px;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: pre-wrap;
+}
+.mindmap-node[aria-pressed='true'],
+.mindmap-node:focus-visible {
+  outline: 2px solid;
+  outline-offset: -3px;
+}
+.mindmap-node[data-drop-target='true'] {
+  outline: 3px dashed;
+  outline-offset: -6px;
+}
+.mindmap-editor {
+  width: min(1400px, 95vw);
+  height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 12px;
+}
+.mindmap-workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.mindmap-canvas {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+.mindmap-inspector {
+  width: 240px;
+  flex-shrink: 0;
+  overflow: auto;
+  padding: 16px;
+  border-left: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.mindmap-inspector label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mindmap-inspector textarea,
+.mindmap-inspector select {
+  width: 100%;
+}
+@media (max-width: 700px) {
+  .mindmap-workspace {
+    flex-direction: column;
+  }
+  .mindmap-canvas {
+    min-height: 180px;
+  }
+  .mindmap-inspector {
+    width: 100%;
+    max-height: 40%;
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
+  }
+}

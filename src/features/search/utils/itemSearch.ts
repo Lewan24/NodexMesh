@@ -25,6 +25,8 @@ export function getSearchableText(item: BoardItem): string {
           ...table.fields.flatMap((field) => [field.name, field.dataType]),
         ]),
       ].join(' ');
+    case 'mindmap':
+      return [item.title, ...item.nodes.map((node) => node.label)].join(' ');
     case 'diagram':
       return [
         item.title,
@@ -132,6 +134,19 @@ export function getColumnSearchResult(column: ColumnItem, query: string): Search
     nestedMatchIds,
   };
 }
+export function getSearchTargets(items: BoardItem[], query: string): { item: BoardItem; columnId?: string }[] {
+  if (!query.trim()) return [];
+  return items.flatMap<{ item: BoardItem; columnId?: string }>((item) => {
+    if (item.type !== 'column') return matchesItemSearch(item, query) ? [{ item }] : [];
+    return [
+      ...(matchesOwnColumnSearch(item, query) ? [{ item }] : []),
+      ...item.items
+        .filter((child) => matchesItemSearch(child, query))
+        .map((child) => ({ item: child, columnId: item.id })),
+    ];
+  });
+}
+
 function matchesOwnColumnSearch(column: ColumnItem, query: string): boolean {
   const normalized = query.trim().toLowerCase();
 
@@ -146,7 +161,7 @@ function matchesOwnColumnSearch(column: ColumnItem, query: string): boolean {
       return true;
     }
 
-    return column.comments?.some((comment) => comment.status!.toLowerCase().includes(statusQuery)) ?? false;
+    return column.comments?.some((comment) => comment.status?.toLowerCase().includes(statusQuery)) ?? false;
   }
 
   if (normalized.startsWith('#')) {

@@ -1,8 +1,9 @@
+import { createId } from '@/shared/lib/createId';
 import type { DatabaseField, DatabaseTable, DatabaseRelation } from '@/entities/board/types';
 
 export function createDatabaseField(name = 'id'): DatabaseField {
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     name,
     dataType: 'integer',
     primaryKey: name === 'id',
@@ -13,7 +14,7 @@ export function createDatabaseField(name = 'id'): DatabaseField {
 }
 export function createDatabaseTable(name: string, index: number): DatabaseTable {
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     name,
     position: { x: (index % 3) * 352, y: Math.floor(index / 3) * 320 },
     fields: [createDatabaseField()],
@@ -55,7 +56,7 @@ export function databaseExample() {
     tables: [users, posts],
     relations: [
       {
-        id: crypto.randomUUID(),
+        id: createId(),
         source: posts.id,
         target: users.id,
         sourceField: posts.fields[1]!.id,

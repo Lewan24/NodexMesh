@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import type { User } from '@/entities/user/types';
 import type { AddUserInput, LoginInput } from '../types';
 import { initialUsers } from '@/entities/user/mockUsers';
@@ -46,7 +47,7 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
       const result = validateNewUser(input, accounts);
       if (!result.ok) fail(422, 'invalid_user', result.error);
       if (!['admin', 'user'].includes(input.role)) fail(422, 'invalid_role', 'Invalid role.');
-      accounts.push({ ...input, username: input.username.trim(), name: input.name.trim(), id: crypto.randomUUID() });
+      accounts.push({ ...input, username: input.username.trim(), name: input.name.trim(), id: createId() });
     },
     async removeUser(id) {
       requireAdmin();
