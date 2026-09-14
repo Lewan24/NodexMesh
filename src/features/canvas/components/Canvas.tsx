@@ -2,9 +2,9 @@ import { useCanvasTouch } from '../hooks/useCanvasTouch';
 import PasteStyleDialog from './PasteStyleDialog';
 import { copyItemStyle, pasteItemStyle } from '../utils/itemStyle';
 import type { ItemStyle } from '../utils/itemStyle';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { BoardItem, LineItem } from '@/entities/board/types';
+import type { BoardItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
 import type { ToolType } from '@/entities/board/toolTypes';
 
@@ -279,7 +279,7 @@ export default function Canvas({
     onUpdateItem,
   });
 
-  const { screenToCanvas } = useCanvasZoom({ containerRef, panRef, zoomRef, pan, zoom, onPanChange, onZoomChange });
+  const { screenToCanvas } = useCanvasZoom({ containerRef, panRef, zoomRef, onPanChange, onZoomChange });
 
   const handleEjectFromColumn = useCallback(
     (columnId: string, ejectedItem: BoardItem, clientX?: number, clientY?: number) => {
@@ -746,7 +746,10 @@ export default function Canvas({
   const normalizedSearch = searchQuery.trim();
 
   const searchActive = normalizedSearch.length > 0;
-  const searchTargets = getSearchTargets(project.items, normalizedSearch);
+  const searchTargets = useMemo(
+    () => getSearchTargets(project.items, normalizedSearch),
+    [project.items, normalizedSearch],
+  );
   const searchIndex =
     searchCursor.query === normalizedSearch ? searchTargets.findIndex(({ item }) => item.id === searchCursor.id) : -1;
   const goToSearchResult = (direction: number) => {
@@ -795,51 +798,74 @@ export default function Canvas({
     setSearchCursor({ query: normalizedSearch, id: target.item.id });
   };
 
-  const matchingIds = new Set<string>();
+  const { matchingIds, nestedColumnMatches, contextFrameIds } = useMemo(() => {
+    const matchingIds = new Set<string>();
 
-  const nestedColumnMatches = new Map<string, Set<string>>();
+    const nestedColumnMatches = new Map<string, Set<string>>();
 
-  for (const item of project.items) {
-    if (item.type === 'column') {
-      const result = getColumnSearchResult(item, normalizedSearch);
+    for (const item of project.items) {
+      if (item.type === 'column') {
+        const result = getColumnSearchResult(item, normalizedSearch);
 
-      if (result.matches) {
-        matchingIds.add(item.id);
-      }
+        if (result.matches) {
+          matchingIds.add(item.id);
+        }
 
-      nestedColumnMatches.set(item.id, result.nestedMatchIds);
+        nestedColumnMatches.set(item.id, result.nestedMatchIds);
 
-      continue;
-    }
-
-    if (matchesItemSearch(item, normalizedSearch)) {
-      matchingIds.add(item.id);
-    }
-  }
-
-  const contextFrameIds = new Set<string>();
-
-  if (searchActive) {
-    const matchedItems = project.items.filter((item) => matchingIds.has(item.id));
-
-    for (const frame of project.items) {
-      if (frame.type !== 'frame') {
         continue;
       }
 
-      const containsMatch = matchedItems.some(
-        (matchedItem) => matchedItem.id !== frame.id && matchedItem.frameId === frame.id,
-      );
-
-      if (containsMatch) {
-        contextFrameIds.add(frame.id);
+      if (matchesItemSearch(item, normalizedSearch)) {
+        matchingIds.add(item.id);
       }
     }
-  }
 
-  const frames = project.items.filter((item) => item.type === 'frame');
+    const contextFrameIds = new Set<string>();
 
-  const regularItems = project.items.filter((item) => item.type !== 'frame').sort((a, b) => a.zIndex - b.zIndex);
+    if (searchActive) {
+      const matchedItems = project.items.filter((item) => matchingIds.has(item.id));
+
+      for (const frame of project.items) {
+        if (frame.type !== 'frame') {
+          continue;
+        }
+
+        const containsMatch = matchedItems.some(
+          (matchedItem) => matchedItem.id !== frame.id && matchedItem.frameId === frame.id,
+        );
+
+        if (containsMatch) {
+          contextFrameIds.add(frame.id);
+        }
+      }
+    }
+
+    return { matchingIds, nestedColumnMatches, contextFrameIds };
+  }, [project.items, normalizedSearch, searchActive]);
+
+  const frames = useMemo(() => project.items.filter((item) => item.type === 'frame'), [project.items]);
+  const regularItems = useMemo(
+    () => project.items.filter((item) => item.type !== 'frame').sort((a, b) => a.zIndex - b.zIndex),
+    [project.items],
+  );
+  const renderedItems = useMemo(
+    () =>
+      new Map(
+        regularItems.map((item) => [
+          item.id,
+          item.type === 'line' ? resolveLineItem(item, project.items, measuredSizes) : item,
+        ]),
+      ),
+    [regularItems, project.items, measuredSizes],
+  );
+  const lockedFrameIds = useMemo(
+    () =>
+      new Set(
+        frames.filter((frame) => isFrameMovementLocked(frame, project.items, measuredSizes)).map((frame) => frame.id),
+      ),
+    [frames, project.items, measuredSizes],
+  );
 
   const minorGridInterval = CANVAS_GRID_SIZE * zoom;
 
@@ -1037,7 +1063,7 @@ export default function Canvas({
           <CanvasFrame
             key={frame.id}
             item={frame}
-            movementLocked={isFrameMovementLocked(frame, project.items, measuredSizes)}
+            movementLocked={lockedFrameIds.has(frame.id)}
             onItemResize={handleItemResize}
             isSettling={settlingIds.includes(frame.id)}
             zoom={zoom}
@@ -1062,8 +1088,7 @@ export default function Canvas({
         ))}
 
         {regularItems.map((item) => {
-          const renderedItem =
-            item.type === 'line' ? resolveLineItem(item as LineItem, project.items, measuredSizes) : item;
+          const renderedItem = renderedItems.get(item.id) ?? item;
 
           return (
             <CanvasItem

@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import type { KanbanCard, KanbanColumn } from '@/entities/board/types';
 
 export const KANBAN_COLUMN_COLORS = ['#5a8a94', '#FFBD65', '#7C3AED', '#02A0A0', '#FF6B8A', '#059669'] as const;
@@ -51,9 +52,7 @@ export function appendKanbanColumn(columns: KanbanColumn[]): KanbanColumn[] {
 
 export const DEFAULT_KANBAN_BACKGROUND = '#ffffff';
 
-export function createId(): string {
-  return crypto.randomUUID();
-}
+export { createId } from '@/shared/lib/createId';
 
 export function createKanbanCard(text: string): KanbanCard {
   return { id: createId(), text, done: false };

@@ -102,7 +102,7 @@ export function useProjectItems({ activeProjectId, setProjects }: UseProjectItem
             ? {
                 ...project,
                 items: normalizeFrameMembership(update(project.items).map(normalizeItemNumbers)).map((item) =>
-                  item.type === 'frame' ? { ...item, zIndex: 0 } : item,
+                  item.type === 'frame' && item.zIndex !== 0 ? { ...item, zIndex: 0 } : item,
                 ),
               }
             : project,

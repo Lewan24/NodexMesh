@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import { validateBoard } from '@/entities/board/boardValidation';
 import { parseProjectSnapshots } from './responseValidation';
 import type { AuditFields, BoardSnapshot, ItemMutation, Revision } from '@/entities/board/records';
@@ -88,7 +89,7 @@ function applyItem(board: BoardSnapshot, entry: ItemMutation, userId: string): v
     if (!normalizedName || name.length > 100) fail(422, 'invalid_tag', 'Invalid tag.');
     let tag = board.tags.find((t) => t.normalizedName === normalizedName);
     if (!tag) {
-      tag = { id: crypto.randomUUID(), projectId: board.board.projectId, name: name.trim(), normalizedName };
+      tag = { id: createId(), projectId: board.board.projectId, name: name.trim(), normalizedName };
       board.tags.push(tag);
     }
     if (!board.itemTags.some((t) => t.itemId === item.id && t.tagId === tag.id))
@@ -193,7 +194,7 @@ export function createMockWorkspace(
               const demo = renewProjectIds(source);
               const metadata = audit(userId);
               const board: BoardSnapshot = {
-                board: { id: crypto.randomUUID(), projectId: demo.id, name: 'Board', sortOrder: 0, ...metadata },
+                board: { id: createId(), projectId: demo.id, name: 'Board', sortOrder: 0, ...metadata },
                 items: [],
                 links: [],
                 comments: [],
@@ -221,7 +222,7 @@ export function createMockWorkspace(
           const snapshot: ProjectSnapshot = {
             project: { id: input.id, ownerId: userId, name: input.name.trim(), color: input.color, ...metadata },
             board: {
-              board: { id: crypto.randomUUID(), projectId: input.id, name: 'Board', sortOrder: 0, ...metadata },
+              board: { id: createId(), projectId: input.id, name: 'Board', sortOrder: 0, ...metadata },
               items: [],
               links: [],
               comments: [],

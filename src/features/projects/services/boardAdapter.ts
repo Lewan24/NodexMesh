@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import type { BoardItem } from '@/entities/board/types';
 import type { BoardMutation, BoardSnapshot, ItemMutation, ItemWrite } from '@/entities/board/records';
 import type { Project, ProjectSnapshot } from '@/entities/project/types';
@@ -155,7 +156,7 @@ export function diffBoard(previous: BoardSnapshot, items: BoardItem[]): BoardMut
     .filter(([id]) => !ids.has(id))
     .map(([id, expectedRevision]) => ({ id, expectedRevision }));
   return upserts.length || deletes.length
-    ? { clientMutationId: crypto.randomUUID(), expectedBoardRevision: previous.board.revision, upserts, deletes }
+    ? { clientMutationId: createId(), expectedBoardRevision: previous.board.revision, upserts, deletes }
     : null;
 }
 
@@ -164,7 +165,7 @@ export function renewProjectIds(project: Project): Project {
   const ids = new Map<string, string>();
   function collect(value: unknown): void {
     if (!value || typeof value !== 'object') return;
-    if ('id' in value && typeof value.id === 'string') ids.set(value.id, crypto.randomUUID());
+    if ('id' in value && typeof value.id === 'string') ids.set(value.id, createId());
     Object.values(value).forEach(collect);
   }
   collect(project);

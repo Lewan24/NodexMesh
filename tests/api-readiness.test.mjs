@@ -27,7 +27,45 @@ const { exportProjectJson, importProjectJson } = await server.ssrLoadModule(
   '/src/features/projects/services/projectJson.ts',
 );
 const { demoProjects } = await server.ssrLoadModule('/src/entities/project/demoProjects.ts');
+const { createDefaultProjectFor } = await server.ssrLoadModule('/src/entities/project/projectFactory.ts');
+const { createId } = await server.ssrLoadModule('/src/shared/lib/createId.ts');
 await server.close();
+
+test('HTTP mobile context can load demo, create a project, save blocks and reload', async (t) => {
+  const originalCrypto = globalThis.crypto;
+  const originalDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+  Object.defineProperty(globalThis, 'crypto', {
+    configurable: true,
+    value: { getRandomValues: originalCrypto.getRandomValues.bind(originalCrypto) },
+  });
+  t.after(() => Object.defineProperty(globalThis, 'crypto', originalDescriptor));
+  const store = storage();
+  const api = createMockWorkspace(DEMO_USER_ID, store, () => DEMO_USER_ID);
+  const controller = new WorkspaceController(api);
+  await controller.load();
+  assert.equal(controller.getSnapshot().status, 'saved');
+  assert.ok(controller.getSnapshot().projects.length > 0);
+  const project = createDefaultProjectFor(DEMO_USER_ID);
+  project.items = Object.keys(itemSchemas)
+    .map((type) => createCanvasItem(type, 10, 20))
+    .filter(Boolean);
+  controller.update((projects) => [...projects, project]);
+  await controller.flush();
+  assert.equal(controller.getSnapshot().status, 'saved');
+  const reloaded = new WorkspaceController(createMockWorkspace(DEMO_USER_ID, store, () => DEMO_USER_ID));
+  await reloaded.load();
+  assert.equal(reloaded.getSnapshot().status, 'saved');
+  const saved = (await api.projects.list()).find((entry) => entry.project.id === project.id);
+  assert.equal(diffBoard(saved.board, project.items), null);
+  assert.deepEqual(
+    reloaded.getSnapshot().projects.find((entry) => entry.id === project.id),
+    toProjectView(saved),
+  );
+  assert.match(project.id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  const ids = Array.from({ length: 1000 }, () => createId());
+  assert.equal(new Set(ids).size, ids.length);
+  for (const id of ids) assert.match(id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+});
 
 test('project JSON imports the complete demo with fresh identities and a new owner', async () => {
   const original = demoProjects[0];

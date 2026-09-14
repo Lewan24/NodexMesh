@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -258,7 +259,7 @@ export default function DatabaseDiagramBlock({
                 }}
                 onConnect={(connection) => {
                   const relation: DatabaseRelation = {
-                    id: crypto.randomUUID(),
+                    id: createId(),
                     source: connection.source,
                     target: connection.target,
                     sourceField: connection.sourceHandle?.replace(/:(left|right)$/, '') ?? '',

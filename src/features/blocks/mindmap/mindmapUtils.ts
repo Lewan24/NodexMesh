@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import type { MindmapNode, MindmapItem } from '@/entities/board/types';
 
 export function nextBranchColor(nodes: MindmapNode[]): string {
@@ -15,7 +16,7 @@ export function nextBranchColor(nodes: MindmapNode[]): string {
 
 export function mindmapTemplate(withBranches = true): MindmapNode[] {
   const root: MindmapNode = {
-    id: crypto.randomUUID(),
+    id: createId(),
     parentId: null,
     label: 'Main idea',
     side: 'positive',
@@ -28,7 +29,7 @@ export function mindmapTemplate(withBranches = true): MindmapNode[] {
     ...(withBranches
       ? ['Explore', 'Develop', 'Plan'].map(
           (label, index): MindmapNode => ({
-            id: crypto.randomUUID(),
+            id: createId(),
             parentId: root.id,
             label,
             side: index === 2 ? 'negative' : 'positive',
@@ -83,7 +84,7 @@ export function addMindmapNode(nodes: MindmapNode[], selectedId: string, sibling
         : 'positive'
       : selected.side;
   const node: MindmapNode = {
-    id: crypto.randomUUID(),
+    id: createId(),
     parentId,
     label: 'New idea',
     side,

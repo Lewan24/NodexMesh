@@ -57,7 +57,7 @@ export default function EmbedBlock({
           </button>
         </div>
         <div className="flex-1 min-h-0 overflow-hidden item-rounded">
-          <YouTubeVideo videoId={videoId} title={item.title} interactive={interactive} />
+          <YouTubeVideo key={videoId} videoId={videoId} title={item.title} interactive={interactive} />
         </div>
         <div className="absolute top-full right-0 z-20 pt-2 opacity-0 pointer-events-none group-hover/video:opacity-100 group-hover/video:pointer-events-auto group-focus-within/video:opacity-100 group-focus-within/video:pointer-events-auto transition-opacity duration-150">
           <button

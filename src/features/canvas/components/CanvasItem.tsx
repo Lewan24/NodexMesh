@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { BoardItem, ChecklistEntry, KanbanCard } from '@/entities/board/types';
 
 import BlockRenderer from '@/features/blocks/BlockRenderer';
@@ -95,6 +96,76 @@ export default function CanvasItem({
   onQuickConnectStart,
 }: CanvasItemProps) {
   const showDragEffect = isDragging && item.type !== 'line';
+
+  // Only section titles change their content with the camera scale. Keep the
+  // expensive block subtree intact while panning, pinching or animating its wrapper.
+  const contentZoom = item.type === 'section-title' ? zoom : 1;
+  const content = useMemo(
+    () => (
+      <ItemWatcher itemId={item.id} onResize={onResize}>
+        <BlockRenderer
+          zoom={contentZoom}
+          item={renderedItem}
+          onTaskDroppedOutside={onChecklistDropOutside}
+          isSelected={isSelected}
+          isDragOver={isDragOver}
+          selectedColumnItemId={selectedColumnItemId}
+          onUpdate={(updater) => onUpdateItem(item.id, updater)}
+          onDelete={() =>
+            onRequestDelete(() => {
+              onDeleteItem(item.id);
+              onSelectItems(selectedIds.filter((id) => id !== item.id));
+            })
+          }
+          onFitFrame={() => {}}
+          onLineEndpointDrag={(event, endpoint) => onLineEndpointDrag(item.id, event, endpoint)}
+          onEjectItem={
+            item.type === 'column'
+              ? (ejectedItem, clientX, clientY) => onEjectFromColumn(item.id, ejectedItem, clientX, clientY)
+              : undefined
+          }
+          onSelectColumnItem={
+            item.type === 'column' ? (columnItem) => onSelectColumnItem(item.id, columnItem) : undefined
+          }
+          onRequestDelete={onRequestDelete}
+          onEntryDroppedOutside={
+            item.type === 'checklist'
+              ? (entry, clientX, clientY) => onChecklistDropOutside(item.id, entry, clientX, clientY)
+              : undefined
+          }
+          onCardDroppedOutside={
+            item.type === 'kanban'
+              ? (card, clientX, clientY) => onKanbanCardDropOutside(item.id, card, clientX, clientY)
+              : undefined
+          }
+          searchActive={searchActive}
+          nestedSearchMatchIds={item.type === 'column' ? nestedSearchMatchIds : undefined}
+        />
+      </ItemWatcher>
+    ),
+    [
+      contentZoom,
+      item.id,
+      item.type,
+      renderedItem,
+      isSelected,
+      isDragOver,
+      selectedColumnItemId,
+      onUpdateItem,
+      onRequestDelete,
+      onDeleteItem,
+      onSelectItems,
+      selectedIds,
+      onLineEndpointDrag,
+      onEjectFromColumn,
+      onSelectColumnItem,
+      onChecklistDropOutside,
+      onKanbanCardDropOutside,
+      searchActive,
+      nestedSearchMatchIds,
+      onResize,
+    ],
+  );
 
   return (
     <div
@@ -194,46 +265,7 @@ export default function CanvasItem({
         />
       )}
 
-      <ItemWatcher itemId={item.id} onResize={onResize}>
-        <BlockRenderer
-          zoom={zoom}
-          item={renderedItem}
-          onTaskDroppedOutside={onChecklistDropOutside}
-          isSelected={isSelected}
-          isDragOver={isDragOver}
-          selectedColumnItemId={selectedColumnItemId}
-          onUpdate={(updater) => onUpdateItem(item.id, updater)}
-          onDelete={() =>
-            onRequestDelete(() => {
-              onDeleteItem(item.id);
-              onSelectItems(selectedIds.filter((id) => id !== item.id));
-            })
-          }
-          onFitFrame={() => {}}
-          onLineEndpointDrag={(event, endpoint) => onLineEndpointDrag(item.id, event, endpoint)}
-          onEjectItem={
-            item.type === 'column'
-              ? (ejectedItem, clientX, clientY) => onEjectFromColumn(item.id, ejectedItem, clientX, clientY)
-              : undefined
-          }
-          onSelectColumnItem={
-            item.type === 'column' ? (columnItem) => onSelectColumnItem(item.id, columnItem) : undefined
-          }
-          onRequestDelete={onRequestDelete}
-          onEntryDroppedOutside={
-            item.type === 'checklist'
-              ? (entry, clientX, clientY) => onChecklistDropOutside(item.id, entry, clientX, clientY)
-              : undefined
-          }
-          onCardDroppedOutside={
-            item.type === 'kanban'
-              ? (card, clientX, clientY) => onKanbanCardDropOutside(item.id, card, clientX, clientY)
-              : undefined
-          }
-          searchActive={searchActive}
-          nestedSearchMatchIds={item.type === 'column' ? nestedSearchMatchIds : undefined}
-        />
-      </ItemWatcher>
+      {content}
     </div>
   );
 }

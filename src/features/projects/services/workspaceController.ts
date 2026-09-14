@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import type { Project, ProjectSnapshot } from '@/entities/project/types';
 import { ApiError, errorMessage } from '@/shared/api/errors';
 import { diffBoard, toProjectView } from './boardAdapter';
@@ -118,12 +119,7 @@ export class WorkspaceController {
     for (const desired of this.state.projects) {
       const previous = this.confirmed.get(desired.id);
       if (!previous) {
-        const input = {
-          id: desired.id,
-          name: desired.name,
-          color: desired.color,
-          clientMutationId: crypto.randomUUID(),
-        };
+        const input = { id: desired.id, name: desired.name, color: desired.color, clientMutationId: createId() };
         return async () => {
           this.confirmed.set(desired.id, await this.services.projects.create(input));
         };
@@ -140,7 +136,7 @@ export class WorkspaceController {
           color: desired.color,
           deletedAt: desired.deletedAt ?? null,
           expectedRevision: previous.project.revision,
-          clientMutationId: crypto.randomUUID(),
+          clientMutationId: createId(),
         };
         return async () => {
           previous.project = await this.services.projects.update(desired.id, input);
@@ -156,7 +152,7 @@ export class WorkspaceController {
     }
     for (const [id, previous] of this.confirmed) {
       if (this.state.projects.some((p) => p.id === id)) continue;
-      const mutationId = crypto.randomUUID();
+      const mutationId = createId();
       if (!previous.project.deletedAt) {
         const input = {
           name: previous.project.name,

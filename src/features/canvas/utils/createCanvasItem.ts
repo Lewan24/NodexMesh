@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import { mindmapTemplate } from '@/features/blocks/mindmap/mindmapUtils';
 
 import type {
@@ -16,10 +17,6 @@ import type {
 import { ITEM_WIDTH } from '@/features/canvas/constants';
 
 import type { ToolType } from '@/entities/board/toolTypes';
-
-function createId(): string {
-  return crypto.randomUUID();
-}
 
 export function createCanvasItem(
   type: ToolType,

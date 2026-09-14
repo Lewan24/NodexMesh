@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { TimelineTask } from '@/entities/board/types';
@@ -155,9 +156,7 @@ export default function TimelineTaskDialog({
           <button
             type="button"
             className="planning-button"
-            onClick={() =>
-              patch({ checklist: [...draft.checklist, { id: crypto.randomUUID(), text: '', done: false }] })
-            }
+            onClick={() => patch({ checklist: [...draft.checklist, { id: createId(), text: '', done: false }] })}
           >
             + Checklist item
           </button>

@@ -1,5 +1,5 @@
-import { autoGrowthLayout } from '../utils/autoGrowthLayout';
-import { useCallback, useRef, useState } from 'react';
+import { autoGrowthLayout, growsAutomatically } from '../utils/autoGrowthLayout';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { RefObject } from 'react';
 
@@ -23,25 +23,46 @@ export function useCanvasMeasurements({ projectRef, suppressAutoLayout, onUpdate
   const [measuredSizes, setMeasuredSizes] = useState<SizeMap>(() => new Map());
 
   const sizesRef = useRef<SizeMap>(new Map());
+  const pendingFrame = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (pendingFrame.current !== null) cancelAnimationFrame(pendingFrame.current);
+      pendingFrame.current = null;
+    },
+    [],
+  );
   const geometryRef = useRef(new Map<string, { width?: number; height?: number; x: number; y: number }>());
   const handleItemResize = useCallback(
     (itemId: string, width: number, height: number) => {
-      const before = sizesRef.current;
-      const prior = before.get(itemId);
+      const prior = sizesRef.current.get(itemId);
       const changed = projectRef.current.items.find((item) => item.id === itemId);
       const previousGeometry = geometryRef.current.get(itemId);
       if (changed)
         geometryRef.current.set(itemId, { width: changed.width, height: changed.height, x: changed.x, y: changed.y });
       if (prior && prior.width === width && prior.height === height) return;
-      const after = new Map(before).set(itemId, { width, height });
-      sizesRef.current = after;
-      setMeasuredSizes(after);
       const explicitResize =
         !changed ||
         !previousGeometry ||
         changed.width !== previousGeometry.width ||
         changed.height !== previousGeometry.height;
-      if (!suppressAutoLayout.current && !explicitResize) {
+      const needsLayout =
+        !suppressAutoLayout.current &&
+        !explicitResize &&
+        changed &&
+        growsAutomatically(changed) &&
+        prior &&
+        height > prior.height + 0.5;
+      // Initial measurements only mutate the working map. Copy once per frame,
+      // except when auto-growth needs the previous geometry immediately.
+      const before = needsLayout ? new Map(sizesRef.current) : sizesRef.current;
+      const after = sizesRef.current.set(itemId, { width, height });
+      if (pendingFrame.current === null) {
+        pendingFrame.current = requestAnimationFrame(() => {
+          pendingFrame.current = null;
+          setMeasuredSizes(new Map(sizesRef.current));
+        });
+      }
+      if (needsLayout) {
         const patches = autoGrowthLayout(projectRef.current.items, itemId, before, after);
         for (const [id, patch] of patches)
           onUpdateItem(id, (current) => {

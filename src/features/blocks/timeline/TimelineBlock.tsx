@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import TimelineTaskDialog from './TimelineTaskDialog';
 import { useEffect, useRef, useState } from 'react';
 import type { TimelineItem, TimelineTask } from '@/entities/board/types';
@@ -67,7 +68,7 @@ export default function TimelineBlock({
     viewport.current?.scrollTo({ left: Math.max(0, (day - range.start) * dayWidth), behavior: 'smooth' });
   };
   const addTask = () => {
-    const id = crypto.randomUUID();
+    const id = createId();
     setDraft({ id, title: '', start: todayDate(), end: todayDate(), done: false, color: '#7c3aed', checklist: [] });
   };
   const moveBar = (

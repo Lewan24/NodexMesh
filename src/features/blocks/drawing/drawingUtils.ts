@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import type { DrawingItem, DrawingStroke } from '@/entities/board/types';
 
 export type DrawingPoint = { x: number; y: number; pressure?: number };
@@ -74,7 +75,7 @@ export function createDrawing(points: DrawingPoint[], zIndex: number): DrawingIt
   const width = Math.max(12, right - left + padding * 2);
   const height = Math.max(12, bottom - top + padding * 2);
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     type: 'drawing',
     x: left - padding,
     y: top - padding,
@@ -196,7 +197,7 @@ export function joinDrawings(items: DrawingItem[]): DrawingItem | null {
   const height = Math.max(...items.map((item) => item.y + item.height)) - y;
   const first = ordered[0]!;
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     type: 'drawing',
     x,
     y,

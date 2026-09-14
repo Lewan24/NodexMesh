@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import type { DiagramEdge, DiagramNode } from '@/entities/board/types';
 
 export function removeDiagramNodes(nodes: DiagramNode[], edges: DiagramEdge[], ids: Set<string>) {
@@ -33,7 +34,7 @@ export function layoutDiagram(
   }));
 }
 export function diagramTemplate(): { nodes: DiagramNode[]; edges: DiagramEdge[] } {
-  const ids = Array.from({ length: 5 }, () => crypto.randomUUID());
+  const ids = Array.from({ length: 5 }, () => createId());
   const nodes: DiagramNode[] = [
     {
       id: ids[0]!,
@@ -72,7 +73,7 @@ export function diagramTemplate(): { nodes: DiagramNode[]; edges: DiagramEdge[] 
     [1, 3, 'No'],
     [2, 4, ''],
   ].map(([source, target, label]) => ({
-    id: crypto.randomUUID(),
+    id: createId(),
     source: ids[Number(source)]!,
     target: ids[Number(target)]!,
     sourceHandle: 'bottom',

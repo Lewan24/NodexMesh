@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import type { CSSProperties } from 'react';
 import { getTypographyStyle } from '../typography/typographyUtils';
@@ -132,7 +133,7 @@ export default function DiagramBlock({
   const selectedNode = nodes.find((node) => node.id === selection.node);
   const selectedEdge = edges.find((edge) => edge.id === selection.edge);
   const addNode = (shape: DiagramShape) => {
-    const id = crypto.randomUUID();
+    const id = createId();
     const viewport = flow.current?.getViewport() ?? { x: 0, y: 0, zoom: 1 };
     save(
       [
@@ -306,7 +307,7 @@ export default function DiagramBlock({
             onConnect={(connection) => {
               if (!editing || connection.source === connection.target) return;
               if (!canConnectDiagram(toEdges(edges), connection)) return;
-              save(nodes, [...edges, { ...connection, id: crypto.randomUUID(), label: '' }]);
+              save(nodes, [...edges, { ...connection, id: createId(), label: '' }]);
             }}
             onNodeClick={(event, node) => {
               const ids = event.shiftKey ? new Set(clickedSelection.current) : new Set<string>();

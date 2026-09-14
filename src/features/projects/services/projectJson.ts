@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import type { Project } from '@/entities/project/types';
 import { createMockWorkspace } from './mockWorkspace';
 import { flattenItems, renewProjectIds } from './boardAdapter';
@@ -51,10 +52,10 @@ export async function importProjectJson(text: string, userId: string): Promise<P
     id: project.id,
     name: project.name,
     color: project.color,
-    clientMutationId: crypto.randomUUID(),
+    clientMutationId: createId(),
   });
   await api.boards.mutate(project.id, snapshot.board.board.id, {
-    clientMutationId: crypto.randomUUID(),
+    clientMutationId: createId(),
     expectedBoardRevision: snapshot.board.board.revision,
     upserts: flattenItems(project.items, snapshot.board.board.id),
     deletes: [],

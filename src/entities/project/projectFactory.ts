@@ -1,3 +1,4 @@
+import { createId } from '@/shared/lib/createId';
 import type { Project } from './types';
 import { PROJECT_COLORS } from '@/entities/project/constants';
 
@@ -6,7 +7,7 @@ export function createDefaultProjectFor(userId: string): Project {
 }
 
 function createProjectId() {
-  return crypto.randomUUID();
+  return createId();
 }
 
 function getRandomProjectColor() {
