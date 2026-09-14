@@ -50,7 +50,7 @@ import CanvasDropPreview from './CanvasDropPreview';
 import { useCanvasLostState } from '../hooks/useCanvasLostState';
 import CanvasLostPrompt from './CanvasLostPrompt';
 import CanvasAlignmentGuides from './CanvasAlignmentGuides';
-import { getColumnSearchResult, matchesItemSearch } from '@/features/search/utils/itemSearch';
+import { getColumnSearchResult, getSearchTargets, matchesItemSearch } from '@/features/search/utils/itemSearch';
 
 import { isItemInsideFrame, isFrameMovementLocked } from '@/features/canvas/utils/frameGeometry';
 
@@ -116,6 +116,7 @@ export default function Canvas({
 }: CanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
+  const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [contextMenu, setContextMenu] = useState<CanvasMenuState | null>(null);
   const pointerPosition = useRef<{ x: number; y: number } | null>(null);
@@ -745,6 +746,54 @@ export default function Canvas({
   const normalizedSearch = searchQuery.trim();
 
   const searchActive = normalizedSearch.length > 0;
+  const searchTargets = getSearchTargets(project.items, normalizedSearch);
+  const searchIndex =
+    searchCursor.query === normalizedSearch ? searchTargets.findIndex(({ item }) => item.id === searchCursor.id) : -1;
+  const goToSearchResult = (direction: number) => {
+    if (!searchTargets.length) return;
+    const index =
+      searchIndex < 0
+        ? direction > 0
+          ? 0
+          : searchTargets.length - 1
+        : (searchIndex + direction + searchTargets.length) % searchTargets.length;
+    const target = searchTargets[index]!;
+    const parent = target.columnId ? project.items.find((item) => item.id === target.columnId) : undefined;
+    let rect = getItemRect(parent ?? target.item, measuredSizes);
+    if (target.columnId) {
+      const element = containerRef.current?.querySelector(`[data-nested-item-id="${CSS.escape(target.item.id)}"]`);
+      const container = containerRef.current?.getBoundingClientRect();
+      if (element && container) {
+        const bounds = element.getBoundingClientRect();
+        rect = {
+          ...rect,
+          x: (bounds.left - container.left - pan.x) / zoom,
+          y: (bounds.top - container.top - pan.y) / zoom,
+          width: bounds.width / zoom,
+          height: bounds.height / zoom,
+        };
+      }
+      handleSelectColumnItem(target.columnId, target.item);
+    } else {
+      clearColumnSelection();
+      onSelectItems([target.item.id]);
+    }
+    const nextZoom = Math.max(
+      ZOOM_MIN,
+      Math.min(
+        1.5,
+        ZOOM_MAX,
+        Math.max(1, viewportSize.width - 120) / Math.max(1, rect.width),
+        Math.max(1, viewportSize.height - 160) / Math.max(1, rect.height),
+      ),
+    );
+    onZoomChange(nextZoom);
+    onPanChange({
+      x: viewportSize.width / 2 - (rect.x + rect.width / 2) * nextZoom,
+      y: viewportSize.height / 2 - (rect.y + rect.height / 2) * nextZoom,
+    });
+    setSearchCursor({ query: normalizedSearch, id: target.item.id });
+  };
 
   const matchingIds = new Set<string>();
 
@@ -889,6 +938,26 @@ export default function Canvas({
         });
       }}
     >
+      {searchActive && (
+        <div
+          data-canvas-ui="true"
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 rounded-lg border px-3 py-2 shadow-md text-xs"
+          style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+          onMouseDown={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+          onContextMenu={(event) => event.stopPropagation()}
+        >
+          <span role="status">
+            {searchTargets.length ? `${searchIndex + 1} / ${searchTargets.length}` : 'No results'}
+          </span>
+          <button disabled={!searchTargets.length} onClick={() => goToSearchResult(-1)} className="disabled:opacity-40">
+            Previous
+          </button>
+          <button disabled={!searchTargets.length} onClick={() => goToSearchResult(1)} className="disabled:opacity-40">
+            Go to next
+          </button>
+        </div>
+      )}
       {pasteStyleOpen && (
         <PasteStyleDialog
           onClose={() => setPasteStyleOpen(false)}

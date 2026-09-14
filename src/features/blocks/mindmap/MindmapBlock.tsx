@@ -19,6 +19,9 @@ export default function MindmapBlock({
   const [editing, setEditing] = useState(false);
   const [selectedId, setSelectedId] = useState(item.nodes[0]?.id);
   const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 32, y: 32 });
+  const [panning, setPanning] = useState(false);
+  const panGesture = useRef<{ id: number; x: number; y: number } | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropId, setDropId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -35,18 +38,43 @@ export default function MindmapBlock({
     () => (dragId ? subtreeIds(item.nodes, dragId) : new Set<string>()),
     [item.nodes, dragId],
   );
+  const changeZoom = (value: number, anchor?: { x: number; y: number }) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const next = Math.max(0.01, Math.min(3, value));
+    const point = anchor ?? { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
+    setPan((current) => ({
+      x: point.x - ((point.x - current.x) * next) / zoom,
+      y: point.y - ((point.y - current.y) * next) / zoom,
+    }));
+    setZoom(next);
+  };
   useEffect(() => {
-    if (editing) selectedRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  }, [editing, selected?.id, branch?.x, branch?.y, zoom]);
+    const canvas = canvasRef.current;
+    if (!editing || !canvas) return;
+    const wheel = (event: WheelEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const rect = canvas.getBoundingClientRect();
+      const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? canvas.clientHeight : 1);
+      const next = Math.max(0.01, Math.min(3, zoom * Math.exp(-delta * 0.002)));
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      setPan((current) => ({ x: x - ((x - current.x) * next) / zoom, y: y - ((y - current.y) * next) / zoom }));
+      setZoom(next);
+    };
+    canvas.addEventListener('wheel', wheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', wheel);
+  }, [editing, zoom]);
   const fit = () => {
     const canvas = canvasRef.current;
-    if (canvas)
-      setZoom(
-        Math.max(
-          0.01,
-          Math.min(1.5, (canvas.clientWidth - 64) / graph.width, (canvas.clientHeight - 64) / graph.height),
-        ),
-      );
+    if (!canvas) return;
+    const next = Math.max(
+      0.01,
+      Math.min(1.5, (canvas.clientWidth - 64) / graph.width, (canvas.clientHeight - 64) / graph.height),
+    );
+    setZoom(next);
+    setPan({ x: (canvas.clientWidth - graph.width * next) / 2, y: (canvas.clientHeight - graph.height * next) / 2 });
   };
   const update = (patch: Partial<MindmapItem>) =>
     onUpdate((current) => (current.type === 'mindmap' ? { ...current, ...patch } : current));
@@ -84,7 +112,15 @@ export default function MindmapBlock({
       className="mindmap-svg"
       viewBox={`0 0 ${graph.width} ${graph.height}`}
       style={
-        interactive ? { width: graph.width * zoom, height: graph.height * zoom } : { width: '100%', height: '100%' }
+        interactive
+          ? {
+              width: graph.width,
+              height: graph.height,
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: '0 0',
+              maxWidth: 'none',
+            }
+          : { width: '100%', height: '100%' }
       }
       role="group"
       aria-label={item.title}
@@ -260,7 +296,7 @@ export default function MindmapBlock({
                 <select
                   className="planning-input"
                   value={zoom}
-                  onChange={(event) => setZoom(Number(event.target.value))}
+                  onChange={(event) => changeZoom(Number(event.target.value))}
                 >
                   {[...new Set([zoom, 0.25, 0.5, 0.75, 1, 1.25, 1.5])]
                     .sort((a, b) => a - b)
@@ -276,7 +312,39 @@ export default function MindmapBlock({
               </button>
             </div>
             <div className="mindmap-workspace">
-              <div ref={canvasRef} className="mindmap-canvas" data-wheel-scroll="true">
+              <div
+                ref={canvasRef}
+                className="mindmap-canvas"
+                data-wheel-scroll="true"
+                style={{ cursor: panning ? 'grabbing' : 'grab' }}
+                onPointerDown={(event) => {
+                  if (event.button !== 0 && event.button !== 1) return;
+                  if (event.button === 0 && (event.target as Element).closest('.mindmap-node')) return;
+                  event.preventDefault();
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  panGesture.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+                  setPanning(true);
+                }}
+                onPointerMove={(event) => {
+                  const gesture = panGesture.current;
+                  if (!gesture || gesture.id !== event.pointerId) return;
+                  const dx = event.clientX - gesture.x;
+                  const dy = event.clientY - gesture.y;
+                  gesture.x = event.clientX;
+                  gesture.y = event.clientY;
+                  setPan((current) => ({ x: current.x + dx, y: current.y + dy }));
+                }}
+                onPointerUp={(event) => {
+                  if (event.currentTarget.hasPointerCapture(event.pointerId))
+                    event.currentTarget.releasePointerCapture(event.pointerId);
+                  panGesture.current = null;
+                  setPanning(false);
+                }}
+                onLostPointerCapture={() => {
+                  panGesture.current = null;
+                  setPanning(false);
+                }}
+              >
                 {map(true)}
               </div>
               {selected && (
@@ -388,8 +456,9 @@ export default function MindmapBlock({
                     </>
                   )}
                   <p className="text-xs text-theme-muted">
-                    Drag an idea onto another to move its entire subtree. Use Move earlier / later to reorder siblings.
-                    Undo is available with Ctrl+Z outside text fields.
+                    Drag the background or use the middle mouse button to pan. Scroll to zoom. Use Fit map to see all
+                    ideas. Drag an idea onto another to move its entire subtree. Use Move earlier / later to reorder
+                    siblings. Undo is available with Ctrl+Z outside text fields.
                   </p>
                 </aside>
               )}

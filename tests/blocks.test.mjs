@@ -18,6 +18,54 @@ const { createEmptySibling } = await server.ssrLoadModule('/src/features/canvas/
 const { resolveLineItem } = await server.ssrLoadModule('/src/features/canvas/utils/lineGeometry.ts');
 const { getEmbedUrl } = await server.ssrLoadModule('/src/features/blocks/embed/embedUrl.ts');
 const { getSearchableText } = await server.ssrLoadModule('/src/features/search/utils/itemSearch.ts');
+const { getSearchTargets } = await server.ssrLoadModule('/src/features/search/utils/itemSearch.ts');
+const {
+  smoothSimplifiedPoints,
+  smoothDrawingItem,
+  createDrawing: createInk,
+} = await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts');
+
+test('SmoothIt reduces dense mouse jitter and preserves endpoints, transforms and locked ink', () => {
+  const points = Array.from({ length: 10000 }, (_, index) => ({
+    x: index / 10,
+    y: index % 2 ? 0.2 : -0.2,
+    pressure: 0.8,
+  }));
+  const result = smoothSimplifiedPoints(points);
+  assert.ok(result.length < 256);
+  assert.deepEqual(result[0], points[0]);
+  assert.deepEqual(result.at(-1), points.at(-1));
+  const drawing = createInk(points, 1);
+  const stroke = { points, x: 15, y: 22, scaleX: 2, scaleY: 0.5, color: '#abcdef', strokeWidth: 4 };
+  const joined = { ...drawing, strokes: [stroke] };
+  const smoothed = smoothDrawingItem(joined);
+  assert.deepEqual({ ...smoothed.strokes[0], points }, stroke);
+  assert.equal(smoothed.width, joined.width);
+  assert.equal(points.length, 10000);
+  const locked = { ...joined, locked: true };
+  assert.equal(smoothDrawingItem(locked), locked);
+  assert.deepEqual(smoothSimplifiedPoints([]), []);
+  assert.deepEqual(smoothSimplifiedPoints(points.slice(0, 2)), points.slice(0, 2));
+});
+
+test('search navigation includes nested tag matches without duplicate parent results', () => {
+  const child = { id: 'child', type: 'note', content: 'Fix this', tags: ['todo'] };
+  const column = { id: 'column', type: 'column', title: 'Work', items: [child], comments: [{}] };
+  const note = { id: 'note', type: 'note', content: 'todo later', tags: ['todo'] };
+  assert.deepEqual(
+    getSearchTargets([column, note], '#todo').map(({ item, columnId }) => [item.id, columnId]),
+    [
+      ['child', 'column'],
+      ['note', undefined],
+    ],
+  );
+  assert.deepEqual(
+    getSearchTargets([column], 'Fix').map(({ item }) => item.id),
+    ['child'],
+  );
+  assert.equal(getSearchTargets([column], 'status:done').length, 0);
+  assert.equal(getSearchTargets([column], ' ').length, 0);
+});
 const { tasksInWindow, dateDay, taskRange, shiftTask, scheduleRange, reorderTasks } = await server.ssrLoadModule(
   '/src/features/blocks/timeline/timelineUtils.ts',
 );

@@ -2,6 +2,60 @@ import type { DrawingItem, DrawingStroke } from '@/entities/board/types';
 
 export type DrawingPoint = { x: number; y: number; pressure?: number };
 
+/** Average mouse jitter, then simplify with a bounded, iterative Douglas–Peucker pass. */
+export function smoothSimplifiedPoints(points: DrawingPoint[], tolerance = 0.75): DrawingPoint[] {
+  if (points.length < 3) return points;
+  const filtered = points.map((point, index) => {
+    if (index === 0 || index === points.length - 1) return { ...point };
+    const before = points[index - 1]!;
+    const after = points[index + 1]!;
+    return {
+      x: (before.x + 2 * point.x + after.x) / 4,
+      y: (before.y + 2 * point.y + after.y) / 4,
+      pressure: ((before.pressure ?? 1) + 2 * (point.pressure ?? 1) + (after.pressure ?? 1)) / 4,
+    };
+  });
+  const kept = new Set([0, filtered.length - 1]);
+  const pending = [[0, filtered.length - 1]];
+  while (pending.length && kept.size < 256) {
+    const [start, end] = pending.shift()!;
+    const a = filtered[start!]!;
+    const b = filtered[end!]!;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const lengthSquared = dx * dx + dy * dy;
+    let largest = tolerance * tolerance;
+    let split = -1;
+    for (let index = start! + 1; index < end!; index++) {
+      const point = filtered[index]!;
+      const t = lengthSquared
+        ? Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSquared))
+        : 0;
+      const distance = (point.x - a.x - t * dx) ** 2 + (point.y - a.y - t * dy) ** 2;
+      const pressureError = ((point.pressure ?? 1) - ((a.pressure ?? 1) * (1 - t) + (b.pressure ?? 1) * t)) * 4;
+      const error = Math.max(distance, pressureError * pressureError);
+      if (error > largest) {
+        largest = error;
+        split = index;
+      }
+    }
+    if (split >= 0) {
+      kept.add(split);
+      pending.push([start!, split], [split, end!]);
+    }
+  }
+  return [...kept].sort((a, b) => a - b).map((index) => filtered[index]!);
+}
+
+export function smoothDrawingItem(item: DrawingItem): DrawingItem {
+  if (item.locked) return item;
+  return {
+    ...item,
+    points: smoothSimplifiedPoints(item.points),
+    strokes: item.strokes?.map((stroke) => ({ ...stroke, points: smoothSimplifiedPoints(stroke.points) })),
+  };
+}
+
 /** Store local coordinates so moving/resizing never rewrites the original stroke. */
 export function createDrawing(points: DrawingPoint[], zIndex: number): DrawingItem | null {
   const valid = points.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));

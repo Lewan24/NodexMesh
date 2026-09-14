@@ -60,8 +60,9 @@
 .mindmap-canvas {
   flex: 1;
   min-width: 0;
-  overflow: auto;
-  padding: 32px;
+  overflow: hidden;
+  position: relative;
+  touch-action: none;
   overscroll-behavior: contain;
 }
 .mindmap-inspector {
