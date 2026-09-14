@@ -1,3 +1,4 @@
+import { mindmapTemplate } from '@/features/blocks/mindmap/mindmapUtils';
 import type { BoardItem } from '@/entities/board/types';
 
 /** Preserve presentation, never copy content, identifiers or discussion. */
@@ -8,6 +9,8 @@ export function createEmptySibling(source: BoardItem): BoardItem | null {
       return { ...base, title: 'Project timeline', tasks: [] };
     case 'database':
       return { ...base, title: 'Database schema', tables: [], relations: [] };
+    case 'mindmap':
+      return { ...base, title: 'Mind map', nodes: mindmapTemplate(false) };
     case 'diagram':
       return { ...base, title: 'System diagram', nodes: [], edges: [] };
     case 'note':

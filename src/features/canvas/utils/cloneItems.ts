@@ -22,7 +22,16 @@ export function cloneItems(items: BoardItem[], dx: number, dy: number, firstZInd
         if (key === 'frameId') return [key, typeof entry === 'string' ? (ids.get(entry) ?? null) : null];
         if (key === 'id' && typeof entry === 'string') return [key, ids.get(entry)];
         if (
-          ['startItemId', 'endItemId', 'dispenserId', 'source', 'target', 'sourceField', 'targetField'].includes(key) &&
+          [
+            'startItemId',
+            'endItemId',
+            'dispenserId',
+            'source',
+            'target',
+            'sourceField',
+            'targetField',
+            'parentId',
+          ].includes(key) &&
           typeof entry === 'string'
         )
           return [key, ids.get(entry)];

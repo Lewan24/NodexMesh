@@ -25,6 +25,8 @@ export function getSearchableText(item: BoardItem): string {
           ...table.fields.flatMap((field) => [field.name, field.dataType]),
         ]),
       ].join(' ');
+    case 'mindmap':
+      return [item.title, ...item.nodes.map((node) => node.label)].join(' ');
     case 'diagram':
       return [
         item.title,

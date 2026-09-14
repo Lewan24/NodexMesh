@@ -21,6 +21,7 @@ function getBackgroundColor(item: BoardItem): string | undefined {
     case 'embed':
     case 'timeline':
     case 'database':
+    case 'mindmap':
     case 'diagram':
     case 'note':
     case 'checklist':
@@ -48,6 +49,7 @@ function updateBackgroundColor(item: BoardItem, color: string | undefined): Boar
     case 'embed':
     case 'timeline':
     case 'database':
+    case 'mindmap':
     case 'diagram':
     case 'note':
     case 'checklist':

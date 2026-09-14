@@ -40,6 +40,7 @@ function getMinSize(item: BoardItem): MinSize {
     case 'timeline':
       return { width: 528, height: 340 };
     case 'database':
+    case 'mindmap':
     case 'diagram':
       return { width: 528, height: 360 };
     case 'document':

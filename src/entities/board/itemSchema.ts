@@ -1,3 +1,5 @@
+import { validMindmapTree } from '@/features/blocks/mindmap/mindmapUtils';
+import type { MindmapNode } from './types';
 import type { BoardItem } from './types';
 import type { ItemWrite } from './records';
 import { fail } from '@/shared/api/errors';
@@ -161,6 +163,29 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
           object({ points, x: number, y: number, scaleX: number, scaleY: number, color: text, strokeWidth: number }),
         ),
       ),
+    }),
+  },
+  mindmap: {
+    version: 1,
+    canNest: false,
+    validate: object({
+      ...title,
+      layout: choice('horizontal', 'vertical'),
+      lineStyle: choice('curve', 'elbow', 'straight'),
+      lineWidth: (value) => number(value) && (value as number) >= 1 && (value as number) <= 10,
+      dashed: bool,
+      nodes: (value) =>
+        list(
+          object({
+            id: text,
+            parentId: (v) => v === null || text(v),
+            label: text,
+            side: choice('negative', 'positive'),
+            branchColor: text,
+            background: text,
+            textColor: text,
+          }),
+        )(value) && validMindmapTree(value as MindmapNode[]),
     }),
   },
   diagram: {

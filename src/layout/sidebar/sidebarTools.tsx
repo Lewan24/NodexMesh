@@ -9,6 +9,7 @@ import {
   Minus,
   GanttChart,
   Workflow,
+  GitFork,
   Pencil,
   Database,
 } from 'lucide-react';
@@ -27,6 +28,7 @@ export const SIDEBAR_TOOLS: SidebarTool[] = [
   { id: 'drawing', label: 'Pencil', icon: <Pencil size={TOOL_ICON_SIZE} /> },
   { id: 'timeline', label: 'Timeline', icon: <GanttChart size={TOOL_ICON_SIZE} /> },
   { id: 'database', label: 'Database diagram', icon: <Database size={TOOL_ICON_SIZE} /> },
+  { id: 'mindmap', label: 'Mind map', icon: <GitFork size={TOOL_ICON_SIZE} /> },
   { id: 'diagram', label: 'Diagram', icon: <Workflow size={TOOL_ICON_SIZE} /> },
   { id: 'document', label: 'Document', icon: <FileText size={TOOL_ICON_SIZE} /> },
   { id: 'code', label: 'Code', icon: <Code size={TOOL_ICON_SIZE} /> },

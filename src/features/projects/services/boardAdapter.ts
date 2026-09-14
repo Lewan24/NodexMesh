@@ -185,6 +185,7 @@ export function renewProjectIds(project: Project): Project {
           'target',
           'sourceField',
           'targetField',
+          'parentId',
         ].includes(key)
           ? (ids.get(entry) ?? entry)
           : rewrite(entry),

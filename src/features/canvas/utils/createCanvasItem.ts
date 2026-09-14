@@ -1,3 +1,5 @@
+import { mindmapTemplate } from '@/features/blocks/mindmap/mindmapUtils';
+
 import type {
   BoardItem,
   ChecklistItem,
@@ -47,6 +49,19 @@ export function createCanvasItem(
         relations: [],
         width: ITEM_WIDTH.database,
         height: 600,
+      };
+    case 'mindmap':
+      return {
+        ...base,
+        type,
+        title: 'Mind map',
+        nodes: mindmapTemplate(),
+        layout: 'horizontal',
+        lineStyle: 'curve',
+        lineWidth: 3,
+        dashed: false,
+        width: ITEM_WIDTH.mindmap,
+        height: 560,
       };
     case 'diagram':
       return { ...base, type, title: 'System diagram', nodes: [], edges: [], width: ITEM_WIDTH.diagram, height: 560 };
