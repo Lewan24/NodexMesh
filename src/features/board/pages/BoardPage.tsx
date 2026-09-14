@@ -36,6 +36,7 @@ export default function BoardPage({ userId }: BoardPageProps) {
     selectProject,
     createFirstProject,
     resetDemo,
+    importProject,
     renameProject,
     trashProject,
     restoreProject,
@@ -236,6 +237,7 @@ export default function BoardPage({ userId }: BoardPageProps) {
           resetBoardView();
         }}
         onResetDemo={resetDemo}
+        onImportProject={importProject}
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
       />

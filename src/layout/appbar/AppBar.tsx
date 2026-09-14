@@ -10,6 +10,7 @@ import { useTheme } from '@/app/providers/ThemeProvider';
 import AppLogo from './components/AppLogo';
 import AccountMenu from './components/AccountMenu';
 import ProjectMenu from './components/ProjectMenu';
+import ProjectTransfer from './components/ProjectTransfer';
 
 interface AppBarProps {
   onAppearance: () => void;
@@ -18,6 +19,7 @@ interface AppBarProps {
   onSelectProject: (id: string) => void;
   onAddProject: (name: string) => void;
   onResetDemo: () => void;
+  onImportProject: (text: string) => Promise<void>;
   onRenameProject: (id: string, name: string) => void;
   onTrashProject: (id: string) => void;
   onEmptyTrash: () => void;
@@ -35,6 +37,7 @@ export default function AppBar({
   onSelectProject,
   onAddProject,
   onResetDemo,
+  onImportProject,
   onRenameProject,
   onTrashProject,
   onRestoreProject,
@@ -85,6 +88,11 @@ export default function AppBar({
           onTrashProject={onTrashProject}
           onRestoreProject={onRestoreProject}
           onEmptyTrash={onEmptyTrash}
+        />
+
+        <ProjectTransfer
+          project={projects.find((project) => project.id === activeProjectId)}
+          onImport={onImportProject}
         />
 
         <div className="app-search flex-1 flex justify-center px-4">
