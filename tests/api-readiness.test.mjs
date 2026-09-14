@@ -23,7 +23,32 @@ const { createMockAuthService } = await server.ssrLoadModule('/src/features/auth
 const { itemSchemas } = await server.ssrLoadModule('/src/entities/board/itemSchema.ts');
 const { DEMO_USER_ID } = await server.ssrLoadModule('/src/entities/user/mockUsers.ts');
 const { createHttpClient } = await server.ssrLoadModule('/src/shared/api/httpClient.ts');
+const { exportProjectJson, importProjectJson } = await server.ssrLoadModule(
+  '/src/features/projects/services/projectJson.ts',
+);
+const { demoProjects } = await server.ssrLoadModule('/src/entities/project/demoProjects.ts');
 await server.close();
+
+test('project JSON imports the complete demo with fresh identities and a new owner', async () => {
+  const original = demoProjects[0];
+  const json = exportProjectJson(original);
+  const imported = await importProjectJson(json, 'qa');
+  assert.equal(imported.ownerId, 'qa');
+  assert.notEqual(imported.id, original.id);
+  assert.equal(imported.name, original.name);
+  assert.equal(imported.items.length, original.items.length);
+  assert.equal(exportProjectJson(original), json);
+  const copy = await importProjectJson(exportProjectJson(imported), 'qa');
+  assert.notEqual(copy.items[0].id, imported.items[0].id);
+});
+
+test('project JSON rejects invalid files before adding a project', async () => {
+  await assert.rejects(importProjectJson('{', 'qa'));
+  await assert.rejects(importProjectJson(JSON.stringify({ format: 'nodexmesh-project', version: 99 }), 'qa'));
+  const invalid = JSON.parse(exportProjectJson(demoProjects[0]));
+  invalid.project.items = [{ id: 'broken', type: 'unknown', x: 0, y: 0, zIndex: 0 }];
+  await assert.rejects(importProjectJson(JSON.stringify(invalid), 'qa'));
+});
 
 function storage() {
   const values = new Map();

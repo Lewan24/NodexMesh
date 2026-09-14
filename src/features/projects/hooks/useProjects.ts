@@ -3,7 +3,9 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import type { Project } from '@/entities/project/types';
 import { createDefaultProjectFor } from '@/entities/project/projectFactory';
 
-import { createWorkspaceServices } from '@/app/services';
+import { createWorkspaceServices, isMockDataSource } from '@/app/services';
+import { importProjectJson } from '../services/projectJson';
+import { toast } from 'sonner';
 import { WorkspaceController, type WorkspaceState } from '../services/workspaceController';
 import { registerSaveGuard } from '@/shared/api/pendingChanges';
 import { seedProjectsFor } from '@/entities/project/projectSeeder';
@@ -22,6 +24,7 @@ interface UseProjectsResult {
   selectProject: (id: string) => void;
   createFirstProject: () => void;
   resetDemo: () => void;
+  importProject: (text: string) => Promise<void>;
   renameProject: (id: string, name: string) => void;
   trashProject: (id: string) => void;
   emptyTrash: () => void;
@@ -87,11 +90,28 @@ export function useProjects(userId: string): UseProjectsResult {
   }, [setProjects]);
 
   const resetDemo = useCallback(() => {
+    if (isMockDataSource) {
+      void controller
+        .discardForReset()
+        .then(() => {
+          localStorage.clear();
+          window.location.reload();
+        })
+        .catch(() => toast.error('Could not clear browser storage.'));
+      return;
+    }
     const freshProjects = seedProjectsFor(userId).map(renewProjectIds);
 
     setProjects(freshProjects);
     setActiveProjectId(freshProjects[0]?.id ?? '');
-  }, [userId, setProjects]);
+  }, [userId, setProjects, controller]);
+
+  const importProject = async (text: string) => {
+    const project = await importProjectJson(text, userId);
+    if (controller.getSnapshot().status === 'loading') throw new Error('Wait for projects to load.');
+    setProjects((previous) => [...previous, project]);
+    setActiveProjectId(project.id);
+  };
 
   const addProject = useCallback(
     (name: string): string => {
@@ -131,6 +151,7 @@ export function useProjects(userId: string): UseProjectsResult {
     selectProject,
     createFirstProject,
     resetDemo,
+    importProject,
     renameProject,
     trashProject,
     restoreProject,

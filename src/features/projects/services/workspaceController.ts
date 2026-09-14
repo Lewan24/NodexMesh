@@ -89,6 +89,15 @@ export class WorkspaceController {
     await this.flush();
   };
 
+  discardForReset = async (): Promise<void> => {
+    clearTimeout(this.timer);
+    await this.running;
+    clearTimeout(this.timer);
+    ++this.generation;
+    this.retryOperation = undefined;
+    this.publish({ status: 'saved', error: '' });
+  };
+
   private async drain() {
     this.publish({ status: 'saving', error: '' });
     try {

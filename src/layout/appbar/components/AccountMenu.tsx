@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { isMockDataSource } from '@/app/services';
 import type { User } from '@/entities/user/types';
 import { useOutsideClick } from '../hooks/useOutsideClick';
 
@@ -147,7 +148,9 @@ export default function AccountMenu({
               type="button"
               onClick={() => {
                 const confirmed = window.confirm(
-                  'Reset demo data? All of your current projects and changes will be permanently replaced with the default demo data.',
+                  isMockDataSource
+                    ? 'Clear ALL local storage for this site? This deletes projects for all local users, old data and preferences. The app will reload and you will need to sign in again. The demo account will load the latest bundled demo. Close other tabs of this app first.'
+                    : 'Reset demo data? All of your current projects and changes will be permanently replaced with the default demo data.',
                 );
 
                 if (!confirmed) return;
