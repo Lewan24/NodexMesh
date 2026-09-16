@@ -126,6 +126,7 @@ export function toProjectView(snapshot: ProjectSnapshot): Project {
   }
   return {
     id: project.id,
+    boardId: board.board.id,
     ownerId: project.ownerId,
     role: project.role,
     name: project.name,

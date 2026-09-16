@@ -9,12 +9,14 @@ import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
 import ItemLockBadge from './ItemLockBadge';
 import ItemCommentBadge from '@/features/comments/ItemCommentBadge';
+import type { RemotePresence } from '@/features/projects/hooks/useCollaborationPresence';
 
 interface CanvasItemProps {
   item: BoardItem;
   renderedItem: BoardItem;
   zoom: number;
   measuredSize?: { width: number; height: number };
+  remotePresence?: RemotePresence[];
 
   isSettling?: boolean;
   isDragging?: boolean;
@@ -65,6 +67,7 @@ interface CanvasItemProps {
 export default function CanvasItem({
   zoom,
   measuredSize,
+  remotePresence,
   item,
   renderedItem,
   isSelected,
@@ -106,6 +109,7 @@ export default function CanvasItem({
     !isDragging &&
     !isDragOver &&
     !hasFocus &&
+    !remotePresence?.length &&
     !searchActive &&
     item.type !== 'line' &&
     item.type !== 'drawing' &&
@@ -238,6 +242,22 @@ export default function CanvasItem({
           style={{ inset: -2, boxShadow: '0 0 0 2px var(--color-accent), 0 0 12px rgba(124, 58, 237,0.25)' }}
         />
       )}
+
+      {remotePresence?.length ? (
+        <div className="absolute pointer-events-none" style={{ inset: -5, zIndex: 45 }}>
+          <div
+            className="absolute inset-0 rounded-2xl"
+            style={{ boxShadow: '0 0 0 2px #06B6D4, 0 0 14px rgba(6,182,212,0.28)' }}
+          />
+          <span
+            className="absolute -top-6 left-0 rounded px-2 py-1 text-[10px] font-medium text-white shadow"
+            style={{ background: '#0891B2' }}
+          >
+            {remotePresence.map((presence) => presence.displayName).join(', ')}
+            {remotePresence.some((presence) => presence.mode === 'editing') ? ' editing' : ' viewing'}
+          </span>
+        </div>
+      ) : null}
 
       {searchActive && isSearchMatch && !isSelected && (
         <div

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { BoardItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
 import type { ToolType } from '@/entities/board/toolTypes';
+import type { RemotePresence } from '@/features/projects/hooks/useCollaborationPresence';
 
 import ConfirmDialog from '@/shared/components/dialogs/ConfirmDialog';
 import CanvasFrame from '@/features/canvas/components/CanvasFrame';
@@ -67,6 +68,7 @@ interface ToolDragGhostState extends ToolDragDetail {
 interface CanvasProps {
   project: Project;
   remoteVersion?: number;
+  remotePresence?: Record<string, RemotePresence[]>;
   selectedTool: ToolType;
   pan: { x: number; y: number };
   zoom: number;
@@ -94,6 +96,7 @@ interface CanvasProps {
 export default function Canvas({
   project,
   remoteVersion = 0,
+  remotePresence,
   selectedTool,
   pan,
   zoom,
@@ -1104,6 +1107,7 @@ export default function Canvas({
               item={item}
               renderedItem={renderedItem}
               measuredSize={measuredSizes.get(item.id)}
+              remotePresence={remotePresence?.[item.id]}
               isFrameCapturePreview={frameCapturePreviewIds.includes(item.id)}
               selectedColumnItemId={
                 item.type === 'column' && selectedColumnItem?.columnId === item.id ? selectedColumnItem.item.id : null

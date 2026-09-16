@@ -16,6 +16,7 @@ export const createWorkspaceServices = (userId: string) =>
   http ? createHttpWorkspace(http.client) : createMockWorkspace(userId, localStorage, mockAuth.currentUserId);
 
 export const httpClient = http?.client;
+export const collaborationToken = http?.getAccessToken;
 
 export const sharingApi = httpClient ? createSharingApi(httpClient) : null;
 export const publicApi = createPublicApi(fetch, import.meta.env.VITE_API_BASE_URL || '/api/v1');

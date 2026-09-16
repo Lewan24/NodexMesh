@@ -85,5 +85,5 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
     addUser: unsupported,
     removeUser: unsupported,
   };
-  return { auth, client };
+  return { auth, client, getAccessToken: () => accessToken };
 }

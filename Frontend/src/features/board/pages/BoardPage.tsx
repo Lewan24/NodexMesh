@@ -1,6 +1,6 @@
 import SharingDialog from '@/features/projects/components/SharingDialog';
 import ReadOnlyBoard from '@/features/projects/components/ReadOnlyBoard';
-import { sharingApi } from '@/app/services';
+import { collaborationToken, sharingApi } from '@/app/services';
 import { flushPendingChanges } from '@/shared/api/pendingChanges';
 import { createId } from '@/shared/lib/createId';
 const AppearanceDialog = lazy(() => import('@/features/appearance/AppearanceDialog'));
@@ -18,6 +18,7 @@ import Canvas from '@/features/canvas/components/Canvas';
 import AppBar from '@/layout/appbar/AppBar';
 import Sidebar from '@/layout/sidebar/Sidebar';
 import SaveStatus from '@/features/projects/components/SaveStatus';
+import { useCollaborationPresence } from '@/features/projects/hooks/useCollaborationPresence';
 
 interface BoardPageProps {
   userId: string;
@@ -68,6 +69,14 @@ export default function BoardPage({ userId }: BoardPageProps) {
     resetViewport,
     resetBoardView,
   } = useBoardView();
+
+  const remotePresence = useCollaborationPresence(
+    activeProjectId,
+    activeProject?.boardId,
+    userId,
+    selectedIds,
+    collaborationToken,
+  );
 
   const {
     addItem,
@@ -140,8 +149,7 @@ export default function BoardPage({ userId }: BoardPageProps) {
           }
 
           const column = project.items.find((item) => item.id === columnId && item.type === 'column') as
-            | ColumnItem
-            | undefined;
+            ColumnItem | undefined;
 
           if (!column) {
             return project;
@@ -311,6 +319,7 @@ export default function BoardPage({ userId }: BoardPageProps) {
             key={activeProjectId}
             project={activeProject}
             remoteVersion={remoteVersion}
+            remotePresence={remotePresence}
             selectedTool={selectedTool}
             pan={pan}
             zoom={zoom}

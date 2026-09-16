@@ -118,9 +118,27 @@ try
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
             };
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    // SignalR sends the short-lived access token in the query only for
+                    // WebSocket/SSE negotiation. Never accept this parameter on API routes.
+                    var token = context.Request.Query["access_token"];
+                    if (!string.IsNullOrEmpty(token) && context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                        context.Token = token;
+                    return Task.CompletedTask;
+                }
+            };
         });
 
     builder.Services.AddAuthorization();
+    builder.Services.AddSignalR(options =>
+    {
+        options.EnableDetailedErrors = false;
+        options.MaximumReceiveMessageSize = 32 * 1024;
+    });
+    builder.Services.AddSingleton<PresenceRegistry>();
 
     // ---------------------------------------------------------------------
     // Rate limiting (OWASP API4: Unrestricted Resource Consumption)
@@ -270,6 +288,7 @@ try
     app.UseAuthentication();
     app.UseRateLimiter();
     app.UseAuthorization();
+    app.MapHub<CollaborationHub>("/hubs/collaboration").RequireAuthorization();
 
     app.MapGet("/health", () => Results.Ok(new { status = "healthy", timeUtc = DateTime.UtcNow }))
        .AllowAnonymous()
