@@ -8,8 +8,6 @@ import { importProjectJson } from '../services/projectJson';
 import { toast } from 'sonner';
 import { WorkspaceController, type WorkspaceState } from '../services/workspaceController';
 import { registerSaveGuard } from '@/shared/api/pendingChanges';
-import { seedProjectsFor } from '@/entities/project/projectSeeder';
-import { renewProjectIds } from '../services/boardAdapter';
 
 interface UseProjectsResult {
   status: WorkspaceState['status'];
@@ -59,7 +57,7 @@ export function useProjects(userId: string): UseProjectsResult {
   }, [controller]);
 
   const activeProject =
-    projects.find((project) => project.id === activeProjectId && !project.deletedAt) ??
+    projects.find((project) => project.id === controller.resolveProjectId(activeProjectId) && !project.deletedAt) ??
     projects.find((project) => !project.deletedAt);
 
   const renameProject = useCallback(
@@ -86,6 +84,10 @@ export function useProjects(userId: string): UseProjectsResult {
   }, []);
 
   const emptyTrash = useCallback(() => {
+    if (!isMockDataSource) {
+      toast.error('Permanent deletion is not supported by the API.');
+      return;
+    }
     setProjects((previous) => previous.filter((project) => !project.deletedAt));
   }, [setProjects]);
 
@@ -100,11 +102,8 @@ export function useProjects(userId: string): UseProjectsResult {
         .catch(() => toast.error('Could not clear browser storage.'));
       return;
     }
-    const freshProjects = seedProjectsFor(userId).map(renewProjectIds);
-
-    setProjects(freshProjects);
-    setActiveProjectId(freshProjects[0]?.id ?? '');
-  }, [userId, setProjects, controller]);
+    toast.error('Demo reset is only available in mock mode.');
+  }, [controller]);
 
   const importProject = async (text: string) => {
     const project = await importProjectJson(text, userId);

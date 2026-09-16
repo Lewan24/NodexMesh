@@ -1,3 +1,5 @@
+import { authService } from '@/app/services';
+import { errorMessage } from '@/shared/api/errors';
 import { useState } from 'react';
 
 import type { FormEvent } from 'react';
@@ -10,6 +12,8 @@ export function useLoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  const [registering, setRegistering] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -25,6 +29,15 @@ export function useLoginForm() {
     setSubmitting(true);
     setError('');
 
+    if (registering) {
+      try {
+        await authService.register?.({ email: username.trim(), password, confirmPassword });
+      } catch (error) {
+        setError(errorMessage(error));
+        setSubmitting(false);
+        return;
+      }
+    }
     const result = await login(username, password);
 
     if (!result.ok) {
@@ -35,6 +48,10 @@ export function useLoginForm() {
   };
 
   return {
+    registering,
+    setRegistering,
+    confirmPassword,
+    setConfirmPassword,
     username,
     password,
     error,

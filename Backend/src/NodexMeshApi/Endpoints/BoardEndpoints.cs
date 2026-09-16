@@ -174,11 +174,3 @@ public static class BoardEndpoints
         return TypedResults.NoContent();
     }
 }
-
-public sealed record AppearanceUpdateDto(
-    string Font, string UiFont, string UiPrimary, string UiSecondary,
-    int InheritanceVersion, int PaletteVersion,
-    System.Text.Json.JsonElement Light, System.Text.Json.JsonElement Dark);
-
-public sealed record ProjectAppearanceUpdateDto(
-    string? Font, System.Text.Json.JsonElement? Light, System.Text.Json.JsonElement? Dark);

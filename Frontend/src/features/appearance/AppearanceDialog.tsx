@@ -7,7 +7,7 @@ import { FONT_FAMILIES } from '@/features/blocks/typography/typographyUtils';
 import type { FontFamily } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
 import type { Appearance } from './appearanceModel';
-import { defaultAppearance } from './appearanceModel';
+import { activeAppearance, defaultAppearance } from './appearanceModel';
 
 export default function AppearanceDialog({ onClose, projects }: { onClose: () => void; projects: Project[] }) {
   const { preferences, savePreferences } = useTheme();
@@ -16,7 +16,7 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
   const [scope, setScope] = useState('');
   const [mode, setMode] = useState<'light' | 'dark'>('light');
   const customEnabled = !!settings.projects[scope];
-  const draft = settings.projects[scope] ?? settings.defaults;
+  const draft = activeAppearance(settings, scope);
   const updateDraft = (next: Appearance) =>
     setSettings((current) =>
       scope && !current.projects[scope]

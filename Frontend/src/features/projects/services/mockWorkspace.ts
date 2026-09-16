@@ -86,7 +86,8 @@ function applyItem(board: BoardSnapshot, entry: ItemMutation, userId: string): v
   if (entry.tags.length > 100) fail(422, 'invalid_tags', 'Too many tags.');
   for (const name of entry.tags) {
     const normalizedName = name.trim().normalize('NFKC').toLowerCase();
-    if (!normalizedName || name.length > 100) fail(422, 'invalid_tag', 'Invalid tag.');
+    if (!normalizedName || name.trim().length > 64 || normalizedName.length > 64)
+      fail(422, 'invalid_tag', 'Invalid tag.');
     let tag = board.tags.find((t) => t.normalizedName === normalizedName);
     if (!tag) {
       tag = { id: createId(), projectId: board.board.projectId, name: name.trim(), normalizedName };

@@ -45,6 +45,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(
+    () =>
+      authService.subscribeSessionExpired?.(() => {
+        setCurrentUser(null);
+        setUsers([]);
+      }),
+    [],
+  );
+
   const login = useCallback(async (username: string, password: string): Promise<AuthResult> => {
     try {
       const user = await authService.login({ username, password });

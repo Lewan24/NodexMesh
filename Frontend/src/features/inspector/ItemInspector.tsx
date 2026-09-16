@@ -242,6 +242,7 @@ export default function ItemInspector({ items, onUpdateAll, onClose }: ItemInspe
             </span>
 
             <input
+              maxLength={64}
               value={newTag}
               onChange={(event) => setNewTag(event.target.value)}
               onKeyDown={(event) => {

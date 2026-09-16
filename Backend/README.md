@@ -80,7 +80,28 @@ Set in `.env` of the SPA:
 
 ```
 VITE_DATA_SOURCE=http
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=/api/v1
+```
+
+Vite proxies `/api` to `http://localhost:5215`. Start the API with
+`dotnet run --project Backend/src/NodexMeshApi --launch-profile http` from the
+repository root (the `https` profile also exposes the HTTP port). Development
+accepts HTTP without HTTPS redirects so requests stay on the frontend origin.
+HTTPS redirection remains enabled outside Development.
+
+For a different backend port, set the shell variable `API_PROXY_TARGET` when
+starting Vite. A direct cross-origin `VITE_API_BASE_URL` must include `/api/v1`
+and requires matching backend CORS and cookie settings.
+
+On a fresh browser session, `POST /api/v1/auth/refresh` returning **401** is expected:
+it means no refresh cookie exists and the frontend should show the login screen.
+A **307** redirect is not expected through the development proxy; restart the
+backend after changing middleware and ensure it runs in Development.
+
+Transport regression checks (no database required):
+
+```bash
+dotnet run --project Backend/tests/TransportSmokeTests
 ```
 
 Two things the HTTP client **must** do:

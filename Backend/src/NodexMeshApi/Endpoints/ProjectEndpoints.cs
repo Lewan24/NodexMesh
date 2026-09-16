@@ -25,6 +25,8 @@ public static class ProjectEndpoints
         group.MapDelete("/{projectId:guid}", TrashAsync);
         group.MapPost("/{projectId:guid}/restore", RestoreAsync);
 
+        group.MapPost("/{projectId:guid}/tags", CreateTagAsync);
+
         group.MapGet("/{projectId:guid}/members", ListMembersAsync);
         group.MapPost("/{projectId:guid}/members", InviteMemberAsync);
         group.MapPatch("/{projectId:guid}/members/{userId:guid}", UpdateMemberRoleAsync);
@@ -167,6 +169,12 @@ public static class ProjectEndpoints
         await db.SaveChangesAsync(ct);
 
         return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<TagRecordDto>> CreateTagAsync(
+        Guid projectId, CreateTagRequest request, ClaimsPrincipal principal, TagService tags, CancellationToken ct)
+    {
+        return TypedResults.Ok(await tags.GetOrCreateAsync(projectId, CurrentUserId(principal), request.Name, ct));
     }
 
     // ---------------- sharing ----------------

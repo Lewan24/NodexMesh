@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Validation;
 
 namespace NodexMeshApi.Dtos;
 
@@ -38,6 +39,9 @@ public sealed class NullableRevisionJsonConverter : JsonConverter<long?>
 
 // ---------------- writes ----------------
 
+// JsonElement is validated by BoardValidator, not by traversing its CLR indexer.
+// Positional records need the annotation on both constructor parameter and property.
+#pragma warning disable ASP0029 // SkipValidation is experimental in .NET 10.
 public sealed record ItemWriteDto(
     Guid Id,
     Guid BoardId,
@@ -52,8 +56,9 @@ public sealed record ItemWriteDto(
     bool Locked,
     [property: Required] string Type,
     short SchemaVersion,
-    JsonElement Appearance,
-    JsonElement Data);
+    [SkipValidation] [property: SkipValidation] JsonElement Appearance,
+    [SkipValidation] [property: SkipValidation] JsonElement Data);
+#pragma warning restore ASP0029
 
 public sealed record ItemLinkDto(Guid SourceItemId, Guid TargetItemId, string Kind);
 

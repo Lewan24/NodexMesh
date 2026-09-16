@@ -52,3 +52,5 @@ public sealed record UpdateMemberRoleRequest([property: Required] string Role) :
             yield return new ValidationResult("Role must be Editor, Commenter or Viewer.", [nameof(Role)]);
     }
 }
+
+public sealed record CreateTagRequest([property: Required, MaxLength(64)] string Name);

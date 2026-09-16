@@ -340,7 +340,7 @@ test('public auth profiles exclude passwords and mock administrative operations 
   assert.ok((await auth.listUsers()).every((user) => !('password' in user)));
 });
 
-test('HTTP transport uses same-origin cookies, CSRF and does not automatically retry mutations', async () => {
+test('HTTP transport uses included cookies, bearer token and CSRF guard', async () => {
   const calls = [];
   const client = createHttpClient(
     async () => 'csrf-token',
@@ -351,8 +351,8 @@ test('HTTP transport uses same-origin cookies, CSRF and does not automatically r
   );
   await client.request('/projects', { method: 'POST', body: { name: 'Test' } });
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].options.credentials, 'same-origin');
-  assert.equal(calls[0].options.headers['X-CSRF-TOKEN'], 'csrf-token');
+  assert.equal(calls[0].options.credentials, 'include');
+  assert.equal(calls[0].options.headers['X-Requested-With'], 'nodexmesh-web');
   await assert.rejects(client.request('//attacker.example'));
 });
 

@@ -185,20 +185,7 @@ try
     // CORS — deny-by-default; only origins explicitly configured are allowed
     // ---------------------------------------------------------------------
     var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("Default", policy =>
-        {
-            if (allowedOrigins.Length > 0)
-            {
-                policy.WithOrigins(allowedOrigins)
-                      .AllowAnyHeader()
-                      .WithMethods("GET", "POST", "PATCH", "DELETE")
-                      .AllowCredentials();
-            }
-            // If nothing is configured, no origins are allowed — fail closed, not open.
-        });
-    });
+    builder.Services.AddApiCors(allowedOrigins);
 
     // ---------------------------------------------------------------------
     // App services
@@ -206,6 +193,7 @@ try
     builder.Services.AddScoped<ITokenService, TokenService>();
     builder.Services.AddScoped<IProjectAccessService, ProjectAccessService>();
     builder.Services.AddScoped<IBoardMutationService, BoardMutationService>();
+    builder.Services.AddScoped<TagService>();
 
     // .NET 10 built-in Minimal API validation: DataAnnotations / IValidatableObject on
     // request DTOs are enforced automatically for query/header/body-bound parameters.
@@ -233,12 +221,7 @@ try
     app.UseSerilogRequestLogging();
     app.UseExceptionHandler();
 
-    if (!app.Environment.IsDevelopment())
-    {
-        app.UseHsts();
-    }
-
-    app.UseHttpsRedirection();
+    app.UseApiTransportSecurity();
     app.UseSecurityHeaders();
 
     if (app.Environment.IsDevelopment())
@@ -248,9 +231,8 @@ try
     }
 
     app.UseCors("Default");
-    app.UseRateLimiter();
-
     app.UseAuthentication();
+    app.UseRateLimiter();
     app.UseAuthorization();
 
     app.MapGet("/health", () => Results.Ok(new { status = "healthy", timeUtc = DateTime.UtcNow }))

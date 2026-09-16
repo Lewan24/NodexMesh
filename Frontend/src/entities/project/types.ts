@@ -2,6 +2,7 @@ import type { BoardItem } from '@/entities/board/types';
 import type { AuditFields, BoardSnapshot } from '@/entities/board/records';
 
 export interface ProjectRecord extends AuditFields {
+  role?: 'Owner' | 'Editor' | 'Commenter' | 'Viewer';
   id: string;
   ownerId: string;
   name: string;

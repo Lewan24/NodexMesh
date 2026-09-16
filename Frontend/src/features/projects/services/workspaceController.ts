@@ -19,6 +19,8 @@ export class WorkspaceController {
   private running: Promise<void> | undefined;
   private retryOperation: (() => Promise<void>) | undefined;
   private generation = 0;
+  private projectIds = new Map<string, string>();
+  resolveProjectId = (id: string) => this.projectIds.get(id) ?? id;
 
   constructor(private readonly services: WorkspaceServices) {}
 
@@ -62,7 +64,7 @@ export class WorkspaceController {
     if (!blocked)
       this.timer = setTimeout(() => {
         void this.flush();
-      }, 500);
+      }, 1100);
   };
 
   private report(error: unknown) {
@@ -121,7 +123,18 @@ export class WorkspaceController {
       if (!previous) {
         const input = { id: desired.id, name: desired.name, color: desired.color, clientMutationId: createId() };
         return async () => {
-          this.confirmed.set(desired.id, await this.services.projects.create(input));
+          const snapshot = await this.services.projects.create(input);
+          this.confirmed.set(snapshot.project.id, snapshot);
+          if (snapshot.project.id !== desired.id) {
+            this.projectIds.set(desired.id, snapshot.project.id);
+            this.publish({
+              projects: this.state.projects.map((project) =>
+                project.id === desired.id
+                  ? { ...project, id: snapshot.project.id, ownerId: snapshot.project.ownerId }
+                  : project,
+              ),
+            });
+          }
         };
       }
       // Restore before item changes; trash only after the last board edit is saved.

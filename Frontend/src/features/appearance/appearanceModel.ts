@@ -33,7 +33,7 @@ export interface Appearance {
 }
 export interface AppearancePreferences {
   defaults: Appearance;
-  projects: Record<string, Appearance>;
+  projects: Record<string, Partial<Appearance>>;
   uiFont: FontFamily;
   uiPrimary: string;
   uiSecondary: string;
@@ -80,7 +80,9 @@ export function newPreferences(): AppearancePreferences {
   };
 }
 export function activeAppearance(preferences: AppearancePreferences, projectId: string): Appearance {
-  return preferences.projects[projectId] ?? preferences.defaults;
+  return preferences.projects[projectId]
+    ? { ...preferences.defaults, ...preferences.projects[projectId] }
+    : preferences.defaults;
 }
 export function readPreferences(userId: string): AppearancePreferences {
   try {
@@ -112,10 +114,10 @@ export function withAppearanceMode(
 /** Older mode toggles copied the whole default palette into project settings. */
 export function migratePreferences(preferences: AppearancePreferences): AppearancePreferences {
   const projects = { ...preferences.projects };
-  const sameStyle = (a: Appearance, b: Appearance) =>
+  const sameStyle = (a: Partial<Appearance>, b: Appearance) =>
     a.font === b.font &&
-    JSON.stringify(a.light.gradients) === JSON.stringify(b.light.gradients) &&
-    JSON.stringify(a.dark.gradients) === JSON.stringify(b.dark.gradients) &&
+    JSON.stringify(a.light?.gradients) === JSON.stringify(b.light.gradients) &&
+    JSON.stringify(a.dark?.gradients) === JSON.stringify(b.dark.gradients) &&
     (['light', 'dark'] as const).every((mode) =>
       Object.keys(b[mode])
         .filter((key) => key !== 'gradients')

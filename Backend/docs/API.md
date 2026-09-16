@@ -293,6 +293,25 @@ Owner may remove anyone; a member may remove **themselves** (leave the project).
 
 ---
 
+### Project tags
+
+#### `POST /api/v1/projects/{projectId}/tags` — Editor+
+
+Create or reuse a project tag. Request: `{ "name": "Planning" }`.
+Returns `200 OK` with a `TagRecord` (`id`, `projectId`, `name`, `normalizedName`).
+Names are trimmed, normalized with Unicode NFKC, and compared case-insensitively
+using invariant lowercase. Display and normalized names must contain 1–64 characters.
+The first created display spelling is retained. Retries and concurrent requests for
+the same normalized name return the same UUID. Invalid names return 400 validation
+errors or 422 `invalid_tag`. Viewers/Commenters cannot create tags.
+
+Available tags are included in board snapshots. Before saving an item with a new tag,
+resolve its name through this endpoint, then send the returned UUID in the item mutation's
+`tags` array. The array fully replaces item assignments; `[]` removes all assignments.
+At most 100 tag IDs may be supplied per item. Malformed, unknown, and other-project
+IDs return 422 `invalid_tag` without applying the mutation. Removing an assignment
+retains the project tag for reuse.
+
 ### 6.4 Board
 
 #### `GET /api/v1/projects/{projectId}/boards` — Viewer+

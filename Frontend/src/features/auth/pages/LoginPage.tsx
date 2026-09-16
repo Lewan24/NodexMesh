@@ -1,7 +1,20 @@
+import { isMockDataSource } from '@/app/services';
 import { useLoginForm } from '@/features/auth/hooks/useLoginForm';
 
 export default function LoginPage() {
-  const { username, password, error, submitting, setUsername, setPassword, handleSubmit } = useLoginForm();
+  const {
+    registering,
+    setRegistering,
+    confirmPassword,
+    setConfirmPassword,
+    username,
+    password,
+    error,
+    submitting,
+    setUsername,
+    setPassword,
+    handleSubmit,
+  } = useLoginForm();
 
   return (
     <div
@@ -72,14 +85,15 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-              Username
+              {isMockDataSource ? 'Username' : 'Email'}
             </span>
 
             <input
               autoFocus
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. demo"
+              type={isMockDataSource ? 'text' : 'email'}
+              placeholder={isMockDataSource ? 'e.g. demo' : 'you@example.com'}
               className="input-theme text-sm px-3.5 py-2.5"
               autoComplete="username"
             />
@@ -100,6 +114,19 @@ export default function LoginPage() {
             />
           </label>
 
+          {registering && (
+            <label className="flex flex-col gap-1.5 text-xs">
+              Confirm password (12+ characters, uppercase, lowercase, number and symbol)
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                autoComplete="new-password"
+                className="input-theme text-sm px-3.5 py-2.5"
+                required
+              />
+            </label>
+          )}
           {error && (
             <div
               className="text-xs px-3 py-2 rounded-xl"
@@ -114,22 +141,34 @@ export default function LoginPage() {
             disabled={submitting}
             className="btn-accent text-sm font-semibold rounded-xl py-2.5 mt-1.5 disabled:opacity-60"
           >
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting ? 'Please wait…' : registering ? 'Create account' : 'Sign in'}
           </button>
         </form>
+        {!isMockDataSource && (
+          <button
+            type="button"
+            disabled={submitting}
+            className="text-sm mt-4"
+            onClick={() => setRegistering(!registering)}
+          >
+            {registering ? 'Back to sign in' : 'Create an account'}
+          </button>
+        )}
 
         <p className="text-xs text-center mt-6" style={{ color: 'var(--color-text-muted)' }}>
-          Accounts are created by your workspace admin — there's no self sign-up.
+          {isMockDataSource ? 'Sign in with a demo account.' : 'Sign in with your registered email address.'}
         </p>
 
         {/* Handy for first-time reviewers of this build */}
 
-        <div
-          className="mt-4 text-[11px] rounded-xl px-3 py-2 leading-relaxed"
-          style={{ backgroundColor: 'var(--color-surface-alt)', color: 'var(--color-text-muted)' }}
-        >
-          Demo logins — <strong>demo / demo123</strong> (user) or <strong>admin / admin123</strong> (admin)
-        </div>
+        {isMockDataSource && (
+          <div
+            className="mt-4 text-[11px] rounded-xl px-3 py-2 leading-relaxed"
+            style={{ backgroundColor: 'var(--color-surface-alt)', color: 'var(--color-text-muted)' }}
+          >
+            Demo logins — <strong>demo / demo123</strong> (user) or <strong>admin / admin123</strong> (admin)
+          </div>
+        )}
       </div>
     </div>
   );

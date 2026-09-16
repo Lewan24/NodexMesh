@@ -52,8 +52,20 @@ public sealed class BoardMutationService(AppDbContext db, ILogger<BoardMutationS
             itemTags.Select(t => new ItemTagDto(t.ItemId, t.TagId)).ToList());
     }
 
-    public async Task<(int Status, BoardMutationResultDto Result)> ApplyAsync(
+    public Task<(int Status, BoardMutationResultDto Result)> ApplyAsync(
         Guid boardId, Guid userId, BoardMutationDto mutation, CancellationToken ct = default)
+    {
+        // EnableRetryOnFailure requires the entire explicit transaction to run inside
+        // the execution strategy. Re-read idempotency and revisions on each attempt.
+        return db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            db.ChangeTracker.Clear();
+            return await ApplyOnceAsync(boardId, userId, mutation, ct);
+        });
+    }
+
+    private async Task<(int Status, BoardMutationResultDto Result)> ApplyOnceAsync(
+        Guid boardId, Guid userId, BoardMutationDto mutation, CancellationToken ct)
     {
         var requestHash = HashRequest(mutation);
 
@@ -131,6 +143,23 @@ public sealed class BoardMutationService(AppDbContext db, ILogger<BoardMutationS
 
         // --- 4. Validate against the referenced subgraph, not the whole 20k-item board ---
         await ValidateAgainstGraphAsync(boardId, mutation, existing, ct);
+
+        // Tags are project-scoped UUIDs, never arbitrary foreign-key references.
+        var requestedTags = new HashSet<Guid>();
+        foreach (var upsert in mutation.Upserts)
+        {
+            if (upsert.Tags is null || upsert.Tags.Count > 100)
+                throw new ApiException(422, "invalid_tag", "An item may have at most 100 tags.");
+            foreach (var value in upsert.Tags)
+            {
+                if (!Guid.TryParse(value, out var tagId))
+                    throw new ApiException(422, "invalid_tag", "Invalid tag ID.");
+                requestedTags.Add(tagId);
+            }
+        }
+        if (requestedTags.Count > 0 && await db.Tags.CountAsync(
+            t => t.ProjectId == board.ProjectId && requestedTags.Contains(t.Id), ct) != requestedTags.Count)
+            throw new ApiException(422, "invalid_tag", "Tags must belong to this project.");
 
         // --- 5. Apply ---
         var now = DateTimeOffset.UtcNow;
@@ -268,7 +297,8 @@ public sealed class BoardMutationService(AppDbContext db, ILogger<BoardMutationS
 
     /// <summary>
     /// "Relations are replaced only for the touched item, inside the same transaction"
-    /// (records.ts) — delete-then-insert rather than diffing.
+    /// (records.ts). Preserve unchanged tag associations so EF never tracks two
+    /// instances with the same composite key during an ordinary item edit.
     /// </summary>
     private async Task ReplaceRelationsAsync(
         BoardItem entity, ItemMutationDto upsert, Guid userId, DateTimeOffset now, CancellationToken ct)
@@ -287,8 +317,10 @@ public sealed class BoardMutationService(AppDbContext db, ILogger<BoardMutationS
         }
 
         var oldTags = await db.ItemTags.Where(t => t.ItemId == entity.Id).ToListAsync(ct);
-        db.ItemTags.RemoveRange(oldTags);
-        foreach (var tagId in upsert.Tags.Select(Guid.Parse).Distinct())
+        var desiredTags = upsert.Tags.Select(Guid.Parse).ToHashSet();
+        var oldTagIds = oldTags.Select(t => t.TagId).ToHashSet();
+        db.ItemTags.RemoveRange(oldTags.Where(t => !desiredTags.Contains(t.TagId)));
+        foreach (var tagId in desiredTags.Except(oldTagIds))
             db.ItemTags.Add(new ItemTag { ItemId = entity.Id, TagId = tagId });
 
         var existingComments = await db.Comments.Where(c => c.ItemId == entity.Id).ToDictionaryAsync(c => c.Id, ct);

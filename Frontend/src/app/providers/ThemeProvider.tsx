@@ -1,5 +1,10 @@
+import { registerSaveGuard } from '@/shared/api/pendingChanges';
+import { httpClient } from '@/app/services';
+import { createHttpAppearance } from '@/features/appearance/httpAppearance';
+import { toast } from 'sonner';
+import { errorMessage } from '@/shared/api/errors';
 import { isLightColor } from '@/features/blocks/kanban/utils/kanbanUtils';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   paletteBackground,
   withAppearanceMode,
@@ -25,6 +30,7 @@ interface ThemeContextValue {
   resetProject: () => void;
   setUiFont: (font: FontFamily) => void;
 }
+const appearanceApi = httpClient ? createHttpAppearance(httpClient) : null;
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [globalTheme, setGlobalTheme] = useState<Theme>(() => {
@@ -36,22 +42,73 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   });
   const [scope, setScopeState] = useState({ userId: '', projectId: '' });
   const [preferences, setPreferences] = useState(newPreferences);
+  const preferencesRef = useRef(preferences);
+  const saveQueue = useRef(Promise.resolve());
+  const loadedUser = useRef('');
+  const saveFailed = useRef(false);
+  const confirmedPreferences = useRef(preferences);
+  useEffect(
+    () =>
+      registerSaveGuard(async () => {
+        await saveQueue.current;
+        return !saveFailed.current;
+      }),
+    [],
+  );
+  useEffect(() => {
+    if (!appearanceApi || !scope.userId) return;
+    let active = true;
+    loadedUser.current = '';
+    void appearanceApi
+      .load()
+      .then((value) => {
+        if (!active) return;
+        confirmedPreferences.current = value;
+        saveFailed.current = false;
+        preferencesRef.current = value;
+        setPreferences(value);
+        loadedUser.current = scope.userId;
+      })
+      .catch((error) => toast.error(errorMessage(error)));
+    return () => {
+      active = false;
+    };
+  }, [scope.userId]);
   const setScope = useCallback((userId: string, projectId: string) => {
     setScopeState((current) => {
       if (current.userId === userId && current.projectId === projectId) return current;
       return { userId, projectId };
     });
-    setPreferences(readPreferences(userId));
+    if (!appearanceApi) {
+      const value = readPreferences(userId);
+      preferencesRef.current = value;
+      setPreferences(value);
+    }
   }, []);
   const appearance = activeAppearance(preferences, scope.projectId);
   const theme = appearance.mode ?? globalTheme;
   const change = useCallback(
     (fn: (current: AppearancePreferences) => AppearancePreferences) => {
-      setPreferences((current) => {
-        const next = fn(current);
-        if (scope.userId) localStorage.setItem(preferenceKey(scope.userId), JSON.stringify(next));
-        return next;
-      });
+      if (appearanceApi && loadedUser.current !== scope.userId) {
+        toast.error('Wait for appearance settings to load.');
+        return;
+      }
+      const current = preferencesRef.current;
+      const next = fn(current);
+      preferencesRef.current = next;
+      setPreferences(next);
+      if (appearanceApi) {
+        saveQueue.current = saveQueue.current
+          .then(async () => {
+            await appearanceApi.save(confirmedPreferences.current, next);
+            confirmedPreferences.current = next;
+            saveFailed.current = false;
+          })
+          .catch((error) => {
+            saveFailed.current = true;
+            toast.error(errorMessage(error));
+          });
+      } else if (scope.userId) localStorage.setItem(preferenceKey(scope.userId), JSON.stringify(next));
     },
     [scope.userId],
   );

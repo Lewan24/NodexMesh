@@ -26,6 +26,7 @@ function audit(value: Record<string, unknown>) {
 export function parseProjectRecord(value: unknown): ProjectRecord {
   const project = record(value);
   audit(project);
+  if (project.color === null) project.color = '#7C3AED';
   for (const key of ['name', 'color', 'ownerId']) string(project[key]);
   return project as unknown as ProjectRecord;
 }

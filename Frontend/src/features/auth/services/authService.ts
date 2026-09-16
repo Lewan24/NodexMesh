@@ -6,6 +6,8 @@ import { validateNewUser } from '../utils/authValidation';
 import { fail } from '@/shared/api/errors';
 
 export interface AuthService {
+  subscribeSessionExpired?(listener: () => void): () => void;
+  register?(input: { email: string; password: string; confirmPassword: string; displayName?: string }): Promise<void>;
   me(): Promise<User | null>;
   login(input: LoginInput): Promise<User>;
   logout(): Promise<void>;

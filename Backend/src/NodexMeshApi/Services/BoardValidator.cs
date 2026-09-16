@@ -49,6 +49,9 @@ public static class BoardValidator
         if (!geometryOk)
             throw new ApiException(422, "invalid_item", $"Invalid {item.Type} content or geometry.");
 
+        if (item.Data.ValueKind != JsonValueKind.Object || item.Appearance.ValueKind != JsonValueKind.Object)
+            throw new ApiException(422, "invalid_item", "Item data and appearance must be JSON objects.");
+
         if (item.Data.GetRawText().Length + item.Appearance.GetRawText().Length > MaxItemBytes)
             throw new ApiException(422, "invalid_item", $"Invalid {item.Type} content or geometry.");
 

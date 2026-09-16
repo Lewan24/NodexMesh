@@ -12,6 +12,7 @@ export default defineConfig({
     host: '0.0.0.0',
     port: Number(process.env.PORT ?? 8443),
     strictPort: true,
+    proxy: { '/api': { target: process.env.API_PROXY_TARGET ?? 'http://localhost:5215', changeOrigin: true } },
     // Enable for shared folders / WSL where filesystem events may be unavailable.
     watch: process.env.VITE_USE_POLLING === 'true' ? { usePolling: true, interval: 200 } : undefined,
   },
