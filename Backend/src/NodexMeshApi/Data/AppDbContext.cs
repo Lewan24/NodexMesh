@@ -17,6 +17,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
+    public DbSet<ProjectShareLink> ProjectShareLinks => Set<ProjectShareLink>();
     public DbSet<Board> Boards => Set<Board>();
     public DbSet<BoardItem> BoardItems => Set<BoardItem>();
     public DbSet<ItemLink> ItemLinks => Set<ItemLink>();
@@ -63,6 +64,23 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             e.ToTable(t => t.HasCheckConstraint(
                 "ck_project_members_role", "role IN ('Editor','Commenter','Viewer')"));
             e.HasOne<Project>().WithMany(p => p.Members).HasForeignKey(x => x.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ---------------- ProjectShareLink ----------------
+        b.Entity<ProjectShareLink>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TokenHash).HasMaxLength(128);
+            e.Property(x => x.Label).HasMaxLength(100);
+
+            // Unique + the lookup path for every anonymous request, so it must be indexed.
+            e.HasIndex(x => x.TokenHash).IsUnique();
+            e.HasIndex(x => x.ProjectId);
+
+            // Deleting a project hard-deletes its links: a revoked project must not leave
+            // live public tokens behind.
+            e.HasOne<Project>().WithMany().HasForeignKey(x => x.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

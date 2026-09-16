@@ -63,6 +63,10 @@ Scalar UI at `/scalar/v1` in Development.
 | POST | `/api/v1/projects/{id}/restore` | Owner |
 | GET/POST | `/api/v1/projects/{id}/members` | Viewer / Owner |
 | PATCH/DELETE | `/api/v1/projects/{id}/members/{userId}` | Owner (or self, to leave) |
+| GET/POST | `/api/v1/projects/{id}/share-links` | Owner |
+| DELETE | `/api/v1/projects/{id}/share-links/{linkId}` | Owner |
+| GET | `/api/v1/public/shared/{token}` | **anonymous** |
+| GET | `/api/v1/public/shared/{token}/boards/{boardId}` | **anonymous** |
 | GET | `/api/v1/boards/{id}` (full snapshot) | Viewer |
 | POST | `/api/v1/boards/{id}/mutations` | **Editor** |
 | GET/PUT | `/api/v1/appearance` | — (own profile) |

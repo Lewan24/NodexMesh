@@ -31,10 +31,17 @@ public static class ProjectEndpoints
         group.MapPost("/{projectId:guid}/members", InviteMemberAsync);
         group.MapPatch("/{projectId:guid}/members/{userId:guid}", UpdateMemberRoleAsync);
         group.MapDelete("/{projectId:guid}/members/{userId:guid}", RemoveMemberAsync);
+
+        // Anonymous read-only share links (owner-managed). The public read side lives in
+        // PublicEndpoints and is unauthenticated.
+        group.MapGet("/{projectId:guid}/share-links", ListShareLinksAsync);
+        group.MapPost("/{projectId:guid}/share-links", CreateShareLinkAsync);
+        group.MapDelete("/{projectId:guid}/share-links/{linkId:guid}", RevokeShareLinkAsync);
     }
 
-    private static Guid CurrentUserId(ClaimsPrincipal user) =>
-        Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    // Delegates to ClaimsPrincipalExtensions.GetUserId, which returns 401 rather than
+    // throwing (and 500-ing) on a token with a missing or malformed subject claim.
+    private static Guid CurrentUserId(ClaimsPrincipal user) => user.GetUserId();
 
     /// <summary>Projects the user owns *or* has been invited to.</summary>
     private static async Task<Ok<List<ProjectRecordDto>>> ListAsync(
@@ -179,20 +186,85 @@ public static class ProjectEndpoints
 
     // ---------------- sharing ----------------
 
+    /// <summary>
+    /// Collaborators on the project. Non-owners see display names but MASKED email
+    /// addresses: a board shared with a dozen people shouldn't hand every one of them a
+    /// harvestable list of the others' addresses. The owner, who invited them all by
+    /// email in the first place, sees the real values.
+    /// </summary>
     private static async Task<Ok<List<ProjectMemberDto>>> ListMembersAsync(
         Guid projectId, ClaimsPrincipal principal, AppDbContext db,
         IProjectAccessService access, CancellationToken ct)
     {
         var userId = CurrentUserId(principal);
-        await access.RequireAsync(projectId, userId, ProjectRole.Viewer, ct);
+        var role = await access.GetRoleAsync(projectId, userId, ct);
+        if (role == ProjectRole.None) throw new ApiException(404, "not_found", "Project not found.");
 
-        var members = await db.ProjectMembers.AsNoTracking()
+        var rows = await db.ProjectMembers.AsNoTracking()
             .Where(m => m.ProjectId == projectId)
-            .Join(db.Users, m => m.UserId, u => u.Id, (m, u) => new ProjectMemberDto(
-                u.Id, u.Email!, u.DisplayName, m.Role.ToString(), m.CreatedAt))
+            .Join(db.Users, m => m.UserId, u => u.Id, (m, u) => new
+            {
+                u.Id,
+                Email = u.Email!,
+                u.DisplayName,
+                Role = m.Role,
+                m.CreatedAt
+            })
             .ToListAsync(ct);
 
+        var isOwner = role == ProjectRole.Owner;
+
+        var members = rows.Select(r => new ProjectMemberDto(
+            r.Id,
+            // Callers always see their own address in full.
+            isOwner || r.Id == userId ? r.Email : MaskEmail(r.Email),
+            r.DisplayName,
+            r.Role.ToString(),
+            r.CreatedAt)).ToList();
+
         return TypedResults.Ok(members);
+    }
+
+    /// <summary>"alice.smith@example.com" -> "a***h@example.com". Enough for a human to
+    /// recognise an address they already know, not enough to harvest one they don't.</summary>
+    private static string MaskEmail(string email)
+    {
+        var at = email.IndexOf('@');
+        if (at <= 0) return "***";
+
+        var local = email[..at];
+        var domain = email[at..];
+
+        return local.Length <= 2
+            ? $"{local[0]}***{domain}"
+            : $"{local[0]}***{local[^1]}{domain}";
+    }
+
+    // ---------------- anonymous share links ----------------
+
+    private static async Task<Ok<List<ShareLinkDto>>> ListShareLinksAsync(
+        Guid projectId, ClaimsPrincipal principal, IShareLinkService shareLinks, CancellationToken ct)
+    {
+        return TypedResults.Ok(await shareLinks.ListAsync(projectId, CurrentUserId(principal), ct));
+    }
+
+    /// <summary>
+    /// Mints a new anonymous read-only link. The raw token is in the response exactly once
+    /// and cannot be retrieved later — only its hash is stored.
+    /// </summary>
+    private static async Task<Ok<CreatedShareLinkDto>> CreateShareLinkAsync(
+        Guid projectId, CreateShareLinkRequest request, ClaimsPrincipal principal,
+        IShareLinkService shareLinks, CancellationToken ct)
+    {
+        return TypedResults.Ok(await shareLinks.CreateAsync(projectId, CurrentUserId(principal), request, ct));
+    }
+
+    private static async Task<NoContent> RevokeShareLinkAsync(
+        Guid projectId, Guid linkId, ClaimsPrincipal principal,
+        IShareLinkService shareLinks, CancellationToken ct)
+    {
+        await shareLinks.RevokeAsync(projectId, linkId, CurrentUserId(principal), ct);
+        return TypedResults.NoContent();
     }
 
     private static async Task<Results<Ok<ProjectMemberDto>, NotFound<ErrorResponse>>> InviteMemberAsync(

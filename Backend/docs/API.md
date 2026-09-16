@@ -94,6 +94,9 @@ All errors are RFC 7807 ProblemDetails:
 | 422 | `board_limit` | Board exceeds 20,000 items |
 | 422 | `invalid_comment` | Unknown comment status |
 | 422 | `invalid_member` | Cannot add the owner as a member |
+| 422 | `share_link_limit` | Project already has 20 active share links |
+| 422 | `invalid_expiry` | Share-link expiry is not in the future |
+| 422 | `invalid_tag` | Tag name empty or over 64 characters |
 | 429 | — | Rate limited; honour the `Retry-After` header |
 
 ### 3.1 Validation errors (400)
@@ -117,6 +120,7 @@ All errors are RFC 7807 ProblemDetails:
 | `auth-strict` | 5/min per IP | register, login, revoke |
 | `auth-refresh` | 30/min per IP (token bucket) | refresh |
 | `board-mutation` | 60/min per user | `POST /boards/{id}/mutations` |
+| `public-share` | 60/min per IP | `/api/v1/public/*` (anonymous share links) |
 
 429 responses carry `Retry-After: 60` and `{"error": "Too many requests. Please try again later."}`.
 
@@ -290,6 +294,140 @@ prevent probing which addresses are registered, so show it as-is.
 #### `DELETE /api/v1/projects/{projectId}/members/{userId}`
 
 Owner may remove anyone; a member may remove **themselves** (leave the project). `204`.
+
+> **Email masking.** `GET .../members` returns real email addresses only to the project
+> **Owner**, and to each caller for their own row. Everyone else sees `a***e@example.com`.
+> Don't build UI that assumes the address is complete — show `displayName` as the primary
+> label.
+
+---
+
+### 6.3b Anonymous share links (read-only)
+
+Lets the owner publish a project to anyone with a URL — no account required. The token is
+a bearer credential: whoever holds the link gets read access, so treat it like a password
+in the UI (copy button, "anyone with this link can view", revoke control).
+
+#### `POST /api/v1/projects/{projectId}/share-links` — **Owner only**
+
+```ts
+// Request
+{ label?: string /* ≤100, owner-facing note */; expiresAt?: string /* ISO 8601, future */ }
+
+// 200 OK
+{ link: ShareLink; token: string }
+```
+
+> **The `token` is returned exactly once.** Only its SHA-256 hash is stored, so it cannot
+> be retrieved later — not by the owner, not by an admin, not from a database dump. Surface
+> it immediately with a copy button and a "you won't see this again" warning. If it's lost,
+> revoke and mint a new one.
+
+Build the public URL client-side, e.g. `https://yourapp/shared/{token}`.
+
+Errors: `422 share_link_limit` (max 20 active links per project),
+`422 invalid_expiry` (expiry not in the future).
+
+#### `GET /api/v1/projects/{projectId}/share-links` — **Owner only**
+
+```ts
+// 200 OK — active (non-revoked) links; never contains tokens
+ShareLink[]
+```
+
+#### `DELETE /api/v1/projects/{projectId}/share-links/{linkId}` — **Owner only**
+
+Revokes immediately. `204`, and idempotent — revoking an already-revoked link also returns
+`204`.
+
+```ts
+interface ShareLink {
+  id: Uuid;
+  projectId: Uuid;
+  label: string | null;
+  createdAt: Iso;
+  expiresAt: Iso | null;       // null = never expires
+  lastAccessedAt: Iso | null;
+  accessCount: number;         // approximate — see note
+  isActive: boolean;
+}
+```
+
+> `accessCount` counts **distinct minutes in which the link was used**, not requests. The
+> counter is throttled to one write per minute per link so a public URL can't be used to
+> force a database write on every GET. Label it "last used" in the UI, not "views".
+
+---
+
+### 6.3c Public read-only endpoints — **anonymous**
+
+No `Authorization` header. These are the only unauthenticated routes besides auth and
+`/health`. Rate limited to 60/min per IP.
+
+#### `GET /api/v1/public/shared/{token}`
+
+```ts
+// 200 OK
+{
+  project: PublicProject;
+  boards: PublicBoard[];
+}
+```
+
+#### `GET /api/v1/public/shared/{token}/boards/{boardId}`
+
+The board must belong to the token's project, otherwise `404`.
+
+```ts
+// 200 OK
+{
+  project: PublicProject;
+  board: PublicBoard;
+  items: PublicItem[];
+  links: ItemLink[];
+  tags: TagRecord[];
+  itemTags: { itemId: Uuid; tagId: Uuid }[];
+  appearance: PublicAppearance | null;   // the OWNER's theme, so it looks as intended
+}
+```
+
+**Every failure returns an identical `404 not_found`** — unknown token, revoked token,
+expired token, or trashed project. This is deliberate: distinguishing them would confirm
+that a given token was once valid. The client should show one generic "this link is no
+longer available" state.
+
+```ts
+// Deliberately narrower than the authenticated equivalents.
+interface PublicProject { id: Uuid; name: string; color: string | null; updatedAt: Iso }
+interface PublicBoard   { id: Uuid; name: string; sortOrder: number }
+
+interface PublicItem {
+  id: Uuid; boardId: Uuid; parentItemId: Uuid | null; frameId: Uuid | null;
+  sortOrder: number; x: number; y: number;
+  width: number | null; height: number | null;
+  zIndex: number; locked: boolean;
+  type: BoardItemType; schemaVersion: 1;
+  appearance: ItemAppearance; data: ItemData;
+  revision: Revision; updatedAt: Iso;
+}
+
+interface PublicAppearance { font: string; light: ThemePalette | null; dark: ThemePalette | null }
+```
+
+**What's intentionally missing from the public payload**, and why the frontend must not
+expect it:
+
+| Omitted | Reason |
+|---|---|
+| `ownerId`, `createdBy`, `updatedBy` | user GUIDs — would leak who owns/edits the board |
+| `comments` (entirely) | carry author identity and are usually internal notes; publishing them alongside a board shared "for viewing" would surprise the owner |
+| `deletedAt`, project `revision` | only meaningful to the sync/mutation layer, which public viewers don't have |
+
+So a public board renderer needs a read-only mode that tolerates absent comments and absent
+audit fields — it can't reuse the authenticated snapshot type unchanged.
+
+There is **no public write path of any kind**, including comments. A public viewer who
+wants to edit must be invited as a member.
 
 ---
 

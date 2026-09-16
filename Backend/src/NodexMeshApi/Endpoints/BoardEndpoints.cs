@@ -25,8 +25,9 @@ public static class BoardEndpoints
         group.MapPut("/projects/{projectId:guid}/appearance", PutProjectAppearanceAsync);
     }
 
-    private static Guid CurrentUserId(ClaimsPrincipal user) =>
-        Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    // Delegates to ClaimsPrincipalExtensions.GetUserId, which returns 401 rather than
+    // throwing (and 500-ing) on a token with a missing or malformed subject claim.
+    private static Guid CurrentUserId(ClaimsPrincipal user) => user.GetUserId();
 
     private static async Task<Ok<List<BoardRecordDto>>> ListBoardsAsync(
         Guid projectId, ClaimsPrincipal principal, AppDbContext db,

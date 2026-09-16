@@ -35,6 +35,17 @@ try
     builder.WebHost.ConfigureKestrel(options =>
     {
         options.Limits.MaxRequestBodySize = 5_000_000; // ~5 MB
+
+        // Don't advertise "Kestrel" to every client — version-specific exploit hunting
+        // starts with fingerprinting the stack (OWASP A05).
+        options.AddServerHeader = false;
+
+        // Slowloris defence: a client that opens a connection and dribbles bytes ties up
+        // a request slot indefinitely without these.
+        options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(30);
+        options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
+        options.Limits.MinRequestBodyDataRate = new Microsoft.AspNetCore.Server.Kestrel.Core.MinDataRate(
+            bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
     });
 
     // ---------------------------------------------------------------------
@@ -179,6 +190,22 @@ try
                 QueueLimit = 0
             });
         });
+
+        // Anonymous share links. Two distinct risks, both handled by one per-IP limit:
+        // brute-forcing the 256-bit token (hopeless anyway, but no reason to allow the
+        // attempts), and a popular public board being used to hammer the read path since
+        // there is no account to throttle or lock out.
+        options.AddPolicy("public-share", httpContext =>
+        {
+            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            return RateLimitPartition.GetSlidingWindowLimiter($"ip:{ip}", _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+                QueueLimit = 0
+            });
+        });
     });
 
     // ---------------------------------------------------------------------
@@ -190,10 +217,19 @@ try
     // ---------------------------------------------------------------------
     // App services
     // ---------------------------------------------------------------------
+    // Injected rather than calling DateTimeOffset.UtcNow directly, so expiry and
+    // revocation logic in ShareLinkService is testable without waiting in real time.
+    builder.Services.AddSingleton(TimeProvider.System);
+
     builder.Services.AddScoped<ITokenService, TokenService>();
     builder.Services.AddScoped<IProjectAccessService, ProjectAccessService>();
     builder.Services.AddScoped<IBoardMutationService, BoardMutationService>();
+    builder.Services.AddScoped<IShareLinkService, ShareLinkService>();
     builder.Services.AddScoped<TagService>();
+
+    // idempotency_keys and refresh_tokens grow on every save and every token refresh;
+    // nothing else deletes them.
+    builder.Services.AddHostedService<ExpiredDataCleanupService>();
 
     // .NET 10 built-in Minimal API validation: DataAnnotations / IValidatableObject on
     // request DTOs are enforced automatically for query/header/body-bound parameters.
@@ -209,9 +245,9 @@ try
 
     var app = builder.Build();
 
-    // For a real deployment use EF Core migrations (`dotnet ef migrations add InitialCreate`,
-    // `dotnet ef database update`) instead of EnsureCreatedAsync, so schema changes are
-    // tracked and reversible. Left as EnsureCreatedAsync here since this is a first preview.
+    // Applies pending EF Core migrations on boot. Fine for a single-instance self-hosted
+    // deployment; if you ever scale to multiple replicas, move this to a one-shot job so
+    // two instances can't race to migrate the same database.
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -242,10 +278,14 @@ try
     app.MapAuthEndpoints();
     app.MapProjectEndpoints();
     app.MapBoardEndpoints();
+    app.MapPublicEndpoints();
 
     app.Run();
 }
-catch (Exception ex)
+// HostAbortedException is how `dotnet ef migrations add` stops the host after building the
+// service provider. Catching it here would log a spurious "terminated unexpectedly" fatal
+// on every migration command.
+catch (Exception ex) when (ex is not HostAbortedException)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
 }
