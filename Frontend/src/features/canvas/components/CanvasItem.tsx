@@ -17,6 +17,7 @@ interface CanvasItemProps {
   zoom: number;
   measuredSize?: { width: number; height: number };
   remotePresence?: RemotePresence[];
+  collaboratorLocked?: boolean;
 
   isSettling?: boolean;
   isDragging?: boolean;
@@ -68,6 +69,7 @@ export default function CanvasItem({
   zoom,
   measuredSize,
   remotePresence,
+  collaboratorLocked = false,
   item,
   renderedItem,
   isSelected,
@@ -130,7 +132,9 @@ export default function CanvasItem({
           isSelected={isSelected}
           isDragOver={isDragOver}
           selectedColumnItemId={selectedColumnItemId}
-          onUpdate={(updater) => onUpdateItem(item.id, updater)}
+          onUpdate={(updater) => {
+            if (!collaboratorLocked) onUpdateItem(item.id, updater);
+          }}
           onDelete={() =>
             onRequestDelete(() => {
               onDeleteItem(item.id);
@@ -191,7 +195,7 @@ export default function CanvasItem({
     <div
       data-board-item="true"
       data-board-item-id={item.id}
-      data-movement-locked={Boolean(item.locked)}
+      data-movement-locked={Boolean(item.locked || collaboratorLocked)}
       className={`absolute ${isAnimating ? 'board-item-enter' : ''} ${showDragEffect ? 'board-item-dragging' : ''} ${
         isSettling ? 'board-item-settling' : ''
       }`}
@@ -200,7 +204,7 @@ export default function CanvasItem({
         top: renderedItem.y,
         // Keep connection handles accessible above already attached lines.
         zIndex: isSelected && item.type !== 'line' ? 100000 : Math.max(1, item.zIndex),
-        cursor: item.locked ? 'default' : 'grab',
+        cursor: item.locked || collaboratorLocked ? 'default' : 'grab',
         transform: showDragEffect
           ? `
               perspective(900px)

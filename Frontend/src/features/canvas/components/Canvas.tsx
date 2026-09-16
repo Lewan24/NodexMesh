@@ -138,6 +138,7 @@ export default function Canvas({
   } | null>(null);
 
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+  const collaboratorLockedIds = useMemo(() => new Set(Object.keys(remotePresence ?? {})), [remotePresence]);
 
   const panRef = useRef(pan);
   panRef.current = pan;
@@ -266,6 +267,7 @@ export default function Canvas({
     projectRef,
     zoomRef,
     measuredSizes,
+    collaboratorLockedIds,
     snapValue,
     pushHistory,
     onUpdateItem,
@@ -577,6 +579,7 @@ export default function Canvas({
       zoomRef,
       snapEnabled,
       measuredSizes,
+      collaboratorLockedIds,
       snapValue,
       pushHistory,
       onSelectItems,
@@ -1108,6 +1111,7 @@ export default function Canvas({
               renderedItem={renderedItem}
               measuredSize={measuredSizes.get(item.id)}
               remotePresence={remotePresence?.[item.id]}
+              collaboratorLocked={collaboratorLockedIds.has(item.id)}
               isFrameCapturePreview={frameCapturePreviewIds.includes(item.id)}
               selectedColumnItemId={
                 item.type === 'column' && selectedColumnItem?.columnId === item.id ? selectedColumnItem.item.id : null
@@ -1212,7 +1216,7 @@ export default function Canvas({
            * Canvas multi-selection.
            */
           for (const selectedItem of selectedItems) {
-            onUpdateItem(selectedItem.id, updater);
+            if (!collaboratorLockedIds.has(selectedItem.id)) onUpdateItem(selectedItem.id, updater);
           }
         }}
         onClose={() => {

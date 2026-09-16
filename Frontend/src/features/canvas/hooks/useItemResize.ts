@@ -17,6 +17,7 @@ interface UseItemResizeOptions {
   projectRef: RefObject<ProjectLike>;
   zoomRef: RefObject<number>;
   measuredSizes: SizeMap;
+  collaboratorLockedIds?: ReadonlySet<string>;
   snapValue: (value: number) => number;
   pushHistory: () => void;
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
@@ -72,6 +73,7 @@ export function useItemResize({
   projectRef,
   zoomRef,
   measuredSizes,
+  collaboratorLockedIds,
   snapValue,
   pushHistory,
   onUpdateItem,
@@ -89,6 +91,7 @@ export function useItemResize({
         !item ||
         item.type === 'line' ||
         item.locked ||
+        collaboratorLockedIds?.has(item.id) ||
         (item.type === 'frame' && isFrameMovementLocked(item, projectRef.current.items, measuredSizes))
       ) {
         return;

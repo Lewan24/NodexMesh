@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
+using Serilog.Events;
 using NodexMeshApi.Common;
 using NodexMeshApi.Data;
 using NodexMeshApi.Endpoints;
@@ -272,7 +273,23 @@ try
         await db.Database.MigrateAsync();
     }
 
-    app.UseSerilogRequestLogging();
+    app.UseSerilogRequestLogging(options =>
+    {
+        // Routine successful requests are intentionally quiet. Warnings and errors
+        // still retain method, path, status and elapsed time for incident analysis.
+        options.GetLevel = (context, _, exception) =>
+            exception is not null || context.Response.StatusCode >= 500
+                ? LogEventLevel.Error
+                : context.Response.StatusCode >= 400
+                    ? LogEventLevel.Warning
+                    : LogEventLevel.Debug;
+        options.EnrichDiagnosticContext = (diagnostics, context) =>
+        {
+            diagnostics.Set("RequestMethod", context.Request.Method);
+            diagnostics.Set("RequestPath", context.Request.Path.Value);
+            diagnostics.Set("ResponseStatus", context.Response.StatusCode);
+        };
+    });
     app.UseExceptionHandler();
 
     app.UseApiTransportSecurity();

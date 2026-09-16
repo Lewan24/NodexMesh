@@ -37,7 +37,7 @@ public sealed class PresenceRegistry
     {
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var previous = lastUpdate.GetOrAdd(connectionId, 0);
-        if (now - previous < 1000) return false;
+        if (now - previous < 500) return false;
         lastUpdate[connectionId] = now;
         return true;
     }
@@ -81,6 +81,15 @@ public sealed class PresenceRegistry
             .Select(entry => (entry.Key, entry.Value))
             .ToList();
     }
+
+    public IReadOnlySet<Guid> LockedItems(Guid projectId, Guid boardId, Guid userId)
+    {
+        RemoveExpired();
+        return states.Values
+            .Where(value => value.ProjectId == projectId && value.BoardId == boardId && value.UserId != userId)
+            .SelectMany(value => value.ItemIds)
+            .ToHashSet();
+    }
 }
 
 [Authorize]
@@ -121,7 +130,7 @@ public sealed class CollaborationHub(
         if (request.ItemIds is null || request.ItemIds.Count > MaxItems || !Modes.Contains(request.Mode))
             throw new HubException("Invalid presence payload.");
         if (!presence.TryAccept(Context.ConnectionId))
-            throw new HubException("Presence updates are limited to one per second.");
+            throw new HubException("Presence updates are limited to one per 500ms.");
         if (Context.Items[ProjectKey] is not Guid joined || joined != request.ProjectId)
             throw new HubException("Join the project before publishing presence.");
 

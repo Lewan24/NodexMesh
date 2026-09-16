@@ -54,7 +54,7 @@ try
         return await new TagService(otherDb, new ProjectAccessService(otherDb)).GetOrCreateAsync(project.Id, userId, "Concurrent");
     }));
     Require(concurrent.Select(t => t.Id).Distinct().Count() == 1, "concurrent tag creation returns one identity");
-    var service = new BoardMutationService(db, NullLogger<BoardMutationService>.Instance);
+    var service = new BoardMutationService(db, NullLogger<BoardMutationService>.Instance, new PresenceRegistry());
     var item = new ItemWriteDto(Guid.NewGuid(), board.Id, null, null, 0, 10, 20, null, null, 0, false,
         "note", 1, JsonSerializer.SerializeToElement(new { }), JsonSerializer.SerializeToElement(new { content = "Saved" }));
     var insert = new BoardMutationDto(Guid.NewGuid(), 1, [new ItemMutationDto(item, null, [], [], [tag.Id.ToString()])], []);

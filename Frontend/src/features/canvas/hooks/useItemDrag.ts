@@ -33,6 +33,7 @@ interface UseItemDragOptions {
   selectedIdsRef: RefObject<string[]>;
   zoomRef: RefObject<number>;
   measuredSizes: SizeMap;
+  collaboratorLockedIds?: ReadonlySet<string>;
 
   snapEnabled: boolean;
   snapValue: (value: number) => number;
@@ -53,6 +54,7 @@ export function useItemDrag({
   zoomRef,
   snapEnabled,
   measuredSizes,
+  collaboratorLockedIds,
   snapValue,
   pushHistory,
   onSelectItems,
@@ -116,7 +118,9 @@ export function useItemDrag({
       const clickedItem = items.find((item) => item.id === id);
 
       const movementLocked = (item: BoardItem) =>
-        !!item.locked || (item.type === 'frame' && isFrameMovementLocked(item, items, measuredSizes));
+        !!item.locked ||
+        collaboratorLockedIds?.has(item.id) ||
+        (item.type === 'frame' && isFrameMovementLocked(item, items, measuredSizes));
       if (clickedItem && movementLocked(clickedItem)) {
         /*
          * Selection already happened above,

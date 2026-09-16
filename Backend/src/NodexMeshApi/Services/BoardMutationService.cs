@@ -21,7 +21,10 @@ public interface IBoardMutationService
 /// BoardMutation contract: a board-level revision check, per-item optimistic concurrency,
 /// and full replacement of each touched item's links/tags/comments.
 /// </summary>
-public sealed class BoardMutationService(AppDbContext db, ILogger<BoardMutationService> logger)
+public sealed class BoardMutationService(
+    AppDbContext db,
+    ILogger<BoardMutationService> logger,
+    PresenceRegistry presence)
     : IBoardMutationService
 {
     private static readonly TimeSpan IdempotencyTtl = TimeSpan.FromHours(24);
@@ -102,6 +105,19 @@ public sealed class BoardMutationService(AppDbContext db, ILogger<BoardMutationS
 
         var touchedIds = mutation.Upserts.Select(u => u.Item.Id)
             .Concat(mutation.Deletes.Select(d => d.Id)).ToHashSet();
+
+        var lockedByCollaborator = presence.LockedItems(board.ProjectId, boardId, userId);
+        var presenceConflicts = touchedIds
+            .Where(lockedByCollaborator.Contains)
+            .Select(id => new ConflictDto(id, null, "presence_locked"))
+            .ToList();
+        if (presenceConflicts.Count > 0)
+        {
+            await tx.RollbackAsync(ct);
+            logger.LogInformation("Rejected mutation for {Count} collaborator-locked items on board {BoardId}",
+                presenceConflicts.Count, boardId);
+            return (409, new BoardMutationResultDto(board.Revision, [], presenceConflicts));
+        }
 
         var existing = await db.BoardItems
             .Where(i => i.BoardId == boardId && touchedIds.Contains(i.Id))
