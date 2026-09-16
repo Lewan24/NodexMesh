@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: nodexmesh-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nodexmesh}
+      POSTGRES_USER: ${POSTGRES_USER:-nodexmesh_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - nodexmesh-data:/var/lib/postgresql/data
+    # Not published to the host by default — only the api service on the internal
+    # network can reach it. Uncomment to connect with a local GUI client.
+    # ports:
+    #   - "5432:5432"
+    networks:
+      - nodexmesh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nodexmesh_app} -d ${POSTGRES_DB:-nodexmesh}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nodexmesh-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB:-nodexmesh};Username=${POSTGRES_USER:-nodexmesh_app};Password=${POSTGRES_PASSWORD}"
+      # Fails fast at startup if unset or under 32 chars — see Program.cs.
+      Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
+      Jwt__Issuer: ${JWT_ISSUER:-https://localhost:8080}
+      Jwt__Audience: ${JWT_AUDIENCE:-nodexmesh-web}
+      Jwt__AccessTokenMinutes: ${JWT_ACCESS_TOKEN_MINUTES:-15}
+      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:5173}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    networks:
+      - nodexmesh
+
+volumes:
+  nodexmesh-data:
+
+networks:
+  nodexmesh:
+    driver: bridge
