@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/NodexMeshApi/Dtos/AppearanceDtos.cs" Link="AppearanceDtos.cs" />
+    <Compile Include="../../src/NodexMeshApi/Dtos/BoardDtos.cs" Link="BoardDtos.cs" />
+    <Compile Include="../../src/NodexMeshApi/Services/BoardValidator.cs" Link="BoardValidator.cs" />
+    <Compile Include="../../src/NodexMeshApi/Models/BoardItemData.cs" Link="BoardItemData.cs" />
+    <Compile Include="../../src/NodexMeshApi/Common/Common.cs" Link="Common.cs" />
+  </ItemGroup>
+</Project>
