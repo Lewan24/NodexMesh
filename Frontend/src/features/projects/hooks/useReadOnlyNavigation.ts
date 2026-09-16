@@ -100,7 +100,11 @@ export function useReadOnlyNavigation() {
     pointerDown: (event: PointerEvent<HTMLDivElement>) => {
       if (touchMode || event.pointerType === 'touch' || ![0, 1].includes(event.button)) return;
       moved.current = false;
-      if (event.target instanceof Element && event.target.closest('a, video, audio, iframe')) return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest('a, button, input, select, textarea, video, audio, iframe, pre, code, .select-none')
+      )
+        return;
       event.preventDefault();
       drag.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
       event.currentTarget.setPointerCapture(event.pointerId);

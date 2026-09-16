@@ -8,14 +8,34 @@ import type { CodeItem } from '@/entities/board/types';
 import type { BlockUpdateHandler } from '../types';
 import ContentBlockShell from '../shared/ContentBlockShell';
 
+async function copyCode(content: string) {
+  try {
+    await navigator.clipboard.writeText(content);
+    return true;
+  } catch {
+    const textarea = document.createElement('textarea');
+    textarea.value = content;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand('copy');
+    textarea.remove();
+    return copied;
+  }
+}
+
 export default function CodeBlock({
   item,
   onUpdate,
   onDelete,
+  readOnly = false,
 }: {
   item: CodeItem;
   onUpdate: BlockUpdateHandler;
   onDelete: () => void;
+  readOnly?: boolean;
 }) {
   const { background, textColor, light } = useCardAppearance('#0d1117');
   const codeStyle = {
@@ -69,7 +89,7 @@ export default function CodeBlock({
                 </option>
               ))}
           </select>
-          {!item.locked && (
+          {!item.locked && !readOnly && (
             <button
               type="button"
               className="shrink-0 text-xs"
@@ -81,19 +101,20 @@ export default function CodeBlock({
               Auto-fit
             </button>
           )}
-          {!item.locked && (
+          {!item.locked && !readOnly && (
             <button className="text-xs" onMouseDown={(e) => e.stopPropagation()} onClick={() => setEditing(!editing)}>
               {editing ? 'Preview' : 'Edit'}
             </button>
           )}
           <button
+            type="button"
+            data-read-only-action="copy-code"
             className="text-xs"
             onMouseDown={(e) => e.stopPropagation()}
             onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(item.content);
+              if (await copyCode(item.content)) {
                 setCopyStatus('Copied!');
-              } catch {
+              } else {
                 setCopyStatus('Copy failed');
               }
             }}
@@ -114,7 +135,7 @@ export default function CodeBlock({
         onDoubleClick={() => setEditing(true)}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        {editing && !item.locked ? (
+        {editing && !item.locked && !readOnly ? (
           <textarea
             style={codeStyle}
             aria-label="Code content"
@@ -140,10 +161,7 @@ export default function CodeBlock({
             }}
           />
         ) : (
-          <pre
-            style={codeStyle}
-            className="p-4 text-sm leading-6 font-mono min-h-full cursor-grab active:cursor-grabbing select-none"
-          >
+          <pre style={codeStyle} className="p-4 text-sm leading-6 font-mono min-h-full cursor-text select-text">
             <code
               className={`hljs language-${language}`}
               style={{ padding: 0, background: 'transparent', fontFamily: 'inherit', fontSize: 'inherit' }}

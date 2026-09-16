@@ -54,6 +54,7 @@ import type {
 
 export interface BlockRendererProps {
   zoom?: number;
+  readOnly?: boolean;
   item: BoardItem;
   isSelected: boolean;
   isDragOver?: boolean;
@@ -75,6 +76,7 @@ export interface BlockRendererProps {
 
 export default function BlockRenderer({
   zoom = 1,
+  readOnly = false,
   item,
   isSelected,
   isDragOver,
@@ -133,7 +135,7 @@ export default function BlockRenderer({
     case 'code':
       return (
         <Suspense fallback={<LoadingBlock item={item} />}>
-          <CodeBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />
+          <CodeBlock item={item} onUpdate={onUpdate} onDelete={onDelete} readOnly={readOnly} />
         </Suspense>
       );
     case 'dispenser':

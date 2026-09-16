@@ -1,34 +1,51 @@
-import { memo, useMemo, useRef, type SyntheticEvent } from 'react';
+import { memo, useCallback, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { useReadOnlyNavigation } from '../hooks/useReadOnlyNavigation';
 import type { BoardItem } from '@/entities/board/types';
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
 import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
+import ItemWatcher from '@/features/canvas/components/ItemWatcher';
+import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import './sharing.css';
 
 const noop = () => {};
 
-/** Render existing block visuals without mounting any canvas mutation, history or clipboard hooks. */
+/** Render existing block visuals without mounting any canvas mutation or history hooks. */
 const ReadOnlyBlock = memo(function ReadOnlyBlock({ item }: { item: BoardItem }) {
-  const stopEditing = (event: SyntheticEvent) => {
-    // Preserve native selection, scrolling and link navigation, but do not dispatch
-    // editor activation or drag handlers in the reused interactive blocks.
+  const stopBoardNavigation = (event: SyntheticEvent) => {
+    // Keep native selection, scrolling, links and copy actions working without
+    // allowing a block interaction to start canvas navigation.
     event.stopPropagation();
   };
+  const preventMutation = (event: SyntheticEvent) => {
+    const target = event.target as HTMLElement;
+    const allowed = target.closest('a, [data-read-only-action]');
+    const mutatingControl = target.closest('button, input, select, textarea, [contenteditable="true"]');
+    if (allowed) {
+      return;
+    }
+    if (mutatingControl) {
+      event.preventDefault();
+      event.stopPropagation();
+    } else {
+      event.stopPropagation();
+    }
+  };
   return (
-    <fieldset
-      disabled
+    <div
       className="read-only-block"
       aria-label={`${item.type} block (read-only)`}
-      onClickCapture={stopEditing}
-      onDoubleClickCapture={stopEditing}
-      onMouseDownCapture={stopEditing}
-      onPointerDownCapture={stopEditing}
-      onKeyDownCapture={stopEditing}
+      onClickCapture={preventMutation}
+      onDoubleClickCapture={(event) => {
+        event.stopPropagation();
+      }}
+      onMouseDownCapture={stopBoardNavigation}
+      onPointerDownCapture={stopBoardNavigation}
       onBeforeInputCapture={(event) => {
         event.preventDefault();
         event.stopPropagation();
       }}
+      onChangeCapture={preventMutation}
       onDropCapture={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -37,13 +54,14 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({ item }: { item: BoardItem })
     >
       <BlockRenderer
         item={item}
+        readOnly
         isSelected={false}
         onUpdate={noop}
         onDelete={noop}
         onFitFrame={noop}
         onLineEndpointDrag={noop}
       />
-    </fieldset>
+    </div>
   );
 });
 
@@ -51,9 +69,21 @@ export default function ReadOnlyBoard({ items }: { items: BoardItem[] }) {
   const navigation = useReadOnlyNavigation();
   const { camera, touchMode } = navigation;
   const zoom = camera.zoom;
+  const [measuredSizes, setMeasuredSizes] = useState<SizeMap>(() => new Map());
+  const handleItemResize = useCallback((itemId: string, width: number, height: number) => {
+    setMeasuredSizes((current) => {
+      const previous = current.get(itemId);
+      if (previous && Math.abs(previous.width - width) < 0.5 && Math.abs(previous.height - height) < 0.5) {
+        return current;
+      }
+      const next = new Map(current);
+      next.set(itemId, { width, height });
+      return next;
+    });
+  }, []);
   const rendered = useMemo(
-    () => items.map((item) => (item.type === 'line' ? resolveLineItem(item, items) : item)),
-    [items],
+    () => items.map((item) => (item.type === 'line' ? resolveLineItem(item, items, measuredSizes) : item)),
+    [items, measuredSizes],
   );
   const { minX, minY, width, height } = useMemo(() => {
     let left = 0,
@@ -141,7 +171,9 @@ export default function ReadOnlyBoard({ items }: { items: BoardItem[] }) {
                     width: item.type === 'line' ? undefined : item.width,
                   }}
                 >
-                  <ReadOnlyBlock item={item} />
+                  <ItemWatcher itemId={item.id} onResize={handleItemResize}>
+                    <ReadOnlyBlock item={item} />
+                  </ItemWatcher>
                 </div>
               ))}
             </div>
