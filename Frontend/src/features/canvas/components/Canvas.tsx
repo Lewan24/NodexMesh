@@ -1103,6 +1103,7 @@ export default function Canvas({
               key={item.id}
               item={item}
               renderedItem={renderedItem}
+              measuredSize={measuredSizes.get(item.id)}
               isFrameCapturePreview={frameCapturePreviewIds.includes(item.id)}
               selectedColumnItemId={
                 item.type === 'column' && selectedColumnItem?.columnId === item.id ? selectedColumnItem.item.id : null

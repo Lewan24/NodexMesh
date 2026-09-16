@@ -32,7 +32,8 @@ public sealed class BoardMutationService(AppDbContext db, ILogger<BoardMutationS
             ?? throw new ApiException(404, "not_found", "Board not found.");
 
         var items = await db.BoardItems.AsNoTracking().Where(i => i.BoardId == boardId).ToListAsync(ct);
-        var itemIds = items.Select(i => i.Id).ToHashSet();
+        // Keep relation filtering in SQL instead of sending every item ID back as a parameter.
+        var itemIds = db.BoardItems.Where(i => i.BoardId == boardId).Select(i => i.Id);
 
         var links = await db.ItemLinks.AsNoTracking()
             .Where(l => itemIds.Contains(l.SourceItemId)).ToListAsync(ct);

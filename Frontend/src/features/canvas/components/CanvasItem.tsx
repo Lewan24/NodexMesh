@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { BoardItem, ChecklistEntry, KanbanCard } from '@/entities/board/types';
 
 import BlockRenderer from '@/features/blocks/BlockRenderer';
@@ -14,6 +14,7 @@ interface CanvasItemProps {
   item: BoardItem;
   renderedItem: BoardItem;
   zoom: number;
+  measuredSize?: { width: number; height: number };
 
   isSettling?: boolean;
   isDragging?: boolean;
@@ -63,6 +64,7 @@ interface CanvasItemProps {
 
 export default function CanvasItem({
   zoom,
+  measuredSize,
   item,
   renderedItem,
   isSelected,
@@ -95,6 +97,20 @@ export default function CanvasItem({
   onKanbanCardDropOutside,
   onQuickConnectStart,
 }: CanvasItemProps) {
+  const [hasFocus, setHasFocus] = useState(false);
+  // Only simplify already measured blocks so connection geometry stays accurate.
+  const simplified =
+    zoom < 0.3 &&
+    measuredSize &&
+    !isSelected &&
+    !isDragging &&
+    !isDragOver &&
+    !hasFocus &&
+    !searchActive &&
+    item.type !== 'line' &&
+    item.type !== 'drawing' &&
+    item.type !== 'section-title' &&
+    item.type !== 'frame';
   const showDragEffect = isDragging && item.type !== 'line';
 
   // Only section titles change their content with the camera scale. Keep the
@@ -265,7 +281,31 @@ export default function CanvasItem({
         />
       )}
 
-      {content}
+      <div
+        onFocusCapture={() => setHasFocus(true)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setHasFocus(false);
+        }}
+      >
+        {simplified ? (
+          <div
+            className="item-rounded border p-3 overflow-hidden space-y-3"
+            style={{
+              width: measuredSize.width,
+              height: measuredSize.height,
+              background: 'var(--color-surface)',
+              borderColor: 'var(--color-border)',
+            }}
+          >
+            <div className="h-3 w-2/5 rounded-full" style={{ background: 'var(--color-border)' }} />
+            <div className="h-2 w-full rounded-full" style={{ background: 'var(--color-border-soft)' }} />
+            <div className="h-2 w-4/5 rounded-full" style={{ background: 'var(--color-border-soft)' }} />
+            <div className="h-2 w-3/5 rounded-full" style={{ background: 'var(--color-border-soft)' }} />
+          </div>
+        ) : (
+          content
+        )}
+      </div>
     </div>
   );
 }

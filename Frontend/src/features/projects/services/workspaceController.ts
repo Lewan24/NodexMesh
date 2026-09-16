@@ -143,11 +143,11 @@ export class WorkspaceController {
     if (projects === this.state.projects) return;
     const blocked = this.state.status === 'error' || this.state.status === 'conflict';
     this.publish({ projects, ...(blocked ? {} : { status: 'pending' }) });
-    clearTimeout(this.timer);
-    if (!blocked)
+    // Batch from the first edit; continuous typing must not postpone saving forever.
+    if (!blocked && !this.timer)
       this.timer = setTimeout(() => {
         void this.flush();
-      }, 1100);
+      }, 250);
   };
 
   private report(error: unknown) {
@@ -159,6 +159,7 @@ export class WorkspaceController {
 
   flush = (): Promise<void> => {
     clearTimeout(this.timer);
+    this.timer = undefined;
     if (this.running) return this.running;
     if (this.syncing) return this.syncing.catch(() => {}).then(() => this.flush());
     if (this.state.status === 'loading' || this.state.status === 'error' || this.state.status === 'conflict')
@@ -178,8 +179,10 @@ export class WorkspaceController {
 
   discardForReset = async (): Promise<void> => {
     clearTimeout(this.timer);
+    this.timer = undefined;
     await this.running;
     clearTimeout(this.timer);
+    this.timer = undefined;
     ++this.generation;
     this.retryOperation = undefined;
     this.publish({ status: 'saved', error: '' });

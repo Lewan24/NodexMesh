@@ -22,8 +22,11 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
   return {
     async sync(previous, signal) {
       const id = previous.project.id;
-      const project = parseProjectRecord(await client.request(`/projects/${segment(id)}`, { signal }));
-      const value = await client.request(`/projects/${segment(id)}/boards`, { signal });
+      const [projectValue, value] = await Promise.all([
+        client.request(`/projects/${segment(id)}`, { signal }),
+        client.request(`/projects/${segment(id)}/boards`, { signal }),
+      ]);
+      const project = parseProjectRecord(projectValue);
       if (!Array.isArray(value)) fail(422, 'invalid_response', 'Invalid board collection.');
       const current = value.find((entry) => entry.id === previous.board.board.id);
       if (!current || typeof current.revision !== 'string') fail(404, 'not_found', 'Board is no longer available.');
@@ -101,8 +104,11 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
           fail(422, 'batch_limit', 'Save fewer than 2,001 item changes at a time.');
         let body = mutationBodies.get(mutation);
         if (!body) {
-          const before = parseBoardSnapshot(await client.request(`/boards/${segment(boardId)}`));
-          const tags = new Map(before.tags.map((tag) => [tag.normalizedName, tag]));
+          // Untagged edits do not need a full snapshot before the write.
+          const existingTags = mutation.upserts.some((entry) => entry.tags.length > 0)
+            ? parseBoardSnapshot(await client.request(`/boards/${segment(boardId)}`)).tags
+            : [];
+          const tags = new Map(existingTags.map((tag) => [tag.normalizedName, tag]));
           const upserts = [];
           for (const entry of mutation.upserts) {
             if (entry.tags.length > 100) fail(422, 'invalid_tag', 'An item may have at most 100 tags.');

@@ -87,7 +87,7 @@ export function useProjects(userId: string): UseProjectsResult {
         if (!abort.signal.aborted) setLiveStatus('Live updates reconnecting...');
       } finally {
         running = false;
-        if (!abort.signal.aborted) timer = setTimeout(() => void tick(), Math.min(30000, 2000 * 2 ** failures));
+        if (!abort.signal.aborted) timer = setTimeout(() => void tick(), Math.min(30000, 1500 * 2 ** failures));
       }
     };
     const wake = () => {

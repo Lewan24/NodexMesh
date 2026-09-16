@@ -315,3 +315,40 @@ test('role downgrade preserves unsaved metadata instead of trying to write with 
   assert.equal(project(controller).name, 'Unsent rename');
   assert.notEqual((await api.projects.list())[0].project.name, 'Unsent rename');
 });
+
+test('untagged mutations skip the pre-save snapshot and still reload the acknowledged board', async () => {
+  const { api } = await setup();
+  const snapshot = (await api.projects.list())[0];
+  const calls = [];
+  const http = createHttpWorkspace({
+    request: async (path, options) => {
+      calls.push(options?.method ?? 'GET');
+      if (options?.method === 'POST') return { boardRevision: snapshot.board.board.revision, conflicts: [] };
+      return snapshot.board;
+    },
+  });
+  const mutation = diffBoard(
+    snapshot.board,
+    toProjectView(snapshot).items.map((item) => ({ ...item, x: item.x + 10, tags: [] })),
+  );
+  await http.boards.mutate(snapshot.project.id, snapshot.board.board.id, mutation);
+  assert.deepEqual(calls, ['POST', 'GET']);
+});
+
+test('continuous edits start saving before the user stops typing', async () => {
+  const { a } = await setup();
+  let writes = 0;
+  a.flush = async () => {
+    writes++;
+  };
+  const edit = () => a.update((projects) => projects.map((project) => ({ ...project, name: `${project.name}x` })));
+  edit();
+  const typing = setInterval(edit, 40);
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    assert.ok(writes > 0, 'saving must not wait for typing to stop');
+  } finally {
+    clearInterval(typing);
+    await a.discardForReset();
+  }
+});
