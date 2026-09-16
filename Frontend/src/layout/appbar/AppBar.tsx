@@ -13,6 +13,9 @@ import ProjectMenu from './components/ProjectMenu';
 import ProjectTransfer from './components/ProjectTransfer';
 
 interface AppBarProps {
+  onShare?: () => void;
+  onRefresh: () => Promise<void>;
+  liveStatus?: string;
   onAppearance: () => void;
   projects: Project[];
   activeProjectId: string;
@@ -31,6 +34,9 @@ interface AppBarProps {
 type OpenMenu = 'projects' | 'account' | null;
 
 export default function AppBar({
+  onShare,
+  onRefresh,
+  liveStatus,
   onAppearance,
   projects,
   activeProjectId,
@@ -90,6 +96,31 @@ export default function AppBar({
           onEmptyTrash={onEmptyTrash}
         />
 
+        <button
+          onClick={onShare}
+          disabled={!onShare}
+          title={onShare ? 'Manage project sharing' : 'Sharing requires a saved project connected to the API'}
+          className="px-3 py-2 text-sm text-white disabled:opacity-40"
+        >
+          Share
+        </button>
+        <button
+          onClick={() => void onRefresh()}
+          className="px-3 py-2 text-sm text-white"
+          title="Save your changes and reload projects"
+        >
+          Refresh
+        </button>
+        {liveStatus && (
+          <span
+            className="hidden lg:inline-flex items-center rounded-full px-2 py-1 text-[11px]"
+            style={{ background: 'var(--color-chrome-bg-alt)', color: 'var(--color-chrome-text-faint)' }}
+            role="status"
+            title="Collaboration status"
+          >
+            {liveStatus}
+          </span>
+        )}
         <ProjectTransfer
           project={projects.find((project) => project.id === activeProjectId)}
           onImport={onImportProject}

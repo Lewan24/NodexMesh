@@ -7,6 +7,7 @@ interface UseCanvasHistoryOptions {
   getItems: () => BoardItem[];
   restoreItems: (items: BoardItem[]) => void;
   projectId: string;
+  remoteVersion?: number;
   limit?: number;
 }
 
@@ -14,15 +15,20 @@ export function useCanvasHistory({
   getItems,
   restoreItems,
   projectId,
+  remoteVersion = 0,
   limit = CANVAS_HISTORY_LIMIT,
 }: UseCanvasHistoryOptions) {
   const state = useRef<{ id: string; history: ItemHistory } | null>(null);
   if (!state.current || state.current.id !== projectId)
     state.current = { id: projectId, history: new ItemHistory(getItems(), limit) };
   const history = state.current.history;
+  const observedRemoteVersion = useRef(remoteVersion);
   // Covers every persisted block mutation, including nested blocks and portal editors.
   useLayoutEffect(() => {
-    history.observe(getItems());
+    if (observedRemoteVersion.current !== remoteVersion) {
+      history.rebase(getItems());
+      observedRemoteVersion.current = remoteVersion;
+    } else history.observe(getItems());
   });
   const pushHistory = useCallback(() => {
     history.observe(getItems());

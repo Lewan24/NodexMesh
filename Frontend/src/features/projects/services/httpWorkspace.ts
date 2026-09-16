@@ -20,6 +20,23 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
     return { project, board };
   };
   return {
+    async sync(previous, signal) {
+      const id = previous.project.id;
+      const project = parseProjectRecord(await client.request(`/projects/${segment(id)}`, { signal }));
+      const value = await client.request(`/projects/${segment(id)}/boards`, { signal });
+      if (!Array.isArray(value)) fail(422, 'invalid_response', 'Invalid board collection.');
+      const current = value.find((entry) => entry.id === previous.board.board.id);
+      if (!current || typeof current.revision !== 'string') fail(404, 'not_found', 'Board is no longer available.');
+      const changed = current.revision !== previous.board.board.revision;
+      const board = changed
+        ? parseBoardSnapshot(await client.request(`/boards/${segment(current.id)}`, { signal }))
+        : previous.board;
+      if (board.board.projectId !== id) fail(422, 'invalid_scope', 'Invalid board project.');
+      projects.set(id, project);
+      return changed || project.revision !== previous.project.revision || project.role !== previous.project.role
+        ? { project, board }
+        : null;
+    },
     projects: {
       async list(signal) {
         const value = await client.request('/projects', { signal });

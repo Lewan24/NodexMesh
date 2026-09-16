@@ -1,3 +1,5 @@
+import { mergeProject } from './collaborationMerge';
+import { canonicalJson } from '@/shared/api/canonicalJson';
 import { createId } from '@/shared/lib/createId';
 import type { Project, ProjectSnapshot } from '@/entities/project/types';
 import { ApiError, errorMessage } from '@/shared/api/errors';
@@ -19,6 +21,75 @@ export class WorkspaceController {
   private running: Promise<void> | undefined;
   private retryOperation: (() => Promise<void>) | undefined;
   private generation = 0;
+  private syncing: Promise<void> | undefined;
+  private remoteVersions = new Map<string, number>();
+  private rebases = 0;
+  getRemoteVersion = (id: string) => this.remoteVersions.get(id) ?? 0;
+
+  private acceptRemote(previous: ProjectSnapshot, remote: ProjectSnapshot, base = toProjectView(previous)) {
+    const local = this.state.projects.find((project) => project.id === previous.project.id);
+    if (!local) return;
+    const remoteView = toProjectView(remote);
+    const merged = mergeProject(base, local, remoteView, remote);
+    if (
+      (remote.project.role === 'Viewer' || remote.project.role === 'Commenter') &&
+      canonicalJson(merged) !== canonicalJson(remoteView)
+    ) {
+      throw new ApiError({
+        status: 409,
+        code: 'access_changed',
+        title: 'Your editing access changed. Your local draft is preserved; download it before reloading.',
+        type: 'about:blank',
+      });
+    }
+    if (canonicalJson(local.items) !== canonicalJson(merged.items))
+      this.remoteVersions.set(local.id, this.getRemoteVersion(local.id) + 1);
+    this.confirmed.set(local.id, remote);
+    this.publish({ projects: this.state.projects.map((project) => (project.id === local.id ? merged : project)) });
+  }
+
+  /** Background reads never reset the loading state, viewport, selection or pending draft. */
+  syncProject = (id: string, signal?: AbortSignal): Promise<void> => {
+    if (this.syncing) return this.syncing;
+    const previous = this.confirmed.get(id);
+    if (
+      !previous ||
+      this.running ||
+      this.retryOperation ||
+      previous.project.deletedAt ||
+      ['loading', 'error', 'conflict'].includes(this.state.status)
+    )
+      return Promise.resolve();
+    const generation = this.generation;
+    this.syncing = (async () => {
+      try {
+        const remote = this.services.sync
+          ? await this.services.sync(previous, signal)
+          : { ...previous, board: await this.services.boards.get(id, previous.board.board.id, signal) };
+        if (!remote || signal?.aborted || generation !== this.generation || this.confirmed.get(id) !== previous) return;
+        if (
+          BigInt(remote.board.board.revision) < BigInt(previous.board.board.revision) ||
+          BigInt(remote.project.revision) < BigInt(previous.project.revision)
+        )
+          return;
+        this.acceptRemote(previous, remote);
+      } catch (error) {
+        if (signal?.aborted || generation !== this.generation) return;
+        if (error instanceof ApiError && error.problem.status === 409) this.report(error);
+        else if (error instanceof ApiError && [403, 404].includes(error.problem.status)) {
+          const local = this.state.projects.find((project) => project.id === id);
+          if (local && canonicalJson(local) === canonicalJson(toProjectView(previous))) {
+            this.confirmed.delete(id);
+            this.publish({ projects: this.state.projects.filter((project) => project.id !== id) });
+          } else
+            this.report(new Error('This project is no longer accessible. Download your local draft before reloading.'));
+        } else throw error;
+      }
+    })().finally(() => {
+      this.syncing = undefined;
+    });
+    return this.syncing;
+  };
   private projectIds = new Map<string, string>();
   resolveProjectId = (id: string) => this.projectIds.get(id) ?? id;
 
@@ -54,6 +125,18 @@ export class WorkspaceController {
   update = (action: Project[] | ((previous: Project[]) => Project[])) => {
     if (this.state.status === 'loading') return;
     const next = typeof action === 'function' ? action(this.state.projects) : action;
+    for (const previous of this.state.projects) {
+      const role = this.confirmed.get(previous.id)?.project.role;
+      const desired = next.find((project) => project.id === previous.id);
+      if (!role || role === 'Owner') continue;
+      if (
+        !desired ||
+        desired.deletedAt !== previous.deletedAt ||
+        ((role === 'Viewer' || role === 'Commenter') && JSON.stringify(desired) !== JSON.stringify(previous))
+      ) {
+        return;
+      }
+    }
     const projects = next.map((project) =>
       project.name === project.name.trim() ? project : { ...project, name: project.name.trim() },
     );
@@ -77,6 +160,7 @@ export class WorkspaceController {
   flush = (): Promise<void> => {
     clearTimeout(this.timer);
     if (this.running) return this.running;
+    if (this.syncing) return this.syncing.catch(() => {}).then(() => this.flush());
     if (this.state.status === 'loading' || this.state.status === 'error' || this.state.status === 'conflict')
       return Promise.resolve();
     this.running = this.drain().finally(() => {
@@ -102,6 +186,7 @@ export class WorkspaceController {
   };
 
   private async drain() {
+    this.rebases = 0;
     this.publish({ status: 'saving', error: '' });
     try {
       while (true) {
@@ -152,15 +237,50 @@ export class WorkspaceController {
           clientMutationId: createId(),
         };
         return async () => {
-          previous.project = await this.services.projects.update(desired.id, input);
+          try {
+            previous.project = await this.services.projects.update(desired.id, input);
+          } catch (error) {
+            if (
+              !(error instanceof ApiError) ||
+              error.problem.status !== 409 ||
+              error.problem.code === 'idempotency_conflict' ||
+              !this.services.sync ||
+              ++this.rebases > 3
+            )
+              throw error;
+            const remote = await this.services.sync(previous);
+            if (!remote) throw error;
+            this.acceptRemote(previous, remote);
+          }
         };
       }
       if (boardMutation)
         return async () => {
-          const board = await this.services.boards.mutate(desired.id, previous.board.board.id, boardMutation);
+          let board;
+          try {
+            board = await this.services.boards.mutate(desired.id, previous.board.board.id, boardMutation);
+          } catch (error) {
+            if (
+              !(error instanceof ApiError) ||
+              error.problem.status !== 409 ||
+              error.problem.code === 'idempotency_conflict' ||
+              ++this.rebases > 3
+            )
+              throw error;
+            // A rejected revision has not committed. Rebase independent edits and mint a new mutation ID.
+            const remote = await this.services.boards.get(desired.id, previous.board.board.id);
+            this.acceptRemote(previous, { ...previous, board: remote });
+            return;
+          }
           if (BigInt(board.board.revision) < BigInt(previous.board.board.revision))
             throw new Error('Stale board response');
-          previous.board = board;
+          // The follow-up snapshot may already contain another collaborator's commit.
+          // Preserve edits made while our own request was in flight as well.
+          this.acceptRemote(
+            previous,
+            { ...previous, board },
+            { ...desired, ...toProjectView(previous), items: desired.items },
+          );
         };
     }
     for (const [id, previous] of this.confirmed) {

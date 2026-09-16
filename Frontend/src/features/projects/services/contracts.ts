@@ -23,6 +23,8 @@ export interface BoardRepository {
 }
 
 export interface WorkspaceServices {
+  /** Check revisions first; return a snapshot only if project metadata or board content changed. */
+  sync?(previous: ProjectSnapshot, signal?: AbortSignal): Promise<ProjectSnapshot | null>;
   projects: ProjectRepository;
   boards: BoardRepository;
 }

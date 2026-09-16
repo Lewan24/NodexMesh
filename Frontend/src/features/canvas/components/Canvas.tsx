@@ -2,7 +2,7 @@ import { useCanvasTouch } from '../hooks/useCanvasTouch';
 import PasteStyleDialog from './PasteStyleDialog';
 import { copyItemStyle, pasteItemStyle } from '../utils/itemStyle';
 import type { ItemStyle } from '../utils/itemStyle';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import type { BoardItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
@@ -66,6 +66,7 @@ interface ToolDragGhostState extends ToolDragDetail {
 
 interface CanvasProps {
   project: Project;
+  remoteVersion?: number;
   selectedTool: ToolType;
   pan: { x: number; y: number };
   zoom: number;
@@ -92,6 +93,7 @@ interface CanvasProps {
 
 export default function Canvas({
   project,
+  remoteVersion = 0,
   selectedTool,
   pan,
   zoom,
@@ -179,6 +181,11 @@ export default function Canvas({
       }),
     );
   }, []);
+  useLayoutEffect(() => {
+    if (!remoteVersion) return;
+    suppressAutoLayout.current = true;
+    resumeAutoLayout();
+  }, [remoteVersion, resumeAutoLayout]);
   useEffect(() => {
     let resizing = false;
     const start = (event: MouseEvent) => {
@@ -217,6 +224,7 @@ export default function Canvas({
   );
   const { pushHistory, undo } = useCanvasHistory({
     projectId: project.id,
+    remoteVersion,
     getItems: getCurrentItems,
     restoreItems: restoreHistoryItems,
   });

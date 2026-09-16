@@ -1,3 +1,4 @@
+import { mergeChanges } from '@/features/projects/services/collaborationMerge';
 import type { BoardItem } from '@/entities/board/types';
 
 /** Immutable board snapshots, grouped by user interaction rather than render count. */
@@ -36,6 +37,18 @@ export class ItemHistory {
     this.current = previous;
     this.checkpoint = true;
     return previous;
+  }
+  /** Carry incoming edits through undo checkpoints; never undo a collaborator's changes. */
+  rebase(items: BoardItem[]) {
+    this.past = this.past.flatMap((previous) => {
+      try {
+        return [mergeChanges(this.current, previous, items) as BoardItem[]];
+      } catch {
+        return [];
+      }
+    });
+    this.current = items;
+    this.checkpoint = true;
   }
   clear(items: BoardItem[]) {
     this.past = [];

@@ -11,6 +11,8 @@ import { registerSaveGuard } from '@/shared/api/pendingChanges';
 
 interface UseProjectsResult {
   status: WorkspaceState['status'];
+  remoteVersion: number;
+  liveStatus: string;
   error: string;
   retry: () => Promise<void>;
   reload: () => Promise<void>;
@@ -59,6 +61,50 @@ export function useProjects(userId: string): UseProjectsResult {
   const activeProject =
     projects.find((project) => project.id === controller.resolveProjectId(activeProjectId) && !project.deletedAt) ??
     projects.find((project) => !project.deletedAt);
+
+  const [liveStatus, setLiveStatus] = useState('Connecting live updates...');
+  const viewedProjectId = activeProject?.id ?? '';
+  useEffect(() => {
+    if (isMockDataSource || !viewedProjectId) return;
+    const abort = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+    let running = false;
+    let failures = 0;
+    const tick = async () => {
+      if (running || abort.signal.aborted) return;
+      clearTimeout(timer);
+      if (document.hidden) {
+        timer = setTimeout(() => void tick(), 2000);
+        return;
+      }
+      running = true;
+      try {
+        await controller.syncProject(viewedProjectId, abort.signal);
+        failures = 0;
+        if (!abort.signal.aborted) setLiveStatus('Live updates on');
+      } catch {
+        failures++;
+        if (!abort.signal.aborted) setLiveStatus('Live updates reconnecting...');
+      } finally {
+        running = false;
+        if (!abort.signal.aborted) timer = setTimeout(() => void tick(), Math.min(30000, 2000 * 2 ** failures));
+      }
+    };
+    const wake = () => {
+      if (!document.hidden) void tick();
+    };
+    void tick();
+    window.addEventListener('online', wake);
+    window.addEventListener('focus', wake);
+    document.addEventListener('visibilitychange', wake);
+    return () => {
+      abort.abort();
+      clearTimeout(timer);
+      window.removeEventListener('online', wake);
+      window.removeEventListener('focus', wake);
+      document.removeEventListener('visibilitychange', wake);
+    };
+  }, [controller, viewedProjectId]);
 
   const renameProject = useCallback(
     (id: string, name: string) => {
@@ -138,6 +184,12 @@ export function useProjects(userId: string): UseProjectsResult {
   }, [userId, setProjects]);
 
   return {
+    remoteVersion: controller.getRemoteVersion(viewedProjectId),
+    liveStatus: isMockDataSource
+      ? ''
+      : status === 'conflict' || status === 'error'
+        ? 'Live updates paused - resolve unsaved changes'
+        : liveStatus,
     status,
     error,
     retry: controller.retry,

@@ -1,3 +1,7 @@
+import SharingDialog from '@/features/projects/components/SharingDialog';
+import ReadOnlyBoard from '@/features/projects/components/ReadOnlyBoard';
+import { sharingApi } from '@/app/services';
+import { flushPendingChanges } from '@/shared/api/pendingChanges';
 import { createId } from '@/shared/lib/createId';
 const AppearanceDialog = lazy(() => import('@/features/appearance/AppearanceDialog'));
 import { useTheme } from '@/app/providers/ThemeProvider';
@@ -22,6 +26,8 @@ interface BoardPageProps {
 export default function BoardPage({ userId }: BoardPageProps) {
   const {
     status,
+    remoteVersion,
+    liveStatus,
     error,
     retry,
     reload,
@@ -42,6 +48,8 @@ export default function BoardPage({ userId }: BoardPageProps) {
 
   const { setScope } = useTheme();
   const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [sharingOpen, setSharingOpen] = useState(false);
+  const readOnly = activeProject?.role === 'Viewer' || activeProject?.role === 'Commenter';
   useEffect(() => {
     setScope(userId, activeProjectId);
   }, [userId, activeProjectId, setScope]);
@@ -218,6 +226,11 @@ export default function BoardPage({ userId }: BoardPageProps) {
   const appBar = (
     <>
       <AppBar
+        onShare={activeProject && sharingApi && status === 'saved' ? () => setSharingOpen(true) : undefined}
+        onRefresh={async () => {
+          if (await flushPendingChanges()) await reload();
+        }}
+        liveStatus={liveStatus}
         onAppearance={() => setAppearanceOpen(true)}
         projects={projects}
         activeProjectId={activeProjectId}
@@ -239,6 +252,18 @@ export default function BoardPage({ userId }: BoardPageProps) {
         onSearchQueryChange={setSearchQuery}
       />
       <SaveStatus status={status} error={error} projects={projects} retry={retry} reload={reload} />
+      {sharingOpen && activeProject && sharingApi && (
+        <SharingDialog
+          key={activeProject.id}
+          project={activeProject}
+          userId={userId}
+          onClose={() => setSharingOpen(false)}
+          onLeave={() => {
+            setSharingOpen(false);
+            void reload();
+          }}
+        />
+      )}
       {appearanceOpen && (
         <Suspense fallback={null}>
           <AppearanceDialog projects={projects} onClose={() => setAppearanceOpen(false)} />
@@ -277,33 +302,38 @@ export default function BoardPage({ userId }: BoardPageProps) {
         className="relative isolate z-0 flex flex-1 min-h-0 min-w-0 w-full overflow-hidden"
         style={{ backgroundColor: 'var(--color-app-bg)' }}
       >
-        <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />
+        {!readOnly && <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />}
 
-        <Canvas
-          key={activeProjectId}
-          project={activeProject}
-          selectedTool={selectedTool}
-          pan={pan}
-          zoom={zoom}
-          selectedIds={selectedIds}
-          onPanChange={setPan}
-          onZoomChange={setZoom}
-          onSelectTool={setSelectedTool}
-          onSelectItems={setSelectedIds}
-          onGroupSelected={handleGroupSelected}
-          onAddItem={addItem}
-          onUpdateItem={updateItem}
-          onDeleteItem={deleteItem}
-          onDeleteItems={deleteItems}
-          onBringForward={bringForward}
-          onSendBackward={sendBackward}
-          onBringToFront={bringToFront}
-          onSendToBack={sendToBack}
-          onDropOnColumn={handleDropOnColumn}
-          onEjectFromColumn={handleEjectFromColumn}
-          onRestoreItems={restoreItems}
-          searchQuery={searchQuery}
-        />
+        {readOnly ? (
+          <ReadOnlyBoard key={activeProjectId} items={activeProject.items} />
+        ) : (
+          <Canvas
+            key={activeProjectId}
+            project={activeProject}
+            remoteVersion={remoteVersion}
+            selectedTool={selectedTool}
+            pan={pan}
+            zoom={zoom}
+            selectedIds={selectedIds}
+            onPanChange={setPan}
+            onZoomChange={setZoom}
+            onSelectTool={setSelectedTool}
+            onSelectItems={setSelectedIds}
+            onGroupSelected={handleGroupSelected}
+            onAddItem={addItem}
+            onUpdateItem={updateItem}
+            onDeleteItem={deleteItem}
+            onDeleteItems={deleteItems}
+            onBringForward={bringForward}
+            onSendBackward={sendBackward}
+            onBringToFront={bringToFront}
+            onSendToBack={sendToBack}
+            onDropOnColumn={handleDropOnColumn}
+            onEjectFromColumn={handleEjectFromColumn}
+            onRestoreItems={restoreItems}
+            searchQuery={searchQuery}
+          />
+        )}
       </div>
     </div>
   );

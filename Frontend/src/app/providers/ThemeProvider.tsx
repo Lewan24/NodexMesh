@@ -206,3 +206,38 @@ export function useTheme(): ThemeContextValue {
   if (!context) throw new Error('ThemeProvider is required');
   return context;
 }
+
+export function PublicAppearanceProvider({
+  appearance: shared,
+  children,
+}: {
+  appearance: import('@/entities/project/shareTypes').PublicAppearance | null;
+  children: React.ReactNode;
+}) {
+  const parent = useTheme();
+  const appearance: Appearance = {
+    ...parent.appearance,
+    font: (shared?.font as FontFamily) || parent.appearance.font,
+    light: { ...parent.appearance.light, ...shared?.light },
+    dark: { ...parent.appearance.dark, ...shared?.dark },
+  };
+  const palette = appearance[parent.theme];
+  return (
+    <ThemeContext.Provider value={{ ...parent, appearance }}>
+      <div
+        className="flex min-h-0 flex-1 flex-col"
+        style={
+          {
+            '--canvas-background': paletteBackground(palette, 'canvas'),
+            '--color-surface': palette.default,
+            '--color-surface-alt': palette.accent1,
+            '--color-accent': palette.primary,
+            '--project-font': getFontFamilyCss(appearance.font),
+          } as React.CSSProperties
+        }
+      >
+        {children}
+      </div>
+    </ThemeContext.Provider>
+  );
+}

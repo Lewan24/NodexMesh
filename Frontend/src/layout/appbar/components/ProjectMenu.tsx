@@ -135,7 +135,8 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{project.name}</span>
                     <span className="block text-xs opacity-60">
-                      {project.items.length} items
+                      {project.items.length} items{' '}
+                      {project.role && project.role !== 'Owner' ? ` / Shared / ${project.role}` : ''}
                       {project.deletedAt ? ` · Deleted ${new Date(project.deletedAt).toLocaleDateString()}` : ''}
                     </span>
                   </span>
@@ -157,6 +158,7 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                   <>
                     <button
                       className="project-action"
+                      disabled={project.role === 'Viewer' || project.role === 'Commenter'}
                       aria-label={`Rename ${project.name}`}
                       title="Rename project"
                       onClick={() => {
@@ -168,6 +170,7 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                     </button>
                     <button
                       className="project-action"
+                      disabled={!!project.role && project.role !== 'Owner'}
                       aria-label={`Move ${project.name} to trash`}
                       title="Move to trash"
                       onClick={() => {

@@ -127,6 +127,7 @@ export function toProjectView(snapshot: ProjectSnapshot): Project {
   return {
     id: project.id,
     ownerId: project.ownerId,
+    role: project.role,
     name: project.name,
     color: project.color,
     deletedAt: project.deletedAt ?? undefined,
