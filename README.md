@@ -2,6 +2,18 @@
 
 NodexMesh is a self-hosted collaborative visual workspace. Users can create projects, arrange typed board items, connect items, share read-only boards, and collaborate through the web application. Administrators can manage users and project membership and control whether registration is available.
 
+## Demo
+
+Live demo:
+
+https://nodexmesh.lewanmordor.workers.dev
+
+---
+
+Demo has **not** all the functionallities and features from **main** **branch**. Its prepared demo for local storage only.
+
+**Version 1.0.0** from main branch has all new features like _admin panel_, _collaborations_, _project sharing_, _data persistence in database_, _full api implementation_, _many fixes and performance upgrades_.
+
 ## Current capabilities
 
 - JWT access tokens with rotating, HttpOnly refresh-token cookies.
