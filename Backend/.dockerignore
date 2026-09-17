@@ -1,5 +1,10 @@
-bin
-obj
-.env
-.env.*
+**/bin/
+**/obj/
+
+.git/
+.vs/
+.vscode/
+.idea/
+
 *.user
+*.suo

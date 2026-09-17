@@ -1,33 +1,42 @@
 # syntax=docker/dockerfile:1
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
 WORKDIR /src
 
-# Restore first, as its own layer — dependencies change far less often than source,
-# so editing a .cs file doesn't invalidate the (slow) restore.
-COPY src/NodexMeshApi/NodexMeshApi.csproj src/NodexMeshApi/
-RUN dotnet restore src/NodexMeshApi/NodexMeshApi.csproj
+COPY src/NodexMeshApi/NodexMeshApi.csproj ./NodexMeshApi/
 
-COPY src/ src/
-RUN dotnet publish src/NodexMeshApi/NodexMeshApi.csproj \
+RUN dotnet restore ./NodexMeshApi/NodexMeshApi.csproj \
+    --force \
+    --no-cache
+
+COPY src/NodexMeshApi/ ./NodexMeshApi/
+
+WORKDIR /src/NodexMeshApi
+
+RUN dotnet publish NodexMeshApi.csproj \
     -c Release \
     -o /app/publish \
-    --no-restore \
     /p:UseAppHost=false
 
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+
 WORKDIR /app
-
-# Run as an unprivileged user. The aspnet images ship with a non-root 'app' user (UID 64198).
-USER app
-
-COPY --from=build --chown=app:app /app/publish .
-COPY --chown=app:app docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 ENV ASPNETCORE_URLS=http://+:8080 \
     ASPNETCORE_ENVIRONMENT=Production \
     DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 EXPOSE 8080
+
+COPY --from=build --chown=app:app /app/publish ./
+COPY --chown=app:app docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+USER root
+
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+USER app
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
