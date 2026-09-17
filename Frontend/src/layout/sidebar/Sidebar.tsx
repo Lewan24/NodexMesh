@@ -18,7 +18,7 @@ const groups = [
     id: 'organize',
     label: 'Organize',
     icon: ListTree,
-    tools: ['checklist', 'kanban', 'column', 'section-title', 'frame', 'line', 'divider'],
+    tools: ['checklist', 'kanban', 'column', 'section-title', 'frame', 'line', 'divider', 'board'],
   },
   { id: 'media', label: 'Media', icon: Play, tools: ['image', 'link', 'embed'] },
 ] satisfies { id: string; label: string; icon: typeof LayoutGrid; tools: ToolType[] }[];

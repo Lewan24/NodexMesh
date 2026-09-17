@@ -22,6 +22,15 @@ interface UseProjectsResult {
   setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
   addProject: (name: string) => string;
   selectProject: (id: string) => void;
+  selectBoard: (projectId: string, boardId: string) => Promise<void>;
+  listBoards: (projectId: string) => Promise<import('@/entities/board/records').BoardRecord[]>;
+  createBoard: (projectId: string, name: string) => Promise<import('@/entities/board/records').BoardSnapshot>;
+  renameBoard: (
+    projectId: string,
+    boardId: string,
+    name: string,
+  ) => Promise<import('@/entities/board/records').BoardRecord>;
+  deleteBoard: (projectId: string, boardId: string) => Promise<void>;
   createFirstProject: () => void;
   resetDemo: () => void;
   importProject: (text: string) => Promise<void>;
@@ -175,6 +184,23 @@ export function useProjects(userId: string): UseProjectsResult {
   const selectProject = useCallback((id: string) => {
     setActiveProjectId(id);
   }, []);
+  const selectBoard = useCallback(
+    (projectId: string, boardId: string) => controller.switchBoard(projectId, boardId),
+    [controller],
+  );
+  const listBoards = useCallback((projectId: string) => controller.listBoards(projectId), [controller]);
+  const createBoard = useCallback(
+    (projectId: string, name: string) => controller.createBoard(projectId, name),
+    [controller],
+  );
+  const renameBoard = useCallback(
+    (projectId: string, boardId: string, name: string) => controller.renameBoard(projectId, boardId, name),
+    [controller],
+  );
+  const deleteBoard = useCallback(
+    (projectId: string, boardId: string) => controller.deleteBoard(projectId, boardId),
+    [controller],
+  );
 
   const createFirstProject = useCallback(() => {
     const project = createDefaultProjectFor(userId);
@@ -200,6 +226,11 @@ export function useProjects(userId: string): UseProjectsResult {
     setProjects,
     addProject,
     selectProject,
+    selectBoard,
+    listBoards,
+    createBoard,
+    renameBoard,
+    deleteBoard,
     createFirstProject,
     resetDemo,
     importProject,

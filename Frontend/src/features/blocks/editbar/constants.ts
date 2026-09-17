@@ -20,6 +20,7 @@ export const LINE_COLORS = ['#7C3AED', '#FFBD65', '#FF6B8A', '#02A0A0', '#e8f4f4
 export const FRAME_COLORS = ['#7C3AED', '#FFBD65', '#02A0A0', '#FF6B8A', '#059669', '#3b82f6'];
 
 export const BACKGROUND_ITEM_TYPES = new Set<BoardItem['type']>([
+  'board',
   'section-title',
   'dispenser',
   'code',
@@ -39,6 +40,7 @@ export const BACKGROUND_ITEM_TYPES = new Set<BoardItem['type']>([
 ]);
 
 export const ITEM_TYPE_LABELS: Partial<Record<BoardItem['type'], string>> = {
+  board: 'Board',
   drawing: 'Drawing',
   timeline: 'Timeline',
   diagram: 'Diagram',

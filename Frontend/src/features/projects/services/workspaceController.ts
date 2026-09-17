@@ -95,6 +95,37 @@ export class WorkspaceController {
 
   constructor(private readonly services: WorkspaceServices) {}
 
+  async listBoards(projectId: string, signal?: AbortSignal) {
+    return this.services.boards.list(projectId, signal);
+  }
+
+  async createBoard(projectId: string, name: string) {
+    return this.services.boards.create(projectId, name);
+  }
+
+  async renameBoard(projectId: string, boardId: string, name: string) {
+    return this.services.boards.rename(projectId, boardId, name);
+  }
+
+  async deleteBoard(projectId: string, boardId: string) {
+    return this.services.boards.delete(projectId, boardId);
+  }
+
+  async switchBoard(projectId: string, boardId: string): Promise<void> {
+    await this.flush();
+    const previous = this.confirmed.get(projectId);
+    if (!previous || previous.board.board.id === boardId) return;
+    const board = await this.services.boards.get(projectId, boardId);
+    if (board.board.projectId !== projectId) throw new Error('Board belongs to another project.');
+    const next = { ...previous, board };
+    this.confirmed.set(projectId, next);
+    this.publish({
+      projects: this.state.projects.map((project) => (project.id === projectId ? toProjectView(next) : project)),
+      status: 'saved',
+      error: '',
+    });
+  }
+
   getSnapshot = () => this.state;
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);

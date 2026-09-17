@@ -15,6 +15,7 @@ import TextBlock from '@/features/blocks/text/TextBlock';
 import EmbedBlock from './embed/EmbedBlock';
 import DispenserBlock from './dispenser/DispenserBlock';
 import DrawingBlock from './drawing/DrawingBlock';
+import BoardBlock from './board/BoardBlock';
 
 const DocumentBlock = lazy(() => import('./document/DocumentBlock'));
 const CodeBlock = lazy(() => import('./code/CodeBlock'));
@@ -72,6 +73,8 @@ export interface BlockRendererProps {
   onTaskDroppedOutside?: TaskDroppedOutsideHandler;
   searchActive?: boolean;
   nestedSearchMatchIds?: Set<string>;
+  onOpenBoard?: (boardId: string) => void;
+  onRenameBoard?: (boardId: string, name: string) => void;
 }
 
 export default function BlockRenderer({
@@ -94,8 +97,12 @@ export default function BlockRenderer({
   onTaskDroppedOutside,
   searchActive = false,
   nestedSearchMatchIds,
+  onOpenBoard,
+  onRenameBoard,
 }: BlockRendererProps) {
   switch (item.type) {
+    case 'board':
+      return <BoardBlock item={item} onUpdate={onUpdate} onOpenBoard={onOpenBoard} onRenameBoard={onRenameBoard} />;
     case 'section-title':
       return <SectionTitleBlock item={item} zoom={zoom} onUpdate={onUpdate} />;
     case 'drawing':

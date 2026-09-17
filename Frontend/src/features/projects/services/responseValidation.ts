@@ -1,4 +1,5 @@
 import type { BoardSnapshot } from '@/entities/board/records';
+import type { BoardRecord } from '@/entities/board/records';
 import type { ProjectRecord, ProjectSnapshot } from '@/entities/project/types';
 import { validateItem } from '@/entities/board/itemSchema';
 import { fail } from '@/shared/api/errors';
@@ -66,6 +67,14 @@ export function parseBoardSnapshot(value: unknown): BoardSnapshot {
   }
   validateBoard(result);
   return result;
+}
+
+export function parseBoardRecord(value: unknown): BoardRecord {
+  const board = record(value);
+  audit(board);
+  for (const key of ['projectId', 'name']) string(board[key]);
+  if (!Number.isInteger(board.sortOrder)) fail(422, 'invalid_response', 'Invalid board ordering.');
+  return board as unknown as BoardRecord;
 }
 
 export function parseProjectSnapshots(value: unknown): ProjectSnapshot[] {

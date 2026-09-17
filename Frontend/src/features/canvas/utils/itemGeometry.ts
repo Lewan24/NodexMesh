@@ -17,6 +17,8 @@ export interface ItemRect extends ItemSize {
 
 export function getApproxItemSize(item: BoardItem): ItemSize {
   switch (item.type) {
+    case 'board':
+      return { width: item.width ?? ITEM_WIDTH.board, height: item.height ?? 190 };
     case 'drawing':
       return { width: item.width, height: item.height };
     case 'line':
@@ -109,6 +111,8 @@ export function getContainedItemIds(
 
 export function getToolDefaultSize(type: ToolType): ItemSize {
   switch (type) {
+    case 'board':
+      return { width: ITEM_WIDTH.board, height: 190 };
     case 'timeline':
       return { width: ITEM_WIDTH.timeline, height: 520 };
     case 'database':

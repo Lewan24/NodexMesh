@@ -17,6 +17,7 @@ public sealed record TypographyDto(
 
 // ---- the 20 item types, matching itemSchema.ts field-for-field --------
 public sealed record SectionTitleData(string Content);
+public sealed record BoardBlockData(Guid? BoardId, string Title, string Description, string Icon);
 public sealed record NoteData(string Content);
 public sealed record TextData(string Content, string Size); // 'sm'|'md'|'lg'|'xl'
 public sealed record DocumentData(string Title, string Content, string ContentFormat, int ContentVersion, bool? AutoHeight);
@@ -59,6 +60,7 @@ public static class BoardItemTypes
 {
     public static readonly IReadOnlyDictionary<string, Type> DataTypes = new Dictionary<string, Type>
     {
+        ["board"] = typeof(BoardBlockData),
         ["section-title"] = typeof(SectionTitleData), ["note"] = typeof(NoteData),
         ["text"] = typeof(TextData), ["document"] = typeof(DocumentData),
         ["code"] = typeof(CodeData), ["icon"] = typeof(IconData),

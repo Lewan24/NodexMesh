@@ -118,7 +118,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             e.ToTable(t =>
             {
                 t.HasCheckConstraint("ck_board_items_type",
-                    "type IN ('section-title','note','text','document','code','icon','image','link'," +
+                    "type IN ('board','section-title','note','text','document','code','icon','image','link'," +
                     "'embed','checklist','kanban','timeline','column','frame','dispenser','line'," +
                     "'drawing','mindmap','diagram','database')");
                 t.HasCheckConstraint("ck_board_items_width", "width IS NULL OR width > 0");

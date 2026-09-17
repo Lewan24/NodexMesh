@@ -16,6 +16,9 @@ public static class BoardEndpoints
         var group = app.MapGroup("/api/v1").WithTags("Board").RequireAuthorization();
 
         group.MapGet("/projects/{projectId:guid}/boards", ListBoardsAsync);
+        group.MapPost("/projects/{projectId:guid}/boards", CreateBoardAsync);
+        group.MapPatch("/boards/{boardId:guid}", RenameBoardAsync);
+        group.MapDelete("/boards/{boardId:guid}", DeleteBoardAsync);
         group.MapGet("/boards/{boardId:guid}", GetSnapshotAsync);
         group.MapPost("/boards/{boardId:guid}/mutations", ApplyMutationAsync)
             .RequireRateLimiting("board-mutation");
@@ -44,6 +47,64 @@ public static class BoardEndpoints
             .ToListAsync(ct);
 
         return TypedResults.Ok(boards);
+    }
+
+    private static async Task<Ok<BoardRecordDto>> CreateBoardAsync(
+        Guid projectId, CreateBoardRequest request, ClaimsPrincipal principal, AppDbContext db,
+        IProjectAccessService access, CancellationToken ct)
+    {
+        var userId = CurrentUserId(principal);
+        await access.RequireAsync(projectId, userId, ProjectRole.Editor, ct);
+        var name = request.Name?.Trim() ?? string.Empty;
+        if (name.Length is < 1 or > 200)
+            throw new ApiException(422, "invalid_name", "Board name must contain 1 to 200 characters.");
+        var now = DateTimeOffset.UtcNow;
+        var sortOrder = await db.Boards.Where(b => b.ProjectId == projectId).Select(b => (int?)b.SortOrder).MaxAsync(ct) ?? -1;
+        var board = new Board
+        {
+            Id = Guid.CreateVersion7(), ProjectId = projectId, Name = name, SortOrder = sortOrder + 1,
+            Revision = 1, CreatedAt = now, UpdatedAt = now, CreatedBy = userId, UpdatedBy = userId
+        };
+        db.Boards.Add(board);
+        await db.SaveChangesAsync(ct);
+        return TypedResults.Ok(new BoardRecordDto(board.Id, board.ProjectId, board.Name, board.SortOrder,
+            board.Revision, board.CreatedAt, board.UpdatedAt, board.CreatedBy, board.UpdatedBy, board.DeletedAt));
+    }
+
+    private static async Task<Ok<BoardRecordDto>> RenameBoardAsync(
+        Guid boardId, RenameBoardRequest request, ClaimsPrincipal principal, AppDbContext db,
+        IProjectAccessService access, CancellationToken ct)
+    {
+        var userId = CurrentUserId(principal);
+        var board = await db.Boards.FirstOrDefaultAsync(item => item.Id == boardId, ct)
+            ?? throw new ApiException(404, "not_found", "Board not found.");
+        await access.RequireAsync(board.ProjectId, userId, ProjectRole.Editor, ct);
+        var name = request.Name?.Trim() ?? string.Empty;
+        if (name.Length is < 1 or > 200)
+            throw new ApiException(422, "invalid_name", "Board name must contain 1 to 200 characters.");
+        board.Name = name;
+        board.Revision++;
+        board.UpdatedAt = DateTimeOffset.UtcNow;
+        board.UpdatedBy = userId;
+        await db.SaveChangesAsync(ct);
+        return TypedResults.Ok(new BoardRecordDto(board.Id, board.ProjectId, board.Name, board.SortOrder,
+            board.Revision, board.CreatedAt, board.UpdatedAt, board.CreatedBy, board.UpdatedBy, board.DeletedAt));
+    }
+
+    private static async Task<NoContent> DeleteBoardAsync(
+        Guid boardId, ClaimsPrincipal principal, AppDbContext db,
+        IProjectAccessService access, CancellationToken ct)
+    {
+        var userId = CurrentUserId(principal);
+        var board = await db.Boards.FirstOrDefaultAsync(item => item.Id == boardId, ct)
+            ?? throw new ApiException(404, "not_found", "Board not found.");
+        await access.RequireAsync(board.ProjectId, userId, ProjectRole.Editor, ct);
+        var isMain = await db.Boards.Where(item => item.ProjectId == board.ProjectId)
+            .OrderBy(item => item.SortOrder).Select(item => item.Id).FirstAsync(ct) == boardId;
+        if (isMain) throw new ApiException(409, "default_board", "The main board cannot be deleted.");
+        db.Boards.Remove(board);
+        await db.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
     }
 
     private static async Task<Ok<BoardSnapshotDto>> GetSnapshotAsync(

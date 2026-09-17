@@ -11,8 +11,9 @@ import { canonicalJson } from '@/shared/api/canonicalJson';
 import type { WorkspaceServices } from './contracts';
 
 interface Database {
-  formatVersion: 1;
+  formatVersion: 2;
   projects: ProjectSnapshot[];
+  boards: Record<string, BoardSnapshot[]>;
   receipts: Record<string, { request: string; result: unknown }>;
 }
 
@@ -111,14 +112,42 @@ export function createMockWorkspace(
   function read(): Database {
     authorize();
     const raw = storage.getItem(key);
-    if (raw === null) return { formatVersion: 1, projects: [], receipts: {} };
+    if (raw === null) return { formatVersion: 2, projects: [], boards: {}, receipts: {} };
     try {
-      const value = JSON.parse(raw) as Database;
-      if (value.formatVersion !== 1 || !Array.isArray(value.projects) || !value.receipts) throw new Error();
-      for (const snapshot of parseProjectSnapshots(value.projects)) {
+      const parsed = JSON.parse(raw) as {
+        formatVersion: number;
+        projects: ProjectSnapshot[];
+        boards?: Record<string, BoardSnapshot[]>;
+        receipts: Database['receipts'];
+      };
+      const value: Database =
+        parsed.formatVersion === 1
+          ? {
+              formatVersion: 2,
+              projects: parsed.projects,
+              boards: Object.fromEntries(parsed.projects.map((project) => [project.project.id, [project.board]])),
+              receipts: parsed.receipts,
+            }
+          : { formatVersion: 2, projects: parsed.projects, boards: parsed.boards ?? {}, receipts: parsed.receipts };
+      if (value.formatVersion !== 2 || !Array.isArray(value.projects) || !value.boards || !value.receipts)
+        throw new Error();
+      value.projects = parseProjectSnapshots(value.projects);
+      for (const snapshot of value.projects) {
         if (snapshot.project.ownerId !== userId || snapshot.board.board.projectId !== snapshot.project.id)
           throw new Error();
         validateBoard(snapshot.board);
+
+        const boards = value.boards[snapshot.project.id] ?? [];
+        const currentBoard = boards.find((board) => board.board.id === snapshot.board.board.id);
+        if (currentBoard) snapshot.board = currentBoard;
+        else value.boards[snapshot.project.id] = [snapshot.board, ...boards];
+      }
+      for (const [projectId, boards] of Object.entries(value.boards)) {
+        if (!Array.isArray(boards)) throw new Error();
+        for (const board of boards) {
+          if (board.board.projectId !== projectId) throw new Error();
+          validateBoard(board);
+        }
       }
       return value;
     } catch {
@@ -133,6 +162,12 @@ export function createMockWorkspace(
     return (
       db.projects.find((p) => p.project.id === id && p.project.ownerId === userId) ??
       fail(404, 'not_found', 'Project not found.')
+    );
+  }
+  function findBoard(db: Database, projectId: string, boardId: string): BoardSnapshot {
+    find(db, projectId);
+    return (
+      db.boards[projectId]?.find((board) => board.board.id === boardId) ?? fail(404, 'not_found', 'Board not found.')
     );
   }
   async function locked<T>(operation: () => T): Promise<T> {
@@ -208,6 +243,7 @@ export function createMockWorkspace(
                 project: { id: demo.id, ownerId: userId, name: demo.name, color: demo.color, ...metadata },
                 board,
               });
+              db.boards[demo.id] = [board];
             }
             persist(db);
           }
@@ -232,6 +268,7 @@ export function createMockWorkspace(
             },
           };
           db.projects.push(snapshot);
+          db.boards[input.id] = [snapshot.board];
           return snapshot;
         });
       },
@@ -257,21 +294,63 @@ export function createMockWorkspace(
           if (!snapshot.project.deletedAt || snapshot.project.revision !== expectedRevision)
             fail(409, 'revision_conflict', 'Only an unchanged trashed project can be removed.');
           db.projects = db.projects.filter((p) => p.project.id !== id);
+          delete db.boards[id];
         });
       },
     },
     boards: {
+      async list(projectId, signal) {
+        signal?.throwIfAborted();
+        const db = read();
+        const snapshot = find(db, projectId);
+        return structuredClone(db.boards[projectId]?.map((board) => board.board) ?? [snapshot.board.board]);
+      },
+      async create(projectId, name) {
+        return transaction(createId(), { action: 'create-board', projectId, name }, (db) => {
+          find(db, projectId);
+          const normalizedName = name.trim();
+          if (!normalizedName || normalizedName.length > 200)
+            fail(422, 'invalid_name', 'Board name must contain 1–200 characters.');
+          const metadata = audit(userId);
+          const boards = db.boards[projectId] ?? [];
+          const board: BoardSnapshot = {
+            board: { id: createId(), projectId, name: normalizedName, sortOrder: boards.length, ...metadata },
+            items: [],
+            links: [],
+            comments: [],
+            tags: [],
+            itemTags: [],
+          };
+          db.boards[projectId] = [...boards, board];
+          return board;
+        });
+      },
+      async rename(projectId, boardId, name) {
+        return transaction(createId(), { action: 'rename-board', projectId, boardId, name }, (db) => {
+          const board = findBoard(db, projectId, boardId);
+          const normalizedName = name.trim();
+          if (!normalizedName || normalizedName.length > 200)
+            fail(422, 'invalid_name', 'Board name must contain 1–200 characters.');
+          board.board = { ...touch(board.board, userId), name: normalizedName };
+          return board.board;
+        });
+      },
+      async delete(projectId, boardId) {
+        return transaction(createId(), { action: 'delete-board', projectId, boardId }, (db) => {
+          const boards = db.boards[projectId] ?? [];
+          const board = findBoard(db, projectId, boardId);
+          if (board.board.id === boards[0]?.board.id) fail(409, 'default_board', 'The main board cannot be deleted.');
+          db.boards[projectId] = boards.filter((entry) => entry.board.id !== boardId);
+        });
+      },
       async get(projectId, boardId, signal) {
         signal?.throwIfAborted();
-        const snapshot = find(read(), projectId);
-        if (snapshot.board.board.id !== boardId) fail(404, 'not_found', 'Board not found.');
-        return structuredClone(snapshot.board);
+        return structuredClone(findBoard(read(), projectId, boardId));
       },
       mutate(projectId, boardId, mutation) {
         return transaction(mutation.clientMutationId, { action: 'mutate', projectId, boardId, mutation }, (db) => {
           const snapshot = find(db, projectId);
-          const board = snapshot.board;
-          if (board.board.id !== boardId) fail(404, 'not_found', 'Board not found.');
+          const board = findBoard(db, projectId, boardId);
           if (snapshot.project.deletedAt) fail(409, 'project_trashed', 'Restore the project before editing it.');
           if (board.board.revision !== mutation.expectedBoardRevision)
             fail(409, 'revision_conflict', 'Board changed in another session. Local changes are preserved.');

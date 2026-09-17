@@ -7,6 +7,8 @@ export interface SearchResult {
 
 export function getSearchableText(item: BoardItem): string {
   switch (item.type) {
+    case 'board':
+      return `${item.title} ${item.description}`;
     case 'timeline':
       return [
         item.title,

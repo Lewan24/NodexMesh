@@ -1,13 +1,14 @@
 import type { IconItem } from '@/entities/board/types';
 
-export function getIconImageSource(mode: IconItem['iconMode'], source: string): string | undefined {
-  if (mode === 'svg' && source.length <= 200_000 && /<svg[\s>]/i.test(source)) {
+export function getIconImageSource(mode: IconItem['iconMode'], source: string | undefined): string | undefined {
+  const value = typeof source === 'string' ? source : '';
+  if (mode === 'svg' && value.length <= 200_000 && /<svg[\s>]/i.test(value)) {
     // Render as an isolated image, never as markup in the application's DOM.
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(source)}`;
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(value)}`;
   }
   if (mode === 'url') {
     try {
-      const url = new URL(source);
+      const url = new URL(value);
       if (['http:', 'https:'].includes(url.protocol) && !url.username && !url.password) return url.href;
     } catch {
       return undefined;

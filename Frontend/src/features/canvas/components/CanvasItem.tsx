@@ -65,6 +65,8 @@ interface CanvasItemProps {
   pushHistory: () => void;
 
   onQuickConnectStart: (id: string, event: React.MouseEvent, side: ConnectionSide) => void;
+  onOpenBoard?: (boardId: string) => void;
+  onRenameBoard?: (boardId: string, name: string) => void;
 }
 
 export default function CanvasItem({
@@ -103,6 +105,8 @@ export default function CanvasItem({
   onChecklistDropOutside,
   onKanbanCardDropOutside,
   onQuickConnectStart,
+  onOpenBoard,
+  onRenameBoard,
 }: CanvasItemProps) {
   const [hasFocus, setHasFocus] = useState(false);
   const mobile = useMobileLayout();
@@ -177,6 +181,8 @@ export default function CanvasItem({
           }
           searchActive={searchActive}
           nestedSearchMatchIds={item.type === 'column' ? nestedSearchMatchIds : undefined}
+          onOpenBoard={onOpenBoard}
+          onRenameBoard={onRenameBoard}
         />
       </ItemWatcher>
     ),
@@ -201,6 +207,8 @@ export default function CanvasItem({
       searchActive,
       nestedSearchMatchIds,
       onResize,
+      onOpenBoard,
+      onRenameBoard,
     ],
   );
 

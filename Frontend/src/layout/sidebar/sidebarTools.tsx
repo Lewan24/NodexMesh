@@ -12,6 +12,7 @@ import {
   GitFork,
   Pencil,
   Database,
+  LayoutDashboard,
 } from 'lucide-react';
 
 const TOOL_ICON_SIZE = 26;
@@ -23,6 +24,7 @@ export interface SidebarTool {
 }
 
 export const SIDEBAR_TOOLS: SidebarTool[] = [
+  { id: 'board', label: 'Board', icon: <LayoutDashboard size={TOOL_ICON_SIZE} /> },
   { id: 'icon', label: 'Icon / Emoji', icon: <Smile size={TOOL_ICON_SIZE} /> },
   { id: 'section-title', label: 'Section title', icon: <FileText size={TOOL_ICON_SIZE} /> },
   { id: 'drawing', label: 'Pencil', icon: <Pencil size={TOOL_ICON_SIZE} /> },

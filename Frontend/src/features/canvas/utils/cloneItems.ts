@@ -35,7 +35,7 @@ export function cloneItems(items: BoardItem[], dx: number, dy: number, firstZInd
           ].includes(key) &&
           typeof entry === 'string'
         )
-          return [key, ids.get(entry)];
+          return [key, ids.get(entry) ?? entry];
         return [key, copy(entry)];
       }),
     );

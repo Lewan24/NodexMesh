@@ -91,6 +91,8 @@ interface CanvasProps {
   onDropOnColumn: (itemId: string, columnId: string) => void;
   onEjectFromColumn: (columnId: string, ejectedItem: BoardItem, position?: { x: number; y: number }) => void;
   onRestoreItems: (items: BoardItem[]) => void;
+  onOpenBoard?: (boardId: string) => void;
+  onRenameBoard?: (boardId: string, name: string) => void;
 }
 
 export default function Canvas({
@@ -118,6 +120,8 @@ export default function Canvas({
   onEjectFromColumn,
   onRestoreItems,
   searchQuery,
+  onOpenBoard,
+  onRenameBoard,
 }: CanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
@@ -1148,6 +1152,8 @@ export default function Canvas({
               searchActive={searchActive}
               isSearchMatch={!searchActive || matchingIds.has(item.id)}
               nestedSearchMatchIds={item.type === 'column' ? nestedColumnMatches.get(item.id) : undefined}
+              onOpenBoard={onOpenBoard}
+              onRenameBoard={onRenameBoard}
             />
           );
         })}

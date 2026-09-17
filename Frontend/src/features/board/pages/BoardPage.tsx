@@ -6,8 +6,10 @@ import { createId } from '@/shared/lib/createId';
 const AppearanceDialog = lazy(() => import('@/features/appearance/AppearanceDialog'));
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { useCallback, useState, useEffect, lazy, Suspense } from 'react';
+import { toast } from 'sonner';
 
 import type { BoardItem, ColumnItem, FrameItem } from '@/entities/board/types';
+import type { BoardRecord } from '@/entities/board/records';
 
 import { useBoardView } from '@/features/board/hooks/useBoardView';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
@@ -40,6 +42,11 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     setProjects,
     addProject,
     selectProject,
+    selectBoard,
+    listBoards,
+    createBoard,
+    renameBoard,
+    deleteBoard,
     createFirstProject,
     resetDemo,
     importProject,
@@ -48,6 +55,26 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     restoreProject,
     emptyTrash,
   } = useProjects(userId);
+
+  const [boardTrail, setBoardTrail] = useState<Array<{ id: string; name: string }>>([]);
+  const [boards, setBoards] = useState<BoardRecord[]>([]);
+  useEffect(() => {
+    if (!activeProject) {
+      setBoards([]);
+      return;
+    }
+    let cancelled = false;
+    void listBoards(activeProject.id)
+      .then((value) => {
+        if (!cancelled) setBoards(value);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('Could not load the project boards.');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeProject?.id, listBoards]);
 
   const { setScope } = useTheme();
   const [appearanceOpen, setAppearanceOpen] = useState(false);
@@ -108,6 +135,122 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       resetBoardView();
     },
     [selectProject, resetBoardView],
+  );
+
+  const handleOpenBoard = useCallback(
+    async (boardId: string) => {
+      if (!activeProject || boardId === activeProject.boardId) return;
+
+      const sourceBoard = boards.find((board) => board.id === activeProject.boardId);
+      try {
+        await selectBoard(activeProject.id, boardId);
+        setBoardTrail((trail) => [
+          ...trail,
+          { id: activeProject.boardId ?? '', name: sourceBoard?.name ?? activeProject.name },
+        ]);
+        resetBoardView();
+      } catch {
+        toast.error('Could not open this board.');
+      }
+    },
+    [activeProject, boards, selectBoard, resetBoardView],
+  );
+
+  const handleSelectListedBoard = useCallback(
+    async (boardId: string) => {
+      if (!activeProject || boardId === activeProject.boardId) return;
+
+      try {
+        await selectBoard(activeProject.id, boardId);
+        if (boardId === boards[0]?.id) setBoardTrail([]);
+        else if (boardTrail.length === 0) {
+          const sourceBoard = boards.find((board) => board.id === activeProject.boardId);
+          setBoardTrail([{ id: activeProject.boardId ?? '', name: sourceBoard?.name ?? activeProject.name }]);
+        }
+        resetBoardView();
+      } catch {
+        toast.error('Could not open this board.');
+      }
+    },
+    [activeProject, boardTrail.length, boards, selectBoard, resetBoardView],
+  );
+
+  const handleAddItem = useCallback(
+    (item: BoardItem) => {
+      if (item.type !== 'board' || !activeProject) {
+        addItem(item);
+        return;
+      }
+
+      // Provision the linked board first so a placed card is never persisted with
+      // a broken destination. Canvas keeps the selected ID while this completes.
+      void createBoard(activeProject.id, item.title)
+        .then((board) => {
+          setBoards((current) =>
+            current.some((entry) => entry.id === board.board.id) ? current : [...current, board.board],
+          );
+          addItem({ ...item, boardId: board.board.id });
+        })
+        .catch(() => toast.error('Could not create the linked board. Please try again.'));
+    },
+    [activeProject, createBoard, addItem],
+  );
+
+  const handleRenameBoard = useCallback(
+    (boardId: string, name: string) => {
+      if (!activeProject || !name.trim()) return;
+      void renameBoard(activeProject.id, boardId, name.trim())
+        .then((record) => setBoards((current) => current.map((board) => (board.id === record.id ? record : board))))
+        .catch(() => toast.error('Could not rename this board.'));
+    },
+    [activeProject, renameBoard],
+  );
+
+  const handleDeleteBoard = useCallback(
+    async (boardId: string) => {
+      if (!activeProject || boardId === boards[0]?.id) return;
+      const board = boards.find((entry) => entry.id === boardId);
+      if (!board || !window.confirm(`Delete board “${board.name}” and all its content?`)) return;
+
+      const mainBoardId = boards[0]?.id;
+      try {
+        await deleteBoard(activeProject.id, boardId);
+        setBoards((current) => current.filter((entry) => entry.id !== boardId));
+        if (activeProject.boardId === boardId && mainBoardId) {
+          await selectBoard(activeProject.id, mainBoardId);
+          setBoardTrail([]);
+          resetBoardView();
+        }
+        setProjects((projects) =>
+          projects.map((project) =>
+            project.id === activeProject.id
+              ? { ...project, items: project.items.filter((item) => item.type !== 'board' || item.boardId !== boardId) }
+              : project,
+          ),
+        );
+      } catch {
+        toast.error('Could not delete this board.');
+      }
+    },
+    [activeProject, boards, deleteBoard, resetBoardView, selectBoard, setProjects],
+  );
+
+  const handleDeleteItems = useCallback(
+    (ids: string[]) => {
+      const linkedBoards =
+        activeProject?.items
+          .filter(
+            (item): item is Extract<BoardItem, { type: 'board' }> => item.type === 'board' && ids.includes(item.id),
+          )
+          .map((item) => item.boardId)
+          .filter((boardId): boardId is string => Boolean(boardId)) ?? [];
+      deleteItems(ids);
+      if (!activeProject) return;
+      void Promise.all(linkedBoards.map((boardId) => deleteBoard(activeProject.id, boardId)))
+        .then(() => setBoards((current) => current.filter((board) => !linkedBoards.includes(board.id))))
+        .catch(() => toast.error('The board card was removed, but its board could not be deleted.'));
+    },
+    [activeProject, deleteBoard, deleteItems],
   );
 
   const handleDropOnColumn = useCallback(
@@ -315,13 +458,61 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         className="relative isolate z-0 flex flex-1 min-h-0 min-w-0 w-full overflow-hidden"
         style={{ backgroundColor: 'var(--color-app-bg)' }}
       >
+        {(boardTrail.length > 0 || boards.length > 1) && (
+          <div
+            className="absolute left-1/2 top-3 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-lg"
+            style={{
+              background: 'var(--color-surface)',
+              borderColor: 'var(--color-border)',
+              color: 'var(--color-text)',
+            }}
+          >
+            <button
+              type="button"
+              className="font-medium hover:underline"
+              onClick={() => {
+                const mainBoardId = boards[0]?.id || boardTrail[0]?.id;
+                if (mainBoardId) void handleSelectListedBoard(mainBoardId);
+              }}
+            >
+              ← Main board
+            </button>
+            <span style={{ color: 'var(--color-text-muted)' }}>/</span>
+            {boards.map((board) => (
+              <span key={board.id} className="inline-flex items-center rounded hover:bg-black/5 dark:hover:bg-white/10">
+                <button
+                  type="button"
+                  className="rounded px-1.5 py-0.5"
+                  aria-current={board.id === activeProject.boardId ? 'page' : undefined}
+                  onClick={() => void handleSelectListedBoard(board.id)}
+                >
+                  {board.name}
+                </button>
+                {board.id !== boards[0]?.id && (
+                  <button
+                    type="button"
+                    className="rounded px-1 text-[10px] opacity-50 hover:bg-rose-500/15 hover:text-rose-600 hover:opacity-100"
+                    aria-label={`Delete board ${board.name}`}
+                    title="Delete board"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void handleDeleteBoard(board.id);
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
         {!readOnly && <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />}
 
         {readOnly ? (
           <ReadOnlyBoard key={activeProjectId} items={activeProject.items} />
         ) : (
           <Canvas
-            key={activeProjectId}
+            key={`${activeProjectId}:${activeProject.boardId ?? ''}`}
             project={activeProject}
             remoteVersion={remoteVersion}
             remotePresence={remotePresence}
@@ -334,10 +525,12 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             onSelectTool={setSelectedTool}
             onSelectItems={setSelectedIds}
             onGroupSelected={handleGroupSelected}
-            onAddItem={addItem}
+            onAddItem={handleAddItem}
+            onOpenBoard={handleOpenBoard}
+            onRenameBoard={handleRenameBoard}
             onUpdateItem={updateItem}
             onDeleteItem={deleteItem}
-            onDeleteItems={deleteItems}
+            onDeleteItems={handleDeleteItems}
             onBringForward={bringForward}
             onSendBackward={sendBackward}
             onBringToFront={bringToFront}

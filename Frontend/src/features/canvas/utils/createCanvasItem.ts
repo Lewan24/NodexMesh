@@ -37,6 +37,18 @@ export function createCanvasItem(
         width: ITEM_WIDTH.timeline,
         height: 520,
       };
+    case 'board':
+      return {
+        ...base,
+        type: 'board',
+        boardId: null,
+        title: 'New board',
+        description: 'Double-click to open this board',
+        icon: 'layout-dashboard',
+        color: '#ffffff',
+        width: ITEM_WIDTH.board,
+        height: 190,
+      };
     case 'database':
       return {
         ...base,
