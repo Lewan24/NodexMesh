@@ -13,6 +13,7 @@ export function createHttpAppearance(client: HttpClient) {
         Object.entries(preferences.projects).map(([id, appearance]) => [
           id,
           {
+            ...(appearance.mode == null ? {} : { mode: appearance.mode }),
             ...(appearance.font == null ? {} : { font: appearance.font }),
             ...(appearance.light == null ? {} : { light: appearance.light }),
             ...(appearance.dark == null ? {} : { dark: appearance.dark }),
@@ -27,6 +28,7 @@ export function createHttpAppearance(client: HttpClient) {
           method: 'PUT',
           body: {
             font: next.defaults.font,
+            mode: next.defaults.mode ?? null,
             light: next.defaults.light,
             dark: next.defaults.dark,
             uiFont: next.uiFont,
@@ -42,7 +44,12 @@ export function createHttpAppearance(client: HttpClient) {
         const appearance = next.projects[id];
         await client.request(`/projects/${encodeURIComponent(id)}/appearance`, {
           method: 'PUT',
-          body: { font: appearance?.font ?? null, light: appearance?.light ?? null, dark: appearance?.dark ?? null },
+          body: {
+            font: appearance?.font ?? null,
+            mode: appearance?.mode ?? null,
+            light: appearance?.light ?? null,
+            dark: appearance?.dark ?? null,
+          },
         });
       }
     },

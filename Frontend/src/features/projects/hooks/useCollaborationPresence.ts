@@ -84,8 +84,8 @@ export function useCollaborationPresence(
       const activeItem = activeElement?.closest<HTMLElement>('[data-board-item-id]')?.dataset.boardItemId;
       const editing = Boolean(
         activeItem &&
-        selectedRef.current.includes(activeItem) &&
-        activeElement?.matches('textarea, input, [contenteditable="true"]'),
+          selectedRef.current.includes(activeItem) &&
+          activeElement?.matches('textarea, input, [contenteditable="true"]'),
       );
       void active
         .invoke('UpdatePresence', {

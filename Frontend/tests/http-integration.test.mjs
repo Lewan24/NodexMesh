@@ -118,12 +118,13 @@ test('nullable project appearance continues to inherit defaults after edits', as
   const api = createHttpAppearance({
     async request(path, options) {
       calls.push([path, options]);
-      return { ...preferences, projects: { project: { font: null, light: null, dark: null } } };
+      return { ...preferences, projects: { project: { font: null, mode: null, light: null, dark: null } } };
     },
   });
   const loaded = await api.load();
-  const updated = { ...loaded, defaults: { ...loaded.defaults, font: 'sans' } };
+  const updated = { ...loaded, defaults: { ...loaded.defaults, font: 'sans', mode: 'dark' } };
   assert.equal(activeAppearance(updated, 'project').font, 'sans');
+  assert.equal(activeAppearance(updated, 'project').mode, 'dark');
   await api.save(loaded, updated);
   assert.equal(calls.length, 2);
   assert.equal(calls[1][0], '/appearance');
@@ -190,4 +191,29 @@ test('new tags resolve once per normalized name and mutation retries reuse the e
   });
   assert.deepEqual(mutations.at(-1).upserts[0].tags, []);
   assert.equal(tagCalls.length, 1);
+});
+
+test('preferred modes survive HTTP saves and reloads, and clearing restores inheritance', async () => {
+  let stored = newPreferences();
+  const api = createHttpAppearance({
+    async request(path, options) {
+      if (!options) return structuredClone(stored);
+      const { mode, font, light, dark } = options.body;
+      if (path === '/appearance') stored.defaults = { mode, font, light, dark };
+      else stored.projects.project = { mode, font, light, dark };
+    },
+  });
+  const initial = await api.load();
+  await api.save(initial, { ...initial, defaults: { ...initial.defaults, mode: 'dark' } });
+  const dark = await api.load();
+  assert.equal(activeAppearance(dark, 'project').mode, 'dark');
+  await api.save(dark, { ...dark, projects: { project: { mode: 'light' } } });
+  const overridden = await api.load();
+  assert.equal(activeAppearance(overridden, 'project').mode, 'light');
+  assert.equal(activeAppearance(overridden, 'other').mode, 'dark');
+  await api.save(overridden, { ...overridden, projects: {} });
+  const inherited = await api.load();
+  assert.equal(activeAppearance(inherited, 'project').mode, 'dark');
+  await api.save(inherited, { ...inherited, defaults: { ...inherited.defaults, mode: undefined } });
+  assert.equal((await api.load()).defaults.mode, null);
 });

@@ -96,6 +96,7 @@ public static class BoardEndpoints
             defaults = new
             {
                 font = profile.Font,
+                mode = profile.Mode,
                 light = System.Text.Json.JsonDocument.Parse(profile.LightTheme).RootElement,
                 dark = System.Text.Json.JsonDocument.Parse(profile.DarkTheme).RootElement
             },
@@ -104,6 +105,7 @@ public static class BoardEndpoints
                 o => (object)new
                 {
                     font = o.Font,
+                    mode = o.Mode,
                     light = o.LightTheme is null ? null : (object)System.Text.Json.JsonDocument.Parse(o.LightTheme).RootElement,
                     dark = o.DarkTheme is null ? null : (object)System.Text.Json.JsonDocument.Parse(o.DarkTheme).RootElement
                 }),
@@ -128,6 +130,7 @@ public static class BoardEndpoints
         }
 
         profile.Font = request.Font;
+        profile.Mode = request.Mode;
         profile.UiFont = request.UiFont;
         profile.UiPrimary = request.UiPrimary;
         profile.UiSecondary = request.UiSecondary;
@@ -167,6 +170,7 @@ public static class BoardEndpoints
         }
 
         entity.Font = request.Font;
+        entity.Mode = request.Mode;
         entity.LightTheme = request.Light?.GetRawText();
         entity.DarkTheme = request.Dark?.GetRawText();
         entity.UpdatedAt = DateTimeOffset.UtcNow;

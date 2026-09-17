@@ -48,6 +48,24 @@ if (palette.StatusCode != HttpStatusCode.OK) throw new InvalidOperationException
 using var inherit = await client.PutAsJsonAsync("/project-appearance", new { font = (string?)null, light = (object?)null, dark = new { primary = "#ffffff" } });
 if (inherit.StatusCode != HttpStatusCode.OK) throw new InvalidOperationException(await inherit.Content.ReadAsStringAsync());
 Console.WriteLine("PASS: appearance JSON and nullable overrides");
+
+foreach (var mode in new string?[] { "light", "dark", null, "invalid" })
+{
+    var expected = mode == "invalid" ? HttpStatusCode.BadRequest : HttpStatusCode.OK;
+    var value = new AppearanceUpdateDto("sans", "sans", "#000000", "#ffffff", 1, 2,
+        JsonSerializer.SerializeToElement(new { }), JsonSerializer.SerializeToElement(new { }), mode);
+    using var result = await client.PutAsJsonAsync("/appearance", value);
+    if (result.StatusCode != expected) throw new InvalidOperationException($"Default mode {mode}: {await result.Content.ReadAsStringAsync()}");
+    using var projectResult = await client.PutAsJsonAsync("/project-appearance", new ProjectAppearanceUpdateDto(null, null, null, mode));
+    if (projectResult.StatusCode != expected) throw new InvalidOperationException($"Project mode {mode}: {await projectResult.Content.ReadAsStringAsync()}");
+    if (expected == HttpStatusCode.OK)
+    {
+        if ((await result.Content.ReadFromJsonAsync<AppearanceUpdateDto>())?.Mode != mode ||
+            (await projectResult.Content.ReadFromJsonAsync<ProjectAppearanceUpdateDto>())?.Mode != mode)
+            throw new InvalidOperationException("Appearance mode was lost during binding.");
+    }
+}
+Console.WriteLine("PASS: default and project mode binding and validation");
 await app.StopAsync();
 
 async Task Check(BoardMutationDto value, HttpStatusCode expected, string name)

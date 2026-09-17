@@ -4,6 +4,7 @@ namespace NodexMeshApi.Models;
 public sealed class AppearanceProfile
 {
     public Guid UserId { get; set; }
+    public string? Mode { get; set; }
     public string Font { get; set; } = "sans";
     public string UiFont { get; set; } = "sans";
     public string UiPrimary { get; set; } = "#7941c8";
@@ -21,6 +22,7 @@ public sealed class ProjectAppearanceOverride
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public Guid ProjectId { get; set; }
+    public string? Mode { get; set; }
     public string? Font { get; set; }
     public string? LightTheme { get; set; }
     public string? DarkTheme { get; set; }

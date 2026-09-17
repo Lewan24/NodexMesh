@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Validation;
 
 namespace NodexMeshApi.Dtos;
@@ -11,11 +12,13 @@ public sealed record AppearanceUpdateDto(
     string Font, string UiFont, string UiPrimary, string UiSecondary,
     int InheritanceVersion, int PaletteVersion,
     [SkipValidation] [property: SkipValidation] JsonElement Light,
-    [SkipValidation] [property: SkipValidation] JsonElement Dark);
+    [SkipValidation] [property: SkipValidation] JsonElement Dark,
+    [RegularExpression("^(light|dark)$")] string? Mode = null);
 
 public sealed record ProjectAppearanceUpdateDto(
     string? Font,
     [SkipValidation] [property: SkipValidation] JsonElement? Light,
-    [SkipValidation] [property: SkipValidation] JsonElement? Dark);
+    [SkipValidation] [property: SkipValidation] JsonElement? Dark,
+    [RegularExpression("^(light|dark)$")] string? Mode = null);
 
 #pragma warning restore ASP0029

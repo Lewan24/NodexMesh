@@ -495,9 +495,10 @@ it can be dropped straight into the existing ThemeProvider.
 ```ts
 // 200 OK
 {
-  defaults: { font: string; light: ThemePalette; dark: ThemePalette };
+  defaults: { font: string; mode: "light" | "dark" | null; light: ThemePalette; dark: ThemePalette };
   projects: Record<string /* projectId */, {
     font: string | null;
+    mode: "light" | "dark" | null; // null = inherit from defaults
     light: ThemePalette | null;   // null = inherit from defaults
     dark: ThemePalette | null;
   }>;
@@ -519,6 +520,7 @@ Project overrides for projects the caller can no longer access are filtered out.
   font: string; uiFont: string; uiPrimary: string; uiSecondary: string;
   inheritanceVersion: number; paletteVersion: number;
   light: ThemePalette; dark: ThemePalette;
+  mode?: "light" | "dark" | null; // null = use general mode
 }   // → 204
 ```
 
@@ -528,7 +530,7 @@ A per-user private preference, not a shared project change — hence Viewer, not
 
 ```ts
 // Request — null means "inherit from defaults"
-{ font: string | null; light: ThemePalette | null; dark: ThemePalette | null }   // → 204
+{ font: string | null; mode?: "light" | "dark" | null; light: ThemePalette | null; dark: ThemePalette | null }   // → 204
 ```
 
 #### `GET /health` — anonymous

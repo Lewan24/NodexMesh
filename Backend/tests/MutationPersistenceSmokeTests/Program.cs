@@ -37,6 +37,23 @@ try
     db.Projects.Add(project);
     db.Boards.Add(board);
     await db.SaveChangesAsync();
+    db.AppearanceProfiles.Add(new AppearanceProfile { UserId = userId, Mode = "dark" });
+    var appearanceOverride = new ProjectAppearanceOverride
+    {
+        Id = Guid.NewGuid(), UserId = userId, ProjectId = project.Id, Mode = "light"
+    };
+    db.ProjectAppearanceOverrides.Add(appearanceOverride);
+    await db.SaveChangesAsync();
+    await using (var reloaded = new AppDbContext(options))
+    {
+        Require((await reloaded.AppearanceProfiles.SingleAsync()).Mode == "dark", "default dark mode survives database reload");
+        Require((await reloaded.ProjectAppearanceOverrides.SingleAsync()).Mode == "light", "project mode survives database reload");
+    }
+    appearanceOverride.Mode = null;
+    await db.SaveChangesAsync();
+    await using (var reloaded = new AppDbContext(options))
+        Require((await reloaded.ProjectAppearanceOverrides.SingleAsync()).Mode is null, "cleared project mode remains inherited");
+
     var tags = new TagService(db, new ProjectAccessService(db));
     var tag = await tags.GetOrCreateAsync(project.Id, userId, "  Planning  ");
     var sameTag = await tags.GetOrCreateAsync(project.Id, userId, "ＰＬＡＮＮＩＮＧ");
