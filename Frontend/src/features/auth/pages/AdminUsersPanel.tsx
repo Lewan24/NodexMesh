@@ -39,8 +39,10 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
       await action();
       await load();
       setMessage(success);
+      return true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'The operation failed.');
+      return false;
     }
   };
   const createUser = async (event: React.FormEvent) => {
@@ -133,36 +135,19 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
               <h2 className="mb-3 font-semibold">Users</h2>
               <div className="space-y-2">
                 {users.map((user) => (
-                  <div
+                  <AdminUserRow
                     key={user.id}
-                    className="flex flex-wrap items-center gap-3 rounded-xl p-3"
-                    style={{ backgroundColor: 'var(--color-surface-alt)' }}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium">{user.displayName}</p>
-                      <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                        {user.email} · {user.isAdmin ? 'admin' : 'user'}
-                        {user.isBlocked ? ' · blocked' : ''}
-                      </p>
-                    </div>
-                    <button className="btn-ghost rounded-lg px-2 py-1 text-xs" onClick={() => resetPassword(user)}>
-                      Reset password
-                    </button>
-                    {user.id !== auth.currentUser?.id && (
-                      <button
-                        className="rounded-lg px-2 py-1 text-xs"
-                        style={{ color: user.isBlocked ? 'var(--color-success)' : 'var(--color-danger-strong)' }}
-                        onClick={() =>
-                          void run(
-                            () => auth.setUserBlocked(user.id, !user.isBlocked),
-                            user.isBlocked ? 'User unblocked.' : 'User blocked.',
-                          )
-                        }
-                      >
-                        {user.isBlocked ? 'Unblock' : 'Block'}
-                      </button>
-                    )}
-                  </div>
+                    user={user}
+                    currentUserId={auth.currentUser?.id}
+                    onSave={(input) => run(() => auth.updateAdminUser(user.id, input), 'User updated.')}
+                    onResetPassword={() => resetPassword(user)}
+                    onToggleBlocked={() =>
+                      run(
+                        () => auth.setUserBlocked(user.id, !user.isBlocked),
+                        user.isBlocked ? 'User unblocked.' : 'User blocked.',
+                      )
+                    }
+                  />
                 ))}
               </div>
             </div>
@@ -210,6 +195,109 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
         )}
       </div>
     </main>
+  );
+}
+
+function AdminUserRow({
+  user,
+  currentUserId,
+  onSave,
+  onResetPassword,
+  onToggleBlocked,
+}: {
+  user: AdminUser;
+  currentUserId?: string;
+  onSave: (input: { email: string; displayName: string; isAdmin: boolean }) => Promise<boolean>;
+  onResetPassword: () => void;
+  onToggleBlocked: () => Promise<boolean>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState({ email: user.email, displayName: user.displayName, isAdmin: user.isAdmin });
+
+  if (editing) {
+    return (
+      <form
+        className="grid gap-2 rounded-xl p-3 sm:grid-cols-[1fr_1fr_auto]"
+        style={{ backgroundColor: 'var(--color-surface-alt)' }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          void onSave(draft).then((saved) => {
+            if (saved) setEditing(false);
+          });
+        }}
+      >
+        <input
+          required
+          maxLength={100}
+          aria-label="Display name"
+          className="input-theme px-3 py-2 text-sm"
+          value={draft.displayName}
+          onChange={(event) => setDraft({ ...draft, displayName: event.target.value })}
+        />
+        <input
+          required
+          type="email"
+          aria-label="Email address"
+          disabled={user.id === currentUserId}
+          className="input-theme px-3 py-2 text-sm"
+          value={draft.email}
+          onChange={(event) => setDraft({ ...draft, email: event.target.value })}
+        />
+        <select
+          aria-label="Application role"
+          disabled={user.id === currentUserId}
+          className="input-theme px-3 py-2 text-sm"
+          value={draft.isAdmin ? 'admin' : 'user'}
+          onChange={(event) => setDraft({ ...draft, isAdmin: event.target.value === 'admin' })}
+        >
+          <option value="user">User</option>
+          <option value="admin">Administrator</option>
+        </select>
+        <div className="flex gap-2 sm:col-span-3 sm:justify-end">
+          <button
+            type="button"
+            className="btn-ghost rounded-lg px-3 py-1.5 text-xs"
+            onClick={() => {
+              setDraft({ email: user.email, displayName: user.displayName, isAdmin: user.isAdmin });
+              setEditing(false);
+            }}
+          >
+            Cancel
+          </button>
+          <button className="btn-accent rounded-lg px-3 py-1.5 text-xs font-semibold">Save changes</button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <div
+      className="flex flex-wrap items-center gap-3 rounded-xl p-3"
+      style={{ backgroundColor: 'var(--color-surface-alt)' }}
+    >
+      <div className="min-w-0 flex-1">
+        <p className="font-medium">{user.displayName}</p>
+        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          {user.email} · {user.isAdmin ? 'admin' : 'user'}
+          {user.isBlocked ? ' · blocked' : ''}
+        </p>
+      </div>
+      <button className="btn-ghost rounded-lg px-2 py-1 text-xs" onClick={() => setEditing(true)}>
+        Edit
+      </button>
+      <button className="btn-ghost rounded-lg px-2 py-1 text-xs" onClick={onResetPassword}>
+        Reset password
+      </button>
+      {user.id !== currentUserId && (
+        <button
+          className="rounded-lg px-2 py-1 text-xs"
+          style={{ color: user.isBlocked ? 'var(--color-success)' : 'var(--color-danger-strong)' }}
+          onClick={() => void onToggleBlocked()}
+        >
+          {user.isBlocked ? 'Unblock' : 'Block'}
+        </button>
+      )}
+    </div>
   );
 }
 

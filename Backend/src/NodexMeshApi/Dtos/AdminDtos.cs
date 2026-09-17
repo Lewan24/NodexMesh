@@ -15,6 +15,11 @@ public sealed record AdminCreateUserRequest(
 
 public sealed record AdminResetPasswordRequest([property: Required, MinLength(12)] string Password);
 
+public sealed record AdminUpdateUserRequest(
+    [property: Required, EmailAddress, MaxLength(256)] string Email,
+    [property: Required, MinLength(1), MaxLength(100)] string DisplayName,
+    bool IsAdmin);
+
 public sealed record AdminBlockUserRequest(bool Blocked);
 
 public sealed record AdminRegistrationRequest(bool Enabled);

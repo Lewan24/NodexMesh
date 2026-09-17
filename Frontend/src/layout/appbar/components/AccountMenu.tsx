@@ -11,6 +11,7 @@ interface AccountMenuProps {
   onToggle: () => void;
   onClose: () => void;
   onToggleTheme: () => void;
+  onProfile: () => void;
   onManageUsers: () => void;
   onLogout: () => void;
   onResetDemo: () => void;
@@ -24,6 +25,7 @@ export default function AccountMenu({
   onToggle,
   onClose,
   onToggleTheme,
+  onProfile,
   onManageUsers,
   onLogout,
   onResetDemo,
@@ -96,6 +98,13 @@ export default function AccountMenu({
           </div>
 
           <div className="py-1.5">
+            <button
+              onClick={onProfile}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm"
+              style={{ color: 'var(--color-chrome-text)' }}
+            >
+              Profile and security
+            </button>
             <button
               onClick={onToggleTheme}
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm"

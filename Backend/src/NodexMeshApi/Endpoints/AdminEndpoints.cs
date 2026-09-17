@@ -19,6 +19,7 @@ public static class AdminEndpoints
 
         group.MapGet("/users", ListUsersAsync);
         group.MapPost("/users", CreateUserAsync);
+        group.MapPut("/users/{userId:guid}", UpdateUserAsync);
         group.MapPost("/users/{userId:guid}/password", ResetPasswordAsync);
         group.MapPatch("/users/{userId:guid}/blocked", SetBlockedAsync);
         group.MapGet("/projects", ListProjectsAsync);
@@ -71,6 +72,48 @@ public static class AdminEndpoints
             throw new ApiException(422, "invalid_password", string.Join(" ", result.Errors.Select(e => e.Description)));
         await RevokeSessionsAsync(db, userId, ct);
         return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<AdminUserDto>> UpdateUserAsync(
+        Guid userId,
+        AdminUpdateUserRequest request,
+        ClaimsPrincipal principal,
+        UserManager<ApplicationUser> users,
+        AppDbContext db,
+        CancellationToken ct)
+    {
+        var callerId = principal.GetUserId();
+        var user = await users.FindByIdAsync(userId.ToString())
+            ?? throw new ApiException(404, "not_found", "User not found.");
+        var email = request.Email.Trim().ToLowerInvariant();
+        var displayName = request.DisplayName.Trim();
+        if (displayName.Length == 0)
+            throw new ApiException(422, "invalid_user", "Display name is required.");
+        var roleChanged = user.IsAdmin != request.IsAdmin;
+        var emailChanged = !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase);
+
+        if (callerId == userId && roleChanged)
+            throw new ApiException(409, "self_role_change", "You cannot change your own administrator role.");
+        if (callerId == userId && emailChanged)
+            throw new ApiException(409, "self_email_change", "Change your own email from the profile page.");
+        if (user.IsAdmin && !request.IsAdmin && !user.IsBlocked
+            && await users.Users.CountAsync(candidate => candidate.IsAdmin && !candidate.IsBlocked, ct) <= 1)
+            throw new ApiException(409, "last_admin", "The last active administrator cannot be demoted.");
+
+        var existing = emailChanged ? await users.FindByEmailAsync(email) : null;
+        if (existing is not null && existing.Id != userId)
+            throw new ApiException(409, "email_conflict", "A user with that email already exists.");
+
+        user.Email = email;
+        user.UserName = email;
+        user.DisplayName = displayName;
+        user.IsAdmin = request.IsAdmin;
+        var result = await users.UpdateAsync(user);
+        if (!result.Succeeded)
+            throw new ApiException(422, "invalid_user", string.Join(" ", result.Errors.Select(error => error.Description)));
+
+        if (emailChanged || roleChanged) await RevokeSessionsAsync(db, userId, ct);
+        return TypedResults.Ok(ToUser(user));
     }
 
     private static async Task<NoContent> SetBlockedAsync(

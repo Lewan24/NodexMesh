@@ -22,9 +22,11 @@ import { useCollaborationPresence } from '@/features/projects/hooks/useCollabora
 
 interface BoardPageProps {
   userId: string;
+  onOpenAdminPanel: () => void;
+  onOpenProfile: () => void;
 }
 
-export default function BoardPage({ userId }: BoardPageProps) {
+export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: BoardPageProps) {
   const {
     status,
     remoteVersion,
@@ -235,6 +237,8 @@ export default function BoardPage({ userId }: BoardPageProps) {
   const appBar = (
     <>
       <AppBar
+        onOpenAdminPanel={onOpenAdminPanel}
+        onOpenProfile={onOpenProfile}
         onShare={activeProject && sharingApi && status === 'saved' ? () => setSharingOpen(true) : undefined}
         onRefresh={async () => {
           if (await flushPendingChanges()) await reload();

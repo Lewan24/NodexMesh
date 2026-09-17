@@ -178,7 +178,11 @@ generic, so don't surface it as "email already taken".
 { email: string; password: string }
 
 // 200 OK — also sets the httpOnly refresh cookie
-{ accessToken: string; expiresAtUtc: string /* ISO 8601 */ }
+{
+  accessToken: string;
+  expiresAtUtc: string; // ISO 8601
+  user: { id: string; email: string; displayName: string; isAdmin: boolean };
+}
 ```
 
 `401` on bad credentials, unknown email, **or lockout** — all identical, by design. After 5
@@ -193,7 +197,11 @@ No request body. **Requires `X-Requested-With: nodexmesh-web`.**
 
 ```ts
 // 200 OK — rotates the cookie
-{ accessToken: string; expiresAtUtc: string }
+{
+  accessToken: string;
+  expiresAtUtc: string;
+  user: { id: string; email: string; displayName: string; isAdmin: boolean };
+}
 ```
 
 `401` means the session is unrecoverable — clear state and redirect to login.
@@ -203,6 +211,40 @@ No request body. **Requires `X-Requested-With: nodexmesh-web`.**
 #### `POST /api/v1/auth/revoke` — authenticated
 
 No body. Always `204`, whether or not a token existed. Call on logout.
+
+---
+
+#### `GET /api/v1/auth/profile` — authenticated
+
+Returns `{ id, email, displayName, isAdmin }` for the current account.
+
+#### `PUT /api/v1/auth/profile` — authenticated
+
+```ts
+{ email: string; displayName: string; currentPassword?: string }
+```
+
+The current password is required when the email changes. An email change revokes other
+refresh sessions and rotates the current browser's cookie. The response has the same shape
+as login so the client immediately receives a token containing the new email claim.
+
+#### `POST /api/v1/auth/password` — authenticated
+
+```ts
+{ currentPassword: string; newPassword: string; confirmPassword: string }
+```
+
+Applies the normal password policy, revokes all existing refresh sessions, creates a new
+refresh session for the current browser, and returns the login response shape.
+
+---
+
+#### Administration endpoints
+
+All `/api/v1/admin` endpoints require an administrator token. `PUT /admin/users/{userId}`
+accepts `{ email, displayName, isAdmin }`. Administrators cannot change their own role or
+demote the last active administrator. Email and role changes revoke the affected user's
+refresh sessions.
 
 ---
 

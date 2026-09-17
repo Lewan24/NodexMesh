@@ -141,7 +141,10 @@ try
                     await using var scope = context.HttpContext.RequestServices.CreateAsyncScope();
                     var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                     var user = await users.FindByIdAsync(userId.ToString());
-                    if (user is null || user.IsBlocked) context.Fail("User account is blocked.");
+                    var tokenRole = context.Principal.FindFirstValue(ClaimTypes.Role);
+                    var currentRole = user?.IsAdmin == true ? "admin" : "user";
+                    if (user is null || user.IsBlocked || !string.Equals(tokenRole, currentRole, StringComparison.Ordinal))
+                        context.Fail("User account or role has changed.");
                 }
             };
         });

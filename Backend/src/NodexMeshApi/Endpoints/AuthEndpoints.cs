@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,9 @@ public static class AuthEndpoints
         group.MapPost("/login", LoginAsync).RequireRateLimiting("auth-strict");
         group.MapPost("/refresh", RefreshAsync).RequireRateLimiting("auth-refresh");
         group.MapPost("/revoke", RevokeAsync).RequireAuthorization().RequireRateLimiting("auth-strict");
+        group.MapGet("/profile", GetProfileAsync).RequireAuthorization();
+        group.MapPut("/profile", UpdateProfileAsync).RequireAuthorization().RequireRateLimiting("auth-strict");
+        group.MapPost("/password", ChangePasswordAsync).RequireAuthorization().RequireRateLimiting("auth-strict");
     }
 
     private static async Task<Ok<object>> RegistrationStatusAsync(AppDbContext db, CancellationToken ct)
@@ -123,7 +127,7 @@ public static class AuthEndpoints
         await db.SaveChangesAsync();
 
         SetRefreshTokenCookie(http, refreshToken, expiresAtUtc, environment);
-        return TypedResults.Ok(new AuthResponse(accessToken, accessTokenExpiresAtUtc));
+        return TypedResults.Ok(CreateAuthResponse(user, accessToken, accessTokenExpiresAtUtc));
     }
 
     private static async Task<Results<Ok<AuthResponse>, UnauthorizedHttpResult>> RefreshAsync(
@@ -151,14 +155,19 @@ public static class AuthEndpoints
 
         if (existing.RevokedAtUtc is not null)
         {
-            // A previously-used token was presented again — strong signal of theft/replay.
-            // Kill the whole refresh-token family so a stolen token can't be used further.
-            var activeTokens = await db.RefreshTokens
-                .Where(r => r.UserId == existing.UserId && r.RevokedAtUtc == null)
-                .ToListAsync();
+            // Only a token consumed by rotation has a replacement. Replaying that token is
+            // a theft signal, so kill the family. Tokens explicitly revoked by logout,
+            // password change or profile change simply fail; a stale browser must not be
+            // able to revoke the fresh session created by an account-security operation.
+            if (existing.ReplacedByTokenHash is not null)
+            {
+                var activeTokens = await db.RefreshTokens
+                    .Where(r => r.UserId == existing.UserId && r.RevokedAtUtc == null)
+                    .ToListAsync();
 
-            foreach (var token in activeTokens) token.RevokedAtUtc = DateTime.UtcNow;
-            await db.SaveChangesAsync();
+                foreach (var token in activeTokens) token.RevokedAtUtc = DateTime.UtcNow;
+                await db.SaveChangesAsync();
+            }
 
             ClearRefreshTokenCookie(http, environment);
             return TypedResults.Unauthorized();
@@ -197,7 +206,104 @@ public static class AuthEndpoints
         await db.SaveChangesAsync();
 
         SetRefreshTokenCookie(http, newRefreshToken, newExpiresAtUtc, environment);
-        return TypedResults.Ok(new AuthResponse(accessToken, accessTokenExpiresAtUtc));
+        return TypedResults.Ok(CreateAuthResponse(user, accessToken, accessTokenExpiresAtUtc));
+    }
+
+    private static async Task<Ok<UserProfileResponse>> GetProfileAsync(
+        ClaimsPrincipal principal, UserManager<ApplicationUser> userManager)
+    {
+        var user = await userManager.FindByIdAsync(principal.GetUserId().ToString())
+            ?? throw new ApiException(401, "unauthorized", "The account is no longer available.");
+        return TypedResults.Ok(ToProfile(user));
+    }
+
+    private static async Task<Ok<AuthResponse>> UpdateProfileAsync(
+        UpdateProfileRequest request,
+        ClaimsPrincipal principal,
+        UserManager<ApplicationUser> userManager,
+        ITokenService tokenService,
+        AppDbContext db,
+        HttpContext http,
+        IHostEnvironment environment,
+        CancellationToken ct)
+    {
+        var user = await userManager.FindByIdAsync(principal.GetUserId().ToString())
+            ?? throw new ApiException(401, "unauthorized", "The account is no longer available.");
+        var email = request.Email.Trim().ToLowerInvariant();
+        var displayName = request.DisplayName.Trim();
+        if (displayName.Length == 0)
+            throw new ApiException(422, "invalid_profile", "Display name is required.");
+        var emailChanged = !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase);
+
+        if (emailChanged && (string.IsNullOrEmpty(request.CurrentPassword)
+            || !await userManager.CheckPasswordAsync(user, request.CurrentPassword)))
+            throw new ApiException(400, "invalid_credentials", "The current password is incorrect.");
+
+        var existing = emailChanged ? await userManager.FindByEmailAsync(email) : null;
+        if (existing is not null && existing.Id != user.Id)
+            throw new ApiException(409, "profile_conflict", "Unable to update the profile with the provided details.");
+
+        user.Email = email;
+        user.UserName = email;
+        user.DisplayName = displayName;
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            throw new ApiException(422, "invalid_profile", string.Join(" ", result.Errors.Select(error => error.Description)));
+
+        if (emailChanged)
+            await RotateSessionsAsync(user, tokenService, db, http, environment, ct);
+        var (accessToken, expiresAtUtc) = tokenService.GenerateAccessToken(user);
+        return TypedResults.Ok(CreateAuthResponse(user, accessToken, expiresAtUtc));
+    }
+
+    private static async Task<Ok<AuthResponse>> ChangePasswordAsync(
+        ChangePasswordRequest request,
+        ClaimsPrincipal principal,
+        UserManager<ApplicationUser> userManager,
+        ITokenService tokenService,
+        AppDbContext db,
+        HttpContext http,
+        IHostEnvironment environment,
+        CancellationToken ct)
+    {
+        var user = await userManager.FindByIdAsync(principal.GetUserId().ToString())
+            ?? throw new ApiException(401, "unauthorized", "The account is no longer available.");
+        var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!result.Succeeded)
+            throw new ApiException(422, "invalid_password", string.Join(" ", result.Errors.Select(error => error.Description)));
+
+        await RotateSessionsAsync(user, tokenService, db, http, environment, ct);
+        var (accessToken, accessExpiresAtUtc) = tokenService.GenerateAccessToken(user);
+        return TypedResults.Ok(CreateAuthResponse(user, accessToken, accessExpiresAtUtc));
+    }
+
+    private static async Task RotateSessionsAsync(
+        ApplicationUser user,
+        ITokenService tokenService,
+        AppDbContext db,
+        HttpContext http,
+        IHostEnvironment environment,
+        CancellationToken ct)
+    {
+        var now = DateTime.UtcNow;
+        var activeTokens = await db.RefreshTokens
+            .Where(token => token.UserId == user.Id && token.RevokedAtUtc == null)
+            .ToListAsync(ct);
+        foreach (var token in activeTokens) token.RevokedAtUtc = now;
+
+        var (refreshToken, hash, refreshExpiresAtUtc) = tokenService.GenerateRefreshToken();
+        db.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.CreateVersion7(),
+            UserId = user.Id,
+            TokenHash = hash,
+            ExpiresAtUtc = refreshExpiresAtUtc,
+            CreatedAtUtc = now,
+            CreatedByIp = http.Connection.RemoteIpAddress?.ToString()
+        });
+        await db.SaveChangesAsync(ct);
+
+        SetRefreshTokenCookie(http, refreshToken, refreshExpiresAtUtc, environment);
     }
 
     private static async Task<NoContent> RevokeAsync(
@@ -243,6 +349,12 @@ public static class AuthEndpoints
             Path = RefreshTokenCookiePath
         });
     }
+
+    private static AuthResponse CreateAuthResponse(ApplicationUser user, string accessToken, DateTime expiresAtUtc) =>
+        new(accessToken, expiresAtUtc, ToProfile(user));
+
+    private static UserProfileResponse ToProfile(ApplicationUser user) =>
+        new(user.Id, user.Email!, user.DisplayName, user.IsAdmin);
 }
 
 internal static class DefaultThemes
