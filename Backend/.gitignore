@@ -1,0 +1,33 @@
+## .NET build output
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+publish/
+*.tsbuildinfo
+
+## Rider / VS / VS Code
+.idea/
+.vs/
+.vscode/
+*.DotSettings.user
+
+## Secrets — never commit these
+appsettings.Production.json
+appsettings.Local.json
+.env
+*.pfx
+*.p12
+secrets.json
+
+## Postgres volume (docker compose)
+.data/
+
+## OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,67 @@
+# Standalone Docker Compose / Portainer stack (Docker Standalone endpoint).
+# Replace the two database password values, JWT key and public origin below.
+# Route HTTPS from your reverse proxy to the Docker host on port 3000.
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      POSTGRES_DB: nodexmesh
+      POSTGRES_USER: nodexmesh_app
+      POSTGRES_PASSWORD: 'CHANGE-ME-database-password'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "nodexmesh_app", "-d", "nodexmesh"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: lewan24/nodexmesh-api:latest
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      # Keep this password identical to POSTGRES_PASSWORD above.
+      ConnectionStrings__Default: 'Host=db;Port=5432;Database=nodexmesh;Username=nodexmesh_app;Password=CHANGE-ME-database-password'
+      # Replace with a random secret of at least 32 characters.
+      Jwt__Key: 'CHANGE-ME-with-a-random-JWT-key-at-least-32-characters'
+      Jwt__Issuer: nodexmesh-api
+      Jwt__Audience: nodexmesh-web
+      # Public browser origin, without a trailing slash.
+      Cors__AllowedOrigins__0: https://nodexmesh.example.com
+      Admin__Email: admin@nodexmesh.pl
+      # Empty generates a one-time password in the API startup logs.
+      Admin__Password: ''
+
+  frontend:
+    image: lewan24/nodexmesh-web:latest
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "3000:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+
+volumes:
+  postgres-data:

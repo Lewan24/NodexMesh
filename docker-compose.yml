@@ -1,0 +1,86 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nodexmesh}
+      POSTGRES_USER: ${POSTGRES_USER:-nodexmesh_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+    # Keep PostgreSQL private to the Compose network. Uncomment for local GUI access.
+    # ports:
+    #   - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+      no_cache: true
+    # Future Docker Hub deployment: use this image instead of the build block.
+    # image: lewan24/nodexmesh-api:latest
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Development keeps the local HTTP stack from redirecting to HTTPS. Set
+      # Production when TLS is terminated by an external reverse proxy.
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__Default: Host=db;Port=5432;Database=${POSTGRES_DB:-nodexmesh};Username=${POSTGRES_USER:-nodexmesh_app};Password=${POSTGRES_PASSWORD:-}
+      Jwt__Key: ${JWT_KEY:-}
+      Jwt__Issuer: ${JWT_ISSUER:-http://localhost:8080}
+      Jwt__Audience: ${JWT_AUDIENCE:-nodexmesh-web}
+      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:3000}
+      Admin__Email: ${ADMIN_EMAIL:-admin@example.com}
+      Admin__Password: ${ADMIN_PASSWORD:-}
+    ports:
+      - "${API_PORT:-8080}:8080"
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+      no_cache: true
+      args:
+        VITE_DATA_SOURCE: ${VITE_DATA_SOURCE:-http}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+    # Future Docker Hub deployment: use this image instead of the build block.
+    # image: lewan24/nodexmesh-web:latest
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "${FRONTEND_PORT:-3000}:8080"
+
+  adminer:
+    image: adminer:4.8.1-standalone
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${ADMINER_PORT:-8081}:8080"
+
+volumes:
+  postgres-data:

@@ -1,0 +1,350 @@
+import SharingDialog from '@/features/projects/components/SharingDialog';
+import ReadOnlyBoard from '@/features/projects/components/ReadOnlyBoard';
+import { collaborationToken, sharingApi } from '@/app/services';
+import { flushPendingChanges } from '@/shared/api/pendingChanges';
+import { createId } from '@/shared/lib/createId';
+const AppearanceDialog = lazy(() => import('@/features/appearance/AppearanceDialog'));
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { useCallback, useState, useEffect, lazy, Suspense } from 'react';
+
+import type { BoardItem, ColumnItem, FrameItem } from '@/entities/board/types';
+
+import { useBoardView } from '@/features/board/hooks/useBoardView';
+import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
+import { useProjectItems } from '@/features/projects/hooks/useProjectItems';
+import { useProjects } from '@/features/projects/hooks/useProjects';
+
+import Canvas from '@/features/canvas/components/Canvas';
+import AppBar from '@/layout/appbar/AppBar';
+import Sidebar from '@/layout/sidebar/Sidebar';
+import SaveStatus from '@/features/projects/components/SaveStatus';
+import { useCollaborationPresence } from '@/features/projects/hooks/useCollaborationPresence';
+
+interface BoardPageProps {
+  userId: string;
+}
+
+export default function BoardPage({ userId }: BoardPageProps) {
+  const {
+    status,
+    remoteVersion,
+    liveStatus,
+    error,
+    retry,
+    reload,
+    projects,
+    activeProject,
+    activeProjectId,
+    setProjects,
+    addProject,
+    selectProject,
+    createFirstProject,
+    resetDemo,
+    importProject,
+    renameProject,
+    trashProject,
+    restoreProject,
+    emptyTrash,
+  } = useProjects(userId);
+
+  const { setScope } = useTheme();
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [sharingOpen, setSharingOpen] = useState(false);
+  const readOnly = activeProject?.role === 'Viewer' || activeProject?.role === 'Commenter';
+  useEffect(() => {
+    setScope(userId, activeProjectId);
+  }, [userId, activeProjectId, setScope]);
+  useEffect(() => () => setScope('', ''), [setScope]);
+
+  const {
+    selectedTool,
+    setSelectedTool,
+    selectTool,
+    selectedIds,
+    setSelectedIds,
+    pan,
+    setPan,
+    zoom,
+    setZoom,
+    resetViewport,
+    resetBoardView,
+  } = useBoardView();
+
+  const remotePresence = useCollaborationPresence(
+    activeProjectId,
+    activeProject?.boardId,
+    userId,
+    selectedIds,
+    collaborationToken,
+  );
+
+  const {
+    addItem,
+    updateItem,
+    restoreItems,
+    deleteItem,
+    deleteItems,
+    bringForward,
+    sendBackward,
+    bringToFront,
+    sendToBack,
+  } = useProjectItems({ activeProjectId, setProjects });
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleAddProject = useCallback(
+    (name: string) => {
+      addProject(name);
+      resetViewport();
+    },
+    [addProject, resetViewport],
+  );
+
+  const handleSelectProject = useCallback(
+    (id: string) => {
+      selectProject(id);
+      resetBoardView();
+    },
+    [selectProject, resetBoardView],
+  );
+
+  const handleDropOnColumn = useCallback(
+    (itemId: string, columnId: string) => {
+      setProjects((previous) =>
+        previous.map((project) => {
+          if (project.id !== activeProjectId) {
+            return project;
+          }
+
+          const droppedItem = project.items.find((item) => item.id === itemId);
+
+          if (!droppedItem) {
+            return project;
+          }
+
+          return {
+            ...project,
+            items: project.items
+              .filter((item) => item.id !== itemId)
+              .map((item) => {
+                if (item.id !== columnId || item.type !== 'column') {
+                  return item;
+                }
+
+                return { ...item, items: [...item.items, { ...droppedItem, x: 0, y: 0, zIndex: 1 }] };
+              }),
+          };
+        }),
+      );
+    },
+    [activeProjectId, setProjects],
+  );
+
+  const handleEjectFromColumn = useCallback(
+    (columnId: string, ejectedItem: BoardItem, position?: { x: number; y: number }) => {
+      setProjects((previous) =>
+        previous.map((project) => {
+          if (project.id !== activeProjectId) {
+            return project;
+          }
+
+          const column = project.items.find((item) => item.id === columnId && item.type === 'column') as
+            | ColumnItem
+            | undefined;
+
+          if (!column) {
+            return project;
+          }
+
+          const newItem: BoardItem = {
+            ...ejectedItem,
+
+            id: ejectedItem.id,
+
+            x: position?.x ?? column.x + column.width + 24,
+
+            y: position?.y ?? column.y + 40,
+
+            zIndex: Math.max(0, ...project.items.map((item) => item.zIndex)) + 1,
+          };
+
+          const updatedColumn: ColumnItem = {
+            ...column,
+
+            items: column.items.filter((item) => item.id !== ejectedItem.id),
+          };
+
+          return {
+            ...project,
+
+            items: [...project.items.filter((item) => item.id !== columnId), updatedColumn, newItem],
+          };
+        }),
+      );
+    },
+    [activeProjectId, setProjects],
+  );
+
+  const handleGroupSelected = useCallback(() => {
+    if (selectedIds.length < 2 || !activeProject) {
+      return;
+    }
+
+    const selectedItems = activeProject.items.filter((item) => selectedIds.includes(item.id));
+
+    if (selectedItems.length < 2) {
+      return;
+    }
+
+    const padding = 32;
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    for (const item of selectedItems) {
+      const size = getApproxItemSize(item);
+
+      minX = Math.min(minX, item.x);
+      minY = Math.min(minY, item.y);
+
+      maxX = Math.max(maxX, item.x + size.width);
+      maxY = Math.max(maxY, item.y + size.height);
+    }
+
+    const frame: FrameItem = {
+      id: createId(),
+      type: 'frame',
+      x: minX - padding,
+      y: minY - padding,
+      zIndex: Math.max(0, Math.min(...selectedItems.map((item) => item.zIndex)) - 1),
+      title: 'Group',
+      width: maxX - minX + padding * 2,
+      height: maxY - minY + padding * 2,
+      color: '#7C3AED',
+    };
+
+    addItem(frame);
+    selectedItems
+      .filter((item) => item.type !== 'frame' && !item.locked)
+      .forEach((item) => updateItem(item.id, (current) => ({ ...current, frameId: frame.id })));
+    setSelectedIds([]);
+  }, [selectedIds, activeProject, addItem, updateItem, setSelectedIds]);
+
+  const appBar = (
+    <>
+      <AppBar
+        onShare={activeProject && sharingApi && status === 'saved' ? () => setSharingOpen(true) : undefined}
+        onRefresh={async () => {
+          if (await flushPendingChanges()) await reload();
+        }}
+        liveStatus={liveStatus}
+        onAppearance={() => setAppearanceOpen(true)}
+        projects={projects}
+        activeProjectId={activeProjectId}
+        onSelectProject={handleSelectProject}
+        onAddProject={handleAddProject}
+        onRenameProject={renameProject}
+        onTrashProject={(id) => {
+          trashProject(id);
+          resetBoardView();
+        }}
+        onEmptyTrash={emptyTrash}
+        onRestoreProject={(id) => {
+          restoreProject(id);
+          resetBoardView();
+        }}
+        onResetDemo={resetDemo}
+        onImportProject={importProject}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+      />
+      <SaveStatus status={status} error={error} projects={projects} retry={retry} reload={reload} />
+      {sharingOpen && activeProject && sharingApi && (
+        <SharingDialog
+          key={activeProject.id}
+          project={activeProject}
+          userId={userId}
+          onClose={() => setSharingOpen(false)}
+          onLeave={() => {
+            setSharingOpen(false);
+            void reload();
+          }}
+        />
+      )}
+      {appearanceOpen && (
+        <Suspense fallback={null}>
+          <AppearanceDialog projects={projects} onClose={() => setAppearanceOpen(false)} />
+        </Suspense>
+      )}
+    </>
+  );
+
+  if (status === 'loading') {
+    return (
+      <div className="flex h-dvh items-center justify-center" role="status">
+        Loading projects…
+      </div>
+    );
+  }
+
+  if (!activeProject) {
+    return (
+      <div className="flex flex-col h-dvh w-full" style={{ backgroundColor: 'var(--color-app-bg)' }}>
+        {appBar}
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-theme-muted">
+          <p>No active projects. Create a board or restore one from the project trash.</p>
+          <button className="btn-accent rounded-xl px-4 py-2.5 text-sm font-semibold" onClick={createFirstProject}>
+            Create your first board
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="board-shell flex flex-col h-dvh w-full overflow-clip">
+      {appBar}
+
+      <div
+        className="relative isolate z-0 flex flex-1 min-h-0 min-w-0 w-full overflow-hidden"
+        style={{ backgroundColor: 'var(--color-app-bg)' }}
+      >
+        {!readOnly && <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />}
+
+        {readOnly ? (
+          <ReadOnlyBoard key={activeProjectId} items={activeProject.items} />
+        ) : (
+          <Canvas
+            key={activeProjectId}
+            project={activeProject}
+            remoteVersion={remoteVersion}
+            remotePresence={remotePresence}
+            selectedTool={selectedTool}
+            pan={pan}
+            zoom={zoom}
+            selectedIds={selectedIds}
+            onPanChange={setPan}
+            onZoomChange={setZoom}
+            onSelectTool={setSelectedTool}
+            onSelectItems={setSelectedIds}
+            onGroupSelected={handleGroupSelected}
+            onAddItem={addItem}
+            onUpdateItem={updateItem}
+            onDeleteItem={deleteItem}
+            onDeleteItems={deleteItems}
+            onBringForward={bringForward}
+            onSendBackward={sendBackward}
+            onBringToFront={bringToFront}
+            onSendToBack={sendToBack}
+            onDropOnColumn={handleDropOnColumn}
+            onEjectFromColumn={handleEjectFromColumn}
+            onRestoreItems={restoreItems}
+            searchQuery={searchQuery}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
