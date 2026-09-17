@@ -15,7 +15,6 @@ RUN dotnet publish src/NodexMeshApi/NodexMeshApi.csproj \
     --no-restore \
     /p:UseAppHost=false
 
-# Runtime image: aspnet (not sdk) — smaller, and no compiler toolchain in production.
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
@@ -23,6 +22,7 @@ WORKDIR /app
 USER app
 
 COPY --from=build --chown=app:app /app/publish .
+COPY --chown=app:app docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 ENV ASPNETCORE_URLS=http://+:8080 \
     ASPNETCORE_ENVIRONMENT=Production \
@@ -30,7 +30,4 @@ ENV ASPNETCORE_URLS=http://+:8080 \
 
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=20s --retries=3 \
-    CMD ["dotnet", "--info"]
-
-ENTRYPOINT ["dotnet", "NodexMeshApi.dll"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
