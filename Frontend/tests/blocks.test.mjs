@@ -738,6 +738,19 @@ test('automatic growth pushes a vertical chain while preserving other columns an
   assert.equal(growsAutomatically({ ...createCanvasItem('document', 0, 0), autoHeight: false }), false);
 });
 
+test('stickers stay static when another item grows and never trigger auto layout themselves', () => {
+  const source = createCanvasItem('checklist', 0, 0);
+  const sticker = { ...createCanvasItem('image', 0, 128), variant: 'sticker' };
+  const before = new Map([
+    [source.id, { width: 320, height: 100 }],
+    [sticker.id, { width: 320, height: 80 }],
+  ]);
+  const after = new Map(before).set(source.id, { width: 320, height: 180 });
+  const patches = autoGrowthLayout([source, sticker], source.id, before, after);
+  assert.equal(patches.has(sticker.id), false);
+  assert.equal(growsAutomatically(sticker), false);
+});
+
 test('automatic growth expands containing frames and preserves standalone line geometry', () => {
   const source = createCanvasItem('checklist', 0, 0);
   const line = { ...createCanvasItem('line', 50, 150), x2: 20, y2: 130 };

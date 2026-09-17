@@ -981,8 +981,13 @@ export default function Canvas({
       {searchActive && (
         <div
           data-canvas-ui="true"
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 rounded-lg border px-3 py-2 shadow-md text-xs"
-          style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3 rounded-lg border px-3 py-2 shadow-md text-xs"
+          style={{
+            background: 'var(--color-surface)',
+            borderColor: 'var(--color-border)',
+            // The edit bar is z-index 50; search navigation must remain clickable above it.
+            zIndex: 60,
+          }}
           onMouseDown={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
           onContextMenu={(event) => event.stopPropagation()}

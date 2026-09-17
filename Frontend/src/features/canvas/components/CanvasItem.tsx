@@ -120,7 +120,8 @@ export default function CanvasItem({
     !remotePresence?.length &&
     !searchActive &&
     item.type !== 'line' &&
-    item.type !== 'drawing';
+    item.type !== 'drawing' &&
+    item.type !== 'section-title';
   const approximateSize = getApproxItemSize(item);
   // Some blocks measure only their currently visible content (for example an
   // empty document or checklist). Keep the persisted/canonical item geometry
