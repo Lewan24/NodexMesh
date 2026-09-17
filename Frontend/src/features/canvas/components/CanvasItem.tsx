@@ -5,6 +5,8 @@ import BlockRenderer from '@/features/blocks/BlockRenderer';
 import ItemWatcher from '@/features/canvas/components/ItemWatcher';
 
 import type { ResizeDirection } from '@/features/canvas/types';
+import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
+import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
 import ItemLockBadge from './ItemLockBadge';
@@ -103,10 +105,14 @@ export default function CanvasItem({
   onQuickConnectStart,
 }: CanvasItemProps) {
   const [hasFocus, setHasFocus] = useState(false);
-  // Only simplify already measured blocks so connection geometry stays accurate.
+  const mobile = useMobileLayout();
+  const lodThreshold = mobile ? 0.2 : 0.25;
+  // Keep a cheap outline on the canvas while the camera is zoomed out. The
+  // previous implementation only entered LOD after a measurement existed,
+  // so newly loaded items stayed as expensive content at tiny scale and could
+  // appear to disappear before their first measurement completed.
   const simplified =
-    zoom < 0.3 &&
-    measuredSize &&
+    zoom <= lodThreshold &&
     !isSelected &&
     !isDragging &&
     !isDragOver &&
@@ -114,9 +120,15 @@ export default function CanvasItem({
     !remotePresence?.length &&
     !searchActive &&
     item.type !== 'line' &&
-    item.type !== 'drawing' &&
-    item.type !== 'section-title' &&
-    item.type !== 'frame';
+    item.type !== 'drawing';
+  const approximateSize = getApproxItemSize(item);
+  // Some blocks measure only their currently visible content (for example an
+  // empty document or checklist). Keep the persisted/canonical item geometry
+  // as the lower bound so the overview still communicates the item's footprint.
+  const skeletonSize = {
+    width: Math.max(measuredSize?.width ?? 0, approximateSize.width),
+    height: Math.max(measuredSize?.height ?? 0, approximateSize.height),
+  };
   const showDragEffect = isDragging && item.type !== 'line';
 
   // Only section titles change their content with the camera scale. Keep the
@@ -313,18 +325,20 @@ export default function CanvasItem({
       >
         {simplified ? (
           <div
+            data-canvas-lod="skeleton"
             className="item-rounded border p-3 overflow-hidden space-y-3"
             style={{
-              width: measuredSize.width,
-              height: measuredSize.height,
-              background: 'var(--color-surface)',
-              borderColor: 'var(--color-border)',
+              width: Math.max(32, skeletonSize.width),
+              height: Math.max(24, skeletonSize.height),
+              background: '#ffffff',
+              borderColor: '#cbd5e1',
+              boxShadow: '0 1px 3px rgba(15, 23, 42, 0.16)',
             }}
           >
-            <div className="h-3 w-2/5 rounded-full" style={{ background: 'var(--color-border)' }} />
-            <div className="h-2 w-full rounded-full" style={{ background: 'var(--color-border-soft)' }} />
-            <div className="h-2 w-4/5 rounded-full" style={{ background: 'var(--color-border-soft)' }} />
-            <div className="h-2 w-3/5 rounded-full" style={{ background: 'var(--color-border-soft)' }} />
+            <div className="h-3 w-2/5 rounded-full" style={{ background: '#94a3b8' }} />
+            <div className="h-2 w-full rounded-full" style={{ background: '#e2e8f0' }} />
+            <div className="h-2 w-4/5 rounded-full" style={{ background: '#e2e8f0' }} />
+            <div className="h-2 w-3/5 rounded-full" style={{ background: '#e2e8f0' }} />
           </div>
         ) : (
           content

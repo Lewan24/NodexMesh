@@ -117,3 +117,7 @@ secrets/TLS deployment examples, and publishing versioned images to Docker Hub.
 ## Configuration and secrets
 
 See [DOCKER.md](DOCKER.md) for the simple `.env` setup and the Docker secrets variant.
+
+## License
+
+NodexMesh is released under the [MIT License](LICENSE).

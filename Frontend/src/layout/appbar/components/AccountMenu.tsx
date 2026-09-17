@@ -142,46 +142,48 @@ export default function AccountMenu({
               </button>
             )}
 
-            <div className="my-1" style={{ borderTop: '1px solid var(--color-chrome-border-soft)' }} />
+            {isMockDataSource && (
+              <>
+                <div className="my-1" style={{ borderTop: '1px solid var(--color-chrome-border-soft)' }} />
 
-            <button
-              type="button"
-              onClick={() => {
-                const confirmed = window.confirm(
-                  isMockDataSource
-                    ? 'Clear ALL local storage for this site? This deletes projects for all local users, old data and preferences. The app will reload and you will need to sign in again. The demo account will load the latest bundled demo. Close other tabs of this app first.'
-                    : 'Reset demo data? All of your current projects and changes will be permanently replaced with the default demo data.',
-                );
-
-                if (!confirmed) return;
-
-                onResetDemo();
-                onClose();
-              }}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm"
-              style={{ color: 'var(--color-danger)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255,107,138,0.08)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 12a9 9 0 1 0 3-6.7" />
-                <path d="M3 3v6h6" />
-              </svg>
-              Reset demo
-            </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (
+                      !window.confirm(
+                        'Clear ALL local storage for this site? This deletes the local demo data and preferences.',
+                      )
+                    )
+                      return;
+                    onResetDemo();
+                    onClose();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm"
+                  style={{ color: 'var(--color-danger)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255,107,138,0.08)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 12a9 9 0 1 0 3-6.7" />
+                    <path d="M3 3v6h6" />
+                  </svg>
+                  Reset demo
+                </button>
+              </>
+            )}
 
             <button
               onClick={onLogout}
