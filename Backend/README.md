@@ -4,11 +4,8 @@ Backend for [NodexMesh](https://github.com/Lewan24/NodexMesh) — .NET 10 minima
 PostgreSQL + EF Core, JWT access tokens with rotating refresh-token cookies, and
 per-project collaboration roles.
 
-> **Not compile-verified.** I had no .NET 10 SDK available when writing this, so treat the
-> first `dotnet build` as part of the setup. Expect a handful of small fixes — most likely
-> around package versions in the `.csproj` (I pinned plausible 10.0.0 versions that may not
-> all exist yet) and the `AddValidation()` API surface. Everything else is written against
-> the documented .NET 10 / EF Core 10 APIs.
+The API is compile-verified with the repository's .NET SDK. Run the build and smoke tests
+from the repository root before deploying.
 
 ## Layout
 
@@ -42,7 +39,7 @@ per-project collaboration roles.
 docker run -d --name nodexmesh-db \
   -e POSTGRES_DB=nodexmesh \
   -e POSTGRES_USER=nodexmesh_app \
-  -e POSTGRES_PASSWORD=devpassword \
+  -e POSTGRES_PASSWORD='<choose-a-local-password>' \
   -p 5432:5432 postgres:17-alpine
 
 # 2. Secrets (never commit real values)
@@ -116,13 +113,13 @@ Two things the HTTP client **must** do:
    purely by cookie.
 2. Send `credentials: 'include'` so the refresh cookie travels.
 
-`API.md` has the full contract, including exact JSON shapes for all 20 board-item types.
+`docs/API.md` has the full contract, including exact JSON shapes for all 20 board-item types.
 
-## Next steps
+## Security and administration
 
-1. `dotnet build` and fix whatever the compiler finds (see the note at the top).
-2. Generate the initial migration and check the produced SQL against
-   `nodexmesh-db-schema.md` — particularly the jsonb columns and check constraints.
-3. Decide on the open design questions in `src/NodexMeshApi/README.md` — most importantly
-   how real-time collaboration should merge concurrent edits, since that shapes the
-   mutation model.
+The API validates JWTs and refresh-token rotation, rejects blocked accounts, applies
+project-role and admin authorization, rate limits authentication/public sharing, and uses
+strict DTO validation. The first startup creates the configured administrator; leave
+`Admin:Password` empty to generate a random password and print it once in the API logs.
+See the repository [README](../README.md) for the current API surface, security posture,
+roadmap, and deployment guidance.

@@ -39,13 +39,14 @@ public sealed class BoardMutationService(
         var itemIds = db.BoardItems.Where(i => i.BoardId == boardId).Select(i => i.Id);
 
         var links = await db.ItemLinks.AsNoTracking()
-            .Where(l => itemIds.Contains(l.SourceItemId)).ToListAsync(ct);
+            .Where(l => itemIds.Contains(l.SourceItemId) && itemIds.Contains(l.TargetItemId)).ToListAsync(ct);
         var comments = await db.Comments.AsNoTracking()
             .Where(c => itemIds.Contains(c.ItemId)).ToListAsync(ct);
         var itemTags = await db.ItemTags.AsNoTracking()
             .Where(t => itemIds.Contains(t.ItemId)).ToListAsync(ct);
+        var tagIds = itemTags.Select(t => t.TagId).ToHashSet();
         var tags = await db.Tags.AsNoTracking()
-            .Where(t => t.ProjectId == board.ProjectId).ToListAsync(ct);
+            .Where(t => t.ProjectId == board.ProjectId && tagIds.Contains(t.Id)).ToListAsync(ct);
 
         return new BoardSnapshotDto(
             ToDto(board),
@@ -124,11 +125,20 @@ public sealed class BoardMutationService(
             .ToDictionaryAsync(i => i.Id, ct);
 
         var conflicts = new List<ConflictDto>();
+        var upsertIds = mutation.Upserts.Select(upsert => upsert.Item.Id).ToHashSet();
+        var foreignIds = await db.BoardItems.IgnoreQueryFilters()
+            .Where(item => upsertIds.Contains(item.Id) && item.BoardId != boardId)
+            .Select(item => item.Id)
+            .ToHashSetAsync(ct);
 
         // --- 3. Collect all conflicts before mutating anything ---
         foreach (var upsert in mutation.Upserts)
         {
-            if (upsert.ExpectedRevision is null)
+            if (foreignIds.Contains(upsert.Item.Id))
+            {
+                conflicts.Add(new ConflictDto(upsert.Item.Id, null, "invalid_scope"));
+            }
+            else if (upsert.ExpectedRevision is null)
             {
                 // Insert: the ID must not already exist.
                 if (existing.ContainsKey(upsert.Item.Id))
@@ -353,6 +363,8 @@ public sealed class BoardMutationService(
 
         foreach (var dto in upsert.Comments)
         {
+            if (dto.Text.Length > 10_000)
+                throw new ApiException(422, "invalid_comment", "Comments may contain at most 10,000 characters.");
             if (existingComments.TryGetValue(dto.Id, out var comment))
             {
                 comment.Text = dto.Text;

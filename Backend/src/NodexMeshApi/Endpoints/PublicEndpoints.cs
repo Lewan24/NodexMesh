@@ -72,15 +72,16 @@ public static class PublicEndpoints
         var itemIds = items.Select(i => i.Id).ToHashSet();
 
         var links = await db.ItemLinks.AsNoTracking()
-            .Where(l => itemIds.Contains(l.SourceItemId))
+            .Where(l => itemIds.Contains(l.SourceItemId) && itemIds.Contains(l.TargetItemId))
             .ToListAsync(ct);
 
         var itemTags = await db.ItemTags.AsNoTracking()
             .Where(t => itemIds.Contains(t.ItemId))
             .ToListAsync(ct);
 
+        var tagIds = itemTags.Select(t => t.TagId).ToHashSet();
         var tags = await db.Tags.AsNoTracking()
-            .Where(t => t.ProjectId == projectId)
+            .Where(t => t.ProjectId == projectId && tagIds.Contains(t.Id))
             .ToListAsync(ct);
 
         // Show the board using the OWNER's theme — an anonymous viewer has no profile of

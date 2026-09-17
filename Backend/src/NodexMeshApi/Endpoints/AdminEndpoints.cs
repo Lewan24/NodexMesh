@@ -62,26 +62,31 @@ public static class AdminEndpoints
     }
 
     private static async Task<NoContent> ResetPasswordAsync(
-        Guid userId, AdminResetPasswordRequest request, UserManager<ApplicationUser> users, CancellationToken ct)
+        Guid userId, AdminResetPasswordRequest request, UserManager<ApplicationUser> users, AppDbContext db, CancellationToken ct)
     {
         var user = await users.FindByIdAsync(userId.ToString()) ?? throw new ApiException(404, "not_found", "User not found.");
         var token = await users.GeneratePasswordResetTokenAsync(user);
         var result = await users.ResetPasswordAsync(user, token, request.Password);
         if (!result.Succeeded)
             throw new ApiException(422, "invalid_password", string.Join(" ", result.Errors.Select(e => e.Description)));
+        await RevokeSessionsAsync(db, userId, ct);
         return TypedResults.NoContent();
     }
 
     private static async Task<NoContent> SetBlockedAsync(
         Guid userId, AdminBlockUserRequest request, ClaimsPrincipal principal, UserManager<ApplicationUser> users,
+        AppDbContext db,
         CancellationToken ct)
     {
         var callerId = principal.GetUserId();
         if (callerId == userId && request.Blocked)
             throw new ApiException(409, "self_block", "You cannot block the active administrator.");
         var user = await users.FindByIdAsync(userId.ToString()) ?? throw new ApiException(404, "not_found", "User not found.");
+        if (request.Blocked && user.IsAdmin && await users.Users.CountAsync(candidate => candidate.IsAdmin && !candidate.IsBlocked, ct) <= 1)
+            throw new ApiException(409, "last_admin", "The last active administrator cannot be blocked.");
         user.IsBlocked = request.Blocked;
         await users.UpdateAsync(user);
+        if (request.Blocked) await RevokeSessionsAsync(db, userId, ct);
         return TypedResults.NoContent();
     }
 
@@ -150,4 +155,12 @@ public static class AdminEndpoints
     }
 
     private static AdminUserDto ToUser(ApplicationUser user) => new(user.Id, user.Email!, user.DisplayName, user.IsAdmin, user.IsBlocked, user.CreatedAt);
+
+    private static async Task RevokeSessionsAsync(AppDbContext db, Guid userId, CancellationToken ct)
+    {
+        var tokens = await db.RefreshTokens.Where(token => token.UserId == userId && token.RevokedAtUtc == null).ToListAsync(ct);
+        var now = DateTime.UtcNow;
+        foreach (var token in tokens) token.RevokedAtUtc = now;
+        if (tokens.Count > 0) await db.SaveChangesAsync(ct);
+    }
 }
