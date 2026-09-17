@@ -3,7 +3,8 @@
 The root Compose file runs the frontend, .NET API, PostgreSQL and Adminer:
 
 ```bash
-cp .env.example .env  # optional; defaults are suitable only for local development
+cp .env.example .env
+# Set POSTGRES_PASSWORD and JWT_KEY in .env before starting.
 docker compose build --no-cache
 docker compose up -d
 ```
@@ -16,6 +17,10 @@ in the `postgres-data` volume.
 The default Compose environment is `Development` so the local HTTP frontend can
 call the API without an HTTPS redirect. Set `ASPNETCORE_ENVIRONMENT=Production`
 when a TLS reverse proxy sits in front of the stack.
+
+When release images are published, replace each application's `build` block in
+`docker-compose.yml` with its commented Docker Hub `image` line. Keep PostgreSQL
+and Adminer as image services.
 
 ## Environment-variable credentials
 
@@ -30,6 +35,7 @@ JWT_KEY=replace-with-at-least-32-random-characters
 
 This is convenient for local development. The values are passed as container
 environment variables, so do not use this method for shared production hosts.
+Leaving either value empty intentionally makes the API or database refuse to start.
 
 ## Docker secrets
 

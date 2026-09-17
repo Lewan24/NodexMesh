@@ -2,12 +2,15 @@ services:
   db:
     image: postgres:17-alpine
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-nodexmesh}
       POSTGRES_USER: ${POSTGRES_USER:-nodexmesh_app}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+    # Keep PostgreSQL private to the Compose network. Uncomment for local GUI access.
+    # ports:
+    #   - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -21,7 +24,13 @@ services:
       context: ./Backend
       dockerfile: Dockerfile
       no_cache: true
+    # Future Docker Hub deployment: use this image instead of the build block.
+    # image: your-dockerhub-user/nodexmesh-api:latest
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     depends_on:
       db:
         condition: service_healthy
@@ -29,8 +38,8 @@ services:
       # Development keeps the local HTTP stack from redirecting to HTTPS. Set
       # Production when TLS is terminated by an external reverse proxy.
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-      ConnectionStrings__Default: Host=db;Port=5432;Database=${POSTGRES_DB:-nodexmesh};Username=${POSTGRES_USER:-nodexmesh_app};Password=${POSTGRES_PASSWORD:-devpassword}
-      Jwt__Key: ${JWT_KEY:-change-this-development-key-to-at-least-32-characters}
+      ConnectionStrings__Default: Host=db;Port=5432;Database=${POSTGRES_DB:-nodexmesh};Username=${POSTGRES_USER:-nodexmesh_app};Password=${POSTGRES_PASSWORD:-}
+      Jwt__Key: ${JWT_KEY:-}
       Jwt__Issuer: ${JWT_ISSUER:-http://localhost:8080}
       Jwt__Audience: ${JWT_AUDIENCE:-nodexmesh-web}
       Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:3000}
@@ -45,16 +54,26 @@ services:
       args:
         VITE_DATA_SOURCE: ${VITE_DATA_SOURCE:-http}
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+    # Future Docker Hub deployment: use this image instead of the build block.
+    # image: your-dockerhub-user/nodexmesh-frontend:latest
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     depends_on:
       api:
         condition: service_started
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      - "${FRONTEND_PORT:-3000}:8080"
 
   adminer:
-    image: adminer:4
+    image: adminer:4.8.1-standalone
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     depends_on:
       db:
         condition: service_healthy
