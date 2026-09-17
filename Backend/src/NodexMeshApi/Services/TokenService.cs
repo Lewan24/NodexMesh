@@ -33,7 +33,8 @@ public sealed class TokenService(IConfiguration configuration) : ITokenService
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email ?? string.Empty)
+            new(ClaimTypes.Email, user.Email ?? string.Empty),
+            new(ClaimTypes.Role, user.IsAdmin ? "admin" : "user")
         };
 
         var expiresMinutes = double.TryParse(jwtSection["AccessTokenMinutes"], out var m) ? m : 15;

@@ -1,6 +1,6 @@
 import { createId } from '@/shared/lib/createId';
 import type { User } from '@/entities/user/types';
-import type { AddUserInput, LoginInput } from '../types';
+import type { AddUserInput, AdminProject, AdminProjectMember, AdminUser, LoginInput } from '../types';
 import { initialUsers } from '@/entities/user/mockUsers';
 import { validateNewUser } from '../utils/authValidation';
 import { fail } from '@/shared/api/errors';
@@ -14,6 +14,21 @@ export interface AuthService {
   listUsers(): Promise<User[]>;
   addUser(input: AddUserInput): Promise<void>;
   removeUser(id: string): Promise<void>;
+  adminUsers(): Promise<AdminUser[]>;
+  createAdminUser(input: {
+    email: string;
+    password: string;
+    displayName: string;
+    isAdmin: boolean;
+  }): Promise<AdminUser>;
+  resetUserPassword(id: string, password: string): Promise<void>;
+  setUserBlocked(id: string, blocked: boolean): Promise<void>;
+  adminProjects(): Promise<AdminProject[]>;
+  addProjectMember(projectId: string, email: string, role: AdminProjectMember['role']): Promise<AdminProjectMember>;
+  removeProjectMember(projectId: string, userId: string): Promise<void>;
+  registrationEnabled(): Promise<boolean>;
+  setRegistrationEnabled(enabled: boolean): Promise<boolean>;
+  registrationAvailable(): Promise<boolean>;
 }
 
 /** Credentials exist only in this mock's memory; never in public User or browser storage. */
@@ -56,6 +71,53 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
       if (id === current?.id) fail(409, 'self_removal', 'You cannot remove the active administrator.');
       const index = accounts.findIndex((a) => a.id === id);
       if (index >= 0) accounts.splice(index, 1);
+    },
+    async adminUsers() {
+      requireAdmin();
+      return accounts.map((user) => ({
+        id: user.id,
+        email: user.username,
+        displayName: user.name,
+        isAdmin: user.role === 'admin',
+        isBlocked: false,
+        createdAt: '',
+      }));
+    },
+    async createAdminUser(input) {
+      await this.addUser({
+        username: input.email,
+        password: input.password,
+        name: input.displayName,
+        role: input.isAdmin ? 'admin' : 'user',
+      });
+      return (await this.adminUsers()).find((user) => user.email === input.email) as AdminUser;
+    },
+    async resetUserPassword() {
+      requireAdmin();
+    },
+    async setUserBlocked() {
+      requireAdmin();
+    },
+    async adminProjects() {
+      requireAdmin();
+      return [];
+    },
+    async addProjectMember() {
+      requireAdmin();
+      return fail(501, 'unsupported', 'Project administration is unavailable in demo mode.');
+    },
+    async removeProjectMember() {
+      requireAdmin();
+    },
+    async registrationEnabled() {
+      return true;
+    },
+    async setRegistrationEnabled(enabled) {
+      requireAdmin();
+      return enabled;
+    },
+    async registrationAvailable() {
+      return true;
     },
   };
 }

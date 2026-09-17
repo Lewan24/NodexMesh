@@ -129,11 +129,23 @@ try
                     if (!string.IsNullOrEmpty(token) && context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
                         context.Token = token;
                     return Task.CompletedTask;
+                },
+                OnTokenValidated = async context =>
+                {
+                    if (context.Principal is null)
+                    {
+                        context.Fail("Missing user identity.");
+                        return;
+                    }
+                    var userId = context.Principal.GetUserId();
+                    await using var scope = context.HttpContext.RequestServices.CreateAsyncScope();
+                    var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                    var user = await users.FindByIdAsync(userId.ToString());
+                    if (user is null || user.IsBlocked) context.Fail("User account is blocked.");
                 }
             };
         });
 
-    builder.Services.AddAuthorization();
     builder.Services.AddSignalR(options =>
     {
         options.EnableDetailedErrors = false;
@@ -233,6 +245,9 @@ try
     var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
     builder.Services.AddApiCors(allowedOrigins);
 
+    builder.Services.AddAuthorization(options =>
+        options.AddPolicy("AdminOnly", policy => policy.RequireClaim(ClaimTypes.Role, "admin")));
+
     // ---------------------------------------------------------------------
     // App services
     // ---------------------------------------------------------------------
@@ -271,6 +286,7 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync();
+        await AdminBootstrap.EnsureAsync(scope.ServiceProvider, app.Configuration, app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AdminBootstrap"));
     }
 
     app.UseSerilogRequestLogging(options =>
@@ -312,6 +328,7 @@ try
        .WithTags("Health");
 
     app.MapAuthEndpoints();
+    app.MapAdminEndpoints();
     app.MapProjectEndpoints();
     app.MapBoardEndpoints();
     app.MapPublicEndpoints();

@@ -96,7 +96,7 @@ Project and demo authentication data are stored in browser local storage, not sy
 
 ### Authentication and themes
 
-The frontend includes local demo authentication, user/admin roles and an administrator user-management UI. These are not server-side security controls. The planned backend remains described below.
+The frontend supports both local demo authentication and the HTTP API. API administrators are sent directly to the administration panel after login.
 
 Light and dark themes apply globally, including default card colors.
 
@@ -133,9 +133,9 @@ This separation is intended to make the frontend suitable for replacing the curr
 - highlight.js for code highlighting
 - Browser local storage for the current local persistence layer
 
-### Planned backend
+### Backend
 
-The planned backend will use:
+The backend uses:
 
 - C#
 - ASP.NET Core Web API
@@ -143,7 +143,9 @@ The planned backend will use:
 - relational database storage
 - JWT-based authentication
 - refresh tokens
-- role and policy-based authorization
+- admin policy authorization and per-project roles
+- PostgreSQL persistence with EF Core migrations
+- registration control, blocked accounts and refresh-token rotation
 
 SignalR may later be introduced for real-time collaboration.
 
@@ -611,33 +613,33 @@ Concurrency handling may also be introduced to prevent users from silently overw
 
 ### API foundation
 
-- [ ] Create ASP.NET Core Web API
-- [ ] Configure application layers
-- [ ] Configure Entity Framework Core
-- [ ] Configure database
-- [ ] Add migrations
-- [ ] Define API DTOs
-- [ ] Define consistent API error responses
-- [ ] Add server-side validation
+- [x] Create ASP.NET Core Web API
+- [x] Configure application layers
+- [x] Configure Entity Framework Core
+- [x] Configure database
+- [x] Add migrations
+- [x] Define API DTOs
+- [x] Define consistent API error responses
+- [x] Add server-side validation
 
 ### Authentication
 
-- [ ] Implement user accounts
-- [ ] Implement password hashing
-- [ ] Implement login endpoint
-- [ ] Implement short-lived access tokens
-- [ ] Implement refresh tokens
-- [ ] Store refresh token hashes
-- [ ] Implement refresh token rotation
-- [ ] Implement session restoration
-- [ ] Implement logout and token revocation
-- [ ] Add rate limiting to authentication endpoints
+- [x] Implement user accounts
+- [x] Implement password hashing
+- [x] Implement login endpoint
+- [x] Implement short-lived access tokens
+- [x] Implement refresh tokens
+- [x] Store refresh token hashes
+- [x] Implement refresh token rotation
+- [x] Implement session restoration
+- [x] Implement logout and token revocation
+- [x] Add rate limiting to authentication endpoints
 
 ### Authorization
 
-- [ ] Implement roles
-- [ ] Implement authorization policies
-- [ ] Protect administrative endpoints
+- [x] Implement roles
+- [x] Implement authorization policies
+- [x] Protect administrative endpoints
 - [ ] Validate project ownership
 - [ ] Validate item ownership through projects
 - [ ] Prevent unauthorized object access
@@ -766,13 +768,31 @@ dist/
 
 ---
 
-## Backend Status
+## Backend and administration
 
-The repository currently contains the frontend implementation.
+The HTTP API is available under `/api/v1`. It supports registration, login, refresh-token
+rotation, projects, boards, collaboration, appearance preferences, sharing, comments,
+tags and administration. The first startup creates the configured administrator from
+`Admin:Email` / `Admin:Password` (or `ADMIN_EMAIL` / `ADMIN_PASSWORD`). If the password
+is blank, the API generates a strong random password and prints it once in the server
+terminal. Store it securely immediately.
 
-The ASP.NET Core API described in this README is part of the planned development roadmap and is not yet required to run the current frontend version.
+Administrators can create users, reset passwords, block and unblock accounts, inspect
+projects and their members, add or remove project members, and enable or disable public
+registration. Accounts are blocked rather than deleted. A blocked user cannot log in or
+refresh a session, and validated API requests are rejected.
 
-Until API integration is completed, authentication and project persistence use the application's local frontend implementation.
+Set these values before starting Docker:
+
+```dotenv
+POSTGRES_PASSWORD=...
+JWT_KEY=...
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=   # blank means generate once and print it
+```
+
+The Docker instructions are in [DOCKER.md](./DOCKER.md). The API applies pending EF Core
+migrations at startup.
 
 ---
 

@@ -30,8 +30,8 @@ per-project collaboration roles.
     ├── Data/AppDbContext.cs    Fluent API, query filters, check constraints
     ├── Models/                 EF entities + the 20 per-item-type Data records
     ├── Dtos/                   wire contracts, revision-as-string converters
-    ├── Services/               tokens, authorization, validation, board mutations
-    ├── Endpoints/              auth, projects, board
+    ├── Services/               tokens, authorization, validation, board mutations, admin bootstrap
+    ├── Endpoints/              auth, projects, board, administration
     └── OpenApi/                bearer scheme transformer for Scalar
 ```
 
@@ -45,7 +45,7 @@ docker run -d --name nodexmesh-db \
   -e POSTGRES_PASSWORD=devpassword \
   -p 5432:5432 postgres:17-alpine
 
-# 2. Secrets (never in appsettings.json)
+# 2. Secrets (never commit real values)
 cd src/NodexMeshApi
 dotnet user-secrets init
 dotnet user-secrets set "Jwt:Key" "$(openssl rand -base64 48)"
@@ -61,6 +61,11 @@ dotnet run
 
 Scalar UI: <https://localhost:7215/scalar/v1> (Development only).
 Health check: `GET /health`.
+
+The first startup creates `Admin:Email` as an administrator. Set `Admin:Password` to
+use a chosen password, or leave it blank to generate a random password and print it
+once. Administration endpoints are under `/api/v1/admin`; they manage users, blocked
+accounts, registration availability, projects and project membership.
 
 ## Docker Compose
 

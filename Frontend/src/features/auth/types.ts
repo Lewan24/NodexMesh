@@ -13,3 +13,30 @@ export interface AddUserInput {
 }
 
 export type AuthResult = { ok: true } | { ok: false; error: string };
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  displayName: string;
+  isAdmin: boolean;
+  isBlocked: boolean;
+  createdAt: string;
+}
+
+export interface AdminProjectMember {
+  userId: string;
+  email: string;
+  displayName: string;
+  role: 'Editor' | 'Commenter' | 'Viewer';
+}
+
+export interface AdminProject {
+  id: string;
+  name: string;
+  ownerId: string;
+  ownerEmail: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  members: AdminProjectMember[];
+}

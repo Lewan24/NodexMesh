@@ -4,6 +4,7 @@ import { useLoginForm } from '@/features/auth/hooks/useLoginForm';
 export default function LoginPage() {
   const {
     registering,
+    registrationAvailable,
     setRegistering,
     confirmPassword,
     setConfirmPassword,
@@ -144,7 +145,7 @@ export default function LoginPage() {
             {submitting ? 'Please wait…' : registering ? 'Create account' : 'Sign in'}
           </button>
         </form>
-        {!isMockDataSource && (
+        {!isMockDataSource && registrationAvailable && (
           <button
             type="button"
             disabled={submitting}

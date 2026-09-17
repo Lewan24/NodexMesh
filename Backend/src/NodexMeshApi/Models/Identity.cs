@@ -5,7 +5,16 @@ namespace NodexMeshApi.Models;
 public sealed class ApplicationUser : IdentityUser<Guid>
 {
     public string DisplayName { get; set; } = string.Empty;
+    public bool IsAdmin { get; set; }
+    public bool IsBlocked { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+}
+
+public sealed class SystemSettings
+{
+    public int Id { get; set; }
+    public bool RegistrationEnabled { get; set; } = true;
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
 
 /// <summary>

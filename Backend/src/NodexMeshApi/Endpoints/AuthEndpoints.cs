@@ -23,17 +23,29 @@ public static class AuthEndpoints
         var group = app.MapGroup("/api/v1/auth").WithTags("Auth");
 
         group.MapPost("/register", RegisterAsync).RequireRateLimiting("auth-strict");
+        group.MapGet("/registration", RegistrationStatusAsync);
         group.MapPost("/login", LoginAsync).RequireRateLimiting("auth-strict");
         group.MapPost("/refresh", RefreshAsync).RequireRateLimiting("auth-refresh");
         group.MapPost("/revoke", RevokeAsync).RequireAuthorization().RequireRateLimiting("auth-strict");
+    }
+
+    private static async Task<Ok<object>> RegistrationStatusAsync(AppDbContext db, CancellationToken ct)
+    {
+        var enabled = await db.SystemSettings.Select(s => (bool?)s.RegistrationEnabled).SingleOrDefaultAsync(ct) ?? true;
+        return TypedResults.Ok<object>(new { enabled });
     }
 
     private static async Task<Results<Created<RegisteredUserResponse>, ValidationProblem, Conflict<ErrorResponse>>> RegisterAsync(
         RegisterRequest request,
         UserManager<ApplicationUser> userManager,
         AppDbContext db,
-        ILogger<Program> logger)
+        ILogger<Program> logger,
+        CancellationToken ct)
     {
+        var settings = await db.SystemSettings.AsNoTracking().SingleOrDefaultAsync(ct);
+        if (settings is { RegistrationEnabled: false })
+            throw new ApiException(403, "registration_disabled", "New account registration is disabled.");
+
         var existing = await userManager.FindByEmailAsync(request.Email);
         if (existing is not null)
         {
@@ -84,11 +96,11 @@ public static class AuthEndpoints
     {
         var user = await userManager.FindByEmailAsync(request.Email);
 
-        var checkResult = user is not null
+        var checkResult = user is not null && !user.IsBlocked
             ? await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true)
             : SignInResult.Failed;
 
-        if (user is null || !checkResult.Succeeded)
+        if (user is null || user.IsBlocked || !checkResult.Succeeded)
         {
             // Same generic response whether the email doesn't exist, the password is wrong,
             // or the account is locked out — avoids leaking account state.
@@ -159,7 +171,7 @@ public static class AuthEndpoints
         }
 
         var user = await userManager.FindByIdAsync(existing.UserId.ToString());
-        if (user is null)
+        if (user is null || user.IsBlocked)
         {
             ClearRefreshTokenCookie(http, environment);
             return TypedResults.Unauthorized();

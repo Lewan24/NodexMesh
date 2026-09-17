@@ -27,6 +27,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<AppearanceProfile> AppearanceProfiles => Set<AppearanceProfile>();
     public DbSet<ProjectAppearanceOverride> ProjectAppearanceOverrides => Set<ProjectAppearanceOverride>();
     public DbSet<IdempotencyKey> IdempotencyKeys => Set<IdempotencyKey>();
+    public DbSet<SystemSettings> SystemSettings => Set<SystemSettings>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -40,6 +41,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasIndex(x => x.UserId);
             e.Property(x => x.TokenHash).HasMaxLength(128);
         });
+
+        b.Entity<SystemSettings>(e => e.HasKey(x => x.Id));
 
         // ---------------- Project ----------------
         b.Entity<Project>(e =>

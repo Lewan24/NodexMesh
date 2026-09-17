@@ -21,7 +21,8 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
       );
       const email = claims.email ?? claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'];
       if (typeof claims.sub !== 'string' || typeof email !== 'string') throw new Error();
-      user = { id: claims.sub, username: email, name: email, role: 'user' };
+      const roleClaim = claims.role ?? claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      user = { id: claims.sub, username: email, name: email, role: roleClaim === 'admin' ? 'admin' : 'user' };
       accessToken = value.accessToken;
       return user;
     } catch {
@@ -47,7 +48,8 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
     return refreshing;
   };
   const client = createHttpClient(async () => accessToken, fetcher, refresh, baseUrl);
-  const unsupported = async () => fail(501, 'unsupported', 'The API does not support user administration.');
+  const admin = async <T>(path: string, options?: { method?: string; body?: unknown }) =>
+    (await client.request(path, options)) as T;
   const auth: AuthService = {
     subscribeSessionExpired(listener) {
       listeners.add(listener);
@@ -81,9 +83,66 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
       accessToken = '';
       user = null;
     },
-    listUsers: unsupported,
-    addUser: unsupported,
-    removeUser: unsupported,
+    async listUsers() {
+      return (
+        await admin<Array<{ id: string; email: string; displayName: string; isAdmin: boolean }>>('/admin/users')
+      ).map((item) => ({
+        id: item.id,
+        username: item.email,
+        name: item.displayName,
+        role: item.isAdmin ? 'admin' : 'user',
+      }));
+    },
+    async addUser(input) {
+      await admin('/admin/users', {
+        method: 'POST',
+        body: {
+          email: input.username,
+          password: input.password,
+          displayName: input.name,
+          isAdmin: input.role === 'admin',
+        },
+      });
+    },
+    async removeUser(id) {
+      await admin(`/admin/users/${encodeURIComponent(id)}/blocked`, { method: 'PATCH', body: { blocked: true } });
+    },
+    async adminUsers() {
+      return admin('/admin/users');
+    },
+    async createAdminUser(input) {
+      return admin('/admin/users', { method: 'POST', body: input });
+    },
+    async resetUserPassword(id, password) {
+      await admin(`/admin/users/${encodeURIComponent(id)}/password`, { method: 'POST', body: { password } });
+    },
+    async setUserBlocked(id, blocked) {
+      await admin(`/admin/users/${encodeURIComponent(id)}/blocked`, { method: 'PATCH', body: { blocked } });
+    },
+    async adminProjects() {
+      return admin('/admin/projects');
+    },
+    async addProjectMember(projectId, email, role) {
+      return admin(`/admin/projects/${encodeURIComponent(projectId)}/members`, {
+        method: 'POST',
+        body: { email, role },
+      });
+    },
+    async removeProjectMember(projectId, userId) {
+      await admin(`/admin/projects/${encodeURIComponent(projectId)}/members/${encodeURIComponent(userId)}`, {
+        method: 'DELETE',
+      });
+    },
+    async registrationEnabled() {
+      return (await admin<{ enabled: boolean }>('/admin/settings/registration')).enabled;
+    },
+    async setRegistrationEnabled(enabled) {
+      return (await admin<{ enabled: boolean }>('/admin/settings/registration', { method: 'PUT', body: { enabled } }))
+        .enabled;
+    },
+    async registrationAvailable() {
+      return ((await anonymous.request('/auth/registration')) as { enabled: boolean }).enabled;
+    },
   };
   return { auth, client, getAccessToken: () => accessToken };
 }

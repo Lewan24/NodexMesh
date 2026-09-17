@@ -1,6 +1,6 @@
 import { authService } from '@/app/services';
 import { errorMessage } from '@/shared/api/errors';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { FormEvent } from 'react';
 
@@ -16,6 +16,14 @@ export function useLoginForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [registrationAvailable, setRegistrationAvailable] = useState(true);
+
+  useEffect(() => {
+    void authService
+      .registrationAvailable()
+      .then(setRegistrationAvailable)
+      .catch(() => setRegistrationAvailable(true));
+  }, []);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -49,6 +57,7 @@ export function useLoginForm() {
 
   return {
     registering,
+    registrationAvailable,
     setRegistering,
     confirmPassword,
     setConfirmPassword,
