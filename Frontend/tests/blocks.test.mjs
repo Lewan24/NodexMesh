@@ -15,6 +15,7 @@ const server = await createServer({
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 const { normalizeItemNumbers } = await server.ssrLoadModule('/src/entities/board/normalizeNumbers.ts');
 const { createEmptySibling } = await server.ssrLoadModule('/src/features/canvas/utils/quickCreate.ts');
+const { cloneItems } = await server.ssrLoadModule('/src/features/canvas/utils/cloneItems.ts');
 const { resolveLineItem } = await server.ssrLoadModule('/src/features/canvas/utils/lineGeometry.ts');
 const { getEmbedUrl } = await server.ssrLoadModule('/src/features/blocks/embed/embedUrl.ts');
 const { getSearchableText } = await server.ssrLoadModule('/src/features/search/utils/itemSearch.ts');
@@ -133,11 +134,14 @@ test('icons render presets, emoji and isolated SVG with transparent scalable geo
   assert.match(render({ ...icon, width: 160, height: 80 }), /width="80"/);
   const sibling = createEmptySibling({ ...icon, iconMode: 'url', source: 'https://example.com/icon.png' });
   assert.notEqual(sibling.id, icon.id);
+  const svgCopy = cloneItems([{ ...icon, iconMode: 'svg', source }], 32, 32, 2)[0];
+  assert.equal(svgCopy.source, source);
   assert.equal(sibling.source, 'star');
   assert.match(getSearchableText({ ...icon, label: 'Milestone' }), /Milestone/);
 });
 
 test('icon image URLs reject executable schemes and credentials', () => {
+  assert.equal(getIconImageSource('svg', undefined), undefined);
   for (const source of [
     'javascript:alert(1)',
     'data:text/html,<script/>',
@@ -293,6 +297,10 @@ test('embed URL conversion isolates videos and rejects executable URLs', () => {
 });
 
 test('new block content participates in board search', () => {
+  assert.match(
+    getSearchableText({ ...createCanvasItem('board', 0, 0), title: 'Research', description: 'Sources and notes' }),
+    /Research Sources and notes/,
+  );
   assert.match(
     getSearchableText({ ...createCanvasItem('document', 0, 0), content: '<h1>Project plan</h1>' }),
     /Project plan/,
@@ -736,6 +744,19 @@ test('automatic growth pushes a vertical chain while preserving other columns an
   assert.equal(autoGrowthLayout([source, { ...first, locked: true }], source.id, before, after).size, 0);
   assert.equal(growsAutomatically({ ...createCanvasItem('document', 0, 0), autoHeight: true }), true);
   assert.equal(growsAutomatically({ ...createCanvasItem('document', 0, 0), autoHeight: false }), false);
+});
+
+test('stickers stay static when another item grows and never trigger auto layout themselves', () => {
+  const source = createCanvasItem('checklist', 0, 0);
+  const sticker = { ...createCanvasItem('image', 0, 128), variant: 'sticker' };
+  const before = new Map([
+    [source.id, { width: 320, height: 100 }],
+    [sticker.id, { width: 320, height: 80 }],
+  ]);
+  const after = new Map(before).set(source.id, { width: 320, height: 180 });
+  const patches = autoGrowthLayout([source, sticker], source.id, before, after);
+  assert.equal(patches.has(sticker.id), false);
+  assert.equal(growsAutomatically(sticker), false);
 });
 
 test('automatic growth expands containing frames and preserves standalone line geometry', () => {

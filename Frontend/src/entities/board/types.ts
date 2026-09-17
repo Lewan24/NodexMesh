@@ -3,7 +3,17 @@ export interface SectionTitleItem extends BaseItem {
   content: string;
 }
 
+export interface BoardBlockItem extends BaseItem {
+  type: 'board';
+  boardId: string | null;
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+}
+
 export type BoardItem =
+  | BoardBlockItem
   | SectionTitleItem
   | NoteItem
   | KanbanItem

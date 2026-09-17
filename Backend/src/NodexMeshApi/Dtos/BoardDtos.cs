@@ -118,6 +118,9 @@ public sealed record BoardRecordDto(
     DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt,
     Guid? CreatedBy, Guid? UpdatedBy, DateTimeOffset? DeletedAt);
 
+public sealed record CreateBoardRequest(string Name);
+public sealed record RenameBoardRequest(string Name);
+
 public sealed record CommentRecordDto(
     Guid Id, Guid ItemId, string Text, string Status,
     [property: JsonConverter(typeof(RevisionJsonConverter))] long Revision,

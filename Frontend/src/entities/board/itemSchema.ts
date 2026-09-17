@@ -72,6 +72,16 @@ const appearance = object({
 });
 
 export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boolean; validate: Check }> = {
+  board: {
+    version: 1,
+    canNest: false,
+    validate: object({
+      boardId: (value) => value === null || value === undefined || uuid(value),
+      title: text,
+      description: text,
+      icon: text,
+    }),
+  },
   'section-title': { version: 1, canNest: false, validate: object({ content: text }) },
   note: { version: 1, canNest: true, validate: object({ content: text }) },
   text: { version: 1, canNest: true, validate: object({ content: text, size: choice('sm', 'md', 'lg', 'xl') }) },

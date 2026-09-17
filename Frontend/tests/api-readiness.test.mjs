@@ -142,6 +142,44 @@ test('all registered item types round-trip and columns become independent record
   assert.equal(diffBoard(board, view.items), null);
 });
 
+test('board blocks link a persistent child board without replacing the parent board', async () => {
+  const { api, snapshot } = await setup();
+  const child = await api.boards.create(snapshot.project.id, 'Research');
+  const block = { ...createCanvasItem('board', 32, 48), boardId: child.board.id, title: 'Research' };
+
+  const parent = await mutate(api, snapshot, [block]);
+  const childNote = { ...createCanvasItem('note', 16, 16), content: 'Child-only content' };
+  const updatedChild = await api.boards.mutate(snapshot.project.id, child.board.id, diffBoard(child, [childNote]));
+
+  assert.deepEqual(
+    (await api.boards.list(snapshot.project.id)).map((board) => board.name),
+    [snapshot.board.board.name, 'Research'],
+  );
+  assert.equal((await api.projects.list())[0].board.items[0].data.boardId, child.board.id);
+  assert.equal((await api.boards.get(snapshot.project.id, snapshot.board.board.id)).items[0].id, block.id);
+  assert.equal(updatedChild.items[0].data.content, 'Child-only content');
+  assert.equal(
+    parent.items.some((item) => item.id === childNote.id),
+    false,
+  );
+});
+
+test('child boards can be renamed and deleted while the main board is protected', async () => {
+  const { api, snapshot } = await setup();
+  const child = await api.boards.create(snapshot.project.id, 'Temporary');
+  const renamed = await api.boards.rename(snapshot.project.id, child.board.id, 'Renamed');
+  assert.equal(renamed.name, 'Renamed');
+  await api.boards.delete(snapshot.project.id, child.board.id);
+  assert.deepEqual(
+    (await api.boards.list(snapshot.project.id)).map((board) => board.id),
+    [snapshot.board.board.id],
+  );
+  await assert.rejects(
+    () => api.boards.delete(snapshot.project.id, snapshot.board.board.id),
+    (error) => error?.problem?.code === 'default_board',
+  );
+});
+
 test('all icon sources survive persistence and edits', async () => {
   const { api, snapshot } = await setup();
   const items = [

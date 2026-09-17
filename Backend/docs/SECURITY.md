@@ -129,6 +129,12 @@ Dependencies are current and minimal. There is no automated monitoring.
 - Uniformly generic auth responses — bad password, unknown email and locked-out are
   indistinguishable.
 - Registration and invite-by-email both return generic failures (no user enumeration).
+- Profile email changes require the account's current password. Email and password changes
+  revoke every existing refresh session and issue a fresh rotating refresh token only to
+  the current browser; password changes use ASP.NET Identity validation.
+- Administrator email and global-role changes revoke the affected user's refresh sessions.
+  JWT validation compares the embedded global role with the database on every request, so
+  a demoted administrator cannot keep using an otherwise unexpired access token.
 - Refresh-token rotation with **reuse detection**: replaying a consumed token revokes the
   entire family for that user.
 - CSRF guard on `/auth/refresh` via a required custom header forcing a preflight.

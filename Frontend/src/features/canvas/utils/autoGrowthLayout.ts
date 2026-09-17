@@ -4,7 +4,13 @@ import { getItemRect } from './itemGeometry';
 import { CANVAS_GRID_SIZE, FRAME_AUTO_EXPAND_PADDING } from '../constants';
 
 export function growsAutomatically(item: BoardItem): boolean {
-  if (item.type === 'frame' || item.type === 'line' || item.type === 'drawing') return false;
+  if (
+    item.type === 'frame' ||
+    item.type === 'line' ||
+    item.type === 'drawing' ||
+    (item.type === 'image' && item.variant === 'sticker')
+  )
+    return false;
   if (item.type === 'document' || item.type === 'code') return item.autoHeight ?? !item.height;
   return item.height === undefined;
 }
@@ -46,6 +52,7 @@ export function autoGrowthLayout(
         (item.frameId ?? null) !== (growing.frameId ?? null) ||
         item.id === growing.id ||
         item.type === 'frame' ||
+        (item.type === 'image' && item.variant === 'sticker') ||
         item.locked ||
         (item.type === 'line' && (item.startItemId || item.endItemId))
       )

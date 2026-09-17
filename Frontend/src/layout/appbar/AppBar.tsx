@@ -3,8 +3,6 @@ import { useState } from 'react';
 import type { Project } from '@/entities/project/types';
 
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import AdminUsersPanel from '@/features/auth/pages/AdminUsersPanel';
-
 import { useTheme } from '@/app/providers/ThemeProvider';
 
 import AppLogo from './components/AppLogo';
@@ -13,6 +11,8 @@ import ProjectMenu from './components/ProjectMenu';
 import ProjectTransfer from './components/ProjectTransfer';
 
 interface AppBarProps {
+  onOpenAdminPanel: () => void;
+  onOpenProfile: () => void;
   onShare?: () => void;
   onRefresh: () => Promise<void>;
   liveStatus?: string;
@@ -34,6 +34,8 @@ interface AppBarProps {
 type OpenMenu = 'projects' | 'account' | null;
 
 export default function AppBar({
+  onOpenAdminPanel,
+  onOpenProfile,
   onShare,
   onRefresh,
   liveStatus,
@@ -55,7 +57,6 @@ export default function AppBar({
   const { theme, toggleTheme } = useTheme();
 
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
-  const [adminPanelOpen, setAdminPanelOpen] = useState(false);
 
   const toggleMenu = (menu: Exclude<OpenMenu, null>) => {
     setOpenMenu((current) => (current === menu ? null : menu));
@@ -63,7 +64,12 @@ export default function AppBar({
 
   const openAdminPanel = () => {
     setOpenMenu(null);
-    setAdminPanelOpen(true);
+    onOpenAdminPanel();
+  };
+
+  const openProfile = () => {
+    setOpenMenu(null);
+    onOpenProfile();
   };
 
   return (
@@ -187,13 +193,12 @@ export default function AppBar({
           onToggle={() => toggleMenu('account')}
           onClose={() => setOpenMenu(null)}
           onToggleTheme={toggleTheme}
+          onProfile={openProfile}
           onManageUsers={openAdminPanel}
           onLogout={logout}
           onResetDemo={onResetDemo}
         />
       </header>
-
-      {adminPanelOpen && <AdminUsersPanel onClose={() => setAdminPanelOpen(false)} />}
     </>
   );
 }

@@ -13,6 +13,8 @@ interface AuthContextValue {
   isAdmin: boolean;
   login: (username: string, password: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
+  updateProfile: (input: { email: string; displayName: string; currentPassword?: string }) => Promise<User>;
+  changePassword: (input: { currentPassword: string; newPassword: string; confirmPassword: string }) => Promise<User>;
   addUser: (input: AddUserInput) => Promise<AuthResult>;
   removeUser: (id: string) => Promise<void>;
   adminUsers: () => Promise<AdminUser[]>;
@@ -24,6 +26,7 @@ interface AuthContextValue {
   }) => Promise<AdminUser>;
   resetUserPassword: (id: string, password: string) => Promise<void>;
   setUserBlocked: (id: string, blocked: boolean) => Promise<void>;
+  updateAdminUser: (id: string, input: { email: string; displayName: string; isAdmin: boolean }) => Promise<AdminUser>;
   adminProjects: () => Promise<AdminProject[]>;
   addProjectMember: (projectId: string, email: string, role: AdminProjectMember['role']) => Promise<AdminProjectMember>;
   removeProjectMember: (projectId: string, userId: string) => Promise<void>;
@@ -104,6 +107,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const updateProfile = useCallback(async (input: { email: string; displayName: string; currentPassword?: string }) => {
+    const updated = await authService.updateProfile(input);
+    setCurrentUser(updated);
+    return updated;
+  }, []);
+  const changePassword = useCallback(
+    async (input: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
+      const updated = await authService.changePassword(input);
+      setCurrentUser(updated);
+      return updated;
+    },
+    [],
+  );
+
   const removeUser = useCallback(async (id: string) => {
     try {
       await authService.removeUser(id);
@@ -124,6 +141,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
   const setUserBlocked = useCallback((id: string, blocked: boolean) => authService.setUserBlocked(id, blocked), []);
+  const updateAdminUser = useCallback(
+    async (id: string, input: { email: string; displayName: string; isAdmin: boolean }) => {
+      const updated = await authService.updateAdminUser(id, input);
+      setUsers(await authService.listUsers());
+      if (currentUser?.id === id) {
+        setCurrentUser({
+          id: updated.id,
+          username: updated.email,
+          name: updated.displayName,
+          role: updated.isAdmin ? 'admin' : 'user',
+        });
+      }
+      return updated;
+    },
+    [currentUser?.id],
+  );
   const adminProjects = useCallback(() => authService.adminProjects(), []);
   const addProjectMember = useCallback(
     (projectId: string, email: string, role: AdminProjectMember['role']) =>
@@ -144,12 +177,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin: currentUser?.role === 'admin',
       login,
       logout,
+      updateProfile,
+      changePassword,
       addUser,
       removeUser,
       adminUsers,
       createAdminUser,
       resetUserPassword,
       setUserBlocked,
+      updateAdminUser,
       adminProjects,
       addProjectMember,
       removeProjectMember,
@@ -161,12 +197,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       users,
       login,
       logout,
+      updateProfile,
+      changePassword,
       addUser,
       removeUser,
       adminUsers,
       createAdminUser,
       resetUserPassword,
       setUserBlocked,
+      updateAdminUser,
       adminProjects,
       addProjectMember,
       removeProjectMember,

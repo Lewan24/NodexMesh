@@ -11,6 +11,8 @@ export interface AuthService {
   me(): Promise<User | null>;
   login(input: LoginInput): Promise<User>;
   logout(): Promise<void>;
+  updateProfile(input: { email: string; displayName: string; currentPassword?: string }): Promise<User>;
+  changePassword(input: { currentPassword: string; newPassword: string; confirmPassword: string }): Promise<User>;
   listUsers(): Promise<User[]>;
   addUser(input: AddUserInput): Promise<void>;
   removeUser(id: string): Promise<void>;
@@ -23,6 +25,7 @@ export interface AuthService {
   }): Promise<AdminUser>;
   resetUserPassword(id: string, password: string): Promise<void>;
   setUserBlocked(id: string, blocked: boolean): Promise<void>;
+  updateAdminUser(id: string, input: { email: string; displayName: string; isAdmin: boolean }): Promise<AdminUser>;
   adminProjects(): Promise<AdminProject[]>;
   addProjectMember(projectId: string, email: string, role: AdminProjectMember['role']): Promise<AdminProjectMember>;
   removeProjectMember(projectId: string, userId: string): Promise<void>;
@@ -54,6 +57,32 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
     },
     async logout() {
       current = null;
+    },
+    async updateProfile(input) {
+      if (!current) return fail(401, 'unauthorized', 'Sign in to update your profile.');
+      const account = accounts.find((candidate) => candidate.id === current?.id)!;
+      const email = input.email.trim();
+      if (
+        accounts.some(
+          (candidate) => candidate.id !== account.id && candidate.username.toLowerCase() === email.toLowerCase(),
+        )
+      )
+        return fail(409, 'profile_conflict', 'Unable to update the profile with the provided details.');
+      if (email.toLowerCase() !== account.username.toLowerCase() && input.currentPassword !== account.password)
+        return fail(400, 'invalid_credentials', 'The current password is incorrect.');
+      account.username = email;
+      account.name = input.displayName.trim();
+      current = publicUser(account);
+      return current;
+    },
+    async changePassword(input) {
+      if (!current) return fail(401, 'unauthorized', 'Sign in to change your password.');
+      const account = accounts.find((candidate) => candidate.id === current?.id)!;
+      if (account.password !== input.currentPassword)
+        return fail(422, 'invalid_password', 'The current password is incorrect.');
+      if (input.newPassword !== input.confirmPassword) return fail(422, 'invalid_password', 'Passwords do not match.');
+      account.password = input.newPassword;
+      return current;
     },
     async listUsers() {
       requireAdmin();
@@ -97,6 +126,25 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
     },
     async setUserBlocked() {
       requireAdmin();
+    },
+    async updateAdminUser(id, input) {
+      requireAdmin();
+      const account = accounts.find((candidate) => candidate.id === id);
+      if (!account) return fail(404, 'not_found', 'User not found.');
+      if (id === current?.id && (account.role === 'admin') !== input.isAdmin)
+        return fail(409, 'self_role_change', 'You cannot change your own administrator role.');
+      account.username = input.email.trim();
+      account.name = input.displayName.trim();
+      account.role = input.isAdmin ? 'admin' : 'user';
+      if (id === current?.id) current = publicUser(account);
+      return {
+        id: account.id,
+        email: account.username,
+        displayName: account.name,
+        isAdmin: account.role === 'admin',
+        isBlocked: false,
+        createdAt: '',
+      };
     },
     async adminProjects() {
       requireAdmin();

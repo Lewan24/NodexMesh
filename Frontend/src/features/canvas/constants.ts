@@ -18,6 +18,7 @@ export const MIN_IMAGE_HEIGHT = 80;
 export const CANVAS_HISTORY_LIMIT = 50;
 
 export const ITEM_WIDTH = {
+  board: 320,
   'section-title': 320,
   drawing: 208,
   timeline: 768,

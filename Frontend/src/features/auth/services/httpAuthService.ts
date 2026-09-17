@@ -13,6 +13,24 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
     if (!value || typeof value !== 'object' || !('accessToken' in value) || typeof value.accessToken !== 'string')
       fail(422, 'invalid_token', 'Invalid authentication response.');
     try {
+      if ('user' in value && value.user && typeof value.user === 'object') {
+        const profile = value.user as Record<string, unknown>;
+        if (
+          typeof profile.id !== 'string' ||
+          typeof profile.email !== 'string' ||
+          typeof profile.displayName !== 'string' ||
+          typeof profile.isAdmin !== 'boolean'
+        )
+          throw new Error();
+        user = {
+          id: profile.id,
+          username: profile.email,
+          name: profile.displayName,
+          role: profile.isAdmin ? 'admin' : 'user',
+        };
+        accessToken = value.accessToken;
+        return user;
+      }
       const payload = value.accessToken.split('.')[1]!;
       const claims = JSON.parse(
         new TextDecoder().decode(
@@ -83,6 +101,12 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
       accessToken = '';
       user = null;
     },
+    async updateProfile(input) {
+      return acceptToken(await client.request('/auth/profile', { method: 'PUT', body: input }));
+    },
+    async changePassword(input) {
+      return acceptToken(await client.request('/auth/password', { method: 'POST', body: input }));
+    },
     async listUsers() {
       return (
         await admin<Array<{ id: string; email: string; displayName: string; isAdmin: boolean }>>('/admin/users')
@@ -118,6 +142,9 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
     },
     async setUserBlocked(id, blocked) {
       await admin(`/admin/users/${encodeURIComponent(id)}/blocked`, { method: 'PATCH', body: { blocked } });
+    },
+    async updateAdminUser(id, input) {
+      return admin(`/admin/users/${encodeURIComponent(id)}`, { method: 'PUT', body: input });
     },
     async adminProjects() {
       return admin('/admin/projects');

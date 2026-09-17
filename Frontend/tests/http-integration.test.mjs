@@ -54,6 +54,42 @@ test('expired refresh notifies the UI and bootstrap returns an anonymous session
   assert.equal(expired, 1);
 });
 
+test('auth responses use server profile data and account changes send only the expected fields', async () => {
+  const requests = [];
+  const profile = { id: 'user-id', email: 'new@example.com', displayName: 'New Name', isAdmin: false };
+  const { auth } = createHttpAuthService(async (url, options) => {
+    requests.push([url, options]);
+    if (url.endsWith('/auth/login')) return json({ accessToken: token('claim-id'), user: profile });
+    if (url.endsWith('/auth/profile')) return json({ accessToken: token('profile-id'), user: profile });
+    if (url.endsWith('/auth/password')) return json({ accessToken: token('password-id'), user: profile });
+    if (url.endsWith('/admin/users/target')) return json({ ...profile, isBlocked: false, createdAt: '' });
+    throw new Error(url);
+  });
+
+  assert.deepEqual(await auth.login({ username: 'old@example.com', password: 'secret' }), {
+    id: 'user-id',
+    username: 'new@example.com',
+    name: 'New Name',
+    role: 'user',
+  });
+  await auth.updateProfile({ email: 'new@example.com', displayName: 'New Name', currentPassword: 'secret' });
+  await auth.changePassword({
+    currentPassword: 'secret',
+    newPassword: 'NewPassword!1',
+    confirmPassword: 'NewPassword!1',
+  });
+  await auth.updateAdminUser('target', { email: 'target@example.com', displayName: 'Target', isAdmin: true });
+
+  assert.deepEqual(JSON.parse(requests[1][1].body), {
+    email: 'new@example.com',
+    displayName: 'New Name',
+    currentPassword: 'secret',
+  });
+  assert.equal(requests[1][0], '/api/v1/auth/profile');
+  assert.equal(requests[2][0], '/api/v1/auth/password');
+  assert.equal(requests[3][0], '/api/v1/admin/users/target');
+});
+
 test('ProblemDetails title is the code and Retry-After blocks early retries', async () => {
   let requests = 0;
   const client = createHttpClient(

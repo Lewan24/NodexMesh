@@ -2,19 +2,27 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import BoardPage from '@/features/board/pages/BoardPage';
 import AdminUsersPanel from '@/features/auth/pages/AdminUsersPanel';
+import ProfilePage from '@/features/auth/pages/ProfilePage';
 import { useEffect, useState } from 'react';
 
 export default function App() {
   const { currentUser } = useAuth();
-  const [adminPanelOpen, setAdminPanelOpen] = useState(false);
+  const [view, setView] = useState<'workspace' | 'admin' | 'profile'>('workspace');
 
   useEffect(() => {
-    if (currentUser?.role === 'admin') setAdminPanelOpen(true);
+    setView(currentUser?.role === 'admin' ? 'admin' : 'workspace');
   }, [currentUser?.id, currentUser?.role]);
 
   if (!currentUser) return <LoginPage />;
-  if (currentUser.role === 'admin' && adminPanelOpen)
-    return <AdminUsersPanel onClose={() => setAdminPanelOpen(false)} />;
+  if (view === 'profile') return <ProfilePage onClose={() => setView('workspace')} />;
+  if (currentUser.role === 'admin' && view === 'admin') return <AdminUsersPanel onClose={() => setView('workspace')} />;
 
-  return <BoardPage key={currentUser.id} userId={currentUser.id} />;
+  return (
+    <BoardPage
+      key={currentUser.id}
+      userId={currentUser.id}
+      onOpenAdminPanel={() => setView('admin')}
+      onOpenProfile={() => setView('profile')}
+    />
+  );
 }

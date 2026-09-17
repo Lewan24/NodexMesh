@@ -2,7 +2,7 @@ import type { HttpClient } from '@/shared/api/httpClient';
 import { fail } from '@/shared/api/errors';
 import type { WorkspaceServices } from './contracts';
 import type { ProjectRecord, ProjectSnapshot } from '@/entities/project/types';
-import { parseBoardSnapshot, parseProjectRecord } from './responseValidation';
+import { parseBoardRecord, parseBoardSnapshot, parseProjectRecord } from './responseValidation';
 
 const segment = encodeURIComponent;
 
@@ -94,6 +94,32 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
       },
     },
     boards: {
+      async list(projectId, signal) {
+        const value = await client.request(`/projects/${segment(projectId)}/boards`, { signal });
+        if (!Array.isArray(value)) fail(422, 'invalid_response', 'Invalid board collection.');
+        return value.map(parseBoardRecord);
+      },
+      async create(projectId, name) {
+        const value = await client.request(`/projects/${segment(projectId)}/boards`, {
+          method: 'POST',
+          body: { name },
+        });
+        const board = parseBoardRecord(value);
+        if (board.projectId !== projectId) fail(422, 'invalid_scope', 'Invalid board project.');
+        if (!value || typeof value !== 'object' || typeof (value as { id?: unknown }).id !== 'string')
+          fail(422, 'invalid_response', 'Invalid board response.');
+        return parseBoardSnapshot({ board, items: [], links: [], comments: [], tags: [], itemTags: [] });
+      },
+      async rename(projectId, boardId, name) {
+        const value = await client.request(`/boards/${segment(boardId)}`, { method: 'PATCH', body: { name } });
+        const board = parseBoardRecord(value);
+        if (board.projectId !== projectId) fail(422, 'invalid_scope', 'Invalid board project.');
+        return board;
+      },
+      async delete(projectId, boardId) {
+        await client.request(`/boards/${segment(boardId)}`, { method: 'DELETE' });
+        void projectId;
+      },
       async get(_projectId, boardId, signal) {
         return parseBoardSnapshot(await client.request(`/boards/${segment(boardId)}`, { signal }));
       },

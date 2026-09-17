@@ -1,4 +1,5 @@
 export type ToolType =
+  | 'board'
   | 'section-title'
   | 'select'
   | 'drawing'
