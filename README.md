@@ -25,8 +25,9 @@ The application is available at <http://localhost:3000>. The API is available at
 <http://localhost:8080> and Adminer at <http://localhost:8081>. PostgreSQL is kept on the
 internal Docker network by default. The API applies pending migrations at startup.
 
-For image-based deployments, the `docker-compose.yml` contains commented `image:`
-entries that can replace the local `build:` entries after images are published.
+For Docker Hub images and Portainer, use [docker-compose.production.yml](docker-compose.production.yml).
+All configuration is inline; no `.env` or repository checkout is required. See
+[production deployment instructions](DOCKER.md#production-with-docker-hub-images).
 
 ## Local development
 

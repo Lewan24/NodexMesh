@@ -18,9 +18,49 @@ The default Compose environment is `Development` so the local HTTP frontend can
 call the API without an HTTPS redirect. Set `ASPNETCORE_ENVIRONMENT=Production`
 when a TLS reverse proxy sits in front of the stack.
 
-When release images are published, replace each application's `build` block in
-`docker-compose.yml` with its commented Docker Hub `image` line. Keep PostgreSQL
-and Adminer as image services.
+## Production with Docker Hub images
+
+Use [docker-compose.production.yml](docker-compose.production.yml) as a standalone
+file, or paste its contents into the Portainer stack editor on a Docker Standalone
+endpoint. It pulls `lewan24/nodexmesh-api:latest`, `lewan24/nodexmesh-web:latest`
+and PostgreSQL. No build context, `.env`, bind-mounted files or secrets files are
+needed. The application images must be published before deploying.
+
+Before deploying, edit the values directly in the YAML:
+
+- Replace `CHANGE-ME-database-password` in both database and API settings with the
+  same random password. A hex value from `openssl rand -hex 32` avoids connection
+  string delimiters and Compose dollar-sign interpolation.
+- Replace `Jwt__Key` with a separate random value from `openssl rand -hex 32`.
+- Set `Cors__AllowedOrigins__0` to your public HTTPS origin, without a trailing slash.
+- Set `Admin__Email`. Leave `Admin__Password` empty to generate a password in the
+  API startup logs, or supply one with at least 12 characters including uppercase,
+  lowercase, a digit and a symbol. This bootstraps the account only on first creation.
+
+Point an HTTPS reverse proxy at the Docker host on port `3000`, with WebSocket
+support enabled. The frontend proxies `/api/` and `/hubs/` to the private API.
+TLS terminates at your external proxy; production refresh cookies require browser
+access over HTTPS. Port `3000` itself serves HTTP. Database and API ports are not
+published, and Adminer is not included.
+
+In Portainer, deploy the edited stack. From the command line:
+
+```bash
+docker compose -f docker-compose.production.yml pull
+docker compose -f docker-compose.production.yml up -d
+docker compose -f docker-compose.production.yml logs api
+```
+
+The web image must be built with the Dockerfile defaults `VITE_DATA_SOURCE=http`
+and `VITE_API_BASE_URL=/api/v1`; these are compiled into the frontend, not runtime
+environment settings. The API applies migrations automatically on startup.
+PostgreSQL data persists in the stack's `postgres-data` volume. Changing the YAML
+database password after initialization does not change the existing database role's
+password; update that role as well. Keep the stack name stable to reuse its volume.
+
+Inline credentials are stored in the stack configuration: keep your edited copy
+private. To update images, pull and recreate the stack using the same commands above
+(or use Portainer's pull/redeploy option).
 
 ## Environment-variable credentials
 
@@ -33,8 +73,8 @@ POSTGRES_PASSWORD=replace-with-a-long-password
 JWT_KEY=replace-with-at-least-32-random-characters
 ```
 
-This is convenient for local development. The values are passed as container
-environment variables, so do not use this method for shared production hosts.
+This is convenient for local development. Like the inline production configuration,
+the values are passed as container environment variables and visible to Docker administrators.
 Leaving either value empty intentionally makes the API or database refuse to start.
 
 ## Docker secrets
