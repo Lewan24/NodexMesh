@@ -110,41 +110,36 @@ public static class SecurityHeadersMiddlewareExtensions
     /// </summary>
     public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app) => app.Use(async (context, next) =>
     {
-        var headers = context.Response.Headers;
         var path = context.Request.Path;
-
-        headers["X-Content-Type-Options"] = "nosniff";
-        headers["X-Frame-Options"] = "DENY";
-        headers["Referrer-Policy"] = "no-referrer";
-        headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()";
-        headers["X-Permitted-Cross-Domain-Policies"] = "none";
-
-        // Advertises nothing about the server stack. Kestrel also has AddServerHeader=false
-        // set in Program.cs; this covers anything a reverse proxy might add back.
-        headers.Remove("Server");
-
-        // A blanket `default-src 'none'` breaks the Scalar docs UI, which legitimately
-        // loads its own scripts, styles and fonts. Rather than weakening the policy for the
-        // whole app (which is what the commented-out line did), apply the strict policy to
-        // API routes — which only ever return JSON and so need no sources at all — and a
-        // narrower one to the docs.
         var isApi = path.StartsWithSegments("/api");
 
-        headers["Content-Security-Policy"] = isApi
-            ? "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
-            : "frame-ancestors 'none'; base-uri 'self'";
-
-        // API responses carry per-user data and must never sit in a shared cache or a
-        // browser's back/forward store. The public share endpoints are the one exception:
-        // they're anonymous and identical for every viewer, so a short private cache is
-        // safe and takes real load off the read path.
-        if (isApi)
+        void ApplyHeaders()
         {
-            headers["Cache-Control"] = path.StartsWithSegments("/api/v1/public")
-                ? "private, max-age=30"
-                : "no-store, no-cache, must-revalidate";
-            headers["Pragma"] = "no-cache";
+            var headers = context.Response.Headers;
+            headers["X-Content-Type-Options"] = "nosniff";
+            headers["X-Frame-Options"] = "DENY";
+            headers["Referrer-Policy"] = "no-referrer";
+            headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()";
+            headers["X-Permitted-Cross-Domain-Policies"] = "none";
+            headers.Remove("Server");
+            headers["Content-Security-Policy"] = isApi
+                ? "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+                : "frame-ancestors 'none'; base-uri 'self'";
+            if (isApi)
+            {
+                headers["Cache-Control"] = path.StartsWithSegments("/api/v1/public")
+                    ? "private, max-age=30"
+                    : "no-store, no-cache, must-revalidate";
+                headers["Pragma"] = "no-cache";
+            }
         }
+
+        ApplyHeaders();
+        context.Response.OnStarting(() =>
+        {
+            ApplyHeaders();
+            return Task.CompletedTask;
+        });
 
         await next();
     });

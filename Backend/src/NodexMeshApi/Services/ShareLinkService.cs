@@ -43,10 +43,10 @@ public sealed class ShareLinkService(AppDbContext db, IProjectAccessService acce
 
         var now = clock.GetUtcNow();
 
-        var activeCount = await db.ProjectShareLinks
-            .CountAsync(l => l.ProjectId == projectId && l.RevokedAt == null
-                && (l.ExpiresAt == null || l.ExpiresAt > now), ct);
-
+        var activeShareLinks = db.ProjectShareLinks.Where(l => l.ProjectId == projectId &&
+                                                          l.RevokedAt == null).ToList();
+        var activeCount = activeShareLinks.Count(l => l.ExpiresAt == null || l.ExpiresAt > now);
+        
         if (activeCount >= MaxActiveLinksPerProject)
             throw new ApiException(422, "share_link_limit",
                 $"A project may have at most {MaxActiveLinksPerProject} active share links.");
@@ -81,10 +81,9 @@ public sealed class ShareLinkService(AppDbContext db, IProjectAccessService acce
 
         var links = await db.ProjectShareLinks.AsNoTracking()
             .Where(l => l.ProjectId == projectId && l.RevokedAt == null)
-            .OrderByDescending(l => l.CreatedAt)
             .ToListAsync(ct);
-
-        return links.Select(l => ToDto(l, now)).ToList();
+        
+        return links.OrderByDescending(l => l.CreatedAt).Select(l => ToDto(l, now)).ToList();
     }
 
     public async Task RevokeAsync(Guid projectId, Guid linkId, Guid userId, CancellationToken ct = default)

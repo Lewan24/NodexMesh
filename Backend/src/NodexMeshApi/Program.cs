@@ -288,7 +288,17 @@ try
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await db.Database.MigrateAsync();
+
+        // The "Testing" environment (WebApplicationFactory in the test suite) swaps in a
+        // SQLite provider with no Npgsql migration history, so applying the real (Postgres-
+        // flavoured) migrations would fail. EnsureCreated builds the schema straight from
+        // the current model instead — fine for a throwaway test database, never for
+        // production, where MigrateAsync is what keeps schema history consistent.
+        if (app.Environment.IsEnvironment("Testing"))
+            await db.Database.EnsureCreatedAsync();
+        else
+            await db.Database.MigrateAsync();
+
         await AdminBootstrap.EnsureAsync(scope.ServiceProvider, app.Configuration, app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AdminBootstrap"));
     }
 
@@ -309,10 +319,10 @@ try
             diagnostics.Set("ResponseStatus", context.Response.StatusCode);
         };
     });
+    app.UseSecurityHeaders();
     app.UseExceptionHandler();
 
     app.UseApiTransportSecurity();
-    app.UseSecurityHeaders();
 
     if (app.Environment.IsDevelopment())
     {
@@ -349,3 +359,8 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// WebApplicationFactory<Program> (used by the integration test suite) needs a public type
+// to bind to; top-level statements otherwise generate an internal one. This adds nothing at
+// runtime — Main above still runs exactly as before.
+public partial class Program { }

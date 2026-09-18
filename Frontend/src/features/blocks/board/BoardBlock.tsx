@@ -77,7 +77,11 @@ export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard 
         <button
           type="button"
           className="mt-5 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ color: appearance.solid, borderColor: `${appearance.solid}66`, background: `${appearance.solid}14` }}
+          style={{
+            color: appearance.textColor,
+            borderColor: `${appearance.textColor}66`,
+            background: `${appearance.textColor}14`,
+          }}
           onClick={(event) => {
             event.stopPropagation();
             open();
