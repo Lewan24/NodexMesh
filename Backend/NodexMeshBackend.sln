@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NodexMeshApi", "src\NodexMeshApi\NodexMeshApi.csproj", "{015AF0F1-0618-419E-BDE0-BDA566CBF4C5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Api", "Api", "{DA53E854-AF73-4D4F-9C23-91EECB4C6597}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{D54DFD11-6A63-47D4-B1A2-86A55EFE7FC8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NodexMeshApi.Tests", "tests\NodexMeshApi.Tests\NodexMeshApi.Tests.csproj", "{3084DD6B-D8CA-4AD5-8640-D2C8B9E1EC85}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{015AF0F1-0618-419E-BDE0-BDA566CBF4C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{015AF0F1-0618-419E-BDE0-BDA566CBF4C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{015AF0F1-0618-419E-BDE0-BDA566CBF4C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{015AF0F1-0618-419E-BDE0-BDA566CBF4C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3084DD6B-D8CA-4AD5-8640-D2C8B9E1EC85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3084DD6B-D8CA-4AD5-8640-D2C8B9E1EC85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3084DD6B-D8CA-4AD5-8640-D2C8B9E1EC85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3084DD6B-D8CA-4AD5-8640-D2C8B9E1EC85}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{015AF0F1-0618-419E-BDE0-BDA566CBF4C5} = {DA53E854-AF73-4D4F-9C23-91EECB4C6597}
+		{3084DD6B-D8CA-4AD5-8640-D2C8B9E1EC85} = {D54DFD11-6A63-47D4-B1A2-86A55EFE7FC8}
+	EndGlobalSection
+EndGlobal
