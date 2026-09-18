@@ -332,7 +332,7 @@ public static class AuthEndpoints
         http.Response.Cookies.Append(RefreshTokenCookieName, token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = !environment.IsDevelopment(),
+            Secure = !environment.IsDevelopment() && !environment.IsEnvironment("Testing"),
             SameSite = environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None,
             Path = RefreshTokenCookiePath,
             Expires = expiresAtUtc
@@ -344,7 +344,7 @@ public static class AuthEndpoints
         http.Response.Cookies.Delete(RefreshTokenCookieName, new CookieOptions
         {
             HttpOnly = true,
-            Secure = !environment.IsDevelopment(),
+            Secure = !environment.IsDevelopment() && !environment.IsEnvironment("Testing"),
             SameSite = environment.IsDevelopment() ? SameSiteMode.Lax : SameSiteMode.None,
             Path = RefreshTokenCookiePath
         });
