@@ -22,7 +22,7 @@ export default function SectionTypographyControls({
   if (!available.length) return null;
   return (
     <div
-      className="flex items-center gap-2 px-3 py-2 border-t overflow-x-auto text-xs"
+      className="edit-bar-row edit-bar-section-controls flex items-center gap-2 px-3 py-2 border-t overflow-x-auto text-xs"
       style={{ borderColor: 'var(--color-border-soft)', color: 'var(--color-text-primary)' }}
     >
       <span className="shrink-0 font-medium" title="Hold Ctrl or Command to select multiple sections">

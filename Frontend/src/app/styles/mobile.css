@@ -79,13 +79,13 @@
   margin: 0 auto;
   width: min(100%, 680px);
   max-width: 100%;
-  max-height: calc(100dvh - 16px - env(safe-area-inset-top));
+  max-height: min(82dvh, calc(100dvh - 16px - env(safe-area-inset-top)));
   padding: 0;
   border: 1px solid var(--color-border);
   border-radius: 20px 20px 0 0;
   background: var(--color-surface);
   color: var(--color-text-primary);
-  overflow: auto;
+  overflow: hidden;
   overscroll-behavior: contain;
   touch-action: pan-y;
 }
@@ -103,12 +103,36 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 16px;
+  min-height: 58px;
+  padding: 14px 16px 10px;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
 }
 
+.mobile-panel-heading::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-border);
+  transform: translateX(-50%);
+}
+
+.mobile-panel-done {
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
 .mobile-panel-body {
+  max-height: calc(82dvh - 58px);
+  overflow-x: hidden;
+  overflow-y: auto;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
 
@@ -247,15 +271,38 @@
     overflow: visible;
   }
 
-  .mobile-panel [data-edit-bar] > div,
-  .mobile-panel [data-edit-bar] > div > .flex {
+  .mobile-panel [data-edit-bar] .edit-bar-row {
     flex-wrap: wrap;
     overflow: visible;
     gap: 8px;
   }
 
-  .mobile-panel [data-edit-bar] > div {
+  .mobile-panel [data-edit-bar] .edit-bar-row {
     padding: 12px;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-actions {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-surface);
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-close {
+    display: none;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-style-controls,
+  .mobile-panel [data-edit-bar] .edit-bar-section-controls {
+    align-items: flex-start;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-section-controls > span:first-child {
+    flex-basis: 100%;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-section-controls select[multiple] {
+    width: 100%;
   }
 
   .mobile-panel button,

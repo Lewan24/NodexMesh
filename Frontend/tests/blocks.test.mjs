@@ -72,6 +72,7 @@ const { tasksInWindow, dateDay, taskRange, shiftTask, scheduleRange, reorderTask
 const { cloneItems, copyOrigin } = await server.ssrLoadModule('/src/features/canvas/utils/cloneItems.ts');
 const { diagramTemplate, layoutDiagram, removeDiagramNodes, alignDiagramNodes, canConnectDiagram } =
   await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts');
+const { getDiagramPreviewEdgeGeometry } = await server.ssrLoadModule('/src/features/blocks/diagram/DiagramPreview.tsx');
 const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure, joinDrawings, drawingStrokes } =
   await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts');
 const { insertTask, createTaskChecklist } = await server.ssrLoadModule(
@@ -337,6 +338,22 @@ test('diagram removal clears incident edges and layout handles cycles without lo
     laidOut.map((node) => node.id),
     graph.nodes.map((node) => node.id),
   );
+});
+
+test('diagram preview paths terminate at their saved node handles', () => {
+  const graph = diagramTemplate();
+  const source = graph.nodes[0];
+  const target = graph.nodes[1];
+  const geometry = getDiagramPreviewEdgeGeometry(graph.edges[0], source, target);
+  assert.match(geometry.path, new RegExp(`^M${source.position.x + 80} ${source.position.y + 72}`));
+  assert.match(geometry.path, new RegExp(`L${target.position.x + 80} ${target.position.y}$`));
+
+  const horizontal = getDiagramPreviewEdgeGeometry(
+    { ...graph.edges[0], type: 'straight', sourceHandle: 'right', targetHandle: 'left' },
+    source,
+    { ...target, position: { x: 440, y: 0 } },
+  );
+  assert.equal(horizontal.path, 'M380 36L440 55');
 });
 
 test('planning block quick copies are empty and search includes nested content', () => {
