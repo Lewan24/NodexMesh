@@ -2,7 +2,14 @@ import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
 import type { User } from '@/entities/user/types';
-import type { AddUserInput, AdminProject, AdminProjectMember, AdminUser, AuthResult } from '@/features/auth/types';
+import type {
+  AddUserInput,
+  AdminAppearanceResetScope,
+  AdminProject,
+  AdminProjectMember,
+  AdminUser,
+  AuthResult,
+} from '@/features/auth/types';
 import { authService } from '@/app/services';
 import { errorMessage } from '@/shared/api/errors';
 import { flushPendingChanges } from '@/shared/api/pendingChanges';
@@ -25,11 +32,13 @@ interface AuthContextValue {
     isAdmin: boolean;
   }) => Promise<AdminUser>;
   resetUserPassword: (id: string, password: string) => Promise<void>;
+  resetUserAppearance: (id: string, scope: AdminAppearanceResetScope) => Promise<void>;
   setUserBlocked: (id: string, blocked: boolean) => Promise<void>;
   updateAdminUser: (id: string, input: { email: string; displayName: string; isAdmin: boolean }) => Promise<AdminUser>;
   adminProjects: () => Promise<AdminProject[]>;
   addProjectMember: (projectId: string, email: string, role: AdminProjectMember['role']) => Promise<AdminProjectMember>;
   removeProjectMember: (projectId: string, userId: string) => Promise<void>;
+  transferProjectOwner: (projectId: string, email: string) => Promise<void>;
   registrationEnabled: () => Promise<boolean>;
   setRegistrationEnabled: (enabled: boolean) => Promise<boolean>;
 }
@@ -140,6 +149,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (id: string, password: string) => authService.resetUserPassword(id, password),
     [],
   );
+  const resetUserAppearance = useCallback(
+    (id: string, scope: AdminAppearanceResetScope) => authService.resetUserAppearance(id, scope),
+    [],
+  );
   const setUserBlocked = useCallback((id: string, blocked: boolean) => authService.setUserBlocked(id, blocked), []);
   const updateAdminUser = useCallback(
     async (id: string, input: { email: string; displayName: string; isAdmin: boolean }) => {
@@ -167,6 +180,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (projectId: string, userId: string) => authService.removeProjectMember(projectId, userId),
     [],
   );
+  const transferProjectOwner = useCallback(
+    (projectId: string, email: string) => authService.transferProjectOwner(projectId, email),
+    [],
+  );
   const registrationEnabled = useCallback(() => authService.registrationEnabled(), []);
   const setRegistrationEnabled = useCallback((enabled: boolean) => authService.setRegistrationEnabled(enabled), []);
 
@@ -184,11 +201,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       adminUsers,
       createAdminUser,
       resetUserPassword,
+      resetUserAppearance,
       setUserBlocked,
       updateAdminUser,
       adminProjects,
       addProjectMember,
       removeProjectMember,
+      transferProjectOwner,
       registrationEnabled,
       setRegistrationEnabled,
     }),
@@ -204,11 +223,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       adminUsers,
       createAdminUser,
       resetUserPassword,
+      resetUserAppearance,
       setUserBlocked,
       updateAdminUser,
       adminProjects,
       addProjectMember,
       removeProjectMember,
+      transferProjectOwner,
       registrationEnabled,
       setRegistrationEnabled,
     ],

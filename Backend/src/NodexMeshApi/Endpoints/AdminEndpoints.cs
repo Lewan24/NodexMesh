@@ -21,8 +21,10 @@ public static class AdminEndpoints
         group.MapPost("/users", CreateUserAsync);
         group.MapPut("/users/{userId:guid}", UpdateUserAsync);
         group.MapPost("/users/{userId:guid}/password", ResetPasswordAsync);
+        group.MapPost("/users/{userId:guid}/appearance/reset", ResetAppearanceAsync);
         group.MapPatch("/users/{userId:guid}/blocked", SetBlockedAsync);
         group.MapGet("/projects", ListProjectsAsync);
+        group.MapPut("/projects/{projectId:guid}/owner", TransferProjectOwnerAsync);
         group.MapPost("/projects/{projectId:guid}/members", AddMemberAsync);
         group.MapDelete("/projects/{projectId:guid}/members/{userId:guid}", RemoveMemberAsync);
         group.MapGet("/settings/registration", GetRegistrationAsync);
@@ -133,6 +135,43 @@ public static class AdminEndpoints
         return TypedResults.NoContent();
     }
 
+    private static async Task<NoContent> ResetAppearanceAsync(
+        Guid userId, AdminResetAppearanceRequest request, AppDbContext db, CancellationToken ct)
+    {
+        if (!await db.Users.AnyAsync(user => user.Id == userId, ct))
+            throw new ApiException(404, "not_found", "User not found.");
+
+        if (request.Scope is "Defaults" or "All")
+        {
+            var profile = await db.AppearanceProfiles.FirstOrDefaultAsync(entry => entry.UserId == userId, ct);
+            if (profile is null)
+            {
+                profile = new AppearanceProfile { UserId = userId };
+                db.AppearanceProfiles.Add(profile);
+            }
+
+            profile.Mode = null;
+            profile.Font = "sans";
+            profile.UiFont = "sans";
+            profile.UiPrimary = "#7941c8";
+            profile.UiSecondary = "#000000";
+            profile.InheritanceVersion = 1;
+            profile.PaletteVersion = 1;
+            profile.LightTheme = DefaultThemes.Light;
+            profile.DarkTheme = DefaultThemes.Dark;
+            profile.UpdatedAt = DateTimeOffset.UtcNow;
+        }
+
+        if (request.Scope is "ProjectOverrides" or "All")
+        {
+            var overrides = await db.ProjectAppearanceOverrides.Where(entry => entry.UserId == userId).ToListAsync(ct);
+            db.ProjectAppearanceOverrides.RemoveRange(overrides);
+        }
+
+        await db.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
+    }
+
     private static async Task<Ok<List<AdminProjectDto>>> ListProjectsAsync(AppDbContext db, CancellationToken ct)
     {
         var projects = await db.Projects.IgnoreQueryFilters().AsNoTracking().Include(p => p.Members).OrderBy(p => p.Name).ToListAsync(ct);
@@ -168,6 +207,48 @@ public static class AdminEndpoints
         var member = await db.ProjectMembers.FirstOrDefaultAsync(m => m.ProjectId == projectId && m.UserId == userId, ct)
             ?? throw new ApiException(404, "not_found", "Project member not found.");
         db.ProjectMembers.Remove(member);
+        await db.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<NoContent> TransferProjectOwnerAsync(
+        Guid projectId, AdminTransferProjectOwnerRequest request, ClaimsPrincipal principal,
+        AppDbContext db, CancellationToken ct)
+    {
+        var callerId = principal.GetUserId();
+        var project = await db.Projects.IgnoreQueryFilters()
+            .Include(entry => entry.Members)
+            .FirstOrDefaultAsync(entry => entry.Id == projectId, ct)
+            ?? throw new ApiException(404, "not_found", "Project not found.");
+        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var nextOwner = await db.Users.FirstOrDefaultAsync(user => user.Email == normalizedEmail, ct)
+            ?? throw new ApiException(404, "not_found", "User not found.");
+        if (nextOwner.IsBlocked)
+            throw new ApiException(409, "blocked_user", "Blocked users cannot own projects.");
+        if (nextOwner.Id == project.OwnerId) return TypedResults.NoContent();
+
+        var previousOwnerId = project.OwnerId;
+        var nextOwnerMembership = project.Members.FirstOrDefault(member => member.UserId == nextOwner.Id);
+        if (nextOwnerMembership is not null) db.ProjectMembers.Remove(nextOwnerMembership);
+
+        var previousOwnerMembership = project.Members.FirstOrDefault(member => member.UserId == previousOwnerId);
+        if (previousOwnerMembership is null)
+        {
+            db.ProjectMembers.Add(new ProjectMember
+            {
+                ProjectId = project.Id,
+                UserId = previousOwnerId,
+                Role = ProjectRole.Editor,
+                CreatedAt = DateTimeOffset.UtcNow,
+                InvitedBy = callerId
+            });
+        }
+        else previousOwnerMembership.Role = ProjectRole.Editor;
+
+        project.OwnerId = nextOwner.Id;
+        project.Revision++;
+        project.UpdatedAt = DateTimeOffset.UtcNow;
+        project.UpdatedBy = callerId;
         await db.SaveChangesAsync(ct);
         return TypedResults.NoContent();
     }

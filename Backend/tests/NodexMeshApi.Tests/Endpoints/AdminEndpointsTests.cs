@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using FluentAssertions;
 using NodexMeshApi.Dtos;
 using NodexMeshApi.Tests.Infrastructure;
@@ -175,5 +176,66 @@ public class AdminEndpointsTests : IDisposable
             new AdminAddProjectMemberRequest(blockedEmail, "Editor"));
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task ResetAppearance_CanResetDefaultsAndProjectOverridesSeparately()
+    {
+        var admin = await _factory.CreateAdminClientAsync();
+        var (target, targetId, _, _) = await _factory.CreateSeededUserAsync();
+        var created = await target.PostAsJsonAsync("/api/v1/projects", new CreateProjectRequest("Appearance", null));
+        var project = (await created.Content.ReadFromJsonAsync<ProjectRecordDto>())!;
+
+        await target.PutAsJsonAsync("/api/v1/appearance", new
+        {
+            font = "mono",
+            mode = "dark",
+            uiFont = "mono",
+            uiPrimary = "#112233",
+            uiSecondary = "#334455",
+            inheritanceVersion = 1,
+            paletteVersion = 2,
+            light = JsonDocument.Parse("""{"primary":"#111111"}""").RootElement,
+            dark = JsonDocument.Parse("""{"primary":"#222222"}""").RootElement
+        });
+        await target.PutAsJsonAsync($"/api/v1/projects/{project.Id}/appearance", new
+        {
+            font = "serif", mode = "light", light = (object?)null, dark = (object?)null
+        });
+
+        (await admin.PostAsJsonAsync($"/api/v1/admin/users/{targetId}/appearance/reset",
+            new AdminResetAppearanceRequest("Defaults"))).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var defaultsReset = await target.GetFromJsonAsync<JsonElement>("/api/v1/appearance");
+        defaultsReset.GetProperty("defaults").GetProperty("font").GetString().Should().Be("sans");
+        defaultsReset.GetProperty("projects").EnumerateObject().Should().ContainSingle();
+
+        (await admin.PostAsJsonAsync($"/api/v1/admin/users/{targetId}/appearance/reset",
+            new AdminResetAppearanceRequest("ProjectOverrides"))).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var overridesReset = await target.GetFromJsonAsync<JsonElement>("/api/v1/appearance");
+        overridesReset.GetProperty("projects").EnumerateObject().Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task TransferOwner_PromotesTheTargetAndKeepsThePreviousOwnerAsEditor()
+    {
+        var admin = await _factory.CreateAdminClientAsync();
+        var (owner, ownerId, _, _) = await _factory.CreateSeededUserAsync();
+        var (nextOwner, nextOwnerId, nextOwnerEmail, _) = await _factory.CreateSeededUserAsync();
+        var created = await owner.PostAsJsonAsync("/api/v1/projects", new CreateProjectRequest("Transfer", null));
+        var project = (await created.Content.ReadFromJsonAsync<ProjectRecordDto>())!;
+        await admin.PostAsJsonAsync($"/api/v1/admin/projects/{project.Id}/members",
+            new AdminAddProjectMemberRequest(nextOwnerEmail, "Viewer"));
+
+        var response = await admin.PutAsJsonAsync($"/api/v1/admin/projects/{project.Id}/owner",
+            new AdminTransferProjectOwnerRequest(nextOwnerEmail));
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var projects = await admin.GetFromJsonAsync<List<AdminProjectDto>>("/api/v1/admin/projects");
+        var transferred = projects!.Single(entry => entry.Id == project.Id);
+        transferred.OwnerId.Should().Be(nextOwnerId);
+        transferred.Members.Should().ContainSingle(member => member.UserId == ownerId && member.Role == "Editor");
+        transferred.Members.Should().NotContain(member => member.UserId == nextOwnerId);
+        (await owner.GetAsync($"/api/v1/projects/{project.Id}")).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await nextOwner.GetAsync($"/api/v1/projects/{project.Id}")).StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }

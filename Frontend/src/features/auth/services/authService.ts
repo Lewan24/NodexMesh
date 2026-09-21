@@ -1,9 +1,17 @@
 import { createId } from '@/shared/lib/createId';
 import type { User } from '@/entities/user/types';
-import type { AddUserInput, AdminProject, AdminProjectMember, AdminUser, LoginInput } from '../types';
+import type {
+  AddUserInput,
+  AdminAppearanceResetScope,
+  AdminProject,
+  AdminProjectMember,
+  AdminUser,
+  LoginInput,
+} from '../types';
 import { initialUsers } from '@/entities/user/mockUsers';
 import { validateNewUser } from '../utils/authValidation';
 import { fail } from '@/shared/api/errors';
+import { newPreferences, preferenceKey, readPreferences } from '@/features/appearance/appearanceModel';
 
 export interface AuthService {
   subscribeSessionExpired?(listener: () => void): () => void;
@@ -24,11 +32,13 @@ export interface AuthService {
     isAdmin: boolean;
   }): Promise<AdminUser>;
   resetUserPassword(id: string, password: string): Promise<void>;
+  resetUserAppearance(id: string, scope: AdminAppearanceResetScope): Promise<void>;
   setUserBlocked(id: string, blocked: boolean): Promise<void>;
   updateAdminUser(id: string, input: { email: string; displayName: string; isAdmin: boolean }): Promise<AdminUser>;
   adminProjects(): Promise<AdminProject[]>;
   addProjectMember(projectId: string, email: string, role: AdminProjectMember['role']): Promise<AdminProjectMember>;
   removeProjectMember(projectId: string, userId: string): Promise<void>;
+  transferProjectOwner(projectId: string, email: string): Promise<void>;
   registrationEnabled(): Promise<boolean>;
   setRegistrationEnabled(enabled: boolean): Promise<boolean>;
   registrationAvailable(): Promise<boolean>;
@@ -124,6 +134,17 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
     async resetUserPassword() {
       requireAdmin();
     },
+    async resetUserAppearance(id, scope) {
+      requireAdmin();
+      if (typeof localStorage === 'undefined') return;
+      const currentPreferences = readPreferences(id);
+      const defaults = newPreferences();
+      const next = {
+        ...(scope === 'Defaults' || scope === 'All' ? defaults : currentPreferences),
+        projects: scope === 'ProjectOverrides' || scope === 'All' ? {} : currentPreferences.projects,
+      };
+      localStorage.setItem(preferenceKey(id), JSON.stringify(next));
+    },
     async setUserBlocked() {
       requireAdmin();
     },
@@ -156,6 +177,10 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
     },
     async removeProjectMember() {
       requireAdmin();
+    },
+    async transferProjectOwner() {
+      requireAdmin();
+      return fail(501, 'unsupported', 'Project administration is unavailable in demo mode.');
     },
     async registrationEnabled() {
       return true;

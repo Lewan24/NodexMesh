@@ -23,6 +23,8 @@ export interface AdminUser {
   createdAt: string;
 }
 
+export type AdminAppearanceResetScope = 'Defaults' | 'ProjectOverrides' | 'All';
+
 export interface AdminProjectMember {
   userId: string;
   email: string;
