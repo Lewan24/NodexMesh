@@ -1,3 +1,6 @@
+import { useSectionStyle } from '../typography/TypographyContext';
+import { readableText } from '../typography/textContrast';
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { createId } from '@/shared/lib/createId';
 import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import type { CSSProperties } from 'react';
@@ -34,9 +37,14 @@ import '../shared/planning.css';
 
 type FlowNode = Node<DiagramNode['data'], 'shape'>;
 function ShapeNode({ data, selected }: NodeProps<FlowNode>) {
+  const labelStyle = useSectionStyle('labels');
   return (
     <div className="diagram-node" data-selected={selected}>
-      <div className="diagram-shape" data-shape={data.shape} style={{ background: data.color }}>
+      <div
+        className="diagram-shape"
+        data-shape={data.shape}
+        style={{ background: data.color, color: readableText(data.color), ...labelStyle }}
+      >
         {data.label || 'Untitled'}
       </div>
       {(
@@ -282,7 +290,10 @@ export default function DiagramBlock({
           <ReactFlow<FlowNode>
             id={`diagram-${item.id}`}
             nodes={nodes}
-            edges={edges}
+            edges={edges.map((edge) => ({
+              ...edge,
+              labelStyle: { ...edge.labelStyle, ...getSectionStyle(item.typography, 'labels') },
+            }))}
             nodeTypes={nodeTypes}
             defaultEdgeOptions={edgeOptions}
             connectionMode={ConnectionMode.Loose}
@@ -534,7 +545,9 @@ export default function DiagramBlock({
       onDelete={onDelete}
       title={
         <span className="flex justify-between gap-2">
-          <span className="truncate">{item.title}</span>
+          <span className="truncate" style={getSectionStyle(item.typography, 'title')}>
+            {item.title}
+          </span>
           <span className="text-xs opacity-50">
             {nodes.length} nodes · {edges.length} connections
           </span>

@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import type { ReactNode, CSSProperties } from 'react';
 import type { BaseItem } from '@/entities/board/types';
 import { getFontFamilyCss } from '../typography/typographyUtils';
@@ -58,7 +59,9 @@ export default function ContentBlockShell({
         <span aria-hidden="true" className="opacity-35 select-none" title="Drag block">
           ⠿
         </span>
-        <div className="flex-1 min-w-0">{title}</div>
+        <div className="flex-1 min-w-0" style={getSectionStyle(item.typography, 'title')}>
+          {title}
+        </div>
         <button
           type="button"
           title="Delete block"

@@ -8,6 +8,18 @@ namespace NodexMeshApi.Tests.Unit;
 public class BoardItemTypesTests
 {
     [Fact]
+    public void Appearance_SectionTypography_RoundTripsWithStrictOptions()
+    {
+        const string json = """{"typography":{"fontFamily":"serif","sections":{"title":{"color":"#ffffff","fontSize":24},"description":{"fontSize":14,"bold":false}}}}""";
+        var appearance = System.Text.Json.JsonSerializer.Deserialize<ItemAppearance>(json, BoardItemTypes.StrictOptions)!;
+        appearance.Typography!.Sections!.Title!.Color.Should().Be("#ffffff");
+        appearance.Typography.Sections.Description!.FontSize.Should().Be(14);
+        var saved = System.Text.Json.JsonSerializer.Serialize(appearance, BoardItemTypes.StrictOptions);
+        var restored = System.Text.Json.JsonSerializer.Deserialize<ItemAppearance>(saved, BoardItemTypes.StrictOptions)!;
+        restored.Should().BeEquivalentTo(appearance);
+    }
+
+    [Fact]
     public void Deserialize_ThrowsForUnknownType()
     {
         var act = () => BoardItemTypes.Deserialize("not-a-real-type", "{}");

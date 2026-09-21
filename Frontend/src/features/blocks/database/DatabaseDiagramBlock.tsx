@@ -1,3 +1,5 @@
+import { useSectionStyle } from '../typography/TypographyContext';
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { createId } from '@/shared/lib/createId';
 import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -30,6 +32,8 @@ import '../shared/planning.css';
 
 type TableNode = Node<{ table: DatabaseTable; foreignKeys: string[] }, 'table'>;
 function TableView({ data, selected }: NodeProps<TableNode>) {
+  const labelStyle = useSectionStyle('labels');
+  const bodyStyle = useSectionStyle('body');
   return (
     <div
       className="shadow-md rounded-sm overflow-visible"
@@ -40,7 +44,9 @@ function TableView({ data, selected }: NodeProps<TableNode>) {
         outline: selected ? '2px solid #8b5cf6' : undefined,
       }}
     >
-      <div className="px-3 py-2 bg-violet-600 text-white font-semibold">{data.table.name || 'Untitled table'}</div>
+      <div className="px-3 py-2 bg-violet-600 text-white font-semibold" style={labelStyle}>
+        {data.table.name || 'Untitled table'}
+      </div>
       {data.table.fields.map((field) => (
         <div key={field.id} className="relative flex items-center gap-2 px-3 py-2 border-b border-current/10 text-xs">
           <Handle type="source" position={Position.Left} id={field.id + ':left'} style={{ width: 10, height: 10 }} />
@@ -50,10 +56,10 @@ function TableView({ data, selected }: NodeProps<TableNode>) {
           >
             {field.primaryKey ? 'PK' : data.foreignKeys.includes(field.id) ? 'FK' : ''}
           </span>
-          <span className="flex-1 truncate" title={field.name}>
+          <span className="flex-1 truncate" title={field.name} style={bodyStyle}>
             {field.name || 'field'}
           </span>
-          <span className="opacity-60 max-w-28 truncate" title={field.dataType}>
+          <span className="max-w-28 truncate" title={field.dataType} style={bodyStyle}>
             {field.dataType}
             {field.nullable ? '?' : ''}
           </span>
@@ -233,7 +239,7 @@ export default function DatabaseDiagramBlock({
               <ReactFlow<TableNode>
                 connectionMode={ConnectionMode.Loose}
                 nodes={nodes}
-                edges={edges}
+                edges={edges.map((edge) => ({ ...edge, labelStyle: getSectionStyle(item.typography, 'labels') }))}
                 nodeTypes={nodeTypes}
                 onInit={(instance) => {
                   flow.current = instance;
@@ -525,7 +531,7 @@ export default function DatabaseDiagramBlock({
       item={item}
       onDelete={onDelete}
       title={
-        <span>
+        <span style={getSectionStyle(item.typography, 'title')}>
           {item.title} · {item.tables.length} tables
         </span>
       }

@@ -1,3 +1,4 @@
+import { useSectionStyle } from '../typography/TypographyContext';
 import { useId } from 'react';
 import type { DatabaseTable, DatabaseRelation } from '@/entities/board/types';
 
@@ -9,6 +10,8 @@ export default function DatabasePreview({
   tables: DatabaseTable[];
   relations: DatabaseRelation[];
 }) {
+  const labels = useSectionStyle('labels');
+  const body = useSectionStyle('body');
   const marker = useId().replace(/:/g, '');
   if (!tables.length) return null;
   const left = Math.min(...tables.map((table) => table.position.x)) - 48;
@@ -56,6 +59,7 @@ export default function DatabasePreview({
                 markerEnd={`url(#${marker})`}
               />
               <text
+                style={labels}
                 x={outside - 12}
                 y={(y + y2) / 2 - 8}
                 textAnchor="middle"
@@ -77,6 +81,7 @@ export default function DatabasePreview({
               markerEnd={`url(#${marker})`}
             />
             <text
+              style={labels}
               x={(x + x2) / 2}
               y={(y + y2) / 2 - 8}
               textAnchor="middle"
@@ -92,22 +97,22 @@ export default function DatabasePreview({
         <g key={table.id} transform={`translate(${table.position.x} ${table.position.y})`}>
           <rect width="288" height={40 + table.fields.length * 32} rx="2" fill="var(--color-surface)" />
           <rect width="288" height="40" fill="var(--color-accent)" />
-          <text x="12" y="26" fontSize="15" fill="white">
+          <text style={labels} x="12" y="26" fontSize="15" fill="white">
             {table.name.slice(0, 30)}
           </text>
           {table.fields.map((field, index) => (
             <g key={field.id} transform={`translate(0 ${40 + index * 32})`}>
-              <text x="10" y="21" fontSize="11" fill="var(--color-accent)">
+              <text style={body} x="10" y="21" fontSize="11" fill="var(--color-accent)">
                 {field.primaryKey
                   ? 'PK'
                   : relations.some((r) => r.source === table.id && r.sourceField === field.id)
                     ? 'FK'
                     : ''}
               </text>
-              <text x="38" y="21" fontSize="12" fill="var(--color-text-primary)">
+              <text style={body} x="38" y="21" fontSize="12" fill="var(--color-text-primary)">
                 {field.name.slice(0, 18)}
               </text>
-              <text x="278" y="21" textAnchor="end" fontSize="11" fill="var(--color-text-secondary)">
+              <text style={body} x="278" y="21" textAnchor="end" fontSize="11" fill="var(--color-text-secondary)">
                 {field.dataType.slice(0, 16)}
               </text>
             </g>

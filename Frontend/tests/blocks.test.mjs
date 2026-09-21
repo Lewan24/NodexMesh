@@ -15,7 +15,6 @@ const server = await createServer({
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 const { normalizeItemNumbers } = await server.ssrLoadModule('/src/entities/board/normalizeNumbers.ts');
 const { createEmptySibling } = await server.ssrLoadModule('/src/features/canvas/utils/quickCreate.ts');
-const { cloneItems } = await server.ssrLoadModule('/src/features/canvas/utils/cloneItems.ts');
 const { resolveLineItem } = await server.ssrLoadModule('/src/features/canvas/utils/lineGeometry.ts');
 const { getEmbedUrl } = await server.ssrLoadModule('/src/features/blocks/embed/embedUrl.ts');
 const { getSearchableText } = await server.ssrLoadModule('/src/features/search/utils/itemSearch.ts');

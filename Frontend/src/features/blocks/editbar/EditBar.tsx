@@ -1,3 +1,4 @@
+import SectionTypographyControls from './components/SectionTypographyControls';
 import type { ReactNode } from 'react';
 import type { BoardItem } from '@/entities/board/types';
 import DrawingControls from './components/DrawingControls';
@@ -82,7 +83,7 @@ export default function EditBar({
         ? (ITEM_TYPE_LABELS[single.type] ?? single.type)
         : '';
 
-  const hasStyleControls = !!single && !isMulti && single.type !== 'dispenser' && single.type !== 'icon';
+  const hasStyleControls = !!single && !isMulti && single.type !== 'icon';
 
   return (
     <div
@@ -236,9 +237,7 @@ export default function EditBar({
 
           {single.type === 'column' && <ColumnLayoutControls item={single} onUpdate={handleUpdate} />}
 
-          {single.type !== 'drawing' && single.type !== 'line' && (
-            <TypographyControls item={single} onUpdate={handleUpdate} />
-          )}
+          {single.type !== 'drawing' && <TypographyControls item={single} onUpdate={handleUpdate} />}
 
           {!isColumnMode && single.type === 'line' && <LineControls item={single} onUpdate={handleUpdate} />}
 
@@ -291,6 +290,7 @@ export default function EditBar({
           {!isColumnMode && single.type === 'frame' && <FrameControls item={single} onUpdate={handleUpdate} />}
         </div>
       )}
+      {single && <SectionTypographyControls key={single.id} item={single} onUpdate={handleUpdate} />}
     </div>
   );
 }

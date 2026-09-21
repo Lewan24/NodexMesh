@@ -186,7 +186,18 @@ export interface ItemComment {
   createdAt: string;
 }
 
+export type TextSection = 'title' | 'description' | 'body' | 'links' | 'caption' | 'labels';
+
+export interface TextSectionStyle {
+  color?: string;
+  fontSize?: number;
+  bold?: boolean;
+  italic?: boolean;
+  textAlign?: TextAlign;
+}
+
 export interface TypographySettings {
+  sections?: Partial<Record<TextSection, TextSectionStyle>>;
   fontFamily?: FontFamily;
   fontSize?: number;
   bold?: boolean;

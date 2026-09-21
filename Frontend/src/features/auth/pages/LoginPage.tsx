@@ -81,7 +81,7 @@ export default function LoginPage() {
           <p className="text-sm text-center mt-1" style={{ color: 'var(--color-text-muted)' }}>
             Sign in to open your boards
           </p>
-        </div>  
+        </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           <label className="flex flex-col gap-1.5">

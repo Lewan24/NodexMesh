@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useState } from 'react';
 import type { EmbedItem } from '@/entities/board/types';
 import type { BlockUpdateHandler } from '../types';
@@ -83,7 +84,9 @@ export default function EmbedBlock({
       onDelete={onDelete}
       title={
         <div className="flex items-center gap-2">
-          <span className="flex-1 truncate">{item.showLabel ? item.title || 'Embed' : 'Embed'}</span>
+          <span className="flex-1 truncate" style={getSectionStyle(item.typography, 'title')}>
+            {item.showLabel ? item.title || 'Embed' : 'Embed'}
+          </span>
           <button
             className="text-xs px-2"
             onMouseDown={(e) => e.stopPropagation()}

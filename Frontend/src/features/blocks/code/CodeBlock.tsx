@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { getTypographyStyle } from '../typography/typographyUtils';
 import { isDefaultCardColor, useCardAppearance } from '../shared/cardAppearance';
 import './code.css';
@@ -137,7 +138,7 @@ export default function CodeBlock({
       >
         {editing && !item.locked && !readOnly ? (
           <textarea
-            style={codeStyle}
+            style={{ ...codeStyle, ...getSectionStyle(item.typography, 'body') }}
             aria-label="Code content"
             spellCheck={false}
             wrap="off"
@@ -161,7 +162,11 @@ export default function CodeBlock({
             }}
           />
         ) : (
-          <pre style={codeStyle} className="p-4 text-sm leading-6 font-mono min-h-full cursor-text select-text">
+          <pre
+            data-custom-text-color={item.typography?.sections?.body?.color ? true : undefined}
+            style={{ ...codeStyle, ...getSectionStyle(item.typography, 'body') }}
+            className="p-4 text-sm leading-6 font-mono min-h-full cursor-text select-text"
+          >
             <code
               className={`hljs language-${language}`}
               style={{ padding: 0, background: 'transparent', fontFamily: 'inherit', fontSize: 'inherit' }}
