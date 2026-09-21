@@ -420,7 +420,8 @@
   }
 
   .canvas-hint {
-    top: 64px;
+    top: auto;
+    bottom: 112px;
     width: calc(100% - 32px);
     max-width: 420px;
   }

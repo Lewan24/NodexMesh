@@ -45,6 +45,11 @@ export type ItemWrite = {
 }[keyof ItemDataMap];
 export type ItemRecord = ItemWrite & AuditFields;
 
+export interface TrashedItemRecord {
+  item: ItemRecord;
+  boardName: string;
+}
+
 export interface ItemLink {
   sourceItemId: string;
   targetItemId: string;

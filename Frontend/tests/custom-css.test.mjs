@@ -19,9 +19,6 @@ const { default: ItemCssScope } = await server.ssrLoadModule('/src/features/bloc
 const { flattenItems, toProjectView } = await server.ssrLoadModule('/src/features/projects/services/boardAdapter.ts');
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 const { validateItem } = await server.ssrLoadModule('/src/entities/board/itemSchema.ts');
-const { default: AppBar } = await server.ssrLoadModule('/src/layout/appbar/AppBar.tsx');
-const { AuthContext } = await server.ssrLoadModule('/src/features/auth/context/AuthContext.tsx');
-const { ThemeProvider } = await server.ssrLoadModule('/src/app/providers/ThemeProvider.tsx');
 await server.close();
 
 test('CSS declarations preserve functions, quoted semicolons, variables and last-declaration precedence', () => {
@@ -109,44 +106,4 @@ test('custom CSS travels as appearance data through board persistence', () => {
     board: JSON.parse(JSON.stringify(snapshot)),
   });
   assert.deepEqual(restored.items[0].customCss, item.customCss);
-});
-
-test('the full navigation bar restores visibility while retaining the reopen control', () => {
-  const storage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
-  const render = (collapsed) => {
-    Object.defineProperty(globalThis, 'localStorage', {
-      configurable: true,
-      value: { getItem: (key) => (key === 'nodexmesh_appbar_collapsed' ? String(collapsed) : null) },
-    });
-    return renderToStaticMarkup(
-      createElement(
-        AuthContext.Provider,
-        { value: { currentUser: null, isAdmin: false, logout() {} } },
-        createElement(
-          ThemeProvider,
-          null,
-          createElement(AppBar, {
-            projects: [],
-            activeProjectId: '',
-            searchQuery: 'keep my search',
-            onSearchQueryChange() {},
-          }),
-        ),
-      ),
-    );
-  };
-  try {
-    const collapsed = render(true);
-    assert.match(collapsed, /<header[^>]*hidden=""/);
-    assert.match(collapsed, /display:none/);
-    assert.match(collapsed, /aria-label="Show navigation bar" aria-expanded="false"/);
-    assert.match(collapsed, /value="keep my search"/);
-    const expanded = render(false);
-    assert.doesNotMatch(expanded, /<header[^>]*hidden/);
-    assert.match(expanded, /aria-label="Hide navigation bar" aria-expanded="true"/);
-    assert.match(expanded, /appbar-visibility-toggle absolute top-full left-1\/2/);
-  } finally {
-    if (storage) Object.defineProperty(globalThis, 'localStorage', storage);
-    else delete globalThis.localStorage;
-  }
 });

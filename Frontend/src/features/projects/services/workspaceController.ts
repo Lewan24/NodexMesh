@@ -111,6 +111,51 @@ export class WorkspaceController {
     return this.services.boards.delete(projectId, boardId);
   }
 
+  async listItemTrash(projectId: string) {
+    await this.flush();
+    return this.services.boards.listTrash(projectId);
+  }
+
+  async restoreTrashItem(
+    projectId: string,
+    itemId: string,
+    targetBoardId: string,
+    position?: { x: number; y: number },
+  ) {
+    await this.flush();
+    const board = await this.services.boards.restoreTrashItem(projectId, itemId, targetBoardId, position);
+    const previous = this.confirmed.get(projectId);
+    if (previous?.board.board.id === board.board.id) {
+      const next = { ...previous, board };
+      this.confirmed.set(projectId, next);
+      this.publish({
+        projects: this.state.projects.map((project) => (project.id === projectId ? toProjectView(next) : project)),
+        status: 'saved',
+        error: '',
+      });
+    }
+    return board;
+  }
+
+  async purgeTrashItem(projectId: string, itemId: string) {
+    await this.flush();
+    await this.services.boards.purgeTrashItem(projectId, itemId);
+    await this.refreshCurrentBoard(projectId);
+  }
+
+  async emptyItemTrash(projectId: string) {
+    await this.flush();
+    await this.services.boards.emptyTrash(projectId);
+    await this.refreshCurrentBoard(projectId);
+  }
+
+  private async refreshCurrentBoard(projectId: string) {
+    const previous = this.confirmed.get(projectId);
+    if (!previous) return;
+    const board = await this.services.boards.get(projectId, previous.board.board.id);
+    if (board.board.revision !== previous.board.board.revision) this.acceptRemote(previous, { ...previous, board });
+  }
+
   async switchBoard(projectId: string, boardId: string): Promise<void> {
     await this.flush();
     const previous = this.confirmed.get(projectId);

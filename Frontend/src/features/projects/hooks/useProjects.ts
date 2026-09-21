@@ -31,6 +31,15 @@ interface UseProjectsResult {
     name: string,
   ) => Promise<import('@/entities/board/records').BoardRecord>;
   deleteBoard: (projectId: string, boardId: string) => Promise<void>;
+  listItemTrash: (projectId: string) => Promise<import('@/entities/board/records').TrashedItemRecord[]>;
+  restoreTrashItem: (
+    projectId: string,
+    itemId: string,
+    targetBoardId: string,
+    position?: { x: number; y: number },
+  ) => Promise<import('@/entities/board/records').BoardSnapshot>;
+  purgeTrashItem: (projectId: string, itemId: string) => Promise<void>;
+  emptyItemTrash: (projectId: string) => Promise<void>;
   createFirstProject: () => void;
   resetDemo: () => void;
   importProject: (text: string) => Promise<void>;
@@ -201,6 +210,17 @@ export function useProjects(userId: string): UseProjectsResult {
     (projectId: string, boardId: string) => controller.deleteBoard(projectId, boardId),
     [controller],
   );
+  const listItemTrash = useCallback((projectId: string) => controller.listItemTrash(projectId), [controller]);
+  const restoreTrashItem = useCallback(
+    (projectId: string, itemId: string, targetBoardId: string, position?: { x: number; y: number }) =>
+      controller.restoreTrashItem(projectId, itemId, targetBoardId, position),
+    [controller],
+  );
+  const purgeTrashItem = useCallback(
+    (projectId: string, itemId: string) => controller.purgeTrashItem(projectId, itemId),
+    [controller],
+  );
+  const emptyItemTrash = useCallback((projectId: string) => controller.emptyItemTrash(projectId), [controller]);
 
   const createFirstProject = useCallback(() => {
     const project = createDefaultProjectFor(userId);
@@ -231,6 +251,10 @@ export function useProjects(userId: string): UseProjectsResult {
     createBoard,
     renameBoard,
     deleteBoard,
+    listItemTrash,
+    restoreTrashItem,
+    purgeTrashItem,
+    emptyItemTrash,
     createFirstProject,
     resetDemo,
     importProject,

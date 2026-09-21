@@ -9,6 +9,7 @@ import type { BoardItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
 import type { ToolType } from '@/entities/board/toolTypes';
 import type { RemotePresence } from '@/features/projects/hooks/useCollaborationPresence';
+import { TRASH_ITEM_MIME } from '@/features/projects/components/ItemTrashPanel';
 
 import ConfirmDialog from '@/shared/components/dialogs/ConfirmDialog';
 import CanvasFrame from '@/features/canvas/components/CanvasFrame';
@@ -94,6 +95,8 @@ interface CanvasProps {
   onRestoreItems: (items: BoardItem[]) => void;
   onOpenBoard?: (boardId: string) => void;
   onRenameBoard?: (boardId: string, name: string) => void;
+  onOpenTrash: () => void;
+  onRestoreTrashItem: (itemId: string, position: { x: number; y: number }) => void;
 }
 
 export default function Canvas({
@@ -123,6 +126,8 @@ export default function Canvas({
   searchQuery,
   onOpenBoard,
   onRenameBoard,
+  onOpenTrash,
+  onRestoreTrashItem,
 }: CanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
@@ -942,6 +947,21 @@ export default function Canvas({
         `,
       }}
       onMouseDownCapture={handleCanvasMouseDownCapture}
+      onDragOver={(event) => {
+        if (!event.dataTransfer.types.includes(TRASH_ITEM_MIME)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+      }}
+      onDrop={(event) => {
+        const itemId = event.dataTransfer.getData(TRASH_ITEM_MIME);
+        if (!itemId) return;
+        event.preventDefault();
+        const rect = event.currentTarget.getBoundingClientRect();
+        onRestoreTrashItem(itemId, {
+          x: snapValue((event.clientX - rect.left - panRef.current.x) / zoomRef.current),
+          y: snapValue((event.clientY - rect.top - panRef.current.y) / zoomRef.current),
+        });
+      }}
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={(event) => {
         const rect = event.currentTarget.getBoundingClientRect();
@@ -1348,7 +1368,7 @@ export default function Canvas({
       {pendingDelete && (
         <ConfirmDialog
           title={pendingDelete.count > 1 ? `Delete ${pendingDelete.count} items?` : 'Delete this item?'}
-          message="This can't be undone."
+          message="The item will move to this project's trash and can be restored later."
           onConfirm={confirmDelete}
           onCancel={cancelDelete}
         />
@@ -1362,6 +1382,7 @@ export default function Canvas({
       <CanvasEmptyState visible={project.items.length === 0 && selectedTool === 'select'} />
 
       <CanvasControls
+        onOpenTrash={onOpenTrash}
         onOpenMenu={() => {
           const rect = containerRef.current?.getBoundingClientRect();
           if (!rect) return;

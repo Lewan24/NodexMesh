@@ -6,7 +6,7 @@ import { createSharingApi } from '@/features/projects/services/sharingApi';
 import { createPublicApi } from '@/features/projects/services/publicApi';
 
 /** Select matching authentication and workspace adapters. HTTP is the default. */
-const source = import.meta.env.VITE_DATA_SOURCE ?? 'mock';
+const source = import.meta.env.VITE_DATA_SOURCE ?? 'http';
 if (!['mock', 'http'].includes(source)) throw new Error('VITE_DATA_SOURCE must be mock or http.');
 const mockAuth = createMockAuthService();
 const http = source === 'http' ? createHttpAuthService(fetch, import.meta.env.VITE_API_BASE_URL || '/api/v1') : null;

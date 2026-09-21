@@ -2,7 +2,7 @@ import type { HttpClient } from '@/shared/api/httpClient';
 import { fail } from '@/shared/api/errors';
 import type { WorkspaceServices } from './contracts';
 import type { ProjectRecord, ProjectSnapshot } from '@/entities/project/types';
-import { parseBoardRecord, parseBoardSnapshot, parseProjectRecord } from './responseValidation';
+import { parseBoardRecord, parseBoardSnapshot, parseProjectRecord, parseTrashedItem } from './responseValidation';
 
 const segment = encodeURIComponent;
 
@@ -189,6 +189,25 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
         if (result.conflicts.length)
           fail(409, 'revision_mismatch', 'The board changed in another session. Local changes are preserved.');
         return parseBoardSnapshot(await client.request(`/boards/${segment(boardId)}`));
+      },
+      async listTrash(projectId) {
+        const value = await client.request(`/projects/${segment(projectId)}/item-trash`);
+        if (!Array.isArray(value)) fail(422, 'invalid_response', 'Invalid item trash response.');
+        return value.map(parseTrashedItem);
+      },
+      async restoreTrashItem(projectId, itemId, targetBoardId, position) {
+        return parseBoardSnapshot(
+          await client.request(`/projects/${segment(projectId)}/item-trash/${segment(itemId)}/restore`, {
+            method: 'POST',
+            body: { targetBoardId, x: position?.x ?? null, y: position?.y ?? null },
+          }),
+        );
+      },
+      async purgeTrashItem(projectId, itemId) {
+        await client.request(`/projects/${segment(projectId)}/item-trash/${segment(itemId)}`, { method: 'DELETE' });
+      },
+      async emptyTrash(projectId) {
+        await client.request(`/projects/${segment(projectId)}/item-trash`, { method: 'DELETE' });
       },
     },
   };

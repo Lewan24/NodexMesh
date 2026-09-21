@@ -1,4 +1,4 @@
-import type { BoardMutation, BoardRecord, BoardSnapshot, Revision } from '@/entities/board/records';
+import type { BoardMutation, BoardRecord, BoardSnapshot, Revision, TrashedItemRecord } from '@/entities/board/records';
 import type { ProjectRecord, ProjectSnapshot } from '@/entities/project/types';
 
 export interface ProjectRepository {
@@ -24,6 +24,15 @@ export interface BoardRepository {
   delete(projectId: string, boardId: string): Promise<void>;
   get(projectId: string, boardId: string, signal?: AbortSignal): Promise<BoardSnapshot>;
   mutate(projectId: string, boardId: string, mutation: BoardMutation): Promise<BoardSnapshot>;
+  listTrash(projectId: string): Promise<TrashedItemRecord[]>;
+  restoreTrashItem(
+    projectId: string,
+    itemId: string,
+    targetBoardId: string,
+    position?: { x: number; y: number },
+  ): Promise<BoardSnapshot>;
+  purgeTrashItem(projectId: string, itemId: string): Promise<void>;
+  emptyTrash(projectId: string): Promise<void>;
 }
 
 export interface WorkspaceServices {

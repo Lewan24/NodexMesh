@@ -120,7 +120,9 @@ public sealed class BoardMutationService(
             return (409, new BoardMutationResultDto(board.Revision, [], presenceConflicts));
         }
 
-        var existing = await db.BoardItems
+        // Include soft-deleted rows so an undo or trash restore can resurrect the
+        // original identity instead of colliding with a hidden primary key.
+        var existing = await db.BoardItems.IgnoreQueryFilters()
             .Where(i => i.BoardId == boardId && touchedIds.Contains(i.Id))
             .ToDictionaryAsync(i => i.Id, ct);
 
@@ -140,8 +142,9 @@ public sealed class BoardMutationService(
             }
             else if (upsert.ExpectedRevision is null)
             {
-                // Insert: the ID must not already exist.
-                if (existing.ContainsKey(upsert.Item.Id))
+                // A null revision is either a new insert or restoration of a row hidden
+                // by the soft-delete filter. Active rows still conflict as usual.
+                if (existing.TryGetValue(upsert.Item.Id, out var current) && current.DeletedAt is null)
                     conflicts.Add(new ConflictDto(upsert.Item.Id, existing[upsert.Item.Id].Revision, "revision_mismatch"));
             }
             else if (!existing.TryGetValue(upsert.Item.Id, out var current))
@@ -191,6 +194,19 @@ public sealed class BoardMutationService(
         // --- 5. Apply ---
         var now = DateTimeOffset.UtcNow;
         var written = new List<BoardItem>();
+        var linkedBoardIds = new Dictionary<Guid, Guid>();
+        foreach (var upsert in mutation.Upserts)
+            if (upsert.Item.Type == "board" && LinkedBoardId(upsert.Item.Data) is { } linkedId)
+                linkedBoardIds[upsert.Item.Id] = linkedId;
+        foreach (var delete in mutation.Deletes)
+            if (existing[delete.Id].Type == "board" && LinkedBoardId(existing[delete.Id].Data) is { } linkedId)
+                linkedBoardIds[delete.Id] = linkedId;
+        var linkedIds = linkedBoardIds.Values.ToHashSet();
+        var linkedBoards = linkedIds.Count == 0
+            ? new Dictionary<Guid, Models.Board>()
+            : await db.Boards.IgnoreQueryFilters()
+                .Where(item => item.ProjectId == board.ProjectId && linkedIds.Contains(item.Id) && item.Id != boardId)
+                .ToDictionaryAsync(item => item.Id, ct);
 
         foreach (var upsert in mutation.Upserts)
         {
@@ -227,6 +243,8 @@ public sealed class BoardMutationService(
             entity.DeletedAt = null;
 
             await ReplaceRelationsAsync(entity, upsert, userId, now, ct);
+            if (linkedBoardIds.TryGetValue(entity.Id, out var linkedId) && linkedBoards.TryGetValue(linkedId, out var linked))
+                SetBoardDeleted(linked, null, userId, now);
             written.Add(entity);
         }
 
@@ -237,6 +255,8 @@ public sealed class BoardMutationService(
             entity.Revision += 1;
             entity.UpdatedAt = now;
             entity.UpdatedBy = userId;
+            if (linkedBoardIds.TryGetValue(entity.Id, out var linkedId) && linkedBoards.TryGetValue(linkedId, out var linked))
+                SetBoardDeleted(linked, now, userId, now);
         }
 
         board.Revision += 1;
@@ -395,6 +415,27 @@ public sealed class BoardMutationService(
     // ---- mapping helpers ----
     private static string HashRequest(BoardMutationDto mutation) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(mutation))));
+
+    private static Guid? LinkedBoardId(JsonElement data)
+    {
+        if (!data.TryGetProperty("boardId", out var value) || value.ValueKind != JsonValueKind.String) return null;
+        return Guid.TryParse(value.GetString(), out var id) ? id : null;
+    }
+
+    private static Guid? LinkedBoardId(string data)
+    {
+        using var document = JsonDocument.Parse(data);
+        return LinkedBoardId(document.RootElement);
+    }
+
+    private static void SetBoardDeleted(Models.Board board, DateTimeOffset? deletedAt, Guid userId, DateTimeOffset now)
+    {
+        if (board.DeletedAt == deletedAt || (board.DeletedAt is not null && deletedAt is not null)) return;
+        board.DeletedAt = deletedAt;
+        board.Revision++;
+        board.UpdatedAt = now;
+        board.UpdatedBy = userId;
+    }
 
     private static ItemLinkKind ParseKind(string kind) => kind switch
     {
