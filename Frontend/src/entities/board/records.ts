@@ -12,12 +12,10 @@ export interface AuditFields {
   deletedAt: string | null;
 }
 
-export type ItemAppearance = Pick<BaseItem, 'color' | 'colorRole' | 'gradient' | 'topColor' | 'typography'> & {
-  textAlign?: 'left' | 'center' | 'right';
-  fontSize?: 'sm' | 'base' | 'lg';
-  bold?: boolean;
-  italic?: boolean;
-};
+export type ItemAppearance = Pick<
+  BaseItem,
+  'color' | 'colorRole' | 'gradient' | 'topColor' | 'typography' | 'customCss'
+> & { textAlign?: 'left' | 'center' | 'right'; fontSize?: 'sm' | 'base' | 'lg'; bold?: boolean; italic?: boolean };
 
 type DataFor<T extends BoardItem> = Omit<
   T,

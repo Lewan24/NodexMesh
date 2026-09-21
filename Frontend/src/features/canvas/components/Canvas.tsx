@@ -1,3 +1,4 @@
+import CustomCssDialog from '@/features/blocks/custom-css/CustomCssDialog';
 import { useCanvasTouch } from '../hooks/useCanvasTouch';
 import PasteStyleDialog from './PasteStyleDialog';
 import { copyItemStyle, pasteItemStyle } from '../utils/itemStyle';
@@ -127,6 +128,7 @@ export default function Canvas({
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
   const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
   const [snapEnabled, setSnapEnabled] = useState(true);
+  const [customCssTarget, setCustomCssTarget] = useState<{ itemId: string; columnId?: string } | null>(null);
   const [contextMenu, setContextMenu] = useState<CanvasMenuState | null>(null);
   const pointerPosition = useRef<{ x: number; y: number } | null>(null);
   const closeContextMenu = useCallback(() => setContextMenu(null), []);
@@ -899,6 +901,13 @@ export default function Canvas({
 
   const cursorClass = selectedTool !== 'select' ? 'cursor-crosshair' : 'cursor-default';
 
+  const customCssParent = project.items.find((item) => item.id === customCssTarget?.columnId);
+  const customCssItem = customCssTarget?.columnId
+    ? customCssParent?.type === 'column' ? customCssParent.items.find((item) => item.id === customCssTarget.itemId) : undefined
+    : project.items.find((item) => item.id === customCssTarget?.itemId);
+  const cssSelection = selectedColumnItem?.item ?? (selectedItems.length === 1 ? selectedItems[0] : undefined);
+  const cssSelectionLocked = collaboratorLockedIds.has(selectedColumnItem?.columnId ?? cssSelection?.id ?? '');
+
   const inspectorItems = selectedColumnItem ? [selectedColumnItem.item] : selectedItems;
 
   return (
@@ -1028,8 +1037,27 @@ export default function Canvas({
           }}
         />
       )}
+      {customCssItem && customCssTarget && (
+        <CustomCssDialog
+          key={customCssItem.id}
+          item={customCssItem}
+          onClose={() => setCustomCssTarget(null)}
+          onUpdate={(updater) => {
+            if (collaboratorLockedIds.has(customCssTarget.columnId ?? customCssTarget.itemId)) return;
+            pushHistory();
+            if (customCssTarget.columnId) {
+              if (selectedColumnItem?.item.id === customCssTarget.itemId)
+                handleUpdateColumnItem(customCssTarget.columnId, updater);
+              else onUpdateItem(customCssTarget.columnId, (column) => column.type === 'column'
+                ? { ...column, items: column.items.map((item) => item.id === customCssTarget.itemId ? updater(item) : item) }
+                : column);
+            } else onUpdateItem(customCssTarget.itemId, updater);
+          }}
+        />
+      )}
       {contextMenu && (
         <CanvasContextMenu
+          onCustomCss={cssSelection && !cssSelectionLocked ? () => setCustomCssTarget({ itemId: cssSelection.id, columnId: selectedColumnItem?.columnId }) : undefined}
           onCopyStyle={() => {
             const source = selectedColumnItem?.item ?? selectedItems[0];
             if (source) setStyleClipboard(copyItemStyle(source));

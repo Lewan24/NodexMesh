@@ -10,7 +10,8 @@ public sealed record GeoPoint(double X, double Y, double? Pressure);
 
 public sealed record ItemAppearance(
     string? Color, string? ColorRole, GradientDto? Gradient, string? TopColor,
-    TypographyDto? Typography, string? TextAlign, string? FontSize, bool? Bold, bool? Italic);
+    TypographyDto? Typography, string? TextAlign, string? FontSize, bool? Bold, bool? Italic, CustomCssDto? CustomCss = null);
+public sealed record CustomCssDto(bool Enabled, string Source);
 public sealed record GradientDto(string From, string To, string Kind, double Angle);
 public sealed record TypographyDto(
     string? FontFamily, double? FontSize, bool? Bold, bool? Italic, string? TextAlign, string? VerticalAlign, TextSectionsDto? Sections = null);

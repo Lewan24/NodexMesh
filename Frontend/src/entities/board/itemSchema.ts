@@ -58,6 +58,9 @@ const sectionStyle = object({
   textAlign: optional(choice('left', 'center', 'right')),
 });
 const appearance = object({
+  customCss: optional(
+    object({ enabled: bool, source: (value) => typeof value === 'string' && value.length <= 10_000 }),
+  ),
   color: optional(text),
   colorRole: optional(choice('default', 'accent1', 'accent2', 'accent3', 'accent4', 'accent5')),
   topColor: optional(text),

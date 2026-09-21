@@ -88,8 +88,9 @@ export default function EditBar({
   return (
     <div
       data-edit-bar="true"
-      className="absolute top-3 left-1/2 -translate-x-1/2 z-50 flex flex-col rounded-2xl shadow-lg select-none overflow-hidden"
+      className="absolute left-1/2 -translate-x-1/2 z-50 flex flex-col rounded-2xl shadow-lg select-none overflow-hidden"
       style={{
+        top: 'var(--canvas-editbar-top, 12px)',
         backgroundColor: 'var(--color-surface-translucent)',
         border: '1px solid var(--color-border)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.14)',

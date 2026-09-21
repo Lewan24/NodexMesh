@@ -1,3 +1,4 @@
+import ItemCssScope from './custom-css/ItemCssScope';
 import { TypographyContext } from './typography/TypographyContext';
 import IconBlock from './icon/IconBlock';
 import SectionTitleBlock from './section-title/SectionTitleBlock';
@@ -219,7 +220,9 @@ function BlockContent({
 export default function BlockRenderer(props: BlockRendererProps) {
   return (
     <TypographyContext.Provider value={props.item.typography}>
-      <BlockContent {...props} />
+      <ItemCssScope item={props.item}>
+        <BlockContent {...props} />
+      </ItemCssScope>
     </TypographyContext.Provider>
   );
 }

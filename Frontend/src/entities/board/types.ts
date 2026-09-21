@@ -207,6 +207,7 @@ export interface TypographySettings {
 }
 
 export interface BaseItem {
+  customCss?: { enabled: boolean; source: string };
   colorRole?: 'default' | 'accent1' | 'accent2' | 'accent3' | 'accent4' | 'accent5';
   gradient?: { from: string; to: string; kind: 'linear' | 'radial'; angle: number };
 

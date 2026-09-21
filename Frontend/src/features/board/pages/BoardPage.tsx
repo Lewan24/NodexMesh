@@ -460,7 +460,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       >
         {(boardTrail.length > 0 || boards.length > 1) && (
           <div
-            className="absolute left-1/2 top-3 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-lg"
+            className="absolute left-1/2 top-9 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-lg"
             style={{
               background: 'var(--color-surface)',
               borderColor: 'var(--color-border)',
