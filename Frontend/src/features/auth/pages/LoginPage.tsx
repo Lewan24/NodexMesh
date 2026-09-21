@@ -81,7 +81,7 @@ export default function LoginPage() {
           <p className="text-sm text-center mt-1" style={{ color: 'var(--color-text-muted)' }}>
             Sign in to open your boards
           </p>
-        </div>
+        </div>  
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           <label className="flex flex-col gap-1.5">
@@ -165,7 +165,7 @@ export default function LoginPage() {
         {isMockDataSource && (
           <div
             className="mt-4 text-[11px] rounded-xl px-3 py-2 leading-relaxed"
-            style={{ backgroundColor: 'var(--color-surface-alt)', color: 'var(--color-text-muted)' }}
+            style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-muted)' }}
           >
             Demo logins — <strong>demo / demo123</strong> (user) or <strong>admin / admin123</strong> (admin)
           </div>

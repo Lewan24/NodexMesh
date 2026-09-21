@@ -37,7 +37,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       return localStorage.getItem('nodexmesh_theme') === 'dark' ? 'dark' : 'light';
     } catch {
-      return 'light';
+      return 'dark';
     }
   });
   const [scope, setScopeState] = useState({ userId: '', projectId: '' });

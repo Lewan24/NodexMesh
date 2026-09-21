@@ -218,7 +218,7 @@ function AdminUserRow({
     return (
       <form
         className="grid gap-2 rounded-xl p-3 sm:grid-cols-[1fr_1fr_auto]"
-        style={{ backgroundColor: 'var(--color-surface-alt)' }}
+        style={{ backgroundColor: 'var(--color-surface)', border: '1px dashed var(--color-border)' }}
         onSubmit={(event) => {
           event.preventDefault();
           void onSave(draft).then((saved) => {
@@ -273,7 +273,7 @@ function AdminUserRow({
   return (
     <div
       className="flex flex-wrap items-center gap-3 rounded-xl p-3"
-      style={{ backgroundColor: 'var(--color-surface-alt)' }}
+      style={{ backgroundColor: 'var(--color-surface)' }}
     >
       <div className="min-w-0 flex-1">
         <p className="font-medium">{user.displayName}</p>

@@ -22,77 +22,119 @@
    are intentionally left as user data, not theme.
    ──────────────────────────────────────────────────────────────────────── */
 
-/* Chrome (sidebar + floating panels) — brand-anchored, same in both themes */
-:root {
-  --color-chrome-bg: #17092a;
-  --color-chrome-bg-alt: #120720;
-  --color-chrome-panel: #1c0e33;
-  --color-chrome-border: #2a1642;
-  --color-chrome-border-soft: rgba(255, 255, 255, 0.08);
-  --color-chrome-text: #b9a8d6;
-  --color-chrome-text-dim: #b99fde;
-  --color-chrome-text-faint: #6c5c85;
-  --color-chrome-text-strong: #ffffff;
-  --color-chrome-hover: #1c0e33;
+/* ── Chrome / sidebar / floating panels ──────────────────────────────── */
+/* Brand-anchored, same in both themes */
 
-  /* Semantic (stable across themes) */
-  --color-success: #059669;
-  --color-warning: #f0a94e;
-  --color-danger: #ff6b8a;
-  --color-danger-strong: #e0507a;
+:root {
+  --color-chrome-bg: #15131c;
+  --color-chrome-bg-alt: #111016;
+  --color-chrome-panel: #1c1924;
+
+  --color-chrome-border: #302a3d;
+  --color-chrome-border-soft: rgba(255, 255, 255, 0.07);
+
+  --color-chrome-text: #c9c3d4;
+  --color-chrome-text-dim: #aaa2b8;
+  --color-chrome-text-faint: #756e82;
+  --color-chrome-text-strong: #f7f5fa;
+
+  --color-chrome-hover: #24202d;
+
+  /* Semantic */
+  --color-success: #66836d;
+  --color-warning: #a98255;
+  --color-danger: #946a6a;
+  --color-danger-strong: #80595c;
 
   --radius-card: 1rem;
   --radius-pill: 999px;
 }
 
-/* ── Light theme (default) ─────────────────────────────────────────────── */
+
+/* ── Light theme ─────────────────────────────────────────────────────── */
+
 :root,
 [data-theme='light'] {
-  --color-accent: #7c3aed;
-  --color-accent-hover: #6d28d9;
-  --color-accent-soft: rgba(124, 58, 237, 0.12);
-  --color-accent-soft-strong: rgba(124, 58, 237, 0.2);
+  --color-item-default: #ffffff;
 
-  --color-app-bg: #f4f2fa;
-  --color-canvas-dot: rgba(23, 9, 42, 0.12);
+  /* Brand */
+  --color-accent: #5b3df5;
+  --color-accent-hover: #4f33d9;
+
+  --color-accent-soft: rgba(91, 61, 245, 0.10);
+  --color-accent-soft-strong: rgba(91, 61, 245, 0.17);
+
+  /* Base */
+  --color-app-bg: #f5f5f7;
+
+  --color-canvas-dot: rgba(24, 22, 30, 0.10);
+
   --color-surface: #ffffff;
-  --color-surface-alt: #f8f7fc;
+  --color-surface-alt: #f9f9fb;
   --color-surface-translucent: rgba(255, 255, 255, 0.92);
 
-  --color-border: rgba(23, 9, 42, 0.1);
-  --color-border-soft: rgba(23, 9, 42, 0.07);
+  /* Borders */
+  --color-border: rgba(24, 22, 30, 0.10);
+  --color-border-soft: rgba(24, 22, 30, 0.06);
 
-  --color-text-primary: #1c1330;
-  --color-text-secondary: #5b5470;
-  --color-text-muted: #948da6;
-  --color-text-faint: #a39cb3;
+  /* Text */
+  --color-text-primary: #1d1b22;
+  --color-text-secondary: #5f5b68;
+  --color-text-muted: #898491;
+  --color-text-faint: #a4a0aa;
+
+  /* Item accents */
+  --color-accent-violet: #6e5fa8;
+  --color-accent-blue: #56718f;
+  --color-accent-cyan: #537f83;
+  --color-accent-green: #66836d;
+  --color-accent-coral: #946a6a;
 }
 
-/* ── Dark theme ───────────────────────────────────────────────────────── */
+
+/* ── Dark theme ──────────────────────────────────────────────────────── */
+
 [data-theme='dark'] {
-  --color-accent: #a276f7;
-  --color-accent-hover: #b28cff;
-  --color-accent-soft: rgba(162, 118, 247, 0.2);
-  --color-accent-soft-strong: rgba(162, 118, 247, 0.3);
+  --color-item-default: #18181b;
 
-  --color-app-bg: #0c0906;
-  --color-canvas-dot: rgba(255, 255, 255, 0.09);
-  --color-surface: #1f1233;
-  --color-surface-alt: #251639;
-  --color-surface-translucent: rgba(31, 18, 51, 0.92);
+  /* Brand */
+  --color-accent: #735cff;
+  --color-accent-hover: #846fff;
 
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-border-soft: rgba(255, 255, 255, 0.07);
+  --color-accent-soft: rgba(115, 92, 255, 0.16);
+  --color-accent-soft-strong: rgba(115, 92, 255, 0.24);
 
-  --color-text-primary: #f2eef9;
-  --color-text-secondary: #bcaed6;
-  --color-text-muted: #8c7fa8;
-  --color-text-faint: #766a8f;
+  /* Base */
+  --color-app-bg: #0b0b0c;
 
-  --color-danger: #ff8aa3;
-  --color-danger-strong: #ff9fb4;
-  --color-success: #34d399;
-  --color-warning: #ffbd65;
+  --color-canvas-dot: rgba(255, 255, 255, 0.07);
+
+  --color-surface: #18181b;
+  --color-surface-alt: #202024;
+  --color-surface-translucent: rgba(24, 24, 27, 0.92);
+
+  /* Borders */
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-border-soft: rgba(255, 255, 255, 0.055);
+
+  /* Text */
+  --color-text-primary: #f4f3f6;
+  --color-text-secondary: #b9b5c0;
+  --color-text-muted: #8d8994;
+  --color-text-faint: #706c77;
+
+  /* Item accents */
+  --color-accent-violet: #8272ba;
+  --color-accent-blue: #6984a1;
+  --color-accent-cyan: #669297;
+  --color-accent-green: #78967f;
+  --color-accent-coral: #aa7d7d;
+
+  /* Semantic */
+  --color-success: #78967f;
+  --color-warning: #c49a66;
+  --color-danger: #aa7d7d;
+  --color-danger-strong: #bd8a8a;
 }
 
 *,
@@ -165,7 +207,7 @@ body {
 }
 
 .input-theme {
-  background-color: var(--color-surface-alt);
+  background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
   border-radius: 0.75rem;
