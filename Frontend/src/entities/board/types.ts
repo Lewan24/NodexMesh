@@ -186,7 +186,18 @@ export interface ItemComment {
   createdAt: string;
 }
 
+export type TextSection = 'title' | 'description' | 'body' | 'links' | 'caption' | 'labels';
+
+export interface TextSectionStyle {
+  color?: string;
+  fontSize?: number;
+  bold?: boolean;
+  italic?: boolean;
+  textAlign?: TextAlign;
+}
+
 export interface TypographySettings {
+  sections?: Partial<Record<TextSection, TextSectionStyle>>;
   fontFamily?: FontFamily;
   fontSize?: number;
   bold?: boolean;
@@ -196,6 +207,7 @@ export interface TypographySettings {
 }
 
 export interface BaseItem {
+  customCss?: { enabled: boolean; source: string };
   colorRole?: 'default' | 'accent1' | 'accent2' | 'accent3' | 'accent4' | 'accent5';
   gradient?: { from: string; to: string; kind: 'linear' | 'radial'; angle: number };
 

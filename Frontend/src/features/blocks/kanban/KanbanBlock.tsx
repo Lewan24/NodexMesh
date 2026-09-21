@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useRef, useState } from 'react';
 
@@ -58,11 +59,14 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
   const columnsRef = useRef(item.columns);
   columnsRef.current = item.columns;
 
-  const { background, light: isLight } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  const {
+    background,
+    light: isLight,
+    textColor,
+    mutedColor,
+  } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
-  const textColor = isLight ? '#1e293b' : '#ffffff';
-  const mutedColor = isLight ? '#64748b' : '#b9aec9';
-  const doneColor = isLight ? 'rgba(30,41,59,0.4)' : '#9f92b0';
+  const doneColor = mutedColor;
   const cardBackground = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(7,19,23,0.5)';
   const cardBorder = isLight ? 'rgba(0,0,0,0.08)' : '#1a3040';
   const cardBorderHover = 'rgba(124,58,237,0.35)';
@@ -276,6 +280,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                   borderColor: accentColor,
                   ...typographyStyle,
                   fontSize: baseFontSize ? `${baseFontSize + 2}px` : undefined,
+                  ...getSectionStyle(item.typography, 'title'),
                 }}
                 value={item.title}
                 onChange={(event) => updateKanban({ title: event.target.value })}
@@ -294,6 +299,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                   ...typographyStyle,
                   color: textColor,
                   fontSize: baseFontSize ? `${baseFontSize + 2}px` : undefined,
+                  ...getSectionStyle(item.typography, 'title'),
                 }}
                 onDoubleClick={() => setEditingTitle(true)}
               >
@@ -511,7 +517,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
 
                 <button
                   className="flex-1 min-w-0 break-words text-left font-bold uppercase tracking-widest"
-                  style={{ color: column.color, ...typographyStyle }}
+                  style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'labels') }}
                   onMouseDown={(event) => event.stopPropagation()}
                   onClick={() => setColumnSettings(column.id)}
                   title="Edit column"
@@ -599,7 +605,11 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                         onToggle={() => toggleCard(column.id, card.id)}
                         onDelete={() => deleteCard(column.id, card.id)}
                         onEdit={(text) => editCard(column.id, card.id, text)}
-                        textStyle={{ ...typographyStyle, fontSize: baseFontSize ? `${baseFontSize}px` : undefined }}
+                        textStyle={{
+                          ...typographyStyle,
+                          fontSize: baseFontSize ? `${baseFontSize}px` : undefined,
+                          ...getSectionStyle(item.typography, 'body'),
+                        }}
                       />
                     </div>
                   </div>
@@ -645,6 +655,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                       backgroundColor: cardBackground,
                       borderColor: accentColor,
                       color: textColor,
+                      ...getSectionStyle(item.typography, 'body'),
                     }}
                   />
                 </div>

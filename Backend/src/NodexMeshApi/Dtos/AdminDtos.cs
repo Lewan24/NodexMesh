@@ -22,6 +22,15 @@ public sealed record AdminUpdateUserRequest(
 
 public sealed record AdminBlockUserRequest(bool Blocked);
 
+public sealed record AdminResetAppearanceRequest([property: Required] string Scope) : IValidatableObject
+{
+    public IEnumerable<ValidationResult> Validate(ValidationContext context)
+    {
+        if (Scope is not ("Defaults" or "ProjectOverrides" or "All"))
+            yield return new ValidationResult("Scope must be Defaults, ProjectOverrides or All.", [nameof(Scope)]);
+    }
+}
+
 public sealed record AdminRegistrationRequest(bool Enabled);
 
 public sealed record AdminProjectMemberDto(Guid UserId, string Email, string DisplayName, string Role);
@@ -40,3 +49,6 @@ public sealed record AdminAddProjectMemberRequest(
             yield return new ValidationResult("Role must be Editor, Commenter or Viewer.", [nameof(Role)]);
     }
 }
+
+public sealed record AdminTransferProjectOwnerRequest(
+    [property: Required, EmailAddress, MaxLength(256)] string Email);

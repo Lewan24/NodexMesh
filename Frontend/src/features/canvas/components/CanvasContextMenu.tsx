@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Copy, CopyPlus, ClipboardPaste, Trash2, Layers, Lock, Unlock } from 'lucide-react';
+import { Copy, CopyPlus, ClipboardPaste, Trash2, Layers, Lock, Unlock, Code } from 'lucide-react';
 
 export interface CanvasMenuState {
   x: number;
@@ -10,6 +10,7 @@ export interface CanvasMenuState {
   hasSelection: boolean;
 }
 export default function CanvasContextMenu({
+  onCustomCss,
   onCopyStyle,
   onPasteStyle,
   canPasteStyle,
@@ -26,6 +27,7 @@ export default function CanvasContextMenu({
   onGroup,
   onJoinDrawings,
 }: {
+  onCustomCss?: () => void;
   onCopyStyle: () => void;
   onPasteStyle: () => void;
   canPasteStyle: boolean;
@@ -71,6 +73,7 @@ export default function CanvasContextMenu({
   const actions = [
     ...(menu.hasSelection
       ? [
+          ...(count === 1 && onCustomCss ? [{ name: 'Custom CSS…', keys: '', icon: Code, run: onCustomCss }] : []),
           ...(count === 1 ? [{ name: 'Copy style', keys: '', icon: Copy, run: onCopyStyle }] : []),
           {
             name: 'Paste style',

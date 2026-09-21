@@ -203,6 +203,62 @@ public class BoardMutationServiceTests : IDisposable
         stored.DeletedAt.Should().NotBeNull(); // soft delete, restorable — the row still exists
     }
 
+    [Fact]
+    public async Task ApplyAsync_RestoresASoftDeletedItem_WhenUndoUpsertsTheOriginalId()
+    {
+        var (_, boardId, ownerId) = await SeedBoardAsync();
+        var context = _db.CreateContext();
+        var service = CreateService(context);
+        var itemId = Guid.NewGuid();
+        await service.ApplyAsync(boardId, ownerId,
+            new BoardMutationDto(Guid.NewGuid(), 1, [InsertOf(itemId, boardId)], []));
+        await service.ApplyAsync(boardId, ownerId,
+            new BoardMutationDto(Guid.NewGuid(), 2, [], [new ItemDeleteDto(itemId, 1)]));
+
+        var (status, result) = await service.ApplyAsync(boardId, ownerId,
+            new BoardMutationDto(Guid.NewGuid(), 3, [InsertOf(itemId, boardId, "restored")], []));
+
+        status.Should().Be(200);
+        result.Conflicts.Should().BeEmpty();
+        var stored = await context.BoardItems.SingleAsync(i => i.Id == itemId);
+        stored.DeletedAt.Should().BeNull();
+        stored.Revision.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_SoftDeletesAndRestoresTheBoardLinkedByABoardCard()
+    {
+        var (projectId, boardId, ownerId) = await SeedBoardAsync();
+        var context = _db.CreateContext();
+        var childBoardId = Guid.NewGuid();
+        context.Boards.Add(new Board
+        {
+            Id = childBoardId, ProjectId = projectId, Name = "Child", SortOrder = 1, Revision = 1,
+            CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow,
+            CreatedBy = ownerId, UpdatedBy = ownerId
+        });
+        await context.SaveChangesAsync();
+        var service = CreateService(context);
+        var itemId = Guid.NewGuid();
+        var boardCard = new ItemMutationDto(
+            new ItemWriteDto(itemId, boardId, null, null, 0, 0, 0, 240, 140, 1, false,
+                "board", 1, EmptyObject(), JsonSerializer.SerializeToElement(new
+                {
+                    boardId = childBoardId, title = "Child", description = "", icon = ""
+                })),
+            null, [], [], []);
+
+        await service.ApplyAsync(boardId, ownerId, new BoardMutationDto(Guid.NewGuid(), 1, [boardCard], []));
+        await service.ApplyAsync(boardId, ownerId,
+            new BoardMutationDto(Guid.NewGuid(), 2, [], [new ItemDeleteDto(itemId, 1)]));
+        (await context.Boards.IgnoreQueryFilters().SingleAsync(b => b.Id == childBoardId))
+            .DeletedAt.Should().NotBeNull();
+
+        await service.ApplyAsync(boardId, ownerId,
+            new BoardMutationDto(Guid.NewGuid(), 3, [boardCard], []));
+        (await context.Boards.SingleAsync(b => b.Id == childBoardId)).DeletedAt.Should().BeNull();
+    }
+
     // ---------------- idempotency ----------------
 
     [Fact]

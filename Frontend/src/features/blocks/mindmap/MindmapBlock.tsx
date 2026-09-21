@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MindmapItem, MindmapNode } from '@/entities/board/types';
 import type { BlockDeleteHandler, BlockUpdateHandler } from '../types';
@@ -168,6 +169,7 @@ export default function MindmapBlock({
             style={{
               background: node.background,
               color: node.textColor,
+              ...getSectionStyle(item.typography, 'labels'),
               borderRadius: node.parentId ? 8 : 32,
               outlineColor: node.color,
               borderColor: node.color,
@@ -217,7 +219,7 @@ export default function MindmapBlock({
     <ContentBlockShell
       item={item}
       title={
-        <span>
+        <span style={getSectionStyle(item.typography, 'title')}>
           {item.title} <span className="text-xs opacity-50">· {item.nodes.length} ideas</span>
         </span>
       }

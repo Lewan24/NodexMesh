@@ -2,7 +2,7 @@ import type { BaseItem } from '@/entities/board/types';
 import { paletteKeys } from '@/features/appearance/appearanceModel';
 import type { Palette, PaletteKey } from '@/features/appearance/appearanceModel';
 import { useTheme } from '@/app/providers/ThemeProvider';
-import { isLightColor } from '../kanban/utils/kanbanUtils';
+import { readableText, contrastRatio } from '../typography/textContrast';
 
 export function isDefaultCardColor(color?: string): boolean {
   return !color || ['#fff', '#ffffff', 'white'].includes(color.trim().toLowerCase());
@@ -30,13 +30,15 @@ export function resolveAppearance(
       ? `radial-gradient(circle at center, ${from}, ${to})`
       : `linear-gradient(${gradient.angle}deg, ${from}, ${to})`
     : solid;
-  const light = isLightColor(from) && isLightColor(to);
+  const textColor = readableText(from, to);
+  const light = textColor === '#000000';
+  const muted = light ? '#374151' : '#e5e7eb';
   return {
     background,
     solid,
     light,
-    textColor: light ? '#172033' : '#f8fafc',
-    mutedColor: light ? '#475569' : '#c8bed5',
+    textColor,
+    mutedColor: Math.min(contrastRatio(muted, from), contrastRatio(muted, to)) >= 4.5 ? muted : textColor,
   };
 }
 export function useCardAppearance(color?: string, gradient?: BaseItem['gradient'], role?: BaseItem['colorRole']) {

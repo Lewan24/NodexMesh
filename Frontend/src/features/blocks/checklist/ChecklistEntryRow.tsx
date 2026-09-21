@@ -1,3 +1,4 @@
+import { useSectionStyle } from '../typography/TypographyContext';
 import { useEffect, useRef, useState } from 'react';
 
 import type { ChecklistEntry } from '@/entities/board/types';
@@ -24,6 +25,7 @@ export default function ChecklistEntryRow({
   onEdit,
   onDragHandleMouseDown,
 }: ChecklistEntryRowProps) {
+  const sectionStyle = useSectionStyle('body');
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(entry.text);
 
@@ -45,8 +47,8 @@ export default function ChecklistEntryRow({
   }, [editing]);
 
   useEffect(() => {
-    if (editing) inputRef.current?.focus();
-  }, [editing]);
+    if (editing) resizeEditor();
+  }, [editing, sectionStyle.fontSize, sectionStyle.fontWeight, sectionStyle.fontStyle]);
 
   useEffect(() => {
     if (!editing) setText(entry.text);
@@ -103,7 +105,7 @@ export default function ChecklistEntryRow({
           ref={inputRef}
           rows={1}
           className="flex-1 min-w-0 bg-transparent outline-none text-[length:inherit] leading-snug resize-none overflow-hidden"
-          style={{ color: textColor }}
+          style={{ color: textColor, ...sectionStyle }}
           value={text}
           onChange={(event) => {
             setText(event.target.value);
@@ -125,10 +127,7 @@ export default function ChecklistEntryRow({
       ) : (
         <span
           className="flex-1 min-w-0 text-[length:inherit] leading-snug select-none cursor-text transition-all duration-150 whitespace-pre-wrap break-words"
-          style={{
-            color: entry.done ? `${textColor}55` : textColor,
-            textDecoration: entry.done ? 'line-through' : 'none',
-          }}
+          style={{ color: textColor, ...sectionStyle, textDecoration: entry.done ? 'line-through' : 'none' }}
           onDoubleClick={() => setEditing(true)}
         >
           {entry.text || <span style={{ opacity: 0.4 }}>Untitled</span>}

@@ -1,3 +1,6 @@
+import { useSectionStyle } from '../typography/TypographyContext';
+import { readableText } from '../typography/textContrast';
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { createId } from '@/shared/lib/createId';
 import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import type { CSSProperties } from 'react';
@@ -22,6 +25,7 @@ import type { Node, NodeProps, Edge, ReactFlowInstance } from '@xyflow/react';
 import type { DiagramItem, DiagramNode, DiagramEdge, DiagramShape } from '@/entities/board/types';
 import type { BlockDeleteHandler, BlockUpdateHandler } from '../types';
 import ContentBlockShell from '../shared/ContentBlockShell';
+import DiagramPreview from './DiagramPreview';
 import {
   diagramTemplate,
   layoutDiagram,
@@ -34,9 +38,14 @@ import '../shared/planning.css';
 
 type FlowNode = Node<DiagramNode['data'], 'shape'>;
 function ShapeNode({ data, selected }: NodeProps<FlowNode>) {
+  const labelStyle = useSectionStyle('labels');
   return (
     <div className="diagram-node" data-selected={selected}>
-      <div className="diagram-shape" data-shape={data.shape} style={{ background: data.color }}>
+      <div
+        className="diagram-shape"
+        data-shape={data.shape}
+        style={{ background: data.color, color: readableText(data.color), ...labelStyle }}
+      >
         {data.label || 'Untitled'}
       </div>
       {(
@@ -183,12 +192,14 @@ export default function DiagramBlock({
               ? 'Diagram editing is available on desktop'
               : 'Double-click to edit diagram'}
         </span>
-        <button
-          className="planning-button ml-auto"
-          onClick={() => flow.current?.fitView({ padding: 0.2, duration: 200 })}
-        >
-          Fit view
-        </button>
+        {editing && (
+          <button
+            className="planning-button ml-auto"
+            onClick={() => flow.current?.fitView({ padding: 0.2, duration: 200 })}
+          >
+            Fit view
+          </button>
+        )}
         <button
           className="planning-button"
           aria-pressed={editing}
@@ -279,72 +290,79 @@ export default function DiagramBlock({
         }}
       >
         <div className="absolute inset-0" style={{ pointerEvents: editing ? 'auto' : 'none' }}>
-          <ReactFlow<FlowNode>
-            id={`diagram-${item.id}`}
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            defaultEdgeOptions={edgeOptions}
-            connectionMode={ConnectionMode.Loose}
-            connectionRadius={28}
-            reconnectRadius={16}
-            edgesReconnectable={editing}
-            connectionLineType={ConnectionLineType.SmoothStep}
-            onReconnect={(edge, connection) => {
-              if (canConnectDiagram(toEdges(edges), connection, edge.id))
-                save(nodes, reconnectEdge(edge, connection, edges));
-            }}
-            isValidConnection={(connection) => canConnectDiagram([], connection)}
-            onInit={(instance) => {
-              flow.current = instance;
-            }}
-            onNodesChange={(changes) => {
-              const next = applyNodeChanges(changes, nodes);
-              setNodes(next);
-              if (changes.some((change) => change.type === 'position' && change.dragging !== true)) save(next, edges);
-            }}
-            onEdgesChange={(changes) => setEdges(applyEdgeChanges(changes, edges))}
-            onConnect={(connection) => {
-              if (!editing || connection.source === connection.target) return;
-              if (!canConnectDiagram(toEdges(edges), connection)) return;
-              save(nodes, [...edges, { ...connection, id: createId(), label: '' }]);
-            }}
-            onNodeClick={(event, node) => {
-              const ids = event.shiftKey ? new Set(clickedSelection.current) : new Set<string>();
-              if (event.shiftKey && ids.has(node.id)) ids.delete(node.id);
-              else ids.add(node.id);
-              clickedSelection.current = ids;
-              setNodes((current) => current.map((entry) => ({ ...entry, selected: ids.has(entry.id) })));
-              setSelection({ node: node.id });
-            }}
-            onSelectionDragStop={(_, selected) => {
-              clickedSelection.current = new Set(selected.map((node) => node.id));
-            }}
-            onEdgeClick={(_, edge) => setSelection({ edge: edge.id })}
-            onPaneClick={() => {
-              clickedSelection.current.clear();
-              setSelection({});
-            }}
-            nodesDraggable={editing}
-            nodesConnectable={editing}
-            elementsSelectable={editing}
-            panOnDrag={editing ? [1, 2] : false}
-            selectionOnDrag={editing}
-            selectionMode={SelectionMode.Partial}
-            multiSelectionKeyCode="Shift"
-            selectionKeyCode={null}
-            zoomOnScroll={editing}
-            zoomOnDoubleClick={false}
-            deleteKeyCode={null}
-            snapToGrid={snap}
-            snapGrid={[16, 16]}
-            fitView
-            minZoom={0.15}
-            maxZoom={2}
-          >
-            <Background gap={16} color="#8b7daa30" />
-            {editing && <Controls showInteractive={false} />}
-          </ReactFlow>
+          {!editing ? (
+            <DiagramPreview nodes={toNodes(nodes)} edges={toEdges(edges)} />
+          ) : (
+            <ReactFlow<FlowNode>
+              id={`diagram-${item.id}`}
+              nodes={nodes}
+              edges={edges.map((edge) => ({
+                ...edge,
+                labelStyle: { ...edge.labelStyle, ...getSectionStyle(item.typography, 'labels') },
+              }))}
+              nodeTypes={nodeTypes}
+              defaultEdgeOptions={edgeOptions}
+              connectionMode={ConnectionMode.Loose}
+              connectionRadius={28}
+              reconnectRadius={16}
+              edgesReconnectable={editing}
+              connectionLineType={ConnectionLineType.SmoothStep}
+              onReconnect={(edge, connection) => {
+                if (canConnectDiagram(toEdges(edges), connection, edge.id))
+                  save(nodes, reconnectEdge(edge, connection, edges));
+              }}
+              isValidConnection={(connection) => canConnectDiagram([], connection)}
+              onInit={(instance) => {
+                flow.current = instance;
+              }}
+              onNodesChange={(changes) => {
+                const next = applyNodeChanges(changes, nodes);
+                setNodes(next);
+                if (changes.some((change) => change.type === 'position' && change.dragging !== true)) save(next, edges);
+              }}
+              onEdgesChange={(changes) => setEdges(applyEdgeChanges(changes, edges))}
+              onConnect={(connection) => {
+                if (!editing || connection.source === connection.target) return;
+                if (!canConnectDiagram(toEdges(edges), connection)) return;
+                save(nodes, [...edges, { ...connection, id: createId(), label: '' }]);
+              }}
+              onNodeClick={(event, node) => {
+                const ids = event.shiftKey ? new Set(clickedSelection.current) : new Set<string>();
+                if (event.shiftKey && ids.has(node.id)) ids.delete(node.id);
+                else ids.add(node.id);
+                clickedSelection.current = ids;
+                setNodes((current) => current.map((entry) => ({ ...entry, selected: ids.has(entry.id) })));
+                setSelection({ node: node.id });
+              }}
+              onSelectionDragStop={(_, selected) => {
+                clickedSelection.current = new Set(selected.map((node) => node.id));
+              }}
+              onEdgeClick={(_, edge) => setSelection({ edge: edge.id })}
+              onPaneClick={() => {
+                clickedSelection.current.clear();
+                setSelection({});
+              }}
+              nodesDraggable={editing}
+              nodesConnectable={editing}
+              elementsSelectable={editing}
+              panOnDrag={editing ? [1, 2] : false}
+              selectionOnDrag={editing}
+              selectionMode={SelectionMode.Partial}
+              multiSelectionKeyCode="Shift"
+              selectionKeyCode={null}
+              zoomOnScroll={editing}
+              zoomOnDoubleClick={false}
+              deleteKeyCode={null}
+              snapToGrid={snap}
+              snapGrid={[16, 16]}
+              fitView
+              minZoom={0.15}
+              maxZoom={2}
+            >
+              <Background gap={16} color="#8b7daa30" />
+              {editing && <Controls showInteractive={false} />}
+            </ReactFlow>
+          )}
         </div>
         {!nodes.length && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none">
@@ -534,7 +552,9 @@ export default function DiagramBlock({
       onDelete={onDelete}
       title={
         <span className="flex justify-between gap-2">
-          <span className="truncate">{item.title}</span>
+          <span className="truncate" style={getSectionStyle(item.typography, 'title')}>
+            {item.title}
+          </span>
           <span className="text-xs opacity-50">
             {nodes.length} nodes · {edges.length} connections
           </span>

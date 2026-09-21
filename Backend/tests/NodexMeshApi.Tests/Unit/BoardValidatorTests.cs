@@ -23,6 +23,22 @@ public class BoardValidatorTests
             Appearance: appearance ?? EmptyObject(),
             Data: data ?? Json(new { content = "hello" }));
 
+    [Fact]
+    public void ValidateItem_AcceptsOptionalCustomCss()
+    {
+        var item = NoteItem(appearance: Json(new { customCss = new { enabled = true, source = "border-radius: 24px;" } }));
+        var act = () => BoardValidator.ValidateItem(item);
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void ValidateItem_RejectsOversizedCustomCss()
+    {
+        var item = NoteItem(appearance: Json(new { customCss = new { enabled = true, source = new string('a', 10_001) } }));
+        var act = () => BoardValidator.ValidateItem(item);
+        act.Should().Throw<ApiException>().Where(error => error.Code == "invalid_item");
+    }
+
     // ---------------- IsUrl (SSRF / stored-XSS guard) ----------------
 
     [Theory]

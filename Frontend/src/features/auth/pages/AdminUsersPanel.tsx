@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useTheme } from '@/app/providers/ThemeProvider';
-import type { AdminProject, AdminUser } from '@/features/auth/types';
+import type { AdminAppearanceResetScope, AdminProject, AdminUser } from '@/features/auth/types';
 
 export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
   const auth = useAuth();
@@ -131,9 +131,14 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
         )}
         {tab === 'users' ? (
           <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--color-surface)' }}>
+            <div className="min-w-0 rounded-2xl p-4" style={{ backgroundColor: 'var(--color-surface)' }}>
               <h2 className="mb-3 font-semibold">Users</h2>
-              <div className="space-y-2">
+              <div
+                className="max-h-[min(58dvh,42rem)] space-y-2 overflow-y-auto overscroll-contain pr-1"
+                role="region"
+                aria-label="Users list"
+                tabIndex={0}
+              >
                 {users.map((user) => (
                   <AdminUserRow
                     key={user.id}
@@ -141,6 +146,16 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                     currentUserId={auth.currentUser?.id}
                     onSave={(input) => run(() => auth.updateAdminUser(user.id, input), 'User updated.')}
                     onResetPassword={() => resetPassword(user)}
+                    onResetAppearance={(scope) => {
+                      const label =
+                        scope === 'Defaults'
+                          ? 'global appearance settings'
+                          : scope === 'ProjectOverrides'
+                            ? 'project appearance overrides'
+                            : 'all appearance settings';
+                      if (!window.confirm(`Reset ${label} for ${user.email}?`)) return;
+                      void run(() => auth.resetUserAppearance(user.id, scope), 'User appearance reset.');
+                    }}
                     onToggleBlocked={() =>
                       run(
                         () => auth.setUserBlocked(user.id, !user.isBlocked),
@@ -182,13 +197,22 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
             </form>
           </section>
         ) : (
-          <section className="space-y-4">
+          <section
+            className="max-h-[calc(100dvh-13rem)] space-y-4 overflow-y-auto overscroll-contain pr-1 pb-2 sm:max-h-[calc(100dvh-14rem)]"
+            role="region"
+            aria-label="Projects list"
+            tabIndex={0}
+          >
             {projects.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}
+                users={users}
                 onAdd={(email, role) => void run(() => auth.addProjectMember(project.id, email, role), 'Member added.')}
                 onRemove={(userId) => void run(() => auth.removeProjectMember(project.id, userId), 'Member removed.')}
+                onTransferOwner={(email) =>
+                  void run(() => auth.transferProjectOwner(project.id, email), 'Project owner changed.')
+                }
               />
             ))}
           </section>
@@ -203,22 +227,25 @@ function AdminUserRow({
   currentUserId,
   onSave,
   onResetPassword,
+  onResetAppearance,
   onToggleBlocked,
 }: {
   user: AdminUser;
   currentUserId?: string;
   onSave: (input: { email: string; displayName: string; isAdmin: boolean }) => Promise<boolean>;
   onResetPassword: () => void;
+  onResetAppearance: (scope: AdminAppearanceResetScope) => void;
   onToggleBlocked: () => Promise<boolean>;
 }) {
   const [editing, setEditing] = useState(false);
+  const [resetScope, setResetScope] = useState<AdminAppearanceResetScope>('Defaults');
   const [draft, setDraft] = useState({ email: user.email, displayName: user.displayName, isAdmin: user.isAdmin });
 
   if (editing) {
     return (
       <form
         className="grid gap-2 rounded-xl p-3 sm:grid-cols-[1fr_1fr_auto]"
-        style={{ backgroundColor: 'var(--color-surface-alt)' }}
+        style={{ backgroundColor: 'var(--color-surface)', border: '1px dashed var(--color-border)' }}
         onSubmit={(event) => {
           event.preventDefault();
           void onSave(draft).then((saved) => {
@@ -273,7 +300,7 @@ function AdminUserRow({
   return (
     <div
       className="flex flex-wrap items-center gap-3 rounded-xl p-3"
-      style={{ backgroundColor: 'var(--color-surface-alt)' }}
+      style={{ backgroundColor: 'var(--color-surface)' }}
     >
       <div className="min-w-0 flex-1">
         <p className="font-medium">{user.displayName}</p>
@@ -288,6 +315,21 @@ function AdminUserRow({
       <button className="btn-ghost rounded-lg px-2 py-1 text-xs" onClick={onResetPassword}>
         Reset password
       </button>
+      <div className="flex max-w-full flex-wrap items-center gap-1">
+        <select
+          aria-label={`Appearance reset scope for ${user.email}`}
+          className="input-theme px-2 py-1 text-xs"
+          value={resetScope}
+          onChange={(event) => setResetScope(event.target.value as AdminAppearanceResetScope)}
+        >
+          <option value="Defaults">Global defaults</option>
+          <option value="ProjectOverrides">Project overrides</option>
+          <option value="All">All appearance</option>
+        </select>
+        <button className="btn-ghost rounded-lg px-2 py-1 text-xs" onClick={() => onResetAppearance(resetScope)}>
+          Reset
+        </button>
+      </div>
       {user.id !== currentUserId && (
         <button
           className="rounded-lg px-2 py-1 text-xs"
@@ -303,17 +345,25 @@ function AdminUserRow({
 
 function ProjectCard({
   project,
+  users,
   onAdd,
   onRemove,
+  onTransferOwner,
 }: {
   project: AdminProject;
+  users: AdminUser[];
   onAdd: (email: string, role: 'Editor' | 'Commenter' | 'Viewer') => void;
   onRemove: (id: string) => void;
+  onTransferOwner: (email: string) => void;
 }) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'Editor' | 'Commenter' | 'Viewer'>('Viewer');
+  const [nextOwnerEmail, setNextOwnerEmail] = useState('');
   return (
-    <article className="rounded-2xl p-4" style={{ backgroundColor: 'var(--color-surface)' }}>
+    <article
+      className="rounded-2xl border p-4"
+      style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+    >
       <div className="flex flex-wrap justify-between gap-2">
         <div>
           <h2 className="font-semibold">{project.name}</h2>
@@ -323,7 +373,7 @@ function ProjectCard({
           </p>
         </div>
         <form
-          className="flex gap-2"
+          className="flex w-full flex-wrap gap-2 sm:w-auto"
           onSubmit={(event) => {
             event.preventDefault();
             onAdd(email, role);
@@ -336,7 +386,7 @@ function ProjectCard({
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="user@example.com"
-            className="input-theme px-2 py-1 text-xs"
+            className="input-theme min-w-0 flex-1 px-2 py-1 text-xs sm:flex-none"
           />
           <select
             value={role}
@@ -350,12 +400,46 @@ function ProjectCard({
           <button className="btn-accent rounded-lg px-2 py-1 text-xs">Add</button>
         </form>
       </div>
+      <form
+        className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border p-3"
+        style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!nextOwnerEmail || !window.confirm(`Transfer “${project.name}” to ${nextOwnerEmail}?`)) return;
+          onTransferOwner(nextOwnerEmail);
+          setNextOwnerEmail('');
+        }}
+      >
+        <label className="text-xs font-semibold" htmlFor={`owner-${project.id}`}>
+          Change owner
+        </label>
+        <select
+          id={`owner-${project.id}`}
+          required
+          className="input-theme min-w-0 max-w-full flex-1 basis-56 px-2 py-1 text-xs"
+          value={nextOwnerEmail}
+          onChange={(event) => setNextOwnerEmail(event.target.value)}
+        >
+          <option value="">Select a user</option>
+          {users
+            .filter((user) => !user.isBlocked && user.id !== project.ownerId)
+            .map((user) => (
+              <option key={user.id} value={user.email}>
+                {user.displayName} · {user.email}
+              </option>
+            ))}
+        </select>
+        <button className="btn-accent rounded-lg px-3 py-1 text-xs font-semibold">Transfer ownership</button>
+        <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          The current owner remains an Editor.
+        </span>
+      </form>
       <div className="mt-3 flex flex-wrap gap-2">
         {project.members.map((member) => (
           <span
             key={member.userId}
-            className="inline-flex items-center gap-2 rounded-lg px-2 py-1 text-xs"
-            style={{ backgroundColor: 'var(--color-surface-alt)' }}
+            className="inline-flex items-center gap-2 rounded-lg border px-2 py-1 text-xs"
+            style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
           >
             {member.email} · {member.role}
             <button onClick={() => onRemove(member.userId)} aria-label={`Remove ${member.email}`}>

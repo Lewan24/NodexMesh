@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -43,9 +44,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
     if (addingEntry) addInputRef.current?.focus();
   }, [addingEntry]);
 
-  const { background, light } = useCardAppearance(item.color, item.gradient, item.colorRole);
-  const textColor = light ? '#1e293b' : '#e8f4f4';
-  const mutedColor = light ? 'rgba(30,41,59,0.45)' : 'rgba(232,244,244,0.4)';
+  const { background, light, textColor, mutedColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
   const accentColor = light ? 'var(--color-accent)' : '#e8f4f4';
 
   const update = useCallback(
@@ -127,7 +126,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
               <input
                 autoFocus
                 className="w-full bg-transparent outline-none font-bold text-base"
-                style={{ ...typographyStyle, color: textColor }}
+                style={{ ...typographyStyle, color: textColor, ...getSectionStyle(item.typography, 'title') }}
                 value={item.title}
                 onChange={(event) => update({ title: event.target.value })}
                 onBlur={() => setEditingTitle(false)}
@@ -144,6 +143,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                   fontSize: item.typography?.fontSize ? `${item.typography.fontSize + 2}px` : undefined,
                   fontWeight: item.typography?.bold ? 700 : 600,
                   color: textColor,
+                  ...getSectionStyle(item.typography, 'title'),
                 }}
                 onDoubleClick={() => setEditingTitle(true)}
               >
@@ -253,7 +253,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                 onBlur={commitNewEntry}
                 placeholder="New item…"
                 className="flex-1 bg-transparent outline-none text-sm"
-                style={{ ...typographyStyle, color: textColor }}
+                style={{ ...typographyStyle, color: textColor, ...getSectionStyle(item.typography, 'body') }}
               />
             </div>
           ) : (

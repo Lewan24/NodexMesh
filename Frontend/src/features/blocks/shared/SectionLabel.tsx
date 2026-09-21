@@ -1,3 +1,5 @@
+import { readableText } from '../typography/textContrast';
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useState } from 'react';
 import type { BoardItem } from '@/entities/board/types';
 import { getTypographyStyle } from '../typography/typographyUtils';
@@ -55,24 +57,26 @@ export default function SectionLabel({
           onMouseDown={(event) => event.stopPropagation()}
           className="bg-transparent outline-none min-w-0"
           style={{
-            color: labelMode === 'far' ? '#fff' : color,
+            color: labelMode === 'far' ? readableText(color) : 'var(--color-text-primary)',
             minWidth: 100,
             maxWidth: 300,
             ...typographyStyle,
             fontSize: item.typography?.fontSize ? `${item.typography.fontSize}px` : '14px',
             fontWeight: item.typography?.bold ? 700 : 650,
+            ...getSectionStyle(item.typography, 'title'),
           }}
         />
       ) : (
         <span
           className="truncate cursor-text select-none whitespace-nowrap"
           style={{
-            color: labelMode === 'far' ? '#fff' : color,
+            color: labelMode === 'far' ? readableText(color) : 'var(--color-text-primary)',
             ...typographyStyle,
             fontSize: item.typography?.fontSize ? `${item.typography.fontSize}px` : '14px',
             fontWeight: item.typography?.bold ? 700 : 650,
             textTransform: labelMode === 'far' ? 'uppercase' : undefined,
             letterSpacing: labelMode === 'far' ? '0.06em' : undefined,
+            ...getSectionStyle(item.typography, 'title'),
           }}
           title={title}
           onDoubleClick={() => {

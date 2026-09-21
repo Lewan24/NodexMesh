@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 const mobileQuery = '(max-width: 900px), (pointer: coarse) and (max-width: 1200px)';
@@ -29,12 +29,17 @@ export default function MobilePanel({
   const mobile = useMobileLayout();
   const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const headingId = useId();
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (mobile && open && dialog && !dialog.open) dialog.showModal();
     return () => dialog?.close();
   }, [mobile, open]);
+
+  useEffect(() => {
+    if (!mobile) setOpen(false);
+  }, [mobile]);
 
   if (!mobile) return children;
 
@@ -57,7 +62,7 @@ export default function MobilePanel({
             ref={dialogRef}
             className="mobile-panel"
             role="dialog"
-            aria-label={title}
+            aria-labelledby={headingId}
             onMouseDown={(event) => event.stopPropagation()}
             onKeyDown={(event) => event.stopPropagation()}
             onCancel={(event) => {
@@ -76,8 +81,13 @@ export default function MobilePanel({
             }}
           >
             <div className="mobile-panel-heading">
-              <strong>{title}</strong>
-              <button type="button" aria-label={`Close ${title}`} onClick={() => setOpen(false)}>
+              <strong id={headingId}>{title}</strong>
+              <button
+                className="mobile-panel-done"
+                type="button"
+                aria-label={`Close ${title}`}
+                onClick={() => setOpen(false)}
+              >
                 Done
               </button>
             </div>

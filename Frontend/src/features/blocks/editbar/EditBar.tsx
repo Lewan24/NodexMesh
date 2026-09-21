@@ -1,3 +1,4 @@
+import SectionTypographyControls from './components/SectionTypographyControls';
 import type { ReactNode } from 'react';
 import type { BoardItem } from '@/entities/board/types';
 import DrawingControls from './components/DrawingControls';
@@ -82,13 +83,14 @@ export default function EditBar({
         ? (ITEM_TYPE_LABELS[single.type] ?? single.type)
         : '';
 
-  const hasStyleControls = !!single && !isMulti && single.type !== 'dispenser' && single.type !== 'icon';
+  const hasStyleControls = !!single && !isMulti && single.type !== 'icon';
 
   return (
     <div
       data-edit-bar="true"
-      className="absolute top-3 left-1/2 -translate-x-1/2 z-50 flex flex-col rounded-2xl shadow-lg select-none overflow-hidden"
+      className="edit-bar absolute left-1/2 -translate-x-1/2 z-50 flex flex-col rounded-2xl shadow-lg select-none overflow-hidden"
       style={{
+        top: 'var(--canvas-editbar-top, 12px)',
         backgroundColor: 'var(--color-surface-translucent)',
         border: '1px solid var(--color-border)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.14)',
@@ -98,10 +100,10 @@ export default function EditBar({
       onMouseDown={(e) => e.stopPropagation()}
     >
       {/* Main actions */}
-      <div className="flex items-center gap-1 px-2 py-1.5 overflow-x-auto">
+      <div className="edit-bar-row edit-bar-actions flex items-center gap-1 px-2 py-1.5 overflow-x-auto">
         <button
           onClick={onClose}
-          className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors flex-shrink-0 cursor-pointer"
+          className="edit-bar-close w-7 h-7 flex items-center justify-center rounded-lg transition-colors flex-shrink-0 cursor-pointer"
           style={{ color: 'var(--color-text-faint)' }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
@@ -220,14 +222,17 @@ export default function EditBar({
       </div>
 
       {isMulti && selectedItems.some((item) => item.type === 'drawing') && (
-        <div className="flex items-center gap-3 px-3 py-2 border-t" style={{ borderColor: 'var(--color-border-soft)' }}>
+        <div
+          className="edit-bar-row flex items-center gap-3 px-3 py-2 border-t"
+          style={{ borderColor: 'var(--color-border-soft)' }}
+        >
           <DrawingControls items={selectedItems.filter((item) => item.type === 'drawing')} onUpdate={onUpdateItem} />
         </div>
       )}
       {/* Style controls */}
       {hasStyleControls && (
         <div
-          className="flex items-center gap-1 px-2 py-1.5 overflow-x-auto"
+          className="edit-bar-row edit-bar-style-controls flex items-center gap-1 px-2 py-1.5 overflow-x-auto"
           style={{ borderTop: '1px solid var(--color-border-soft)' }}
         >
           {single.type !== 'drawing' && single.type !== 'line' && single.type !== 'frame' && (
@@ -236,9 +241,7 @@ export default function EditBar({
 
           {single.type === 'column' && <ColumnLayoutControls item={single} onUpdate={handleUpdate} />}
 
-          {single.type !== 'drawing' && single.type !== 'line' && (
-            <TypographyControls item={single} onUpdate={handleUpdate} />
-          )}
+          {single.type !== 'drawing' && <TypographyControls item={single} onUpdate={handleUpdate} />}
 
           {!isColumnMode && single.type === 'line' && <LineControls item={single} onUpdate={handleUpdate} />}
 
@@ -291,6 +294,7 @@ export default function EditBar({
           {!isColumnMode && single.type === 'frame' && <FrameControls item={single} onUpdate={handleUpdate} />}
         </div>
       )}
+      {single && <SectionTypographyControls key={single.id} item={single} onUpdate={handleUpdate} />}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { LayoutDashboard, ExternalLink } from 'lucide-react';
 import type { BoardBlockItem, BoardItem } from '@/entities/board/types';
 import { useCardAppearance } from '@/features/blocks/shared/cardAppearance';
@@ -57,7 +58,12 @@ export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard 
                 const name = item.title.trim();
                 if (item.boardId && name) onRenameBoard?.(item.boardId, name);
               }}
-              style={{ ...typographyStyle, color: appearance.textColor, fontWeight: typographyStyle.fontWeight ?? 600 }}
+              style={{
+                ...typographyStyle,
+                color: appearance.textColor,
+                fontWeight: typographyStyle.fontWeight ?? 600,
+                ...getSectionStyle(item.typography, 'title'),
+              }}
             />
             <textarea
               aria-label="Board block description"
@@ -70,7 +76,11 @@ export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard 
                 )
               }
               onDoubleClick={(event) => event.stopPropagation()}
-              style={{ ...typographyStyle, color: appearance.mutedColor }}
+              style={{
+                ...typographyStyle,
+                color: appearance.mutedColor,
+                ...getSectionStyle(item.typography, 'description'),
+              }}
             />
           </div>
         </div>
@@ -81,6 +91,7 @@ export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard 
             color: appearance.textColor,
             borderColor: `${appearance.textColor}66`,
             background: `${appearance.textColor}14`,
+            ...getSectionStyle(item.typography, 'links'),
           }}
           onClick={(event) => {
             event.stopPropagation();

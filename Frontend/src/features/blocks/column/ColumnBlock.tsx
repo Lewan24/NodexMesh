@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { paletteKeys, paletteBackground } from '@/features/appearance/appearanceModel';
 import { ITEM_WIDTH } from '@/features/canvas/constants';
@@ -135,9 +136,12 @@ export default function ColumnBlock({
     return Math.max(140, cellWidth - nestedControlsWidth);
   };
 
-  const { background, light: columnLight } = useCardAppearance(item.color, item.gradient, item.colorRole);
-  const headerTextColor = columnLight ? '#1e293b' : '#f1f5f9';
-  const headerMutedColor = columnLight ? '#64748b' : '#94a3b8';
+  const {
+    background,
+    light: columnLight,
+    textColor: headerTextColor,
+    mutedColor: headerMutedColor,
+  } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
   const update = useCallback(
     (patch: Partial<ColumnItem>) => {
@@ -364,7 +368,12 @@ export default function ColumnBlock({
               <input
                 autoFocus
                 className="bg-transparent font-bold text-base outline-none border-b-2 min-w-0 flex-1"
-                style={{ ...typographyStyle, color: headerTextColor, borderColor: 'var(--color-accent)' }}
+                style={{
+                  ...typographyStyle,
+                  color: headerTextColor,
+                  borderColor: 'var(--color-accent)',
+                  ...getSectionStyle(item.typography, 'title'),
+                }}
                 value={item.title}
                 onChange={(event) => update({ title: event.target.value })}
                 onBlur={() => setEditingTitle(false)}
@@ -378,7 +387,7 @@ export default function ColumnBlock({
             ) : (
               <span
                 className="font-bold text-base select-none cursor-text truncate"
-                style={{ ...typographyStyle, color: headerTextColor }}
+                style={{ ...typographyStyle, color: headerTextColor, ...getSectionStyle(item.typography, 'title') }}
                 onDoubleClick={() => setEditingTitle(true)}
               >
                 {item.title}
@@ -562,7 +571,7 @@ export default function ColumnBlock({
               style={{
                 gridColumn: isGrid ? '1 / -1' : undefined,
                 minWidth: isHorizontal ? 180 : undefined,
-                color: columnLight ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.2)',
+                color: headerMutedColor,
                 borderColor: columnLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
               }}
             >

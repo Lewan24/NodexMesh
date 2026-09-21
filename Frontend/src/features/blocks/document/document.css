@@ -42,7 +42,7 @@
 .document-editor code,
 .document-editor pre {
   font-family: monospace;
-  background: var(--color-surface-alt);
+  background: color-mix(in srgb, currentColor 8%, transparent);
   border-radius: 4px;
   padding: 0.15em 0.3em;
 }
@@ -51,12 +51,15 @@
   white-space: pre-wrap;
 }
 .document-editor a {
-  color: var(--color-accent);
+  color: var(--document-link-color, inherit);
+  font-size: var(--document-link-size, inherit);
+  font-weight: var(--document-link-weight, inherit);
+  font-style: var(--document-link-style, inherit);
   text-decoration: underline;
 }
 .document-editor .tiptap p:only-child:empty:before {
   content: 'Start writing…';
-  opacity: 0.4;
+  opacity: 0.75;
   pointer-events: none;
   float: left;
   height: 0;

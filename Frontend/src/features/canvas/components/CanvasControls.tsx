@@ -1,4 +1,5 @@
 import { ZOOM_MAX, ZOOM_MIN } from '@/features/canvas/constants';
+import { Trash2 } from 'lucide-react';
 
 interface CanvasControlsProps {
   zoom: number;
@@ -11,6 +12,7 @@ interface CanvasControlsProps {
   onToggleSelectionMode: () => void;
   onUndo: () => void;
   onOpenMenu: () => void;
+  onOpenTrash: () => void;
 }
 
 export default function CanvasControls({
@@ -24,6 +26,7 @@ export default function CanvasControls({
   onToggleSelectionMode,
   onUndo,
   onOpenMenu,
+  onOpenTrash,
 }: CanvasControlsProps) {
   const zoomOut = () => {
     const nextZoom = Math.max(ZOOM_MIN, Number((zoom - 0.1).toFixed(2)));
@@ -66,6 +69,16 @@ export default function CanvasControls({
       </button>
       <button type="button" className="canvas-fit-button" onClick={onFitView} title="Fit board to screen">
         Fit
+      </button>
+      <button
+        type="button"
+        className="canvas-fit-button flex items-center gap-1.5"
+        onClick={onOpenTrash}
+        title="Open item trash"
+        aria-label="Open item trash"
+      >
+        <Trash2 size={14} />
+        <span className="hidden sm:inline">Trash</span>
       </button>
       <button
         onClick={onToggleSnap}
