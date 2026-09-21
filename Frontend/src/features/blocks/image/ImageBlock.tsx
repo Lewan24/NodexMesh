@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -23,10 +24,8 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
 
   const width = item.width ?? DEFAULT_IMAGE_WIDTH;
   const imageHeight = item.imgHeight ?? DEFAULT_IMAGE_HEIGHT;
-  const { background, light } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  const { background, light, textColor, mutedColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
-  const textColor = light ? '#1e293b' : '#8aacb8';
-  const mutedColor = light ? '#94a3b8' : '#b9aec9';
   const borderColor = light ? 'rgba(0,0,0,0.1)' : '#1a3040';
   const inputBackground = light ? '#f8fafc' : '#071317';
 
@@ -245,13 +244,13 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
                 onChange={(event) => update({ caption: event.target.value })}
                 placeholder="Add caption…"
                 className="w-full bg-transparent text-sm outline-none transition-colors"
-                style={{ color: textColor, ...typographyStyle }}
+                style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'caption') }}
               />
             ) : (
               <div
                 onDoubleClick={() => setEditingCaption(true)}
                 className="text-sm whitespace-pre-wrap break-words"
-                style={{ color: textColor, ...typographyStyle }}
+                style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'caption') }}
               >
                 {item.caption || 'Double-click to add caption…'}
               </div>

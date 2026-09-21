@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -37,7 +38,7 @@ export default function TextBlock({ item, onUpdate, fillWidth = false }: TextBlo
     if (!editing || !textarea) return;
     textarea.style.height = '0px';
     textarea.style.height = `${textarea.scrollHeight}px`;
-  }, [editing, item.content, item.width, item.typography?.fontSize, item.typography?.fontFamily]);
+  }, [editing, item.content, item.width, item.typography]);
 
   const update = useCallback(
     (patch: Partial<TextItem>) => {
@@ -54,11 +55,15 @@ export default function TextBlock({ item, onUpdate, fillWidth = false }: TextBlo
 
   const isCard = Boolean(item.color || item.colorRole || item.gradient);
 
-  const { background, light } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  const {
+    background,
+    textColor: cardText,
+    mutedColor: cardMuted,
+  } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
-  const textColor = isCard ? (light ? '#1e293b' : '#f1f5f9') : 'var(--color-text-primary)';
+  const textColor = isCard ? cardText : 'var(--color-text-primary)';
 
-  const mutedColor = isCard ? (light ? 'rgba(30,41,59,0.4)' : 'rgba(241,245,249,0.4)') : 'var(--color-text-faint)';
+  const mutedColor = isCard ? cardMuted : 'var(--color-text-faint)';
 
   const cardWidth = item.width ?? DEFAULT_TEXT_CARD_WIDTH;
 
@@ -124,6 +129,7 @@ export default function TextBlock({ item, onUpdate, fillWidth = false }: TextBlo
                 ...typographyStyle,
 
                 fontSize: item.typography?.fontSize ? `${item.typography.fontSize}px` : undefined,
+                ...getSectionStyle(item.typography, 'body'),
               }}
             />
           ) : (
@@ -135,6 +141,7 @@ export default function TextBlock({ item, onUpdate, fillWidth = false }: TextBlo
                 color: item.content ? textColor : mutedColor,
 
                 ...typographyStyle,
+                ...getSectionStyle(item.typography, 'body'),
               }}
               onDoubleClick={() => setEditing(true)}
             >

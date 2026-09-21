@@ -140,6 +140,9 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
     async resetUserPassword(id, password) {
       await admin(`/admin/users/${encodeURIComponent(id)}/password`, { method: 'POST', body: { password } });
     },
+    async resetUserAppearance(id, scope) {
+      await admin(`/admin/users/${encodeURIComponent(id)}/appearance/reset`, { method: 'POST', body: { scope } });
+    },
     async setUserBlocked(id, blocked) {
       await admin(`/admin/users/${encodeURIComponent(id)}/blocked`, { method: 'PATCH', body: { blocked } });
     },
@@ -159,6 +162,9 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
       await admin(`/admin/projects/${encodeURIComponent(projectId)}/members/${encodeURIComponent(userId)}`, {
         method: 'DELETE',
       });
+    },
+    async transferProjectOwner(projectId, email) {
+      await admin(`/admin/projects/${encodeURIComponent(projectId)}/owner`, { method: 'PUT', body: { email } });
     },
     async registrationEnabled() {
       return (await admin<{ enabled: boolean }>('/admin/settings/registration')).enabled;

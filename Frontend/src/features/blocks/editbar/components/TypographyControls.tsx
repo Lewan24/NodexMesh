@@ -1,261 +1,36 @@
-import type { BoardItem, FontFamily, TextAlign, VerticalAlign } from '@/entities/board/types';
-
-import {
-  FONT_FAMILIES,
-  FONT_SIZE_PRESETS,
-  MAX_FONT_SIZE,
-  MIN_FONT_SIZE,
-  updateTypography,
-} from '@/features/blocks/typography/typographyUtils';
-
-import EditBarButton, { EditBarDivider } from './EditBarButton';
-
-interface TypographyControlsProps {
+import type { BoardItem, FontFamily } from '@/entities/board/types';
+import { FONT_FAMILIES, updateTypography } from '../../typography/typographyUtils';
+export default function TypographyControls({
+  item,
+  onUpdate,
+}: {
   item: BoardItem;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
-}
-
-const ALIGNMENTS: TextAlign[] = ['left', 'center', 'right'];
-
-const VERTICAL_ALIGNMENTS: VerticalAlign[] = ['top', 'middle', 'bottom'];
-
-export default function TypographyControls({ item, onUpdate }: TypographyControlsProps) {
+}) {
   const typography = item.typography;
-
-  const currentSize = typography?.fontSize ?? getDefaultFontSize(item);
-
-  const update = (patch: Partial<NonNullable<BoardItem['typography']>>) => {
+  const update = (patch: Partial<NonNullable<BoardItem['typography']>>) =>
     onUpdate((current) => updateTypography(current, patch));
-  };
-
-  const handleSizeChange = (value: number) => {
-    if (!Number.isFinite(value)) return;
-
-    const next = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, value));
-
-    update({ fontSize: next });
-  };
-
   return (
-    <>
-      <EditBarDivider />
-
-      {/* Font family */}
-
-      <select
-        value={typography?.fontFamily ?? (item.type === 'code' ? 'mono' : '')}
-        onChange={(event) => update({ fontFamily: (event.target.value || undefined) as FontFamily | undefined })}
-        onMouseDown={(event) => event.stopPropagation()}
-        className="h-8 px-2 rounded-lg text-xs outline-none border flex-shrink-0"
-        style={{
-          minWidth: 92,
-          color: 'var(--color-text-primary)',
-          backgroundColor: 'var(--color-surface)',
-          borderColor: 'var(--color-border)',
-        }}
-        title="Font family"
-      >
-        <option value="">Project default</option>
-        {FONT_FAMILIES.map((font) => (
-          <option key={font.value} value={font.value} style={{ fontFamily: font.css }}>
-            {font.label}
-          </option>
-        ))}
-      </select>
-
-      <EditBarDivider />
-
-      {/* Presets */}
-
-      {FONT_SIZE_PRESETS.map((size) => (
-        <EditBarButton
-          key={size}
-          active={currentSize === size}
-          onClick={() => handleSizeChange(size)}
-          title={`${size}px`}
-        >
-          <span className="text-[10px] font-semibold">{size}</span>
-        </EditBarButton>
+    <select
+      value={typography?.fontFamily ?? (item.type === 'code' ? 'mono' : '')}
+      onChange={(event) => update({ fontFamily: (event.target.value || undefined) as FontFamily | undefined })}
+      onMouseDown={(event) => event.stopPropagation()}
+      className="h-8 px-2 rounded-lg text-xs outline-none border flex-shrink-0"
+      style={{
+        minWidth: 92,
+        color: 'var(--color-text-primary)',
+        backgroundColor: 'var(--color-surface)',
+        borderColor: 'var(--color-border)',
+      }}
+      title="Font family"
+      aria-label="Item font family"
+    >
+      <option value="">Project default</option>
+      {FONT_FAMILIES.map((font) => (
+        <option key={font.value} value={font.value} style={{ fontFamily: font.css }}>
+          {font.label}
+        </option>
       ))}
-
-      {/* Custom pixels */}
-
-      <div
-        className="h-8 flex items-center rounded-lg border overflow-hidden flex-shrink-0"
-        style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <input
-          type="number"
-          min={MIN_FONT_SIZE}
-          max={MAX_FONT_SIZE}
-          value={currentSize}
-          onChange={(event) => handleSizeChange(Number(event.target.value))}
-          className="w-11 h-full px-1.5 text-xs text-right bg-transparent outline-none"
-          style={{ color: 'var(--color-text-primary)' }}
-          title="Custom font size"
-        />
-
-        <span className="text-[9px] pr-2 select-none" style={{ color: 'var(--color-text-faint)' }}>
-          px
-        </span>
-      </div>
-
-      <EditBarDivider />
-
-      {/* Bold */}
-
-      <EditBarButton active={!!typography?.bold} onClick={() => update({ bold: !typography?.bold })} title="Bold">
-        <span style={{ fontWeight: 800, fontSize: 13 }}>B</span>
-      </EditBarButton>
-
-      {/* Italic */}
-
-      <EditBarButton
-        active={!!typography?.italic}
-        onClick={() => update({ italic: !typography?.italic })}
-        title="Italic"
-      >
-        <span style={{ fontStyle: 'italic', fontFamily: 'Georgia, serif', fontSize: 13 }}>I</span>
-      </EditBarButton>
-
-      <EditBarDivider />
-
-      {/* Alignment */}
-
-      {ALIGNMENTS.map((alignment) => (
-        <EditBarButton
-          key={alignment}
-          active={(typography?.textAlign ?? 'left') === alignment}
-          onClick={() => update({ textAlign: alignment })}
-          title={`Align ${alignment}`}
-        >
-          {alignment === 'left' && (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M3 6h18M3 12h12M3 18h15" strokeLinecap="round" />
-            </svg>
-          )}
-
-          {alignment === 'center' && (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M3 6h18M6 12h12M4 18h16" strokeLinecap="round" />
-            </svg>
-          )}
-
-          {alignment === 'right' && (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M3 6h18M9 12h12M6 18h15" strokeLinecap="round" />
-            </svg>
-          )}
-        </EditBarButton>
-      ))}
-
-      {(item.type === 'note' || item.type === 'text') && (
-        <>
-          <EditBarDivider />
-
-          {VERTICAL_ALIGNMENTS.map((alignment) => (
-            <EditBarButton
-              key={alignment}
-              active={(typography?.verticalAlign ?? 'top') === alignment}
-              onClick={() => update({ verticalAlign: alignment })}
-              title={`Align vertically ${alignment}`}
-            >
-              {alignment === 'top' && (
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                >
-                  <path d="M4 4h16" />
-                  <path d="M7 8h10M9 12h6" />
-                </svg>
-              )}
-
-              {alignment === 'middle' && (
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                >
-                  <path d="M4 12h16" />
-                  <path d="M7 8h10M9 16h6" />
-                </svg>
-              )}
-
-              {alignment === 'bottom' && (
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                >
-                  <path d="M4 20h16" />
-                  <path d="M9 12h6M7 16h10" />
-                </svg>
-              )}
-            </EditBarButton>
-          ))}
-        </>
-      )}
-    </>
+    </select>
   );
-}
-
-function getDefaultFontSize(item: BoardItem): number {
-  switch (item.type) {
-    case 'text':
-      switch (item.size) {
-        case 'sm':
-          return 14;
-        case 'md':
-          return 16;
-        case 'lg':
-          return 24;
-        case 'xl':
-          return 36;
-      }
-
-    case 'note':
-      switch (item.fontSize) {
-        case 'sm':
-          return 12;
-        case 'lg':
-          return 18;
-        default:
-          return 14;
-      }
-
-    case 'frame':
-      return 14;
-
-    case 'column':
-      return 16;
-
-    case 'kanban':
-      return 14;
-
-    case 'link':
-      return 14;
-
-    case 'checklist':
-      return 14;
-
-    case 'image':
-      return 14;
-
-    default:
-      return 14;
-  }
 }

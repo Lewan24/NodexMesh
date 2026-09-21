@@ -6,6 +6,7 @@ import { createId } from '@/shared/lib/createId';
 const AppearanceDialog = lazy(() => import('@/features/appearance/AppearanceDialog'));
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { useCallback, useState, useEffect, lazy, Suspense } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { BoardItem, ColumnItem, FrameItem } from '@/entities/board/types';
@@ -20,12 +21,24 @@ import Canvas from '@/features/canvas/components/Canvas';
 import AppBar from '@/layout/appbar/AppBar';
 import Sidebar from '@/layout/sidebar/Sidebar';
 import SaveStatus from '@/features/projects/components/SaveStatus';
+import ItemTrashPanel from '@/features/projects/components/ItemTrashPanel';
 import { useCollaborationPresence } from '@/features/projects/hooks/useCollaborationPresence';
+import type { TrashedItemRecord } from '@/entities/board/records';
 
 interface BoardPageProps {
   userId: string;
   onOpenAdminPanel: () => void;
   onOpenProfile: () => void;
+}
+
+function linkedBoardIdFromItem(item: BoardItem | undefined): string | undefined {
+  return item?.type === 'board' ? (item.boardId ?? undefined) : undefined;
+}
+
+function linkedBoardIdFromTrash(entry: TrashedItemRecord): string | undefined {
+  if (entry.item.type !== 'board') return undefined;
+  const boardId = (entry.item.data as { boardId?: unknown }).boardId;
+  return typeof boardId === 'string' ? boardId : undefined;
 }
 
 export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: BoardPageProps) {
@@ -47,6 +60,10 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     createBoard,
     renameBoard,
     deleteBoard,
+    listItemTrash,
+    restoreTrashItem,
+    purgeTrashItem,
+    emptyItemTrash,
     createFirstProject,
     resetDemo,
     importProject,
@@ -58,11 +75,16 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
 
   const [boardTrail, setBoardTrail] = useState<Array<{ id: string; name: string }>>([]);
   const [boards, setBoards] = useState<BoardRecord[]>([]);
+  const [boardNavigationVisible, setBoardNavigationVisible] = useState(true);
+  const [trashOpen, setTrashOpen] = useState(false);
+  const [trashLoading, setTrashLoading] = useState(false);
+  const [trashedItems, setTrashedItems] = useState<TrashedItemRecord[]>([]);
   useEffect(() => {
     if (!activeProject) {
       setBoards([]);
       return;
     }
+    if (status !== 'saved') return;
     let cancelled = false;
     void listBoards(activeProject.id)
       .then((value) => {
@@ -74,7 +96,11 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     return () => {
       cancelled = true;
     };
-  }, [activeProject?.id, listBoards]);
+  }, [activeProject?.id, listBoards, status]);
+  useEffect(() => {
+    setTrashOpen(false);
+    setTrashedItems([]);
+  }, [activeProject?.id]);
 
   const { setScope } = useTheme();
   const [appearanceOpen, setAppearanceOpen] = useState(false);
@@ -235,23 +261,95 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     [activeProject, boards, deleteBoard, resetBoardView, selectBoard, setProjects],
   );
 
+  const refreshItemTrash = useCallback(async () => {
+    if (!activeProject) return;
+    setTrashLoading(true);
+    try {
+      setTrashedItems(await listItemTrash(activeProject.id));
+    } catch {
+      toast.error('Could not load the item trash.');
+    } finally {
+      setTrashLoading(false);
+    }
+  }, [activeProject, listItemTrash]);
+
+  const handleDeleteItem = useCallback(
+    (id: string) => {
+      const linkedBoardId = linkedBoardIdFromItem(activeProject?.items.find((item) => item.id === id));
+      if (linkedBoardId) {
+        const deletedAt = new Date().toISOString();
+        setBoards((boards) => boards.map((board) => (board.id === linkedBoardId ? { ...board, deletedAt } : board)));
+      }
+      deleteItem(id);
+      if (trashOpen) void refreshItemTrash();
+    },
+    [activeProject, deleteItem, refreshItemTrash, trashOpen],
+  );
+
   const handleDeleteItems = useCallback(
     (ids: string[]) => {
-      const linkedBoards =
+      // Linked boards stay intact while their cards are in trash, so restoring a
+      // board card can never produce a broken destination.
+      const linkedBoardIds = new Set(
         activeProject?.items
-          .filter(
-            (item): item is Extract<BoardItem, { type: 'board' }> => item.type === 'board' && ids.includes(item.id),
-          )
-          .map((item) => item.boardId)
-          .filter((boardId): boardId is string => Boolean(boardId)) ?? [];
+          .filter((item) => ids.includes(item.id))
+          .map(linkedBoardIdFromItem)
+          .filter((id): id is string => Boolean(id)) ?? [],
+      );
+      if (linkedBoardIds.size) {
+        const deletedAt = new Date().toISOString();
+        setBoards((boards) => boards.map((board) => (linkedBoardIds.has(board.id) ? { ...board, deletedAt } : board)));
+      }
       deleteItems(ids);
-      if (!activeProject) return;
-      void Promise.all(linkedBoards.map((boardId) => deleteBoard(activeProject.id, boardId)))
-        .then(() => setBoards((current) => current.filter((board) => !linkedBoards.includes(board.id))))
-        .catch(() => toast.error('The board card was removed, but its board could not be deleted.'));
+      if (trashOpen) void refreshItemTrash();
     },
-    [activeProject, deleteBoard, deleteItems],
+    [activeProject, deleteItems, refreshItemTrash, trashOpen],
   );
+
+  const handleRestoreTrashItem = useCallback(
+    async (entry: TrashedItemRecord, position?: { x: number; y: number }) => {
+      if (!activeProject?.boardId) return;
+      const targetBoardId = position ? activeProject.boardId : entry.item.boardId;
+      try {
+        await restoreTrashItem(activeProject.id, entry.item.id, targetBoardId, position);
+        setBoards(await listBoards(activeProject.id));
+        setTrashedItems((items) => items.filter((item) => item.item.id !== entry.item.id));
+        toast.success(position ? 'Item restored to the canvas.' : 'Item restored.');
+      } catch {
+        toast.error('Could not restore this item.');
+      }
+    },
+    [activeProject, listBoards, restoreTrashItem],
+  );
+
+  const handlePurgeTrashItem = useCallback(
+    async (entry: TrashedItemRecord) => {
+      if (!activeProject || !window.confirm('Permanently delete this item? This cannot be undone.')) return;
+      try {
+        await purgeTrashItem(activeProject.id, entry.item.id);
+        const linkedBoardId = linkedBoardIdFromTrash(entry);
+        if (linkedBoardId) setBoards((boards) => boards.filter((board) => board.id !== linkedBoardId));
+        setTrashedItems((items) => items.filter((item) => item.item.id !== entry.item.id));
+      } catch {
+        toast.error('Could not permanently delete this item.');
+      }
+    },
+    [activeProject, purgeTrashItem],
+  );
+
+  const handleEmptyItemTrash = useCallback(async () => {
+    if (!activeProject || !window.confirm('Permanently delete every item in this project trash?')) return;
+    try {
+      await emptyItemTrash(activeProject.id);
+      const linkedBoardIds = new Set(
+        trashedItems.map(linkedBoardIdFromTrash).filter((id): id is string => typeof id === 'string'),
+      );
+      setBoards((boards) => boards.filter((board) => !linkedBoardIds.has(board.id)));
+      setTrashedItems([]);
+    } catch {
+      toast.error('Could not empty the item trash.');
+    }
+  }, [activeProject, emptyItemTrash, trashedItems]);
 
   const handleDropOnColumn = useCallback(
     (itemId: string, columnId: string) => {
@@ -458,9 +556,9 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         className="relative isolate z-0 flex flex-1 min-h-0 min-w-0 w-full overflow-hidden"
         style={{ backgroundColor: 'var(--color-app-bg)' }}
       >
-        {(boardTrail.length > 0 || boards.length > 1) && (
+        {(boardTrail.length > 0 || boards.length > 1) && boardNavigationVisible && (
           <div
-            className="absolute left-1/2 top-3 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-lg"
+            className="absolute left-1/2 top-9 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-lg"
             style={{
               background: 'var(--color-surface)',
               borderColor: 'var(--color-border)',
@@ -479,16 +577,24 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             </button>
             <span style={{ color: 'var(--color-text-muted)' }}>/</span>
             {boards.map((board) => (
-              <span key={board.id} className="inline-flex items-center rounded hover:bg-black/5 dark:hover:bg-white/10">
+              <span
+                key={board.id}
+                className={`inline-flex items-center rounded ${board.deletedAt ? 'cursor-not-allowed opacity-45' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+                title={
+                  board.deletedAt ? 'This board is in item trash. Restore its board card to access it.' : undefined
+                }
+              >
                 <button
                   type="button"
                   className="rounded px-1.5 py-0.5"
                   aria-current={board.id === activeProject.boardId ? 'page' : undefined}
+                  disabled={Boolean(board.deletedAt)}
+                  aria-label={board.deletedAt ? `${board.name} (deleted)` : board.name}
                   onClick={() => void handleSelectListedBoard(board.id)}
                 >
                   {board.name}
                 </button>
-                {board.id !== boards[0]?.id && (
+                {board.id !== boards[0]?.id && !board.deletedAt && (
                   <button
                     type="button"
                     className="rounded px-1 text-[10px] opacity-50 hover:bg-rose-500/15 hover:text-rose-600 hover:opacity-100"
@@ -504,7 +610,32 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
                 )}
               </span>
             ))}
+            <button
+              type="button"
+              className="-mr-1 flex size-6 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10"
+              aria-label="Hide board navigation"
+              title="Hide board navigation"
+              onClick={() => setBoardNavigationVisible(false)}
+            >
+              <ChevronUp size={16} aria-hidden="true" />
+            </button>
           </div>
+        )}
+        {(boardTrail.length > 0 || boards.length > 1) && !boardNavigationVisible && (
+          <button
+            type="button"
+            className="absolute left-1/2 top-2 z-30 flex size-7 -translate-x-1/2 items-center justify-center rounded-full border shadow-md transition-transform hover:scale-105"
+            style={{
+              background: 'var(--color-surface)',
+              borderColor: 'var(--color-border)',
+              color: 'var(--color-text-primary)',
+            }}
+            aria-label="Show board navigation"
+            title="Show board navigation"
+            onClick={() => setBoardNavigationVisible(true)}
+          >
+            <ChevronDown size={17} aria-hidden="true" />
+          </button>
         )}
         {!readOnly && <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />}
 
@@ -529,7 +660,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             onOpenBoard={handleOpenBoard}
             onRenameBoard={handleRenameBoard}
             onUpdateItem={updateItem}
-            onDeleteItem={deleteItem}
+            onDeleteItem={handleDeleteItem}
             onDeleteItems={handleDeleteItems}
             onBringForward={bringForward}
             onSendBackward={sendBackward}
@@ -539,6 +670,24 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             onEjectFromColumn={handleEjectFromColumn}
             onRestoreItems={restoreItems}
             searchQuery={searchQuery}
+            onOpenTrash={() => {
+              setTrashOpen(true);
+              void refreshItemTrash();
+            }}
+            onRestoreTrashItem={(itemId, position) => {
+              const entry = trashedItems.find((item) => item.item.id === itemId);
+              if (entry) void handleRestoreTrashItem(entry, position);
+            }}
+          />
+        )}
+        {trashOpen && !readOnly && (
+          <ItemTrashPanel
+            items={trashedItems}
+            loading={trashLoading}
+            onClose={() => setTrashOpen(false)}
+            onRestore={(entry) => void handleRestoreTrashItem(entry)}
+            onPurge={(entry) => void handlePurgeTrashItem(entry)}
+            onEmpty={() => void handleEmptyItemTrash()}
           />
         )}
       </div>

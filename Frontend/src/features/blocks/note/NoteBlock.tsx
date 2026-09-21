@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -24,10 +25,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const { background, light } = useCardAppearance(item.color, item.gradient, item.colorRole);
-
-  const textColor = light ? '#1e293b' : '#e8f4f4';
-  const mutedColor = light ? 'rgba(30,41,59,0.4)' : 'rgba(232,244,244,0.4)';
+  const { background, textColor, mutedColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
   const fontSize: NoteFontSize = item.fontSize ?? 'base';
 
@@ -85,7 +83,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
 
   useEffect(() => {
     resizeTextarea();
-  }, [item.content, resizeTextarea]);
+  }, [item.content, item.typography, resizeTextarea]);
 
   return (
     <div className="group relative" style={{ width: item.width ?? 220, height: item.height }}>
@@ -160,7 +158,14 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
                 }
               }}
               className={`w-full bg-transparent resize-none outline-none wrap-break-word leading-relaxed ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
-              style={{ color: textColor, resize: 'none', maxHeight: '100%', overflowY: 'auto', ...typographyStyle }}
+              style={{
+                color: textColor,
+                resize: 'none',
+                maxHeight: '100%',
+                overflowY: 'auto',
+                ...typographyStyle,
+                ...getSectionStyle(item.typography, 'body'),
+              }}
               placeholder="Type your note…"
               rows={1}
             />
@@ -168,7 +173,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
             <div
               onDoubleClick={() => setEditing(true)}
               className={`leading-relaxed whitespace-pre-wrap wrap-break-word cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
-              style={{ color: textColor, ...typographyStyle }}
+              style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'body') }}
             >
               {item.content || 'Double-click to edit…'}
             </div>

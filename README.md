@@ -10,9 +10,11 @@ https://nodexmesh.lewanmordor.workers.dev
 
 ---
 
-Demo has **not** all the functionallities and features from **main** **branch**. Its prepared demo for local storage only.
+Demo has almost all of the functionallities and features from **main** **branch**. Its prepared demo for local storage only, so collaboration and data persistence does not work.
 
-**Version 1.0.0** from main branch has all new features like _admin panel_, _collaborations_, _project sharing_, _data persistence in database_, _full api implementation_, _many fixes and performance upgrades_.
+**Main branch** has all new features like _admin panel_, _collaborations_, _project sharing_, _data persistence in database_, _full api implementation_, _many fixes and performance upgrades_.
+
+Dev branch has all unstable but newest features, changes and fixes. Main branch is updated after tests and when stable version is prepared.
 
 ## Current capabilities
 

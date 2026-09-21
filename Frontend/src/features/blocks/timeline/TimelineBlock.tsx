@@ -1,3 +1,5 @@
+import { readableText } from '../typography/textContrast';
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { createId } from '@/shared/lib/createId';
 import TimelineTaskDialog from './TimelineTaskDialog';
 import { useEffect, useRef, useState } from 'react';
@@ -115,7 +117,9 @@ export default function TimelineBlock({
       onDelete={onDelete}
       title={
         <span className="flex items-center justify-between gap-2">
-          <span className="truncate">{item.title}</span>
+          <span className="truncate" style={getSectionStyle(item.typography, 'title')}>
+            {item.title}
+          </span>
           <span className="text-xs opacity-50">
             {item.tasks.filter((task) => task.done).length}/{item.tasks.length} done
           </span>
@@ -260,7 +264,10 @@ export default function TimelineBlock({
                   ))}
                 </div>
                 <span className="timeline-dot" style={{ background: task.done ? '#059669' : task.color }} />
-                <div className="text-xs font-medium text-theme-muted mb-1">
+                <div
+                  className="text-xs font-medium text-theme-muted mb-1"
+                  style={getSectionStyle(item.typography, 'labels')}
+                >
                   {task.start || 'Unscheduled'}
                   {task.end && task.end !== task.start ? ` → ${task.end}` : ''}
                 </div>
@@ -271,8 +278,12 @@ export default function TimelineBlock({
                     checked={task.done}
                     onMouseDown={(event) => event.stopPropagation()}
                     onChange={() => updateTask(task.id, (current) => ({ ...current, done: !current.done }))}
+                    style={getSectionStyle(item.typography, 'body')}
                   />
-                  <h3 className={`font-semibold text-sm ${task.done ? 'line-through opacity-50' : ''}`}>
+                  <h3
+                    className={`font-semibold text-sm ${task.done ? 'line-through' : ''}`}
+                    style={getSectionStyle(item.typography, 'body')}
+                  >
                     {task.title || 'Untitled task'}
                   </h3>
                   {
@@ -303,7 +314,7 @@ export default function TimelineBlock({
                         }))
                       }
                     />
-                    <span className={entry.done ? 'line-through opacity-50' : ''}>
+                    <span className={entry.done ? 'line-through' : ''} style={getSectionStyle(item.typography, 'body')}>
                       {entry.text || 'Checklist item'}
                     </span>
                   </label>
@@ -404,11 +415,12 @@ export default function TimelineBlock({
                           setDraft({ ...task, checklist: task.checklist.map((entry) => ({ ...entry })) });
                           setEditing(true);
                         }}
+                        style={getSectionStyle(item.typography, 'body')}
                       >
                         {task.done ? '✓ ' : ''}
                         {task.title}
                       </button>
-                      <div className="flex flex-col text-[10px]">
+                      <div className="flex flex-col text-[10px]" style={getSectionStyle(item.typography, 'labels')}>
                         {([-1, 1] as const).map((direction) => (
                           <button
                             key={direction}
@@ -447,7 +459,8 @@ export default function TimelineBlock({
                             left: (dates.start - range.start) * dayWidth,
                             width: (dates.end - dates.start + 1) * dayWidth,
                             background: task.color,
-                            opacity: task.done ? 0.5 : 1,
+                            color: readableText(task.color),
+                            textDecoration: task.done ? 'line-through' : undefined,
                           }}
                           onMouseDown={(event) => event.stopPropagation()}
                           onPointerDown={(event) => moveBar(event, task, false)}
@@ -466,7 +479,12 @@ export default function TimelineBlock({
                             }
                           }}
                         >
-                          <span className="block truncate px-2 leading-7 pointer-events-none">{task.title}</span>
+                          <span
+                            className="block truncate px-2 leading-7 pointer-events-none"
+                            style={getSectionStyle(item.typography, 'body')}
+                          >
+                            {task.title}
+                          </span>
                           {editing && (
                             <div
                               className="absolute right-0 top-0 h-full w-3 cursor-ew-resize rounded-r bg-white/25"

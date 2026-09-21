@@ -121,6 +121,10 @@ public sealed record BoardRecordDto(
 public sealed record CreateBoardRequest(string Name);
 public sealed record RenameBoardRequest(string Name);
 
+public sealed record RestoreTrashItemRequest(Guid TargetBoardId, double? X, double? Y);
+
+public sealed record TrashedItemDto(ItemRecordDto Item, string BoardName);
+
 public sealed record CommentRecordDto(
     Guid Id, Guid ItemId, string Text, string Status,
     [property: JsonConverter(typeof(RevisionJsonConverter))] long Revision,

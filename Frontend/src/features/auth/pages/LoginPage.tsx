@@ -165,7 +165,7 @@ export default function LoginPage() {
         {isMockDataSource && (
           <div
             className="mt-4 text-[11px] rounded-xl px-3 py-2 leading-relaxed"
-            style={{ backgroundColor: 'var(--color-surface-alt)', color: 'var(--color-text-muted)' }}
+            style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-muted)' }}
           >
             Demo logins — <strong>demo / demo123</strong> (user) or <strong>admin / admin123</strong> (admin)
           </div>

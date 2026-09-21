@@ -30,6 +30,12 @@ const touch = <T extends AuditFields>(value: T, userId: string): T => ({
   updatedBy: userId,
 });
 
+function linkedBoardId(item: { type: string; data: unknown }): string | undefined {
+  if (item.type !== 'board' || !item.data || typeof item.data !== 'object') return undefined;
+  const value = (item.data as { boardId?: unknown }).boardId;
+  return typeof value === 'string' ? value : undefined;
+}
+
 function applyItem(board: BoardSnapshot, entry: ItemMutation, userId: string): void {
   const allowed = [
     'id',
@@ -167,7 +173,8 @@ export function createMockWorkspace(
   function findBoard(db: Database, projectId: string, boardId: string): BoardSnapshot {
     find(db, projectId);
     return (
-      db.boards[projectId]?.find((board) => board.board.id === boardId) ?? fail(404, 'not_found', 'Board not found.')
+      db.boards[projectId]?.find((board) => board.board.id === boardId && !board.board.deletedAt) ??
+      fail(404, 'not_found', 'Board not found.')
     );
   }
   async function locked<T>(operation: () => T): Promise<T> {
@@ -370,14 +377,156 @@ export function createMockWorkspace(
           board.items = board.items.map((item) =>
             removed.has(item.id) ? { ...touch(item, userId), deletedAt: new Date().toISOString() } : item,
           );
-          board.links = board.links.filter((link) => !removed.has(link.sourceItemId));
-          board.itemTags = board.itemTags.filter((tag) => !removed.has(tag.itemId));
-          board.comments = board.comments.map((c) =>
-            removed.has(c.itemId) ? { ...touch(c, userId), deletedAt: new Date().toISOString() } : c,
-          );
+          for (const item of board.items.filter((item) => removed.has(item.id))) {
+            const linkedId = linkedBoardId(item);
+            const linked = db.boards[projectId]?.find((entry) => entry.board.id === linkedId);
+            if (linked && linked !== board && !linked.board.deletedAt)
+              linked.board = { ...touch(linked.board, userId), deletedAt: new Date().toISOString() };
+          }
+          // Relations stay with a soft-deleted item and become visible again when
+          // it is restored. They are removed only by permanent trash deletion.
           validateBoard(board);
           board.board = touch(board.board, userId);
           return board;
+        });
+      },
+      async listTrash(projectId) {
+        const db = read();
+        find(db, projectId);
+        return structuredClone(
+          (db.boards[projectId] ?? []).flatMap((board) => {
+            const deleted = board.items.filter((item) => item.deletedAt);
+            const deletedIds = new Set(deleted.map((item) => item.id));
+            return deleted
+              .filter((item) => !item.parentItemId || !deletedIds.has(item.parentItemId))
+              .sort((a, b) => (b.deletedAt ?? '').localeCompare(a.deletedAt ?? ''))
+              .map((item) => ({ item, boardName: board.board.name }));
+          }),
+        );
+      },
+      restoreTrashItem(projectId, itemId, targetBoardId, position) {
+        return transaction(
+          createId(),
+          { action: 'restore-trash-item', projectId, itemId, targetBoardId, position },
+          (db) => {
+            find(db, projectId);
+            const boards = db.boards[projectId] ?? [];
+            const source = boards.find((board) => board.items.some((item) => item.id === itemId && item.deletedAt));
+            if (!source) fail(404, 'not_found', 'Trashed item not found.');
+            const target = findBoard(db, projectId, targetBoardId);
+            const restoredIds = new Set([itemId]);
+            let changed = true;
+            while (changed) {
+              changed = false;
+              for (const item of source.items)
+                if (
+                  item.deletedAt &&
+                  item.parentItemId &&
+                  restoredIds.has(item.parentItemId) &&
+                  !restoredIds.has(item.id)
+                ) {
+                  restoredIds.add(item.id);
+                  changed = true;
+                }
+            }
+            const nextZ = Math.max(0, ...target.items.filter((item) => !item.deletedAt).map((item) => item.zIndex)) + 1;
+            const restored = source.items
+              .filter((item) => restoredIds.has(item.id))
+              .map((item) => ({
+                ...touch(item, userId),
+                boardId: targetBoardId,
+                deletedAt: null,
+                ...(item.id === itemId
+                  ? {
+                      parentItemId: null,
+                      frameId: null,
+                      x: position?.x ?? item.x,
+                      y: position?.y ?? item.y,
+                      zIndex: item.type === 'frame' ? 0 : nextZ,
+                    }
+                  : {}),
+              }));
+            const restoredLinkedId = linkedBoardId(restored.find((item) => item.id === itemId)!);
+            const restoredLinked = boards.find((entry) => entry.board.id === restoredLinkedId);
+            if (restoredLinked?.board.deletedAt)
+              restoredLinked.board = { ...touch(restoredLinked.board, userId), deletedAt: null };
+            source.items = source.items.filter((item) => !restoredIds.has(item.id));
+            target.items = target.items.filter((item) => !restoredIds.has(item.id)).concat(restored);
+            if (source !== target) {
+              const validTargets = new Set(target.items.filter((item) => !item.deletedAt).map((item) => item.id));
+              const movedLinks = source.links.filter(
+                (link) => restoredIds.has(link.sourceItemId) && validTargets.has(link.targetItemId),
+              );
+              source.links = source.links.filter((link) => !restoredIds.has(link.sourceItemId));
+              target.links = target.links.concat(movedLinks);
+              const movedComments = source.comments.filter((comment) => restoredIds.has(comment.itemId));
+              source.comments = source.comments.filter((comment) => !restoredIds.has(comment.itemId));
+              target.comments = target.comments.concat(movedComments);
+              const movedTags = source.itemTags.filter((tag) => restoredIds.has(tag.itemId));
+              source.itemTags = source.itemTags.filter((tag) => !restoredIds.has(tag.itemId));
+              target.itemTags = target.itemTags.concat(movedTags);
+              target.tags = [...new Map([...target.tags, ...source.tags].map((tag) => [tag.id, tag])).values()];
+              source.board = touch(source.board, userId);
+            }
+            target.board = touch(target.board, userId);
+            return target;
+          },
+        );
+      },
+      purgeTrashItem(projectId, itemId) {
+        return transaction(createId(), { action: 'purge-trash-item', projectId, itemId }, (db) => {
+          find(db, projectId);
+          const board = (db.boards[projectId] ?? []).find((entry) =>
+            entry.items.some((item) => item.id === itemId && item.deletedAt),
+          );
+          if (!board) fail(404, 'not_found', 'Trashed item not found.');
+          const linkedId = linkedBoardId(board.items.find((item) => item.id === itemId)!);
+          const removed = new Set([itemId]);
+          let changed = true;
+          while (changed) {
+            changed = false;
+            for (const item of board.items)
+              if (item.deletedAt && item.parentItemId && removed.has(item.parentItemId) && !removed.has(item.id)) {
+                removed.add(item.id);
+                changed = true;
+              }
+          }
+          board.items = board.items.filter((item) => !removed.has(item.id));
+          board.links = board.links.filter(
+            (link) => !removed.has(link.sourceItemId) && !removed.has(link.targetItemId),
+          );
+          board.comments = board.comments.filter((comment) => !removed.has(comment.itemId));
+          board.itemTags = board.itemTags.filter((tag) => !removed.has(tag.itemId));
+          board.board = touch(board.board, userId);
+          if (linkedId)
+            db.boards[projectId] = (db.boards[projectId] ?? []).filter((entry) => entry.board.id !== linkedId);
+        });
+      },
+      emptyTrash(projectId) {
+        return transaction(createId(), { action: 'empty-item-trash', projectId }, (db) => {
+          find(db, projectId);
+          const deletedLinkedBoards = new Set(
+            (db.boards[projectId] ?? []).flatMap((board) =>
+              board.items
+                .filter((item) => item.deletedAt)
+                .map(linkedBoardId)
+                .filter((id): id is string => Boolean(id)),
+            ),
+          );
+          for (const board of db.boards[projectId] ?? []) {
+            const removed = new Set(board.items.filter((item) => item.deletedAt).map((item) => item.id));
+            if (!removed.size) continue;
+            board.items = board.items.filter((item) => !removed.has(item.id));
+            board.links = board.links.filter(
+              (link) => !removed.has(link.sourceItemId) && !removed.has(link.targetItemId),
+            );
+            board.comments = board.comments.filter((comment) => !removed.has(comment.itemId));
+            board.itemTags = board.itemTags.filter((tag) => !removed.has(tag.itemId));
+            board.board = touch(board.board, userId);
+          }
+          db.boards[projectId] = (db.boards[projectId] ?? []).filter(
+            (board) => !deletedLinkedBoards.has(board.board.id),
+          );
         });
       },
     },

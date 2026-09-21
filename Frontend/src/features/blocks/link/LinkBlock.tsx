@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useState } from 'react';
 
@@ -19,10 +20,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
 
   const typographyStyle = getTypographyStyle(item);
 
-  const { background, light } = useCardAppearance(item.color, item.gradient, item.colorRole);
-
-  const textColor = light ? '#1e293b' : '#e2e8f0';
-  const mutedColor = light ? '#64748b' : '#b9aec9';
+  const { background, light, textColor, mutedColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
 
   const borderBase = light ? 'rgba(0,0,0,0.1)' : '#1a3040';
   const borderHover = light ? 'rgba(124, 58, 237,0.5)' : 'rgba(124, 58, 237,0.4)';
@@ -91,7 +89,10 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                 </svg>
               </div>
 
-              <span className="text-[11px] truncate" style={{ color: mutedColor, maxWidth: 110 }}>
+              <span
+                className="text-[11px] truncate"
+                style={{ color: mutedColor, maxWidth: 110, ...getSectionStyle(item.typography, 'links') }}
+              >
                 {domain}
               </span>
             </div>
@@ -165,6 +166,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                   color: textColor,
                   borderColor: '#7C3AED',
                   caretColor: '#7C3AED',
+                  ...getSectionStyle(item.typography, 'links'),
                 }}
               />
 
@@ -179,6 +181,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                   backgroundColor: inputBackground,
                   color: textColor,
                   borderColor: inputBorder,
+                  ...getSectionStyle(item.typography, 'title'),
                 }}
               />
 
@@ -196,12 +199,16 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                   backgroundColor: inputBackground,
                   color: mutedColor,
                   borderColor: inputBorder,
+                  ...getSectionStyle(item.typography, 'description'),
                 }}
               />
             </div>
           ) : (
             <div>
-              <h4 className="text-sm font-semibold leading-snug mb-1" style={{ color: textColor, ...typographyStyle }}>
+              <h4
+                className="text-sm font-semibold leading-snug mb-1"
+                style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'title') }}
+              >
                 {item.title || 'Untitled link'}
               </h4>
 
@@ -212,6 +219,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                     color: mutedColor,
                     ...typographyStyle,
                     fontSize: item.typography?.fontSize ? `${Math.max(8, item.typography.fontSize - 2)}px` : undefined,
+                    ...getSectionStyle(item.typography, 'description'),
                   }}
                 >
                   {item.description}
@@ -224,7 +232,8 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                   target="_blank"
                   rel="noopener noreferrer"
                   onMouseDown={(event) => event.stopPropagation()}
-                  className="inline-flex items-center gap-1 text-[#7C3AED] text-xs hover:text-[#FFBD65] transition-colors"
+                  className="inline-flex items-center gap-1 underline text-xs hover:opacity-80 transition-colors"
+                  style={{ color: textColor, ...getSectionStyle(item.typography, 'links') }}
                 >
                   Open link
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

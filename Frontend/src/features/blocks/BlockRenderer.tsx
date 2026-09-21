@@ -1,3 +1,5 @@
+import ItemCssScope from './custom-css/ItemCssScope';
+import { TypographyContext } from './typography/TypographyContext';
 import IconBlock from './icon/IconBlock';
 import SectionTitleBlock from './section-title/SectionTitleBlock';
 import type { BoardItem } from '@/entities/board/types';
@@ -77,7 +79,7 @@ export interface BlockRendererProps {
   onRenameBoard?: (boardId: string, name: string) => void;
 }
 
-export default function BlockRenderer({
+function BlockContent({
   zoom = 1,
   readOnly = false,
   item,
@@ -213,4 +215,14 @@ export default function BlockRenderer({
     default:
       return null;
   }
+}
+
+export default function BlockRenderer(props: BlockRendererProps) {
+  return (
+    <TypographyContext.Provider value={props.item.typography}>
+      <ItemCssScope item={props.item}>
+        <BlockContent {...props} />
+      </ItemCssScope>
+    </TypographyContext.Provider>
+  );
 }

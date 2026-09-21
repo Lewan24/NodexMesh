@@ -12,6 +12,7 @@ const appearanceKeys = [
   'gradient',
   'topColor',
   'typography',
+  'customCss',
   'textAlign',
   'fontSize',
   'bold',

@@ -164,6 +164,36 @@ test('board blocks link a persistent child board without replacing the parent bo
   );
 });
 
+test('trashing a board card disables its child board and permanent deletion removes the board contents', async () => {
+  const { api, snapshot } = await setup();
+  let child = await api.boards.create(snapshot.project.id, 'Disposable board');
+  child = await api.boards.mutate(
+    snapshot.project.id,
+    child.board.id,
+    diffBoard(child, [{ ...createCanvasItem('note', 20, 20), content: 'Delete with board' }]),
+  );
+  const block = { ...createCanvasItem('board', 32, 48), boardId: child.board.id, title: child.board.name };
+  let parent = await mutate(api, snapshot, [block]);
+
+  parent = await api.boards.mutate(snapshot.project.id, parent.board.id, diffBoard(parent, []));
+  assert.ok((await api.boards.list(snapshot.project.id)).find((board) => board.id === child.board.id).deletedAt);
+  await assert.rejects(() => api.boards.get(snapshot.project.id, child.board.id));
+
+  parent = await api.boards.restoreTrashItem(snapshot.project.id, block.id, parent.board.id);
+  assert.equal(
+    (await api.boards.list(snapshot.project.id)).find((board) => board.id === child.board.id).deletedAt,
+    null,
+  );
+  assert.equal((await api.boards.get(snapshot.project.id, child.board.id)).items[0].data.content, 'Delete with board');
+
+  parent = await api.boards.mutate(snapshot.project.id, parent.board.id, diffBoard(parent, []));
+  await api.boards.purgeTrashItem(snapshot.project.id, block.id);
+  assert.equal(
+    (await api.boards.list(snapshot.project.id)).some((board) => board.id === child.board.id),
+    false,
+  );
+});
+
 test('child boards can be renamed and deleted while the main board is protected', async () => {
   const { api, snapshot } = await setup();
   const child = await api.boards.create(snapshot.project.id, 'Temporary');
@@ -363,6 +393,27 @@ test('undo writes an inverse item mutation instead of replacing a board snapshot
   assert.equal(controller.getSnapshot().status, 'saved');
   const [saved] = await api.projects.list();
   assert.ok(saved.board.items[0].deletedAt);
+});
+
+test('item trash lists, restores, repositions and permanently removes soft-deleted items', async () => {
+  const { api } = await setup();
+  const [snapshot] = await api.projects.list();
+  const item = createCanvasItem('note', 10, 20);
+  let board = await mutate(api, snapshot, [item]);
+  board = await api.boards.mutate(snapshot.project.id, board.board.id, diffBoard(board, []));
+
+  const trash = await api.boards.listTrash(snapshot.project.id);
+  assert.equal(trash.length, 1);
+  assert.equal(trash[0].item.id, item.id);
+
+  board = await api.boards.restoreTrashItem(snapshot.project.id, item.id, board.board.id, { x: 320, y: 240 });
+  const restored = toProjectView({ project: snapshot.project, board }).items[0];
+  assert.equal(restored.id, item.id);
+  assert.deepEqual([restored.x, restored.y], [320, 240]);
+
+  board = await api.boards.mutate(snapshot.project.id, board.board.id, diffBoard(board, []));
+  await api.boards.purgeTrashItem(snapshot.project.id, item.id);
+  assert.equal((await api.boards.listTrash(snapshot.project.id)).length, 0);
 });
 
 test('public auth profiles exclude passwords and mock administrative operations enforce role', async () => {

@@ -1,3 +1,4 @@
+import { getSectionStyle, getDocumentLinkVariables } from '@/features/blocks/typography/sectionTypography';
 import { useEffect, useState } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -123,9 +124,14 @@ export default function DocumentBlock({
               onChange={(e) =>
                 onUpdate((current) => (current.type === 'document' ? { ...current, title: e.target.value } : current))
               }
+              style={getSectionStyle(item.typography, 'title')}
             />
           ) : (
-            <span className="flex-1 truncate" onDoubleClick={() => setEditing(true)}>
+            <span
+              className="flex-1 truncate"
+              onDoubleClick={() => setEditing(true)}
+              style={getSectionStyle(item.typography, 'title')}
+            >
               {item.title}
             </span>
           )}
@@ -191,6 +197,7 @@ export default function DocumentBlock({
         <EditorContent
           editor={editor}
           className={`document-editor ${editing ? '' : 'pointer-events-none select-none'}`}
+          style={{ ...getSectionStyle(item.typography, 'body'), ...getDocumentLinkVariables(item.typography) }}
         />
       </div>
     </ContentBlockShell>

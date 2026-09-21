@@ -60,7 +60,9 @@ public static class BoardValidator
 
         try
         {
-            JsonSerializer.Deserialize<ItemAppearance>(item.Appearance.GetRawText(), BoardItemTypes.StrictOptions);
+            var appearance = JsonSerializer.Deserialize<ItemAppearance>(item.Appearance.GetRawText(), BoardItemTypes.StrictOptions);
+            if (appearance?.CustomCss is { } customCss && (customCss.Source is null || customCss.Source.Length > 10_000))
+                throw new ApiException(422, "invalid_item", "Custom CSS must contain at most 10,000 characters.");
         }
         catch (JsonException)
         {

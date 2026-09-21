@@ -1,4 +1,4 @@
-import type { BoardSnapshot } from '@/entities/board/records';
+import type { BoardSnapshot, ItemRecord, TrashedItemRecord } from '@/entities/board/records';
 import type { BoardRecord } from '@/entities/board/records';
 import type { ProjectRecord, ProjectSnapshot } from '@/entities/project/types';
 import { validateItem } from '@/entities/board/itemSchema';
@@ -67,6 +67,17 @@ export function parseBoardSnapshot(value: unknown): BoardSnapshot {
   }
   validateBoard(result);
   return result;
+}
+
+export function parseTrashedItem(value: unknown): TrashedItemRecord {
+  const entry = record(value);
+  const item = record(entry.item);
+  audit(item);
+  string(item.boardId);
+  validateItem(item as unknown as ItemRecord);
+  string(entry.boardName);
+  if (!item.deletedAt) fail(422, 'invalid_response', 'Trash contains an active item.');
+  return { item: item as unknown as ItemRecord, boardName: entry.boardName };
 }
 
 export function parseBoardRecord(value: unknown): BoardRecord {

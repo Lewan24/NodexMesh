@@ -1,3 +1,4 @@
+import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useState } from 'react';
 import type { DispenserItem } from '@/entities/board/types';
 import type { BlockUpdateHandler } from '../types';
@@ -35,9 +36,15 @@ export default function DispenserBlock({
             onChange={(e) =>
               onUpdate((current) => (current.type === 'dispenser' ? { ...current, title: e.target.value } : current))
             }
+            style={getSectionStyle(item.typography, 'title')}
           />
         ) : (
-          <span className="block truncate" title="Double-click to rename" onDoubleClick={() => setEditingLabel(true)}>
+          <span
+            className="block truncate"
+            title="Double-click to rename"
+            onDoubleClick={() => setEditingLabel(true)}
+            style={getSectionStyle(item.typography, 'title')}
+          >
             {item.title}
           </span>
         )

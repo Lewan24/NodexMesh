@@ -50,13 +50,33 @@ const points = list(point, 100_000);
 const title = { title: text };
 const uuid: Check = (v) =>
   typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+const sectionStyle = object({
+  color: optional(text),
+  fontSize: optional(number),
+  bold: optional(bool),
+  italic: optional(bool),
+  textAlign: optional(choice('left', 'center', 'right')),
+});
 const appearance = object({
+  customCss: optional(
+    object({ enabled: bool, source: (value) => typeof value === 'string' && value.length <= 10_000 }),
+  ),
   color: optional(text),
   colorRole: optional(choice('default', 'accent1', 'accent2', 'accent3', 'accent4', 'accent5')),
   topColor: optional(text),
   gradient: optional(object({ from: text, to: text, kind: choice('linear', 'radial'), angle: number })),
   typography: optional(
     object({
+      sections: optional(
+        object({
+          title: optional(sectionStyle),
+          description: optional(sectionStyle),
+          body: optional(sectionStyle),
+          links: optional(sectionStyle),
+          caption: optional(sectionStyle),
+          labels: optional(sectionStyle),
+        }),
+      ),
       fontFamily: optional(text),
       fontSize: optional(number),
       bold: optional(bool),

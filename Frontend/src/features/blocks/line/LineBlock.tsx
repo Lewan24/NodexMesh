@@ -1,3 +1,4 @@
+import { getSectionStyle } from '../typography/sectionTypography';
 import { getFontFamilyCss } from '../typography/typographyUtils';
 import { useState } from 'react';
 
@@ -199,7 +200,8 @@ export default function LineBlock({ item, isSelected, onDelete, onLineEndpointDr
 
             fontStyle: item.typography?.italic ? 'italic' : undefined,
 
-            color: lineColor,
+            color: 'var(--color-text-primary)',
+            ...getSectionStyle(item.typography, 'labels'),
 
             backgroundColor: 'var(--color-surface-translucent)',
 

@@ -3,7 +3,7 @@ import { httpClient } from '@/app/services';
 import { createHttpAppearance } from '@/features/appearance/httpAppearance';
 import { toast } from 'sonner';
 import { errorMessage } from '@/shared/api/errors';
-import { isLightColor } from '@/features/blocks/kanban/utils/kanbanUtils';
+import { readableText, contrastRatio } from '@/features/blocks/typography/textContrast';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   paletteBackground,
@@ -37,7 +37,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       return localStorage.getItem('nodexmesh_theme') === 'dark' ? 'dark' : 'light';
     } catch {
-      return 'light';
+      return 'dark';
     }
   });
   const [scope, setScopeState] = useState({ userId: '', projectId: '' });
@@ -147,15 +147,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const root = document.documentElement,
       palette = appearance[theme];
     root.dataset.theme = theme;
+    const text = readableText(palette.default);
+    const mutedCandidate = text === '#000000' ? '#4b4654' : '#cfc8da';
+    const muted = contrastRatio(mutedCandidate, palette.default) >= 4.5 ? mutedCandidate : text;
     const vars: Record<string, string> = {
       '--color-accent': palette.primary,
+      '--color-on-accent': readableText(palette.primary),
+      '--ui-on-accent': readableText(preferences.uiPrimary),
       '--color-accent-hover': palette.primary,
       '--color-accent-soft': `color-mix(in srgb, ${palette.primary} 14%, transparent)`,
       '--color-accent-soft-strong': `color-mix(in srgb, ${palette.primary} 24%, transparent)`,
-      '--color-text-primary': isLightColor(palette.default) ? '#1c1330' : '#f5f0fc',
-      '--color-text-secondary': isLightColor(palette.default) ? '#514360' : '#d2c4e4',
-      '--color-text-muted': isLightColor(palette.default) ? '#685777' : '#b6a5ca',
-      '--color-text-faint': isLightColor(palette.default) ? '#746581' : '#a695ba',
+      '--color-text-primary': text,
+      '--color-text-secondary': muted,
+      '--color-text-muted': muted,
+      '--color-text-faint': muted,
       '--canvas-background': paletteBackground(palette, 'canvas'),
       '--color-secondary': palette.secondary,
       '--color-app-bg': palette.canvas,
@@ -230,6 +235,11 @@ export function PublicAppearanceProvider({
           {
             '--canvas-background': paletteBackground(palette, 'canvas'),
             '--color-surface': palette.default,
+            '--color-text-primary': readableText(palette.default),
+            '--color-text-secondary': readableText(palette.default),
+            '--color-text-muted': readableText(palette.default),
+            '--color-text-faint': readableText(palette.default),
+            '--color-on-accent': readableText(palette.primary),
             '--color-surface-alt': palette.accent1,
             '--color-accent': palette.primary,
             '--project-font': getFontFamilyCss(appearance.font),

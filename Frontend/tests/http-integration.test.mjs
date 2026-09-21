@@ -63,6 +63,8 @@ test('auth responses use server profile data and account changes send only the e
     if (url.endsWith('/auth/profile')) return json({ accessToken: token('profile-id'), user: profile });
     if (url.endsWith('/auth/password')) return json({ accessToken: token('password-id'), user: profile });
     if (url.endsWith('/admin/users/target')) return json({ ...profile, isBlocked: false, createdAt: '' });
+    if (url.endsWith('/admin/users/target/appearance/reset')) return new Response(null, { status: 204 });
+    if (url.endsWith('/admin/projects/project/owner')) return new Response(null, { status: 204 });
     throw new Error(url);
   });
 
@@ -79,6 +81,8 @@ test('auth responses use server profile data and account changes send only the e
     confirmPassword: 'NewPassword!1',
   });
   await auth.updateAdminUser('target', { email: 'target@example.com', displayName: 'Target', isAdmin: true });
+  await auth.resetUserAppearance('target', 'ProjectOverrides');
+  await auth.transferProjectOwner('project', 'next@example.com');
 
   assert.deepEqual(JSON.parse(requests[1][1].body), {
     email: 'new@example.com',
@@ -88,6 +92,10 @@ test('auth responses use server profile data and account changes send only the e
   assert.equal(requests[1][0], '/api/v1/auth/profile');
   assert.equal(requests[2][0], '/api/v1/auth/password');
   assert.equal(requests[3][0], '/api/v1/admin/users/target');
+  assert.equal(requests[4][0], '/api/v1/admin/users/target/appearance/reset');
+  assert.deepEqual(JSON.parse(requests[4][1].body), { scope: 'ProjectOverrides' });
+  assert.equal(requests[5][0], '/api/v1/admin/projects/project/owner');
+  assert.deepEqual(JSON.parse(requests[5][1].body), { email: 'next@example.com' });
 });
 
 test('ProblemDetails title is the code and Retry-After blocks early retries', async () => {

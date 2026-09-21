@@ -28,3 +28,9 @@
 .code-content[data-light='true'] .hljs-type {
   color: #865900;
 }
+
+/* An explicit section color takes precedence over syntax highlighting. */
+pre[data-custom-text-color] code,
+pre[data-custom-text-color] code span {
+  color: inherit !important;
+}
