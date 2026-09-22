@@ -24,6 +24,7 @@ public static class ProjectEndpoints
         group.MapPatch("/{projectId:guid}", UpdateAsync);
         group.MapDelete("/{projectId:guid}", TrashAsync);
         group.MapPost("/{projectId:guid}/restore", RestoreAsync);
+        group.MapDelete("/{projectId:guid}/permanent", PurgeAsync);
 
         group.MapPost("/{projectId:guid}/tags", CreateTagAsync);
 
@@ -49,7 +50,7 @@ public static class ProjectEndpoints
     {
         var userId = CurrentUserId(principal);
 
-        var owned = await db.Projects.AsNoTracking()
+        var owned = await db.Projects.IgnoreQueryFilters().AsNoTracking()
             .Where(p => p.OwnerId == userId)
             .ToListAsync(ct);
 
@@ -154,6 +155,28 @@ public static class ProjectEndpoints
         project.UpdatedBy = userId;
         await db.SaveChangesAsync(ct);
 
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<NoContent> PurgeAsync(
+        Guid projectId, ClaimsPrincipal principal, AppDbContext db, CancellationToken ct)
+    {
+        var userId = CurrentUserId(principal);
+        var project = await db.Projects.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.Id == projectId && p.OwnerId == userId, ct)
+            ?? throw new ApiException(404, "not_found", "Project not found.");
+        if (project.DeletedAt is null)
+            throw new ApiException(409, "not_trashed", "Move the project to trash before deleting it permanently.");
+        var boardIds = db.Boards.IgnoreQueryFilters().Where(b => b.ProjectId == projectId).Select(b => b.Id);
+        var itemIds = db.BoardItems.IgnoreQueryFilters().Where(i => boardIds.Contains(i.BoardId)).Select(i => i.Id);
+        db.ItemLinks.RemoveRange(await db.ItemLinks
+            .Where(link => itemIds.Contains(link.SourceItemId) || itemIds.Contains(link.TargetItemId)).ToListAsync(ct));
+        db.ProjectAppearanceOverrides.RemoveRange(await db.ProjectAppearanceOverrides
+            .Where(value => value.ProjectId == projectId).ToListAsync(ct));
+        db.UserClaims.RemoveRange(await db.UserClaims
+            .Where(claim => claim.ClaimType == "default_project" && claim.ClaimValue == projectId.ToString()).ToListAsync(ct));
+        db.Projects.Remove(project);
+        await db.SaveChangesAsync(ct);
         return TypedResults.NoContent();
     }
 

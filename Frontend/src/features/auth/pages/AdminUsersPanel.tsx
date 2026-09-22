@@ -8,6 +8,30 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
   const { theme, toggleTheme } = useTheme();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [projects, setProjects] = useState<AdminProject[]>([]);
+  const [userSearch, setUserSearch] = useState('');
+  const [projectSearch, setProjectSearch] = useState('');
+  const [projectUserSearch, setProjectUserSearch] = useState('');
+  const [projectStatus, setProjectStatus] = useState('all');
+  const [userStatus, setUserStatus] = useState('all');
+  const matches = (query: string, ...values: string[]) =>
+    values.some((value) => value.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  const filteredUsers = users.filter(
+    (user) =>
+      matches(userSearch, user.displayName, user.email, user.id) &&
+      (userStatus === 'all' || (userStatus === 'blocked' ? user.isBlocked : !user.isBlocked)),
+  );
+  const filteredProjects = projects.filter(
+    (project) =>
+      matches(projectSearch, project.name, project.id) &&
+      (projectStatus === 'all' || (projectStatus === 'trashed' ? !!project.deletedAt : !project.deletedAt)) &&
+      matches(
+        projectUserSearch,
+        project.ownerEmail,
+        project.ownerId,
+        users.find((user) => user.id === project.ownerId)?.displayName ?? '',
+        ...project.members.flatMap((member) => [member.email, member.displayName, member.userId]),
+      ),
+  );
   const [registration, setRegistration] = useState(true);
   const [tab, setTab] = useState<'users' | 'projects'>('users');
   const [message, setMessage] = useState('');
@@ -129,6 +153,64 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
             {error || message}
           </p>
         )}
+        <div className="mb-4 flex flex-wrap gap-2">
+          {tab === 'users' ? (
+            <>
+              <input
+                type="search"
+                aria-label="Search users"
+                placeholder="Search users by name, email or ID"
+                className="input-theme min-w-64 flex-1 px-3 py-2 text-sm"
+                value={userSearch}
+                onChange={(event) => setUserSearch(event.target.value)}
+              />
+              <select
+                aria-label="User status"
+                className="input-theme px-3 py-2 text-sm"
+                value={userStatus}
+                onChange={(event) => setUserStatus(event.target.value)}
+              >
+                <option value="all">All users</option>
+                <option value="active">Active users</option>
+                <option value="blocked">Blocked users</option>
+              </select>
+            </>
+          ) : (
+            <>
+              <input
+                type="search"
+                aria-label="Search projects"
+                placeholder="Search projects by name or ID"
+                className="input-theme min-w-56 flex-1 px-3 py-2 text-sm"
+                value={projectSearch}
+                onChange={(event) => setProjectSearch(event.target.value)}
+              />
+              <input
+                type="search"
+                aria-label="Search project owners and members"
+                placeholder="Owner or member name, email or ID"
+                className="input-theme min-w-56 flex-1 px-3 py-2 text-sm"
+                value={projectUserSearch}
+                onChange={(event) => setProjectUserSearch(event.target.value)}
+              />
+              <select
+                aria-label="Project status"
+                className="input-theme px-3 py-2 text-sm"
+                value={projectStatus}
+                onChange={(event) => setProjectStatus(event.target.value)}
+              >
+                <option value="all">All projects</option>
+                <option value="active">Active projects</option>
+                <option value="trashed">Trashed projects</option>
+              </select>
+            </>
+          )}
+        </div>
+        <p className="mb-3 text-sm" role="status">
+          {tab === 'users'
+            ? `${filteredUsers.length} of ${users.length} users`
+            : `${filteredProjects.length} of ${projects.length} projects`}
+        </p>
         {tab === 'users' ? (
           <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="min-w-0 rounded-2xl p-4" style={{ backgroundColor: 'var(--color-surface)' }}>
@@ -139,7 +221,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                 aria-label="Users list"
                 tabIndex={0}
               >
-                {users.map((user) => (
+                {filteredUsers.map((user) => (
                   <AdminUserRow
                     key={user.id}
                     user={user}
@@ -203,7 +285,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
             aria-label="Projects list"
             tabIndex={0}
           >
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}

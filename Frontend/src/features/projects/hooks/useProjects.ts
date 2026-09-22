@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import type { Project } from '@/entities/project/types';
 import { createDefaultProjectFor } from '@/entities/project/projectFactory';
 
-import { createWorkspaceServices, isMockDataSource } from '@/app/services';
-import { importProjectJson } from '../services/projectJson';
+import { createWorkspaceServices, httpClient, isMockDataSource } from '@/app/services';
+import { importProjectJson, exportWorkspaceProject, persistImportedProject } from '../services/projectJson';
 import { toast } from 'sonner';
 import { WorkspaceController, type WorkspaceState } from '../services/workspaceController';
 import { registerSaveGuard } from '@/shared/api/pendingChanges';
@@ -45,7 +45,11 @@ interface UseProjectsResult {
   importProject: (text: string) => Promise<void>;
   renameProject: (id: string, name: string) => void;
   trashProject: (id: string) => void;
-  emptyTrash: () => void;
+  emptyTrash: () => Promise<void>;
+  purgeProject: (id: string) => Promise<void>;
+  exportProject: () => Promise<string>;
+  defaultProjectId: string;
+  setDefaultProject: (id: string) => Promise<void>;
   restoreProject: (id: string) => void;
 }
 
@@ -54,13 +58,29 @@ export function useProjects(userId: string): UseProjectsResult {
   const { projects, status, error } = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const setProjects = controller.update;
 
+  const [defaultProjectId, setDefaultProjectId] = useState('');
   const [activeProjectId, setActiveProjectId] = useState<string>(
     () => projects.find((project) => !project.deletedAt)?.id ?? '',
   );
 
   useEffect(() => {
     const abort = new AbortController();
-    void controller.load(abort.signal);
+    void (async () => {
+      try {
+        const preference = httpClient
+          ? ((await httpClient.request('/auth/default-project', { signal: abort.signal })) as {
+              projectId: string | null;
+            })
+          : { projectId: localStorage.getItem(`nodexmesh.default-project.${userId}`) };
+        if (!abort.signal.aborted) {
+          setDefaultProjectId(preference.projectId ?? '');
+          setActiveProjectId(preference.projectId ?? '');
+        }
+      } catch {
+        if (!abort.signal.aborted) toast.error('Could not load your default project.');
+      }
+      if (!abort.signal.aborted) await controller.load(abort.signal);
+    })();
     const unregister = registerSaveGuard(async () => {
       await controller.flush();
       return controller.getSnapshot().status === 'saved';
@@ -147,13 +167,33 @@ export function useProjects(userId: string): UseProjectsResult {
     setActiveProjectId(id);
   }, []);
 
-  const emptyTrash = useCallback(() => {
-    if (!isMockDataSource) {
-      toast.error('Permanent deletion is not supported by the API.');
-      return;
-    }
-    setProjects((previous) => previous.filter((project) => !project.deletedAt));
-  }, [setProjects]);
+  const removeProjects = async (ids: string[]) => {
+    await controller.flush();
+    if (controller.getSnapshot().status !== 'saved') throw new Error('Save pending changes before deleting projects.');
+    for (const id of ids) await controller.purgeProject(id);
+  };
+  const purgeProject = (id: string) => removeProjects([id]);
+  const emptyTrash = () =>
+    removeProjects(
+      projects
+        .filter((project) => project.deletedAt && (!project.role || project.role === 'Owner'))
+        .map((project) => project.id),
+    );
+  const setDefaultProject = async (id: string) => {
+    await controller.flush();
+    if (controller.getSnapshot().status !== 'saved') throw new Error('Save the project before setting it as default.');
+    id = controller.resolveProjectId(id);
+    if (httpClient)
+      await httpClient.request('/auth/default-project', { method: 'PUT', body: { projectId: id || null } });
+    else localStorage.setItem(`nodexmesh.default-project.${userId}`, id);
+    setDefaultProjectId(id);
+  };
+  const exportProject = async () => {
+    await controller.flush();
+    if (controller.getSnapshot().status !== 'saved') throw new Error('Save pending changes before exporting.');
+    if (!activeProject) throw new Error('Select a project to export.');
+    return exportWorkspaceProject(createWorkspaceServices(userId), controller.resolveProjectId(activeProject.id));
+  };
 
   const resetDemo = useCallback(() => {
     if (isMockDataSource) {
@@ -171,9 +211,11 @@ export function useProjects(userId: string): UseProjectsResult {
 
   const importProject = async (text: string) => {
     const project = await importProjectJson(text, userId);
-    if (controller.getSnapshot().status === 'loading') throw new Error('Wait for projects to load.');
-    setProjects((previous) => [...previous, project]);
-    setActiveProjectId(project.id);
+    await controller.flush();
+    if (controller.getSnapshot().status !== 'saved') throw new Error('Save pending changes before importing.');
+    const snapshot = await persistImportedProject(createWorkspaceServices(userId), project);
+    controller.addImportedProject(snapshot);
+    setActiveProjectId(snapshot.project.id);
   };
 
   const addProject = useCallback(
@@ -262,5 +304,9 @@ export function useProjects(userId: string): UseProjectsResult {
     trashProject,
     restoreProject,
     emptyTrash,
+    purgeProject,
+    exportProject,
+    defaultProjectId,
+    setDefaultProject,
   };
 }

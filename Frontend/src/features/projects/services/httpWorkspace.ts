@@ -12,6 +12,22 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
   const mutationBodies = new WeakMap<object, unknown>();
   let nextMutationAt = 0;
   const snapshot = async (project: ProjectRecord, signal?: AbortSignal): Promise<ProjectSnapshot> => {
+    if (project.deletedAt) {
+      // Trashed projects expose metadata only. The project ID marks a placeholder
+      // board which the controller replaces with the real snapshot after restore.
+      projects.set(project.id, project);
+      return {
+        project,
+        board: {
+          board: { ...project, projectId: project.id, sortOrder: 0 },
+          items: [],
+          links: [],
+          comments: [],
+          tags: [],
+          itemTags: [],
+        },
+      };
+    }
     const boards = await client.request(`/projects/${segment(project.id)}/boards`, { signal });
     if (!Array.isArray(boards) || !boards[0]?.id) fail(422, 'invalid_response', 'Project has no default board.');
     const board = parseBoardSnapshot(await client.request(`/boards/${segment(boards[0].id)}`, { signal }));
@@ -89,8 +105,9 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
         projects.set(id, project);
         return project;
       },
-      async purge() {
-        fail(501, 'unsupported', 'Permanent deletion is not supported by the API.');
+      async purge(id) {
+        await client.request(`/projects/${segment(id)}/permanent`, { method: 'DELETE' });
+        projects.delete(id);
       },
     },
     boards: {

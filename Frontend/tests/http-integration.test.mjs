@@ -10,6 +10,7 @@ const server = await createServer({
 });
 const { createHttpAuthService } = await server.ssrLoadModule('/src/features/auth/services/httpAuthService.ts');
 const { createHttpWorkspace } = await server.ssrLoadModule('/src/features/projects/services/httpWorkspace.ts');
+const { WorkspaceController } = await server.ssrLoadModule('/src/features/projects/services/workspaceController.ts');
 const { createHttpClient } = await server.ssrLoadModule('/src/shared/api/httpClient.ts');
 const { createHttpAppearance } = await server.ssrLoadModule('/src/features/appearance/httpAppearance.ts');
 const { newPreferences, activeAppearance } = await server.ssrLoadModule('/src/features/appearance/appearanceModel.ts');
@@ -142,6 +143,7 @@ test('HTTP workspace composes project records and boards and reloads mutation sn
       calls.push([path, options]);
       if (path === '/projects') return options.method === 'POST' ? project : [project];
       if (path === '/projects/project/boards') return [snapshot.board];
+      if (path === '/projects/project/permanent' && options.method === 'DELETE') return null;
       if (path === '/boards/board/mutations') return { boardRevision: audit.revision, items: [], conflicts: [] };
       if (path === '/boards/board') return snapshot;
       throw new Error(path);
@@ -153,7 +155,9 @@ test('HTTP workspace composes project records and boards and reloads mutation sn
   const mutation = { clientMutationId: 'mutation', expectedBoardRevision: audit.revision, upserts: [], deletes: [] };
   assert.deepEqual(await api.boards.mutate('project', 'board', mutation), snapshot);
   assert.deepEqual(calls.find(([path]) => path.endsWith('/mutations'))[1].body, mutation);
-  await assert.rejects(api.projects.purge('project'), (error) => error.problem.code === 'unsupported');
+  await api.projects.purge('project');
+  assert.equal(calls.at(-1)[0], '/projects/project/permanent');
+  assert.equal(calls.at(-1)[1].method, 'DELETE');
 });
 
 test('nullable project appearance continues to inherit defaults after edits', async () => {
@@ -260,4 +264,54 @@ test('preferred modes survive HTTP saves and reloads, and clearing restores inhe
   assert.equal(activeAppearance(inherited, 'project').mode, 'dark');
   await api.save(inherited, { ...inherited, defaults: { ...inherited.defaults, mode: undefined } });
   assert.equal((await api.load()).defaults.mode, null);
+});
+
+test('HTTP project trash reloads without fetching inaccessible boards and restores its content', async () => {
+  const audit = {
+    revision: '1',
+    createdAt: '2026-09-16T00:00:00Z',
+    updatedAt: '2026-09-16T00:00:00Z',
+    createdBy: null,
+    updatedBy: null,
+    deletedAt: null,
+  };
+  let project = {
+    ...audit,
+    id: 'project',
+    ownerId: 'owner',
+    role: 'Owner',
+    name: 'Test',
+    color: '#7C3AED',
+    deletedAt: audit.createdAt,
+  };
+  const snapshot = {
+    board: { ...audit, id: 'board', projectId: 'project', name: 'Main', sortOrder: 0 },
+    items: [],
+    links: [],
+    comments: [],
+    tags: [],
+    itemTags: [],
+  };
+  const api = createHttpWorkspace({
+    async request(path, options = {}) {
+      if (path === '/projects') return [project];
+      if (path === '/projects/project/restore') {
+        project = { ...project, deletedAt: null };
+        return null;
+      }
+      if (path === '/projects/project') return project;
+      assert.equal(project.deletedAt, null, 'trashed project boards must not be requested');
+      if (path === '/projects/project/boards') return [snapshot.board];
+      if (path === '/boards/board') return snapshot;
+      throw new Error(path);
+    },
+  });
+  const controller = new WorkspaceController(api);
+  await controller.load();
+  assert.equal(controller.getSnapshot().status, 'saved');
+  assert.equal(controller.getSnapshot().projects.length, 1);
+  controller.update((projects) => projects.map((entry) => ({ ...entry, deletedAt: undefined })));
+  await controller.flush();
+  assert.equal(controller.getSnapshot().status, 'saved');
+  assert.equal(controller.getSnapshot().projects[0].boardId, 'board');
 });

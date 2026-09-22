@@ -164,7 +164,7 @@ export function diffBoard(previous: BoardSnapshot, items: BoardItem[]): BoardMut
 }
 
 /** Fresh demo identities; reference remapping is scoped to this project. */
-export function renewProjectIds(project: Project): Project {
+export function renewProjectIds<T extends Project>(project: T): T {
   const ids = new Map<string, string>();
   function collect(value: unknown): void {
     if (!value || typeof value !== 'object') return;
@@ -181,6 +181,7 @@ export function renewProjectIds(project: Project): Project {
         typeof entry === 'string' &&
         [
           'id',
+          'boardId',
           'frameId',
           'dispenserId',
           'startItemId',
@@ -196,5 +197,5 @@ export function renewProjectIds(project: Project): Project {
       ]),
     );
   }
-  return rewrite(project) as Project;
+  return rewrite(project) as T;
 }

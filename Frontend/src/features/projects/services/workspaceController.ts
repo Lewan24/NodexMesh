@@ -95,6 +95,19 @@ export class WorkspaceController {
 
   constructor(private readonly services: WorkspaceServices) {}
 
+  addImportedProject(snapshot: ProjectSnapshot) {
+    this.confirmed.set(snapshot.project.id, snapshot);
+    this.publish({ projects: [...this.state.projects, toProjectView(snapshot)] });
+  }
+
+  async purgeProject(id: string) {
+    const previous = this.confirmed.get(id);
+    if (!previous?.project.deletedAt) throw new Error('Only trashed projects can be deleted permanently.');
+    await this.services.projects.purge(id, previous.project.revision, createId());
+    this.confirmed.delete(id);
+    this.publish({ projects: this.state.projects.filter((project) => project.id !== id) });
+  }
+
   async listBoards(projectId: string, signal?: AbortSignal) {
     return this.services.boards.list(projectId, signal);
   }
@@ -152,7 +165,16 @@ export class WorkspaceController {
   private async refreshCurrentBoard(projectId: string) {
     const previous = this.confirmed.get(projectId);
     if (!previous) return;
-    const board = await this.services.boards.get(projectId, previous.board.board.id);
+    const boards = await this.services.boards.list(projectId);
+    const current =
+      boards.find((board) => board.id === previous.board.board.id && !board.deletedAt) ??
+      boards.find((board) => !board.deletedAt);
+    if (!current) return;
+    if (current.id !== previous.board.board.id) {
+      await this.switchBoard(projectId, current.id);
+      return;
+    }
+    const board = await this.services.boards.get(projectId, current.id);
     if (board.board.revision !== previous.board.board.revision) this.acceptRemote(previous, { ...previous, board });
   }
 
@@ -318,6 +340,13 @@ export class WorkspaceController {
         return async () => {
           try {
             previous.project = await this.services.projects.update(desired.id, input);
+            if (previous.board.board.id === previous.project.id && !previous.project.deletedAt) {
+              const boards = await this.services.boards.list(desired.id);
+              const first = boards.find((board) => !board.deletedAt);
+              if (!first) throw new Error('Restored project has no active board.');
+              const board = await this.services.boards.get(desired.id, first.id);
+              this.acceptRemote(previous, { ...previous, board });
+            }
           } catch (error) {
             if (
               !(error instanceof ApiError) ||

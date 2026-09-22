@@ -23,9 +23,8 @@ const { createMockAuthService } = await server.ssrLoadModule('/src/features/auth
 const { itemSchemas } = await server.ssrLoadModule('/src/entities/board/itemSchema.ts');
 const { DEMO_USER_ID } = await server.ssrLoadModule('/src/entities/user/mockUsers.ts');
 const { createHttpClient } = await server.ssrLoadModule('/src/shared/api/httpClient.ts');
-const { exportProjectJson, importProjectJson } = await server.ssrLoadModule(
-  '/src/features/projects/services/projectJson.ts',
-);
+const { exportProjectJson, importProjectJson, exportWorkspaceProject, persistImportedProject } =
+  await server.ssrLoadModule('/src/features/projects/services/projectJson.ts');
 const { demoProjects } = await server.ssrLoadModule('/src/entities/project/demoProjects.ts');
 const { createDefaultProjectFor } = await server.ssrLoadModule('/src/entities/project/projectFactory.ts');
 const { createId } = await server.ssrLoadModule('/src/shared/lib/createId.ts');
@@ -542,4 +541,73 @@ test('a forged author is rejected and an unsupported persisted version is retain
   store.setItem(mockWorkspaceKey('qa'), raw);
   await assert.rejects(api.projects.list());
   assert.equal(store.getItem(mockWorkspaceKey('qa')), raw);
+});
+
+test('project transfer preserves additional boards, their contents and links with new identities', async () => {
+  const { api, snapshot } = await setup();
+  let child = await api.boards.create(snapshot.project.id, 'Research');
+  child = await api.boards.mutate(
+    snapshot.project.id,
+    child.board.id,
+    diffBoard(child, [
+      { ...createCanvasItem('note', 20, 20), content: 'Additional board content' },
+      { ...createCanvasItem('board', 60, 60), boardId: snapshot.board.board.id, title: 'Back to main' },
+    ]),
+  );
+  await mutate(api, snapshot, [{ ...createCanvasItem('board', 32, 48), boardId: child.board.id, title: 'Research' }]);
+  const json = await exportWorkspaceProject(api, snapshot.project.id);
+  assert.equal(JSON.parse(json).version, 2);
+  const imported = await importProjectJson(json, DEMO_USER_ID);
+  const copy = await persistImportedProject(api, imported);
+  const boards = await api.boards.list(copy.project.id);
+  assert.equal(boards.length, 2);
+  const research = boards.find((board) => board.name === 'Research');
+  assert.notEqual(research.id, child.board.id);
+  assert.equal(copy.board.items[0].data.boardId, research.id);
+  const content = await api.boards.get(copy.project.id, research.id);
+  assert.equal(content.items.find((item) => item.type === 'note').data.content, 'Additional board content');
+  assert.equal(content.items.find((item) => item.type === 'board').data.boardId, copy.board.board.id);
+  const malformed = JSON.parse(json);
+  malformed.project.boards.pop();
+  await assert.rejects(importProjectJson(JSON.stringify(malformed), DEMO_USER_ID), /missing board/);
+});
+
+test('permanent project deletion publishes the updated trash immediately and survives reload', async () => {
+  const { api, snapshot } = await setup();
+  const controller = new WorkspaceController(api);
+  await controller.load();
+  controller.update((projects) =>
+    projects.map((project) =>
+      project.id === snapshot.project.id ? { ...project, deletedAt: new Date().toISOString() } : project,
+    ),
+  );
+  await controller.flush();
+  await controller.purgeProject(snapshot.project.id);
+  assert.equal(
+    controller.getSnapshot().projects.some((project) => project.id === snapshot.project.id),
+    false,
+  );
+  await controller.load();
+  assert.equal(
+    controller.getSnapshot().projects.some((project) => project.id === snapshot.project.id),
+    false,
+  );
+});
+
+test('purging the viewed child board returns to the main board without a stale trash error', async () => {
+  const { api, snapshot } = await setup();
+  const child = await api.boards.create(snapshot.project.id, 'Child');
+  const card = { ...createCanvasItem('board', 20, 20), boardId: child.board.id };
+  const parent = await mutate(api, snapshot, [card]);
+  const controller = new WorkspaceController(api);
+  await controller.load();
+  await controller.switchBoard(snapshot.project.id, child.board.id);
+  await api.boards.mutate(snapshot.project.id, parent.board.id, diffBoard(parent, []));
+  await controller.purgeTrashItem(snapshot.project.id, card.id);
+  assert.equal(controller.getSnapshot().status, 'saved');
+  assert.equal(
+    controller.getSnapshot().projects.find((project) => project.id === snapshot.project.id).boardId,
+    parent.board.id,
+  );
+  assert.equal((await api.boards.listTrash(snapshot.project.id)).length, 0);
 });

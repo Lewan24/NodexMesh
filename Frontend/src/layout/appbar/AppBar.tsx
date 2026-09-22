@@ -25,7 +25,11 @@ interface AppBarProps {
   onImportProject: (text: string) => Promise<void>;
   onRenameProject: (id: string, name: string) => void;
   onTrashProject: (id: string) => void;
-  onEmptyTrash: () => void;
+  onEmptyTrash: () => Promise<void>;
+  onPurgeProject: (id: string) => Promise<void>;
+  onExportProject: () => Promise<string>;
+  defaultProjectId: string;
+  onSetDefaultProject: (id: string) => Promise<void>;
   onRestoreProject: (id: string) => void;
   searchQuery: string;
   onSearchQueryChange: (value: string) => void;
@@ -50,6 +54,10 @@ export default function AppBar({
   onTrashProject,
   onRestoreProject,
   onEmptyTrash,
+  onPurgeProject,
+  onExportProject,
+  defaultProjectId,
+  onSetDefaultProject,
   searchQuery,
   onSearchQueryChange,
 }: AppBarProps) {
@@ -100,6 +108,9 @@ export default function AppBar({
           onTrashProject={onTrashProject}
           onRestoreProject={onRestoreProject}
           onEmptyTrash={onEmptyTrash}
+          onPurgeProject={onPurgeProject}
+          defaultProjectId={defaultProjectId}
+          onSetDefaultProject={onSetDefaultProject}
         />
 
         <button
@@ -130,6 +141,7 @@ export default function AppBar({
         <ProjectTransfer
           project={projects.find((project) => project.id === activeProjectId)}
           onImport={onImportProject}
+          onExport={onExportProject}
         />
 
         <div className="app-search flex-1 flex justify-center px-4">
