@@ -15,6 +15,41 @@ public class AdminEndpointsTests : IDisposable
     public void Dispose() => _factory.Dispose();
 
     [Fact]
+    public async Task InactiveProjects_AreProtected_AndUserDeletionIsRecoverableOnlyByAdmin()
+    {
+        var admin = await _factory.CreateAdminClientAsync();
+        var (owner, _, _, _) = await _factory.CreateSeededUserAsync();
+        var (member, memberId, memberEmail, _) = await _factory.CreateSeededUserAsync();
+        var created = await owner.PostAsJsonAsync("/api/v1/projects", new CreateProjectRequest("Recoverable", null));
+        var project = (await created.Content.ReadFromJsonAsync<ProjectRecordDto>())!;
+        var userPath = $"/api/v1/projects/{project.Id}";
+        var adminPath = $"/api/v1/admin/projects/{project.Id}";
+        (await owner.PostAsJsonAsync($"{userPath}/members", new InviteMemberRequest(memberEmail, "Viewer"))).EnsureSuccessStatusCode();
+        (await admin.DeleteAsync($"{adminPath}/permanent")).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await owner.DeleteAsync(userPath)).EnsureSuccessStatusCode();
+        foreach (var userDeleted in new[] { false, true })
+        {
+            if (userDeleted) (await owner.DeleteAsync($"{userPath}/permanent")).EnsureSuccessStatusCode();
+            var rows = await admin.GetFromJsonAsync<List<AdminProjectDto>>("/api/v1/admin/projects");
+            rows!.Single(p => p.Id == project.Id).Status.Should().Be(userDeleted ? "userdeleted" : "trashed");
+            (await admin.PutAsJsonAsync($"{adminPath}/owner", new AdminTransferProjectOwnerRequest(memberEmail))).StatusCode.Should().Be(HttpStatusCode.Conflict);
+            (await admin.PostAsJsonAsync($"{adminPath}/members", new AdminAddProjectMemberRequest(memberEmail, "Editor"))).StatusCode.Should().Be(HttpStatusCode.Conflict);
+            (await admin.DeleteAsync($"{adminPath}/members/{memberId}")).StatusCode.Should().Be(HttpStatusCode.Conflict);
+            (await member.GetAsync(userPath)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+        (await owner.GetFromJsonAsync<List<ProjectRecordDto>>("/api/v1/projects"))!.Should().NotContain(p => p.Id == project.Id);
+        (await owner.PostAsync($"{userPath}/restore", null)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await owner.PostAsync($"{adminPath}/restore", null)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await admin.PostAsync($"{adminPath}/restore", null)).EnsureSuccessStatusCode();
+        (await owner.GetAsync(userPath)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await member.GetAsync(userPath)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await owner.DeleteAsync(userPath)).EnsureSuccessStatusCode();
+        (await owner.DeleteAsync($"{userPath}/permanent")).EnsureSuccessStatusCode();
+        (await admin.DeleteAsync($"{adminPath}/permanent")).EnsureSuccessStatusCode();
+        (await admin.PostAsync($"{adminPath}/restore", null)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task AdminEndpoint_WithoutAnyToken_Returns401()
     {
         var client = _factory.CreateClientNoRedirect();
@@ -206,7 +241,7 @@ public class AdminEndpointsTests : IDisposable
         (await admin.PostAsJsonAsync($"/api/v1/admin/users/{targetId}/appearance/reset",
             new AdminResetAppearanceRequest("Defaults"))).StatusCode.Should().Be(HttpStatusCode.NoContent);
         var defaultsReset = await target.GetFromJsonAsync<JsonElement>("/api/v1/appearance");
-        defaultsReset.GetProperty("defaults").GetProperty("font").GetString().Should().Be("sans");
+        defaultsReset.GetProperty("defaults").ValueKind.Should().Be(JsonValueKind.Null);
         defaultsReset.GetProperty("projects").EnumerateObject().Should().ContainSingle();
 
         (await admin.PostAsJsonAsync($"/api/v1/admin/users/{targetId}/appearance/reset",

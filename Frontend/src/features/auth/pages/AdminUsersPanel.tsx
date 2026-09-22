@@ -23,7 +23,8 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
   const filteredProjects = projects.filter(
     (project) =>
       matches(projectSearch, project.name, project.id) &&
-      (projectStatus === 'all' || (projectStatus === 'trashed' ? !!project.deletedAt : !project.deletedAt)) &&
+      (projectStatus === 'all' ||
+        projectStatus === (project.userDeletedAt ? 'userdeleted' : project.deletedAt ? 'trashed' : 'active')) &&
       matches(
         projectUserSearch,
         project.ownerEmail,
@@ -202,6 +203,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                 <option value="all">All projects</option>
                 <option value="active">Active projects</option>
                 <option value="trashed">Trashed projects</option>
+                <option value="userdeleted">User-deleted projects</option>
               </select>
             </>
           )}
@@ -290,6 +292,8 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                 key={project.id}
                 project={project}
                 users={users}
+                onRestore={() => run(() => auth.restoreAdminProject(project.id), 'Project restored.')}
+                onPurge={() => run(() => auth.purgeAdminProject(project.id), 'Project permanently deleted.')}
                 onAdd={(email, role) => void run(() => auth.addProjectMember(project.id, email, role), 'Member added.')}
                 onRemove={(userId) => void run(() => auth.removeProjectMember(project.id, userId), 'Member removed.')}
                 onTransferOwner={(email) =>
@@ -431,16 +435,77 @@ function ProjectCard({
   onAdd,
   onRemove,
   onTransferOwner,
+  onRestore,
+  onPurge,
 }: {
   project: AdminProject;
   users: AdminUser[];
   onAdd: (email: string, role: 'Editor' | 'Commenter' | 'Viewer') => void;
   onRemove: (id: string) => void;
   onTransferOwner: (email: string) => void;
+  onRestore: () => Promise<boolean>;
+  onPurge: () => Promise<boolean>;
 }) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'Editor' | 'Commenter' | 'Viewer'>('Viewer');
   const [nextOwnerEmail, setNextOwnerEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  if (project.deletedAt || project.userDeletedAt)
+    return (
+      <article
+        className="rounded-2xl border p-4"
+        style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+      >
+        <div className="opacity-60" aria-disabled="true">
+          <h2 className="font-semibold">{project.name}</h2>
+          <p className="text-sm">
+            Owner: {project.ownerEmail} · {project.userDeletedAt ? 'User-deleted' : 'Trashed'}
+          </p>
+          <p className="mt-2 text-xs">
+            {project.members.map((member) => `${member.email} (${member.role})`).join(' · ') || 'No members'}
+          </p>
+          <p className="mt-2 text-xs">Restore this project to change ownership or membership.</p>
+          {project.userDeletedAt && (
+            <p className="mt-2 text-xs">
+              Scheduled for permanent deletion:{' '}
+              {new Date(new Date(project.userDeletedAt).getTime() + 30 * 86400000).toLocaleDateString()}
+            </p>
+          )}
+        </div>
+        <div className="mt-4 flex gap-2">
+          <button
+            className="btn-accent rounded-lg px-3 py-2 text-sm"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await onRestore();
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            Restore project
+          </button>
+          <button
+            className="btn-ghost rounded-lg px-3 py-2 text-sm"
+            disabled={busy}
+            onClick={async () => {
+              if (!window.confirm(`Permanently delete “${project.name}” and all its boards? This cannot be undone.`))
+                return;
+              setBusy(true);
+              try {
+                await onPurge();
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            Delete permanently
+          </button>
+        </div>
+      </article>
+    );
   return (
     <article
       className="rounded-2xl border p-4"

@@ -23,6 +23,11 @@ interface UseProjectsResult {
   addProject: (name: string) => string;
   selectProject: (id: string) => void;
   selectBoard: (projectId: string, boardId: string) => Promise<void>;
+  saveComments: (
+    projectId: string,
+    itemId: string,
+    comments: import('@/entities/board/types').ItemComment[],
+  ) => Promise<void>;
   listBoards: (projectId: string) => Promise<import('@/entities/board/records').BoardRecord[]>;
   createBoard: (projectId: string, name: string) => Promise<import('@/entities/board/records').BoardSnapshot>;
   renameBoard: (
@@ -290,6 +295,7 @@ export function useProjects(userId: string): UseProjectsResult {
     selectProject,
     selectBoard,
     listBoards,
+    saveComments: (projectId, itemId, comments) => controller.saveComments(projectId, itemId, comments),
     createBoard,
     renameBoard,
     deleteBoard,

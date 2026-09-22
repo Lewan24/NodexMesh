@@ -104,7 +104,13 @@ export function toProjectView(snapshot: ProjectSnapshot): Project {
       locked: record.locked,
       comments: board.comments
         .filter((c) => c.itemId === record.id && !c.deletedAt)
-        .map((c) => ({ id: c.id, text: c.text, status: c.status, createdAt: c.createdAt })),
+        .map((c) => ({
+          id: c.id,
+          text: c.text,
+          status: c.status,
+          createdAt: c.createdAt,
+          authorId: c.createdBy ?? undefined,
+        })),
       tags: board.itemTags
         .filter((t) => t.itemId === record.id)
         .map((t) => board.tags.find((tag) => tag.id === t.tagId)!.name),

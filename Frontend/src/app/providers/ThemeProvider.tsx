@@ -59,20 +59,49 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (!appearanceApi || !scope.userId) return;
     let active = true;
     loadedUser.current = '';
-    void appearanceApi
-      .load()
-      .then((value) => {
-        if (!active) return;
+    let request = 0;
+    const reload = async () => {
+      const generation = ++request;
+      await saveQueue.current;
+      if (!active || saveFailed.current) return;
+      const before = preferencesRef.current;
+      try {
+        const value = await appearanceApi.load();
+        if (!active || generation !== request || preferencesRef.current !== before) return;
         confirmedPreferences.current = value;
         saveFailed.current = false;
         preferencesRef.current = value;
         setPreferences(value);
         loadedUser.current = scope.userId;
-      })
-      .catch((error) => toast.error(errorMessage(error)));
+      } catch (error) {
+        if (active) toast.error(errorMessage(error));
+      }
+    };
+    const reset = (event: Event) => {
+      if ((event as CustomEvent<{ userId: string }>).detail.userId === scope.userId) void reload();
+    };
+    const focus = () => {
+      void reload();
+    };
+    void reload();
+    window.addEventListener('focus', focus);
+    window.addEventListener('nodexmesh-appearance-reset', reset);
     return () => {
       active = false;
+      window.removeEventListener('focus', focus);
+      window.removeEventListener('nodexmesh-appearance-reset', reset);
     };
+  }, [scope.userId]);
+  useEffect(() => {
+    if (appearanceApi) return;
+    const reset = (event: Event) => {
+      if ((event as CustomEvent<{ userId: string }>).detail.userId !== scope.userId) return;
+      const value = readPreferences(scope.userId);
+      preferencesRef.current = value;
+      setPreferences(value);
+    };
+    window.addEventListener('nodexmesh-appearance-reset', reset);
+    return () => window.removeEventListener('nodexmesh-appearance-reset', reset);
   }, [scope.userId]);
   const setScope = useCallback((userId: string, projectId: string) => {
     setScopeState((current) => {

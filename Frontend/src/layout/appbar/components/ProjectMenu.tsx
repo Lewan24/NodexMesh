@@ -173,11 +173,15 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                     <button
                       className="project-action"
                       disabled={busy || (!!project.role && project.role !== 'Owner')}
-                      aria-label={`Permanently delete ${project.name}`}
-                      title="Delete permanently"
+                      aria-label={`Delete ${project.name}`}
+                      title="Delete project"
                       onClick={() => {
-                        if (window.confirm(`Permanently delete “${project.name}”? This cannot be undone.`))
-                          void run(() => props.onPurgeProject(project.id), `${project.name} permanently deleted.`);
+                        if (
+                          window.confirm(
+                            `Delete “${project.name}”? You cannot restore it yourself. Administrators can recover it for 30 days.`,
+                          )
+                        )
+                          void run(() => props.onPurgeProject(project.id), `${project.name} deleted.`);
                       }}
                     >
                       <Trash2 size={15} />
@@ -245,7 +249,9 @@ export default function ProjectMenu(props: ProjectMenuProps) {
               disabled={busy}
               onClick={() => {
                 if (
-                  window.confirm(`Permanently delete all ${visible.length} projects in Trash? This cannot be undone.`)
+                  window.confirm(
+                    `Delete all ${visible.length} projects in Trash? You cannot restore it yourself. Administrators can recover it for 30 days.`,
+                  )
                 ) {
                   void run(props.onEmptyTrash, 'Trash emptied.');
                 }
@@ -257,7 +263,7 @@ export default function ProjectMenu(props: ProjectMenuProps) {
           <p className="px-4 pb-3 text-xs opacity-65" role="status">
             {message ||
               (trash
-                ? 'Restore projects or empty the trash permanently. No automatic deletion.'
+                ? 'Deleted projects can be recovered by administrators for 30 days.'
                 : 'All changes are saved automatically.')}
           </p>
         </div>

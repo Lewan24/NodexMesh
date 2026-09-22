@@ -57,6 +57,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     selectProject,
     selectBoard,
     listBoards,
+    saveComments,
     createBoard,
     renameBoard,
     deleteBoard,
@@ -661,7 +662,17 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         {!readOnly && <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />}
 
         {readOnly ? (
-          <ReadOnlyBoard key={activeProjectId} items={activeProject.items} />
+          <ReadOnlyBoard
+            key={`${activeProjectId}:${activeProject.boardId}`}
+            items={activeProject.items}
+            inspect
+            canComment={activeProject.role === 'Commenter'}
+            currentUserId={userId}
+            onSaveComments={(itemId, comments) => saveComments(activeProjectId, itemId, comments)}
+            onOpenBoard={(boardId) => {
+              void selectBoard(activeProjectId, boardId).catch(() => toast.error('Could not open board.'));
+            }}
+          />
         ) : (
           <Canvas
             key={`${activeProjectId}:${activeProject.boardId ?? ''}`}

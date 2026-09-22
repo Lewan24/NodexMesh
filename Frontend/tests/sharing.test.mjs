@@ -1,4 +1,6 @@
 import test from 'node:test';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
@@ -18,6 +20,7 @@ const { WorkspaceController } = await server.ssrLoadModule('/src/features/projec
 const { toProjectView, flattenItems } = await server.ssrLoadModule('/src/features/projects/services/boardAdapter.ts');
 const { DEMO_USER_ID } = await server.ssrLoadModule('/src/entities/user/mockUsers.ts');
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
+const { default: ItemInspector } = await server.ssrLoadModule('/src/features/inspector/ItemInspector.tsx');
 await server.close();
 
 function workspace() {
@@ -155,3 +158,66 @@ for (const role of ['Viewer', 'Commenter', 'Editor']) {
     assert.equal(writes, 0);
   });
 }
+
+test('viewer inspector exposes details and comments without tag or position editing', () => {
+  const item = { ...createCanvasItem('note', 0, 0), tags: ['review'] };
+  const html = renderToStaticMarkup(
+    createElement(ItemInspector, {
+      items: [item],
+      readOnly: true,
+      canComment: false,
+      onUpdateAll: () => {},
+      onClose: () => {},
+    }),
+  );
+  assert.match(html, /Item details/);
+  assert.match(html, /#review/);
+  assert.match(html, /View comments/);
+  assert.doesNotMatch(html, /Add tag|Add comment/);
+  assert.match(html, /<button[^>]*disabled=""[^>]*hidden=""[^>]*title="Remove #review/);
+  assert.match(html, /disabled=""[^>]*class="w-full flex items-center justify-between/);
+});
+
+test('commenter saves through the comments endpoint without modifying item content', async () => {
+  const services = workspace();
+  const [snapshot] = await services.projects.list();
+  const item = createCanvasItem('note', 20, 30);
+  await services.boards.mutate(snapshot.project.id, snapshot.board.board.id, {
+    clientMutationId: crypto.randomUUID(),
+    expectedBoardRevision: snapshot.board.board.revision,
+    upserts: flattenItems([item], snapshot.board.board.id),
+    deletes: [],
+  });
+  const controller = new WorkspaceController({
+    ...services,
+    projects: {
+      ...services.projects,
+      list: async () =>
+        (await services.projects.list()).map((entry) => ({
+          ...entry,
+          project: { ...entry.project, role: 'Commenter' },
+        })),
+    },
+  });
+  await controller.load();
+  const before = controller.getSnapshot().projects.find((project) => project.id === snapshot.project.id).items;
+  const comment = { id: crypto.randomUUID(), text: 'Review this', status: 'open', createdAt: new Date().toISOString() };
+  await controller.saveComments(snapshot.project.id, item.id, [comment]);
+  const after = controller.getSnapshot().projects.find((project) => project.id === snapshot.project.id).items;
+  const saved = after.find((entry) => entry.id === item.id);
+  assert.equal(saved.comments[0].text, comment.text);
+  assert.equal(saved.comments[0].authorId, DEMO_USER_ID);
+  assert.deepEqual(
+    after.map((entry) => ({ ...entry, comments: [] })),
+    before.map((entry) => ({ ...entry, comments: [] })),
+  );
+  assert.equal(controller.getSnapshot().status, 'saved');
+  await controller.load();
+  assert.equal(
+    controller
+      .getSnapshot()
+      .projects.find((project) => project.id === snapshot.project.id)
+      .items.find((entry) => entry.id === item.id).comments.length,
+    1,
+  );
+});

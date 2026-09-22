@@ -108,6 +108,34 @@ export class WorkspaceController {
     this.publish({ projects: this.state.projects.filter((project) => project.id !== id) });
   }
 
+  async saveComments(projectId: string, itemId: string, comments: import('@/entities/board/types').ItemComment[]) {
+    await this.flush();
+    if (this.state.status !== 'saved') throw new Error('Resolve pending changes before commenting.');
+    const previous = this.confirmed.get(projectId);
+    if (!previous) throw new Error('Project is unavailable.');
+    const before = previous.board.comments.filter((comment) => comment.itemId === itemId && !comment.deletedAt);
+    const upserts = comments
+      .filter(
+        (comment) =>
+          !before.some(
+            (old) => old.id === comment.id && old.text === comment.text && old.status === (comment.status ?? 'open'),
+          ),
+      )
+      .map((comment) => ({ id: comment.id, text: comment.text, status: comment.status ?? 'open' }));
+    const deletes = before
+      .filter((old) => !comments.some((comment) => comment.id === old.id))
+      .map((comment) => comment.id);
+    if (!upserts.length && !deletes.length) return;
+    const board = await this.services.boards.saveComments(projectId, previous.board.board.id, itemId, {
+      expectedBoardRevision: previous.board.board.revision,
+      upserts,
+      deletes,
+    });
+    // A board switch during the request must not bring the previous board back.
+    if (this.confirmed.get(projectId)?.board.board.id === board.board.id)
+      this.acceptRemote(previous, { ...previous, board });
+  }
+
   async listBoards(projectId: string, signal?: AbortSignal) {
     return this.services.boards.list(projectId, signal);
   }

@@ -1,5 +1,6 @@
 import { memo, useCallback, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { useReadOnlyNavigation } from '../hooks/useReadOnlyNavigation';
+import ItemInspector from '@/features/inspector/ItemInspector';
 import type { BoardItem } from '@/entities/board/types';
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
@@ -11,7 +12,17 @@ import './sharing.css';
 const noop = () => {};
 
 /** Render existing block visuals without mounting any canvas mutation or history hooks. */
-const ReadOnlyBlock = memo(function ReadOnlyBlock({ item }: { item: BoardItem }) {
+const ReadOnlyBlock = memo(function ReadOnlyBlock({
+  item,
+  onSelect,
+  onOpenBoard,
+  selected,
+}: {
+  item: BoardItem;
+  onSelect?: (id: string) => void;
+  onOpenBoard?: (id: string) => void;
+  selected: boolean;
+}) {
   const stopBoardNavigation = (event: SyntheticEvent) => {
     // Keep native selection, scrolling, links and copy actions working without
     // allowing a block interaction to start canvas navigation.
@@ -35,8 +46,21 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({ item }: { item: BoardItem })
     <div
       className="read-only-block"
       aria-label={`${item.type} block (read-only)`}
-      onClickCapture={preventMutation}
+      tabIndex={onSelect ? 0 : undefined}
+      style={{ outline: selected ? '2px solid var(--color-accent)' : undefined }}
+      onKeyDown={(event) => {
+        if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          onSelect?.(item.id);
+        }
+      }}
+      onClickCapture={(event) => {
+        const nested = (event.target as Element).closest('[data-nested-item-id]');
+        onSelect?.(nested?.getAttribute('data-nested-item-id') ?? item.id);
+        preventMutation(event);
+      }}
       onDoubleClickCapture={(event) => {
+        if (item.type === 'board' && item.boardId) onOpenBoard?.(item.boardId);
         event.stopPropagation();
       }}
       onMouseDownCapture={stopBoardNavigation}
@@ -55,7 +79,8 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({ item }: { item: BoardItem })
       <BlockRenderer
         item={item}
         readOnly
-        isSelected={false}
+        isSelected={selected}
+        onOpenBoard={onOpenBoard}
         onUpdate={noop}
         onDelete={noop}
         onFitFrame={noop}
@@ -65,7 +90,33 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({ item }: { item: BoardItem })
   );
 });
 
-export default function ReadOnlyBoard({ items }: { items: BoardItem[] }) {
+export default function ReadOnlyBoard({
+  items,
+  inspect = false,
+  canComment = false,
+  currentUserId,
+  onSaveComments,
+  onOpenBoard,
+}: {
+  items: BoardItem[];
+  inspect?: boolean;
+  canComment?: boolean;
+  currentUserId?: string;
+  onSaveComments?: (itemId: string, comments: import('@/entities/board/types').ItemComment[]) => Promise<void>;
+  onOpenBoard?: (boardId: string) => void;
+}) {
+  const [selectedId, setSelectedId] = useState('');
+  const findItem = (entries: BoardItem[]): BoardItem | undefined => {
+    for (const item of entries) {
+      if (item.id === selectedId) return item;
+      if (item.type === 'column') {
+        const nested = findItem(item.items);
+        if (nested) return nested;
+      }
+    }
+    return undefined;
+  };
+  const selected = findItem(items);
   const navigation = useReadOnlyNavigation();
   const { camera, touchMode } = navigation;
   const zoom = camera.zoom;
@@ -106,7 +157,7 @@ export default function ReadOnlyBoard({ items }: { items: BoardItem[] }) {
   return (
     <section className="relative flex min-h-0 min-w-0 flex-1 flex-col" aria-label="Read-only board">
       <div className="flex items-center gap-3 p-2 border-b" style={{ background: 'var(--color-surface)' }}>
-        <span>Read-only</span>
+        <span>{canComment ? 'Commenter — select an item to comment' : 'Read-only'}</span>
         <button aria-label="Zoom out" onClick={() => navigation.zoomBy(1 / 1.25)}>
           -
         </button>
@@ -172,7 +223,15 @@ export default function ReadOnlyBoard({ items }: { items: BoardItem[] }) {
                   }}
                 >
                   <ItemWatcher itemId={item.id} onResize={handleItemResize}>
-                    <ReadOnlyBlock item={item} />
+                    <ReadOnlyBlock
+                      item={item}
+                      selected={
+                        selectedId === item.id ||
+                        (item.type === 'column' && item.items.some((child) => child.id === selectedId))
+                      }
+                      onSelect={inspect ? setSelectedId : undefined}
+                      onOpenBoard={onOpenBoard}
+                    />
                   </ItemWatcher>
                 </div>
               ))}
@@ -180,6 +239,19 @@ export default function ReadOnlyBoard({ items }: { items: BoardItem[] }) {
           </div>
         )}
       </div>
+      {inspect && selected && (
+        <ItemInspector
+          items={[selected]}
+          readOnly
+          canComment={canComment}
+          currentUserId={currentUserId}
+          onClose={() => setSelectedId('')}
+          onUpdateAll={async (updater) => {
+            if (!canComment || !onSaveComments) return;
+            await onSaveComments(selected.id, updater(selected).comments ?? []);
+          }}
+        />
+      )}
     </section>
   );
 }

@@ -13,7 +13,9 @@ const { createHttpWorkspace } = await server.ssrLoadModule('/src/features/projec
 const { WorkspaceController } = await server.ssrLoadModule('/src/features/projects/services/workspaceController.ts');
 const { createHttpClient } = await server.ssrLoadModule('/src/shared/api/httpClient.ts');
 const { createHttpAppearance } = await server.ssrLoadModule('/src/features/appearance/httpAppearance.ts');
-const { newPreferences, activeAppearance } = await server.ssrLoadModule('/src/features/appearance/appearanceModel.ts');
+const { newPreferences, activeAppearance, defaultAppearance } = await server.ssrLoadModule(
+  '/src/features/appearance/appearanceModel.ts',
+);
 await server.close();
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -314,4 +316,24 @@ test('HTTP project trash reloads without fetching inaccessible boards and restor
   await controller.flush();
   assert.equal(controller.getSnapshot().status, 'saved');
   assert.equal(controller.getSnapshot().projects[0].boardId, 'board');
+});
+
+test('appearance reset resolves canonical defaults while retaining project overrides', async () => {
+  const api = createHttpAppearance({
+    request: async () => ({
+      defaults: null,
+      projects: { project: { font: 'mono', light: null, dark: null, mode: null } },
+      uiFont: null,
+      uiPrimary: null,
+      uiSecondary: null,
+    }),
+  });
+  const preferences = await api.load();
+  assert.deepEqual(preferences.defaults, defaultAppearance);
+  assert.deepEqual(preferences.projects, { project: { font: 'mono' } });
+  assert.equal(preferences.paletteVersion, newPreferences().paletteVersion);
+  assert.equal(activeAppearance(preferences, 'project').font, 'mono');
+  assert.deepEqual(activeAppearance(preferences, 'project').light, defaultAppearance.light);
+  preferences.defaults.light.primary = '#000000';
+  assert.notEqual(defaultAppearance.light.primary, '#000000');
 });

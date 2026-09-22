@@ -332,8 +332,7 @@ public static class BoardEndpoints
         var userId = CurrentUserId(principal);
 
         var profile = await db.AppearanceProfiles.AsNoTracking()
-            .FirstOrDefaultAsync(a => a.UserId == userId, ct)
-            ?? throw new ApiException(404, "not_found", "Appearance profile not found.");
+            .FirstOrDefaultAsync(a => a.UserId == userId, ct);
 
         // Only overrides for projects the user can still see — a project they were removed
         // from shouldn't keep leaking its ID back through the theme payload.
@@ -346,7 +345,7 @@ public static class BoardEndpoints
         // Shaped to match the frontend's existing appearance JSON exactly.
         return TypedResults.Ok<object>(new
         {
-            defaults = new
+            defaults = profile is null ? null : new
             {
                 font = profile.Font,
                 mode = profile.Mode,
@@ -362,11 +361,11 @@ public static class BoardEndpoints
                     light = o.LightTheme is null ? null : (object)System.Text.Json.JsonDocument.Parse(o.LightTheme).RootElement,
                     dark = o.DarkTheme is null ? null : (object)System.Text.Json.JsonDocument.Parse(o.DarkTheme).RootElement
                 }),
-            uiFont = profile.UiFont,
-            uiPrimary = profile.UiPrimary,
-            uiSecondary = profile.UiSecondary,
-            inheritanceVersion = profile.InheritanceVersion,
-            paletteVersion = profile.PaletteVersion
+            uiFont = profile?.UiFont,
+            uiPrimary = profile?.UiPrimary,
+            uiSecondary = profile?.UiSecondary,
+            inheritanceVersion = profile?.InheritanceVersion,
+            paletteVersion = profile?.PaletteVersion
         });
     }
 

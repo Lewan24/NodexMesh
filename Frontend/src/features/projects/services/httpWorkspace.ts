@@ -111,6 +111,14 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
       },
     },
     boards: {
+      async saveComments(_projectId, boardId, itemId, changes) {
+        return parseBoardSnapshot(
+          await client.request(`/boards/${segment(boardId)}/items/${segment(itemId)}/comments`, {
+            method: 'PUT',
+            body: changes,
+          }),
+        );
+      },
       async list(projectId, signal) {
         const value = await client.request(`/projects/${segment(projectId)}/boards`, { signal });
         if (!Array.isArray(value)) fail(422, 'invalid_response', 'Invalid board collection.');

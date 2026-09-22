@@ -35,6 +35,8 @@ interface AuthContextValue {
   resetUserAppearance: (id: string, scope: AdminAppearanceResetScope) => Promise<void>;
   setUserBlocked: (id: string, blocked: boolean) => Promise<void>;
   updateAdminUser: (id: string, input: { email: string; displayName: string; isAdmin: boolean }) => Promise<AdminUser>;
+  restoreAdminProject: (id: string) => Promise<void>;
+  purgeAdminProject: (id: string) => Promise<void>;
   adminProjects: () => Promise<AdminProject[]>;
   addProjectMember: (projectId: string, email: string, role: AdminProjectMember['role']) => Promise<AdminProjectMember>;
   removeProjectMember: (projectId: string, userId: string) => Promise<void>;
@@ -149,10 +151,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (id: string, password: string) => authService.resetUserPassword(id, password),
     [],
   );
-  const resetUserAppearance = useCallback(
-    (id: string, scope: AdminAppearanceResetScope) => authService.resetUserAppearance(id, scope),
-    [],
-  );
+  const resetUserAppearance = useCallback(async (id: string, scope: AdminAppearanceResetScope) => {
+    await authService.resetUserAppearance(id, scope);
+    window.dispatchEvent(new CustomEvent('nodexmesh-appearance-reset', { detail: { userId: id } }));
+  }, []);
   const setUserBlocked = useCallback((id: string, blocked: boolean) => authService.setUserBlocked(id, blocked), []);
   const updateAdminUser = useCallback(
     async (id: string, input: { email: string; displayName: string; isAdmin: boolean }) => {
@@ -170,6 +172,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [currentUser?.id],
   );
+  const restoreAdminProject = useCallback((id: string) => authService.restoreAdminProject(id), []);
+  const purgeAdminProject = useCallback((id: string) => authService.purgeAdminProject(id), []);
   const adminProjects = useCallback(() => authService.adminProjects(), []);
   const addProjectMember = useCallback(
     (projectId: string, email: string, role: AdminProjectMember['role']) =>
@@ -205,6 +209,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserBlocked,
       updateAdminUser,
       adminProjects,
+      restoreAdminProject,
+      purgeAdminProject,
       addProjectMember,
       removeProjectMember,
       transferProjectOwner,
@@ -227,6 +233,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserBlocked,
       updateAdminUser,
       adminProjects,
+      restoreAdminProject,
+      purgeAdminProject,
       addProjectMember,
       removeProjectMember,
       transferProjectOwner,

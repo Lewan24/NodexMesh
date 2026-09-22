@@ -51,7 +51,7 @@ public static class ProjectEndpoints
         var userId = CurrentUserId(principal);
 
         var owned = await db.Projects.IgnoreQueryFilters().AsNoTracking()
-            .Where(p => p.OwnerId == userId)
+            .Where(p => p.OwnerId == userId && p.UserDeletedAt == null)
             .ToListAsync(ct);
 
         var shared = await db.Projects.AsNoTracking()
@@ -163,19 +163,15 @@ public static class ProjectEndpoints
     {
         var userId = CurrentUserId(principal);
         var project = await db.Projects.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(p => p.Id == projectId && p.OwnerId == userId, ct)
+            .FirstOrDefaultAsync(p => p.Id == projectId && p.OwnerId == userId && p.UserDeletedAt == null, ct)
             ?? throw new ApiException(404, "not_found", "Project not found.");
         if (project.DeletedAt is null)
             throw new ApiException(409, "not_trashed", "Move the project to trash before deleting it permanently.");
-        var boardIds = db.Boards.IgnoreQueryFilters().Where(b => b.ProjectId == projectId).Select(b => b.Id);
-        var itemIds = db.BoardItems.IgnoreQueryFilters().Where(i => boardIds.Contains(i.BoardId)).Select(i => i.Id);
-        db.ItemLinks.RemoveRange(await db.ItemLinks
-            .Where(link => itemIds.Contains(link.SourceItemId) || itemIds.Contains(link.TargetItemId)).ToListAsync(ct));
-        db.ProjectAppearanceOverrides.RemoveRange(await db.ProjectAppearanceOverrides
-            .Where(value => value.ProjectId == projectId).ToListAsync(ct));
-        db.UserClaims.RemoveRange(await db.UserClaims
-            .Where(claim => claim.ClaimType == "default_project" && claim.ClaimValue == projectId.ToString()).ToListAsync(ct));
-        db.Projects.Remove(project);
+        // User deletion retains the project for administrator recovery for 30 days.
+        project.UserDeletedAt ??= DateTimeOffset.UtcNow;
+        project.UpdatedAt = DateTimeOffset.UtcNow;
+        project.UpdatedBy = userId;
+        project.Revision++;
         await db.SaveChangesAsync(ct);
         return TypedResults.NoContent();
     }
@@ -189,7 +185,7 @@ public static class ProjectEndpoints
         // Ownership is still checked explicitly here since ProjectAccessService (correctly)
         // can't see soft-deleted projects.
         var project = await db.Projects.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(p => p.Id == projectId && p.OwnerId == userId, ct)
+            .FirstOrDefaultAsync(p => p.Id == projectId && p.OwnerId == userId && p.UserDeletedAt == null, ct)
             ?? throw new ApiException(404, "not_found", "Project not found.");
 
         project.DeletedAt = null;

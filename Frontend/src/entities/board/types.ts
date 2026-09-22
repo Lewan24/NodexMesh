@@ -180,6 +180,7 @@ export type LineLabelMode = 'horizontal' | 'follow-line';
 export type CommentStatus = 'open' | 'todo' | 'in-progress' | 'resolved';
 
 export interface ItemComment {
+  authorId?: string;
   id: string;
   text: string;
   status?: CommentStatus;
