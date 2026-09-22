@@ -35,6 +35,8 @@ export interface AuthService {
   resetUserAppearance(id: string, scope: AdminAppearanceResetScope): Promise<void>;
   setUserBlocked(id: string, blocked: boolean): Promise<void>;
   updateAdminUser(id: string, input: { email: string; displayName: string; isAdmin: boolean }): Promise<AdminUser>;
+  restoreAdminProject(id: string): Promise<void>;
+  purgeAdminProject(id: string): Promise<void>;
   adminProjects(): Promise<AdminProject[]>;
   addProjectMember(projectId: string, email: string, role: AdminProjectMember['role']): Promise<AdminProjectMember>;
   removeProjectMember(projectId: string, userId: string): Promise<void>;
@@ -166,6 +168,14 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
         isBlocked: false,
         createdAt: '',
       };
+    },
+    async restoreAdminProject() {
+      requireAdmin();
+      return fail(501, 'unsupported', 'Project administration is unavailable in demo mode.');
+    },
+    async purgeAdminProject() {
+      requireAdmin();
+      return fail(501, 'unsupported', 'Project administration is unavailable in demo mode.');
     },
     async adminProjects() {
       requireAdmin();

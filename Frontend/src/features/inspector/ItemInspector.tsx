@@ -12,7 +12,10 @@ import { getActiveCommentStatus, getUnresolvedCommentCount } from '@/features/co
 interface ItemInspectorProps {
   items: BoardItem[];
 
-  onUpdateAll: (updater: (item: BoardItem) => BoardItem) => void;
+  onUpdateAll: (updater: (item: BoardItem) => BoardItem) => void | Promise<void>;
+  readOnly?: boolean;
+  canComment?: boolean;
+  currentUserId?: string;
 
   onClose: () => void;
 }
@@ -22,7 +25,14 @@ interface TagSummary {
   count: number;
 }
 
-export default function ItemInspector({ items, onUpdateAll, onClose }: ItemInspectorProps) {
+export default function ItemInspector({
+  items,
+  onUpdateAll,
+  onClose,
+  readOnly = false,
+  canComment = !readOnly,
+  currentUserId,
+}: ItemInspectorProps) {
   const [newTag, setNewTag] = useState('');
 
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -156,6 +166,7 @@ export default function ItemInspector({ items, onUpdateAll, onClose }: ItemInspe
 
           <button
             type="button"
+            disabled={readOnly}
             onClick={handleLock}
             className="w-full flex items-center justify-between gap-3 rounded-xl px-3 py-2.5"
             style={{
@@ -214,6 +225,8 @@ export default function ItemInspector({ items, onUpdateAll, onClose }: ItemInspe
 
                   <button
                     type="button"
+                    disabled={readOnly}
+                    hidden={readOnly}
                     onClick={() => handleRemoveTag(tag)}
                     className="opacity-50 hover:opacity-100"
                     title={`Remove #${tag} from selected items`}
@@ -229,45 +242,47 @@ export default function ItemInspector({ items, onUpdateAll, onClose }: ItemInspe
             </p>
           )}
 
-          <div
-            className="flex items-center rounded-xl border overflow-hidden"
-            style={{
-              backgroundColor: 'var(--color-surface)',
+          {!readOnly && (
+            <div
+              className="flex items-center rounded-xl border overflow-hidden"
+              style={{
+                backgroundColor: 'var(--color-surface)',
 
-              borderColor: 'var(--color-border)',
-            }}
-          >
-            <span className="pl-3 text-sm" style={{ color: 'var(--color-text-faint)' }}>
-              #
-            </span>
-
-            <input
-              maxLength={64}
-              value={newTag}
-              onChange={(event) => setNewTag(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  handleAddTag();
-                }
-
-                if (event.key === 'Escape') {
-                  setNewTag('');
-                }
+                borderColor: 'var(--color-border)',
               }}
-              placeholder={items.length === 1 ? 'Add tag...' : `Add to ${items.length} items...`}
-              className="flex-1 min-w-0 bg-transparent outline-none px-1.5 py-2 text-xs"
-              style={{ color: 'var(--color-text-primary)' }}
-            />
-
-            <button
-              type="button"
-              onClick={handleAddTag}
-              className="px-3 py-2 text-xs font-semibold"
-              style={{ color: 'var(--color-accent)' }}
             >
-              Add
-            </button>
-          </div>
+              <span className="pl-3 text-sm" style={{ color: 'var(--color-text-faint)' }}>
+                #
+              </span>
+
+              <input
+                maxLength={64}
+                value={newTag}
+                onChange={(event) => setNewTag(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    handleAddTag();
+                  }
+
+                  if (event.key === 'Escape') {
+                    setNewTag('');
+                  }
+                }}
+                placeholder={items.length === 1 ? 'Add tag...' : `Add to ${items.length} items...`}
+                className="flex-1 min-w-0 bg-transparent outline-none px-1.5 py-2 text-xs"
+                style={{ color: 'var(--color-text-primary)' }}
+              />
+
+              <button
+                type="button"
+                onClick={handleAddTag}
+                className="px-3 py-2 text-xs font-semibold"
+                style={{ color: 'var(--color-accent)' }}
+              >
+                Add
+              </button>
+            </div>
+          )}
         </section>
 
         {/* Comments */}
@@ -298,7 +313,11 @@ export default function ItemInspector({ items, onUpdateAll, onClose }: ItemInspe
 
                 <div className="text-left">
                   <div className="text-xs font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                    {comments.length === 0 ? 'Add comment' : `${comments.length} comments`}
+                    {comments.length === 0
+                      ? canComment
+                        ? 'Add comment'
+                        : 'View comments'
+                      : `${comments.length} comments`}
                   </div>
 
                   {unresolvedCount > 0 && (
@@ -342,7 +361,14 @@ export default function ItemInspector({ items, onUpdateAll, onClose }: ItemInspe
       </aside>
 
       {single && commentsOpen && (
-        <CommentsDialog item={single} onUpdate={onUpdateAll} onClose={() => setCommentsOpen(false)} />
+        <CommentsDialog
+          item={single}
+          onUpdate={onUpdateAll}
+          onClose={() => setCommentsOpen(false)}
+          readOnly={!canComment}
+          ownCommentsOnly={readOnly}
+          currentUserId={currentUserId}
+        />
       )}
     </MobilePanel>
   );

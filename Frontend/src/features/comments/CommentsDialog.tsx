@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { useState } from 'react';
 import Modal from '@/shared/components/dialogs/Modal';
 
@@ -8,7 +9,10 @@ import { createComment } from '@/features/comments/utils/commentUtils';
 interface CommentsDialogProps {
   item: BoardItem;
 
-  onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
+  onUpdate: (updater: (item: BoardItem) => BoardItem) => void | Promise<void>;
+  readOnly?: boolean;
+  ownCommentsOnly?: boolean;
+  currentUserId?: string;
 
   onClose: () => void;
 }
@@ -20,28 +24,49 @@ const STATUSES: { value: CommentStatus; label: string }[] = [
   { value: 'resolved', label: 'Resolved' },
 ];
 
-export default function CommentsDialog({ item, onUpdate, onClose }: CommentsDialogProps) {
+export default function CommentsDialog({
+  item,
+  onUpdate,
+  onClose,
+  readOnly = false,
+  ownCommentsOnly = false,
+  currentUserId,
+}: CommentsDialogProps) {
+  const [busy, setBusy] = useState(false);
+  const save = async (updater: (item: BoardItem) => BoardItem) => {
+    if (readOnly || busy) return false;
+    setBusy(true);
+    try {
+      await onUpdate(updater);
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not save comments.');
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
   const [text, setText] = useState('');
 
   const [status, setStatus] = useState<CommentStatus>('open');
 
   const comments = item.comments ?? [];
 
-  const add = () => {
+  const add = async () => {
     const value = text.trim();
 
     if (!value) return;
 
     const comment = createComment(value, status);
 
-    onUpdate((current) => ({ ...current, comments: [...(current.comments ?? []), comment] }));
+    if (!(await save((current) => ({ ...current, comments: [...(current.comments ?? []), comment] })))) return;
 
     setText('');
     setStatus('open');
   };
 
   const updateComment = (id: string, patch: Partial<ItemComment>) => {
-    onUpdate((current) => ({
+    void save((current) => ({
       ...current,
 
       comments:
@@ -52,7 +77,7 @@ export default function CommentsDialog({ item, onUpdate, onClose }: CommentsDial
   };
 
   const deleteComment = (id: string) => {
-    onUpdate((current) => ({
+    void save((current) => ({
       ...current,
 
       comments: current.comments?.filter((comment) => comment.id !== id) ?? [],
@@ -127,6 +152,9 @@ export default function CommentsDialog({ item, onUpdate, onClose }: CommentsDial
               <CommentCard
                 key={comment.id}
                 comment={comment}
+                readOnly={
+                  readOnly || busy || (ownCommentsOnly && (!currentUserId || comment.authorId !== currentUserId))
+                }
                 onUpdate={(patch) => updateComment(comment.id, patch)}
                 onDelete={() => deleteComment(comment.id)}
               />
@@ -135,51 +163,53 @@ export default function CommentsDialog({ item, onUpdate, onClose }: CommentsDial
 
           {/* Add */}
 
-          <div className="p-4" style={{ borderTop: '1px solid var(--color-border-soft)' }}>
-            <textarea
-              rows={3}
-              value={text}
-              onChange={(event) => setText(event.target.value)}
-              placeholder="Write a comment..."
-              className="w-full resize-none rounded-xl border bg-transparent px-3 py-2.5 text-sm outline-none"
-              style={{
-                color: 'var(--color-text-primary)',
-                borderColor: 'var(--color-border)',
-                backgroundColor: 'var(--color-surface-alt)',
-              }}
-            />
-
-            <div className="flex items-center justify-between gap-3 mt-3">
-              <select
-                value={status}
-                onChange={(event) => setStatus(event.target.value as CommentStatus)}
-                className="h-9 rounded-xl border px-3 text-xs outline-none"
+          {!readOnly && (
+            <fieldset disabled={busy} className="p-4" style={{ borderTop: '1px solid var(--color-border-soft)' }}>
+              <textarea
+                rows={3}
+                value={text}
+                onChange={(event) => setText(event.target.value)}
+                placeholder="Write a comment..."
+                className="w-full resize-none rounded-xl border bg-transparent px-3 py-2.5 text-sm outline-none"
                 style={{
                   color: 'var(--color-text-primary)',
-
-                  backgroundColor: 'var(--color-surface-alt)',
-
                   borderColor: 'var(--color-border)',
+                  backgroundColor: 'var(--color-surface-alt)',
                 }}
-              >
-                {STATUSES.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              />
 
-              <button
-                type="button"
-                onClick={add}
-                disabled={!text.trim()}
-                className="h-9 px-4 rounded-xl text-xs font-semibold transition-opacity disabled:opacity-40"
-                style={{ color: 'white', backgroundColor: 'var(--color-accent)' }}
-              >
-                Add comment
-              </button>
-            </div>
-          </div>
+              <div className="flex items-center justify-between gap-3 mt-3">
+                <select
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value as CommentStatus)}
+                  className="h-9 rounded-xl border px-3 text-xs outline-none"
+                  style={{
+                    color: 'var(--color-text-primary)',
+
+                    backgroundColor: 'var(--color-surface-alt)',
+
+                    borderColor: 'var(--color-border)',
+                  }}
+                >
+                  {STATUSES.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={add}
+                  disabled={!text.trim()}
+                  className="h-9 px-4 rounded-xl text-xs font-semibold transition-opacity disabled:opacity-40"
+                  style={{ color: 'white', backgroundColor: 'var(--color-accent)' }}
+                >
+                  Add comment
+                </button>
+              </div>
+            </fieldset>
+          )}
         </div>
       </div>
     </Modal>
@@ -187,6 +217,7 @@ export default function CommentsDialog({ item, onUpdate, onClose }: CommentsDial
 }
 
 interface CommentCardProps {
+  readOnly: boolean;
   comment: ItemComment;
 
   onUpdate: (patch: Partial<ItemComment>) => void;
@@ -194,7 +225,7 @@ interface CommentCardProps {
   onDelete: () => void;
 }
 
-function CommentCard({ comment, onUpdate, onDelete }: CommentCardProps) {
+function CommentCard({ comment, onUpdate, onDelete, readOnly }: CommentCardProps) {
   const [editing, setEditing] = useState(false);
 
   const [text, setText] = useState(comment.text);
@@ -220,6 +251,7 @@ function CommentCard({ comment, onUpdate, onDelete }: CommentCardProps) {
     >
       <div className="flex items-center justify-between gap-2 mb-2">
         <select
+          disabled={readOnly}
           value={comment.status}
           onChange={(event) => onUpdate({ status: event.target.value as CommentStatus })}
           className="text-[10px] font-semibold uppercase tracking-wide rounded-lg px-2 py-1 outline-none"
@@ -238,6 +270,8 @@ function CommentCard({ comment, onUpdate, onDelete }: CommentCardProps) {
 
         <button
           type="button"
+          hidden={readOnly}
+          disabled={readOnly}
           onClick={onDelete}
           className="text-xs opacity-50 hover:opacity-100"
           style={{ color: 'var(--color-danger)' }}
@@ -246,7 +280,7 @@ function CommentCard({ comment, onUpdate, onDelete }: CommentCardProps) {
         </button>
       </div>
 
-      {editing ? (
+      {editing && !readOnly ? (
         <textarea
           autoFocus
           value={text}
@@ -260,7 +294,9 @@ function CommentCard({ comment, onUpdate, onDelete }: CommentCardProps) {
         <p
           className="text-sm whitespace-pre-wrap break-words cursor-text"
           style={{ color: 'var(--color-text-primary)' }}
-          onDoubleClick={() => setEditing(true)}
+          onDoubleClick={() => {
+            if (!readOnly) setEditing(true);
+          }}
         >
           {comment.text}
         </p>

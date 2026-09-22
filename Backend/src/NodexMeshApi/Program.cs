@@ -344,6 +344,7 @@ try
     app.MapAdminEndpoints();
     app.MapProjectEndpoints();
     app.MapBoardEndpoints();
+    app.MapCommentEndpoints();
     app.MapPublicEndpoints();
 
     app.Run();

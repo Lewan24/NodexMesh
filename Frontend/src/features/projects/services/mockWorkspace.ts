@@ -166,7 +166,7 @@ export function createMockWorkspace(
   }
   function find(db: Database, id: string): ProjectSnapshot {
     return (
-      db.projects.find((p) => p.project.id === id && p.project.ownerId === userId) ??
+      db.projects.find((p) => p.project.id === id && p.project.ownerId === userId && !p.project.userDeletedAt) ??
       fail(404, 'not_found', 'Project not found.')
     );
   }
@@ -254,7 +254,7 @@ export function createMockWorkspace(
             }
             persist(db);
           }
-          return structuredClone(db.projects);
+          return structuredClone(db.projects.filter((entry) => !entry.project.userDeletedAt));
         });
       },
       create(input) {
@@ -300,12 +300,52 @@ export function createMockWorkspace(
           const snapshot = find(db, id);
           if (!snapshot.project.deletedAt || snapshot.project.revision !== expectedRevision)
             fail(409, 'revision_conflict', 'Only an unchanged trashed project can be removed.');
-          db.projects = db.projects.filter((p) => p.project.id !== id);
-          delete db.boards[id];
+          snapshot.project = { ...touch(snapshot.project, userId), userDeletedAt: new Date().toISOString() };
         });
       },
     },
     boards: {
+      saveComments(projectId, boardId, itemId, changes) {
+        return transaction(createId(), { action: 'comments', projectId, boardId, itemId, changes }, (db) => {
+          const project = find(db, projectId).project;
+          if (project.deletedAt || project.role === 'Viewer') fail(403, 'forbidden', 'Commenting is unavailable.');
+          const board = findBoard(db, projectId, boardId);
+          const item = board.items.find((entry) => entry.id === itemId && !entry.deletedAt);
+          if (!item) fail(404, 'not_found', 'Item not found.');
+          if (board.board.revision !== changes.expectedBoardRevision)
+            fail(409, 'revision_mismatch', 'Comments changed. Refresh and try again.');
+          for (const id of [...changes.upserts.map((comment) => comment.id), ...changes.deletes]) {
+            const previous = board.comments.find((comment) => comment.id === id);
+            if (previous && (previous.itemId !== itemId || previous.deletedAt))
+              fail(404, 'not_found', 'Comment not found.');
+            if (previous && project.role === 'Commenter' && previous.createdBy !== userId)
+              fail(403, 'forbidden', 'You can only change your own comments.');
+          }
+          for (const value of changes.upserts) {
+            if (
+              !value.text.trim() ||
+              value.text.length > 10000 ||
+              !['open', 'todo', 'in-progress', 'resolved'].includes(value.status)
+            )
+              fail(422, 'invalid_comment', 'Invalid comment.');
+            const previous = board.comments.find((comment) => comment.id === value.id);
+            board.comments = board.comments.filter((comment) => comment.id !== value.id);
+            board.comments.push({
+              ...(previous ? touch(previous, userId) : audit(userId)),
+              ...value,
+              status: value.status as import('@/entities/board/types').CommentStatus,
+              itemId,
+            });
+          }
+          const deletedAt = new Date().toISOString();
+          board.comments = board.comments.map((comment) =>
+            changes.deletes.includes(comment.id) ? { ...touch(comment, userId), deletedAt } : comment,
+          );
+          board.board = touch(board.board, userId);
+          board.items = board.items.map((entry) => (entry.id === itemId ? touch(entry, userId) : entry));
+          return board;
+        });
+      },
       async list(projectId, signal) {
         signal?.throwIfAborted();
         const db = read();

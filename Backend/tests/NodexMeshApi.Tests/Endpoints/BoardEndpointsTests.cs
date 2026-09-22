@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
 using NodexMeshApi.Dtos;
+using static NodexMeshApi.Endpoints.CommentEndpoints;
 using NodexMeshApi.Tests.Infrastructure;
 using Xunit;
 
@@ -29,6 +30,44 @@ public class BoardEndpointsTests : IDisposable
         new ItemWriteDto(itemId ?? Guid.NewGuid(), boardId, null, null, 0, 0, 0, 100, 100, 0, false,
             "note", 1, EmptyObject(), NoteData()),
         ExpectedRevision: null, Links: [], Comments: [], Tags: []);
+
+    [Fact]
+    public async Task Commenter_CanManageOwnComments_ButViewerAndOtherAuthorsCannotWrite()
+    {
+        var (owner, _, _, _) = await _factory.CreateSeededUserAsync();
+        var (project, board) = await CreateProjectWithBoardAsync(owner);
+        var (commenter, commenterId, commenterEmail, _) = await _factory.CreateSeededUserAsync();
+        var (viewer, _, viewerEmail, _) = await _factory.CreateSeededUserAsync();
+        var (other, _, otherEmail, _) = await _factory.CreateSeededUserAsync();
+        foreach (var (email, role) in new[] { (commenterEmail, "Commenter"), (viewerEmail, "Viewer"), (otherEmail, "Commenter") })
+            (await owner.PostAsJsonAsync($"/api/v1/projects/{project.Id}/members", new InviteMemberRequest(email, role))).EnsureSuccessStatusCode();
+        var item = NoteInsert(board.Id);
+        (await owner.PostAsJsonAsync($"/api/v1/boards/{board.Id}/mutations", new BoardMutationDto(Guid.NewGuid(), board.Revision, [item], []))).EnsureSuccessStatusCode();
+        var before = (await owner.GetFromJsonAsync<BoardSnapshotDto>($"/api/v1/boards/{board.Id}"))!;
+        var path = $"/api/v1/boards/{board.Id}/items/{item.Item.Id}/comments";
+        var commentId = Guid.NewGuid();
+        var request = new UpdateCommentsRequest(before.Board.Revision, [new CommentWrite(commentId, "Review this", "open")], []);
+        (await viewer.PutAsJsonAsync(path, request)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var added = await commenter.PutAsJsonAsync(path, request);
+        added.EnsureSuccessStatusCode();
+        var after = (await added.Content.ReadFromJsonAsync<BoardSnapshotDto>())!;
+        after.Comments.Should().ContainSingle(c => c.Id == commentId && c.CreatedBy == commenterId);
+        after.Items.Single().Data.GetRawText().Should().Be(before.Items.Single().Data.GetRawText());
+        (await commenter.PutAsJsonAsync(path, request)).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var edit = new UpdateCommentsRequest(after.Board.Revision, [new CommentWrite(commentId, "Reviewed", "resolved")], []);
+        (await other.PutAsJsonAsync(path, edit)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var edited = await commenter.PutAsJsonAsync(path, edit);
+        edited.EnsureSuccessStatusCode();
+        var updated = (await edited.Content.ReadFromJsonAsync<BoardSnapshotDto>())!;
+        updated.Comments.Single().Status.Should().Be("resolved");
+        var deletion = new UpdateCommentsRequest(updated.Board.Revision, [], [commentId]);
+        (await other.PutAsJsonAsync(path, deletion)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var deleted = await commenter.PutAsJsonAsync(path, deletion);
+        deleted.EnsureSuccessStatusCode();
+        (await deleted.Content.ReadFromJsonAsync<BoardSnapshotDto>())!.Comments.Should().BeEmpty();
+        (await owner.DeleteAsync($"/api/v1/projects/{project.Id}")).EnsureSuccessStatusCode();
+        (await commenter.PutAsJsonAsync(path, edit)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
 
     [Fact]
     public async Task GetSnapshot_ForABoardTheCallerCannotSee_Returns404()

@@ -24,6 +24,7 @@ public static class ProjectEndpoints
         group.MapPatch("/{projectId:guid}", UpdateAsync);
         group.MapDelete("/{projectId:guid}", TrashAsync);
         group.MapPost("/{projectId:guid}/restore", RestoreAsync);
+        group.MapDelete("/{projectId:guid}/permanent", PurgeAsync);
 
         group.MapPost("/{projectId:guid}/tags", CreateTagAsync);
 
@@ -49,8 +50,8 @@ public static class ProjectEndpoints
     {
         var userId = CurrentUserId(principal);
 
-        var owned = await db.Projects.AsNoTracking()
-            .Where(p => p.OwnerId == userId)
+        var owned = await db.Projects.IgnoreQueryFilters().AsNoTracking()
+            .Where(p => p.OwnerId == userId && p.UserDeletedAt == null)
             .ToListAsync(ct);
 
         var shared = await db.Projects.AsNoTracking()
@@ -157,6 +158,24 @@ public static class ProjectEndpoints
         return TypedResults.NoContent();
     }
 
+    private static async Task<NoContent> PurgeAsync(
+        Guid projectId, ClaimsPrincipal principal, AppDbContext db, CancellationToken ct)
+    {
+        var userId = CurrentUserId(principal);
+        var project = await db.Projects.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.Id == projectId && p.OwnerId == userId && p.UserDeletedAt == null, ct)
+            ?? throw new ApiException(404, "not_found", "Project not found.");
+        if (project.DeletedAt is null)
+            throw new ApiException(409, "not_trashed", "Move the project to trash before deleting it permanently.");
+        // User deletion retains the project for administrator recovery for 30 days.
+        project.UserDeletedAt ??= DateTimeOffset.UtcNow;
+        project.UpdatedAt = DateTimeOffset.UtcNow;
+        project.UpdatedBy = userId;
+        project.Revision++;
+        await db.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
+    }
+
     private static async Task<NoContent> RestoreAsync(
         Guid projectId, ClaimsPrincipal principal, AppDbContext db, CancellationToken ct)
     {
@@ -166,7 +185,7 @@ public static class ProjectEndpoints
         // Ownership is still checked explicitly here since ProjectAccessService (correctly)
         // can't see soft-deleted projects.
         var project = await db.Projects.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(p => p.Id == projectId && p.OwnerId == userId, ct)
+            .FirstOrDefaultAsync(p => p.Id == projectId && p.OwnerId == userId && p.UserDeletedAt == null, ct)
             ?? throw new ApiException(404, "not_found", "Project not found.");
 
         project.DeletedAt = null;

@@ -14,6 +14,7 @@ public sealed class Project
     public Guid CreatedBy { get; set; }
     public Guid UpdatedBy { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
+    public DateTimeOffset? UserDeletedAt { get; set; }
 
     public List<Board> Boards { get; set; } = [];
     public List<ProjectMember> Members { get; set; } = [];

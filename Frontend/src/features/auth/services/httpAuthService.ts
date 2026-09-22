@@ -149,6 +149,12 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
     async updateAdminUser(id, input) {
       return admin(`/admin/users/${encodeURIComponent(id)}`, { method: 'PUT', body: input });
     },
+    async restoreAdminProject(id) {
+      await admin(`/admin/projects/${encodeURIComponent(id)}/restore`, { method: 'POST' });
+    },
+    async purgeAdminProject(id) {
+      await admin(`/admin/projects/${encodeURIComponent(id)}/permanent`, { method: 'DELETE' });
+    },
     async adminProjects() {
       return admin('/admin/projects');
     },

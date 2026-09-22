@@ -102,7 +102,9 @@ export function useReadOnlyNavigation() {
       moved.current = false;
       if (
         event.target instanceof Element &&
-        event.target.closest('a, button, input, select, textarea, video, audio, iframe, pre, code, .select-none')
+        event.target.closest(
+          'a, button, input, select, textarea, video, audio, iframe, pre, code, .select-none, .read-only-block',
+        )
       )
         return;
       event.preventDefault();

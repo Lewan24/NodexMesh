@@ -52,7 +52,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(x => x.Color).HasMaxLength(9);
             e.Property(x => x.Revision).IsConcurrencyToken();
             e.HasIndex(x => x.OwnerId);
-            e.HasQueryFilter(x => x.DeletedAt == null);
+            e.HasIndex(x => x.UserDeletedAt);
+            e.HasQueryFilter(x => x.DeletedAt == null && x.UserDeletedAt == null);
         });
 
         // ---------------- ProjectMember ----------------
