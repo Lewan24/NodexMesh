@@ -37,7 +37,8 @@ public sealed record AdminProjectMemberDto(Guid UserId, string Email, string Dis
 
 public sealed record AdminProjectDto(
     Guid Id, string Name, Guid OwnerId, string OwnerEmail, DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt, DateTimeOffset? DeletedAt, List<AdminProjectMemberDto> Members);
+    DateTimeOffset UpdatedAt, DateTimeOffset? DeletedAt, List<AdminProjectMemberDto> Members,
+    DateTimeOffset? UserDeletedAt = null, string Status = "active");
 
 public sealed record AdminAddProjectMemberRequest(
     [property: Required, EmailAddress, MaxLength(256)] string Email,

@@ -908,7 +908,9 @@ export default function Canvas({
 
   const customCssParent = project.items.find((item) => item.id === customCssTarget?.columnId);
   const customCssItem = customCssTarget?.columnId
-    ? customCssParent?.type === 'column' ? customCssParent.items.find((item) => item.id === customCssTarget.itemId) : undefined
+    ? customCssParent?.type === 'column'
+      ? customCssParent.items.find((item) => item.id === customCssTarget.itemId)
+      : undefined
     : project.items.find((item) => item.id === customCssTarget?.itemId);
   const cssSelection = selectedColumnItem?.item ?? (selectedItems.length === 1 ? selectedItems[0] : undefined);
   const cssSelectionLocked = collaboratorLockedIds.has(selectedColumnItem?.columnId ?? cssSelection?.id ?? '');
@@ -1068,16 +1070,26 @@ export default function Canvas({
             if (customCssTarget.columnId) {
               if (selectedColumnItem?.item.id === customCssTarget.itemId)
                 handleUpdateColumnItem(customCssTarget.columnId, updater);
-              else onUpdateItem(customCssTarget.columnId, (column) => column.type === 'column'
-                ? { ...column, items: column.items.map((item) => item.id === customCssTarget.itemId ? updater(item) : item) }
-                : column);
+              else
+                onUpdateItem(customCssTarget.columnId, (column) =>
+                  column.type === 'column'
+                    ? {
+                        ...column,
+                        items: column.items.map((item) => (item.id === customCssTarget.itemId ? updater(item) : item)),
+                      }
+                    : column,
+                );
             } else onUpdateItem(customCssTarget.itemId, updater);
           }}
         />
       )}
       {contextMenu && (
         <CanvasContextMenu
-          onCustomCss={cssSelection && !cssSelectionLocked ? () => setCustomCssTarget({ itemId: cssSelection.id, columnId: selectedColumnItem?.columnId }) : undefined}
+          onCustomCss={
+            cssSelection && !cssSelectionLocked
+              ? () => setCustomCssTarget({ itemId: cssSelection.id, columnId: selectedColumnItem?.columnId })
+              : undefined
+          }
           onCopyStyle={() => {
             const source = selectedColumnItem?.item ?? selectedItems[0];
             if (source) setStyleClipboard(copyItemStyle(source));

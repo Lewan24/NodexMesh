@@ -86,6 +86,7 @@ export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard 
         </div>
         <button
           type="button"
+          data-read-only-action="true"
           className="mt-5 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
           style={{
             color: appearance.textColor,

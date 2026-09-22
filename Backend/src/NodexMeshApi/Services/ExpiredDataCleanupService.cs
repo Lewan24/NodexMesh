@@ -72,6 +72,8 @@ public sealed class ExpiredDataCleanupService(
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var now = clock.GetUtcNow();
+        var projects = await ProjectDeletionService.CleanExpiredAsync(db, now, ct);
+        if (projects > 0) logger.LogInformation("Permanently removed {Count} projects after 30 days of user deletion.", projects);
 
         // Cut-offs are computed here rather than inside the predicates: EF translates a
         // captured constant cleanly, but `now - someTimeSpan` inside an expression tree

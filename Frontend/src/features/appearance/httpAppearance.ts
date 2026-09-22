@@ -1,5 +1,5 @@
 import type { HttpClient } from '@/shared/api/httpClient';
-import type { AppearancePreferences } from './appearanceModel';
+import { newPreferences, type AppearancePreferences } from './appearanceModel';
 import { fail } from '@/shared/api/errors';
 
 export function createHttpAppearance(client: HttpClient) {
@@ -20,7 +20,7 @@ export function createHttpAppearance(client: HttpClient) {
           },
         ]),
       );
-      return { ...preferences, projects };
+      return preferences.defaults == null ? { ...newPreferences(), projects } : { ...preferences, projects };
     },
     async save(previous: AppearancePreferences, next: AppearancePreferences) {
       if (JSON.stringify({ ...previous, projects: {} }) !== JSON.stringify({ ...next, projects: {} })) {

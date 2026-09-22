@@ -95,6 +95,47 @@ export class WorkspaceController {
 
   constructor(private readonly services: WorkspaceServices) {}
 
+  addImportedProject(snapshot: ProjectSnapshot) {
+    this.confirmed.set(snapshot.project.id, snapshot);
+    this.publish({ projects: [...this.state.projects, toProjectView(snapshot)] });
+  }
+
+  async purgeProject(id: string) {
+    const previous = this.confirmed.get(id);
+    if (!previous?.project.deletedAt) throw new Error('Only trashed projects can be deleted permanently.');
+    await this.services.projects.purge(id, previous.project.revision, createId());
+    this.confirmed.delete(id);
+    this.publish({ projects: this.state.projects.filter((project) => project.id !== id) });
+  }
+
+  async saveComments(projectId: string, itemId: string, comments: import('@/entities/board/types').ItemComment[]) {
+    await this.flush();
+    if (this.state.status !== 'saved') throw new Error('Resolve pending changes before commenting.');
+    const previous = this.confirmed.get(projectId);
+    if (!previous) throw new Error('Project is unavailable.');
+    const before = previous.board.comments.filter((comment) => comment.itemId === itemId && !comment.deletedAt);
+    const upserts = comments
+      .filter(
+        (comment) =>
+          !before.some(
+            (old) => old.id === comment.id && old.text === comment.text && old.status === (comment.status ?? 'open'),
+          ),
+      )
+      .map((comment) => ({ id: comment.id, text: comment.text, status: comment.status ?? 'open' }));
+    const deletes = before
+      .filter((old) => !comments.some((comment) => comment.id === old.id))
+      .map((comment) => comment.id);
+    if (!upserts.length && !deletes.length) return;
+    const board = await this.services.boards.saveComments(projectId, previous.board.board.id, itemId, {
+      expectedBoardRevision: previous.board.board.revision,
+      upserts,
+      deletes,
+    });
+    // A board switch during the request must not bring the previous board back.
+    if (this.confirmed.get(projectId)?.board.board.id === board.board.id)
+      this.acceptRemote(previous, { ...previous, board });
+  }
+
   async listBoards(projectId: string, signal?: AbortSignal) {
     return this.services.boards.list(projectId, signal);
   }
@@ -152,7 +193,16 @@ export class WorkspaceController {
   private async refreshCurrentBoard(projectId: string) {
     const previous = this.confirmed.get(projectId);
     if (!previous) return;
-    const board = await this.services.boards.get(projectId, previous.board.board.id);
+    const boards = await this.services.boards.list(projectId);
+    const current =
+      boards.find((board) => board.id === previous.board.board.id && !board.deletedAt) ??
+      boards.find((board) => !board.deletedAt);
+    if (!current) return;
+    if (current.id !== previous.board.board.id) {
+      await this.switchBoard(projectId, current.id);
+      return;
+    }
+    const board = await this.services.boards.get(projectId, current.id);
     if (board.board.revision !== previous.board.board.revision) this.acceptRemote(previous, { ...previous, board });
   }
 
@@ -318,6 +368,13 @@ export class WorkspaceController {
         return async () => {
           try {
             previous.project = await this.services.projects.update(desired.id, input);
+            if (previous.board.board.id === previous.project.id && !previous.project.deletedAt) {
+              const boards = await this.services.boards.list(desired.id);
+              const first = boards.find((board) => !board.deletedAt);
+              if (!first) throw new Error('Restored project has no active board.');
+              const board = await this.services.boards.get(desired.id, first.id);
+              this.acceptRemote(previous, { ...previous, board });
+            }
           } catch (error) {
             if (
               !(error instanceof ApiError) ||

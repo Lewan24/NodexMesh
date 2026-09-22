@@ -33,6 +33,8 @@ export interface AdminProjectMember {
 }
 
 export interface AdminProject {
+  userDeletedAt?: string | null;
+  status?: 'active' | 'trashed' | 'userdeleted';
   id: string;
   name: string;
   ownerId: string;

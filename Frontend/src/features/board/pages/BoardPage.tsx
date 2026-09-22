@@ -5,7 +5,7 @@ import { flushPendingChanges } from '@/shared/api/pendingChanges';
 import { createId } from '@/shared/lib/createId';
 const AppearanceDialog = lazy(() => import('@/features/appearance/AppearanceDialog'));
 import { useTheme } from '@/app/providers/ThemeProvider';
-import { useCallback, useState, useEffect, lazy, Suspense } from 'react';
+import { useCallback, useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -57,6 +57,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     selectProject,
     selectBoard,
     listBoards,
+    saveComments,
     createBoard,
     renameBoard,
     deleteBoard,
@@ -71,11 +72,16 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     trashProject,
     restoreProject,
     emptyTrash,
+    purgeProject,
+    exportProject,
+    defaultProjectId,
+    setDefaultProject,
   } = useProjects(userId);
 
   const [boardTrail, setBoardTrail] = useState<Array<{ id: string; name: string }>>([]);
   const [boards, setBoards] = useState<BoardRecord[]>([]);
   const [boardNavigationVisible, setBoardNavigationVisible] = useState(true);
+  const trashRequest = useRef(0);
   const [trashOpen, setTrashOpen] = useState(false);
   const [trashLoading, setTrashLoading] = useState(false);
   const [trashedItems, setTrashedItems] = useState<TrashedItemRecord[]>([]);
@@ -98,6 +104,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     };
   }, [activeProject?.id, listBoards, status]);
   useEffect(() => {
+    ++trashRequest.current;
     setTrashOpen(false);
     setTrashedItems([]);
   }, [activeProject?.id]);
@@ -263,13 +270,15 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
 
   const refreshItemTrash = useCallback(async () => {
     if (!activeProject) return;
+    const request = ++trashRequest.current;
     setTrashLoading(true);
     try {
-      setTrashedItems(await listItemTrash(activeProject.id));
+      const items = await listItemTrash(activeProject.id);
+      if (request === trashRequest.current) setTrashedItems(items);
     } catch {
-      toast.error('Could not load the item trash.');
+      if (request === trashRequest.current) toast.error('Could not load the item trash.');
     } finally {
-      setTrashLoading(false);
+      if (request === trashRequest.current) setTrashLoading(false);
     }
   }, [activeProject, listItemTrash]);
 
@@ -326,27 +335,36 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     async (entry: TrashedItemRecord) => {
       if (!activeProject || !window.confirm('Permanently delete this item? This cannot be undone.')) return;
       try {
+        ++trashRequest.current;
         await purgeTrashItem(activeProject.id, entry.item.id);
+        ++trashRequest.current;
+        setTrashLoading(false);
         const linkedBoardId = linkedBoardIdFromTrash(entry);
         if (linkedBoardId) setBoards((boards) => boards.filter((board) => board.id !== linkedBoardId));
         setTrashedItems((items) => items.filter((item) => item.item.id !== entry.item.id));
+        await refreshItemTrash();
       } catch {
+        setTrashLoading(false);
         toast.error('Could not permanently delete this item.');
       }
     },
-    [activeProject, purgeTrashItem],
+    [activeProject, purgeTrashItem, refreshItemTrash],
   );
 
   const handleEmptyItemTrash = useCallback(async () => {
     if (!activeProject || !window.confirm('Permanently delete every item in this project trash?')) return;
     try {
+      ++trashRequest.current;
       await emptyItemTrash(activeProject.id);
+      ++trashRequest.current;
+      setTrashLoading(false);
       const linkedBoardIds = new Set(
         trashedItems.map(linkedBoardIdFromTrash).filter((id): id is string => typeof id === 'string'),
       );
       setBoards((boards) => boards.filter((board) => !linkedBoardIds.has(board.id)));
       setTrashedItems([]);
     } catch {
+      setTrashLoading(false);
       toast.error('Could not empty the item trash.');
     }
   }, [activeProject, emptyItemTrash, trashedItems]);
@@ -496,6 +514,10 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
           resetBoardView();
         }}
         onEmptyTrash={emptyTrash}
+        onPurgeProject={purgeProject}
+        onExportProject={exportProject}
+        defaultProjectId={defaultProjectId}
+        onSetDefaultProject={setDefaultProject}
         onRestoreProject={(id) => {
           restoreProject(id);
           resetBoardView();
@@ -640,7 +662,17 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         {!readOnly && <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />}
 
         {readOnly ? (
-          <ReadOnlyBoard key={activeProjectId} items={activeProject.items} />
+          <ReadOnlyBoard
+            key={`${activeProjectId}:${activeProject.boardId}`}
+            items={activeProject.items}
+            inspect
+            canComment={activeProject.role === 'Commenter'}
+            currentUserId={userId}
+            onSaveComments={(itemId, comments) => saveComments(activeProjectId, itemId, comments)}
+            onOpenBoard={(boardId) => {
+              void selectBoard(activeProjectId, boardId).catch(() => toast.error('Could not open board.'));
+            }}
+          />
         ) : (
           <Canvas
             key={`${activeProjectId}:${activeProject.boardId ?? ''}`}

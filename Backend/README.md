@@ -123,3 +123,22 @@ strict DTO validation. The first startup creates the configured administrator; l
 `Admin:Password` empty to generate a random password and print it once in the API logs.
 See the repository [README](../README.md) for the current API surface, security posture,
 roadmap, and deployment guidance.
+
+### Project recovery and collaboration
+
+User deletion now has three states: active, trashed, and user-deleted. Trashed
+projects remain in the owner's trash. Deleting from trash hides a project from
+all users while retaining it for administrators. Admins can restore either
+inactive state or permanently delete it; ownership and membership changes are
+disabled until restoration. The hourly cleanup service permanently removes
+user-deleted projects after 30 days (up to 100 per run). Apply the
+`AddUserDeletedProjects` migration when updating; normal startup applies migrations.
+
+Authenticated Viewers can select items and inspect tags and comments. Commenters
+can additionally add comments and edit/delete their own comments. Comment writes
+use `/api/v1/boards/{boardId}/items/{itemId}/comments`, with optimistic board
+revision checks. Canvas mutations still require Editor access.
+
+Admin appearance resets remove saved defaults so the frontend uses
+`defaultAppearance` from `appearanceModel.ts`. Project override resets remain
+independent. Active sessions reload appearance when focused.

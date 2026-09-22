@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ChevronDown, Plus, Pencil, Trash2, RotateCcw, Check, X, Folder } from 'lucide-react';
+import { ChevronDown, Plus, Pencil, Trash2, RotateCcw, Check, X, Folder, Star } from 'lucide-react';
 import type { Project } from '@/entities/project/types';
 import { useOutsideClick } from '../hooks/useOutsideClick';
 import './projectMenu.css';
@@ -14,11 +14,26 @@ interface ProjectMenuProps {
   onAddProject: (name: string) => void;
   onRenameProject: (id: string, name: string) => void;
   onTrashProject: (id: string) => void;
-  onEmptyTrash: () => void;
+  onEmptyTrash: () => Promise<void>;
+  onPurgeProject: (id: string) => Promise<void>;
+  defaultProjectId: string;
+  onSetDefaultProject: (id: string) => Promise<void>;
   onRestoreProject: (id: string) => void;
 }
 export default function ProjectMenu(props: ProjectMenuProps) {
   const { projects, activeProjectId, open, onToggle, onClose } = props;
+  const [busy, setBusy] = useState(false);
+  const run = async (action: () => Promise<void>, success: string) => {
+    setBusy(true);
+    try {
+      await action();
+      setMessage(success);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Operation failed.');
+    } finally {
+      setBusy(false);
+    }
+  };
   const [trash, setTrash] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -142,20 +157,57 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                   </span>
                 </button>
                 {trash ? (
-                  <button
-                    className="project-action"
-                    aria-label={`Restore ${project.name}`}
-                    title="Restore project"
-                    onClick={() => {
-                      props.onRestoreProject(project.id);
-                      setMessage(`${project.name} restored`);
-                      setTrash(false);
-                    }}
-                  >
-                    <RotateCcw size={16} />
-                  </button>
+                  <>
+                    <button
+                      className="project-action"
+                      aria-label={`Restore ${project.name}`}
+                      title="Restore project"
+                      onClick={() => {
+                        props.onRestoreProject(project.id);
+                        setMessage(`${project.name} restored`);
+                        setTrash(false);
+                      }}
+                    >
+                      <RotateCcw size={16} />
+                    </button>
+                    <button
+                      className="project-action"
+                      disabled={busy || (!!project.role && project.role !== 'Owner')}
+                      aria-label={`Delete ${project.name}`}
+                      title="Delete project"
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            `Delete “${project.name}”? You cannot restore it yourself. Administrators can recover it for 30 days.`,
+                          )
+                        )
+                          void run(() => props.onPurgeProject(project.id), `${project.name} deleted.`);
+                      }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </>
                 ) : (
                   <>
+                    <button
+                      className="project-action"
+                      disabled={busy}
+                      aria-label={`${props.defaultProjectId === project.id ? 'Clear default project' : 'Set as default project'}: ${project.name}`}
+                      title={
+                        props.defaultProjectId === project.id
+                          ? 'Default project — click to clear'
+                          : 'Open this project after login'
+                      }
+                      aria-pressed={props.defaultProjectId === project.id}
+                      onClick={() =>
+                        void run(
+                          () => props.onSetDefaultProject(props.defaultProjectId === project.id ? '' : project.id),
+                          'Default project updated.',
+                        )
+                      }
+                    >
+                      <Star size={15} fill={props.defaultProjectId === project.id ? 'currentColor' : 'none'} />
+                    </button>
                     <button
                       className="project-action"
                       disabled={project.role === 'Viewer' || project.role === 'Commenter'}
@@ -194,12 +246,14 @@ export default function ProjectMenu(props: ProjectMenuProps) {
           {trash && visible.length > 0 && (
             <button
               className="project-tab m-3 text-rose-400"
+              disabled={busy}
               onClick={() => {
                 if (
-                  window.confirm(`Permanently delete all ${visible.length} projects in Trash? This cannot be undone.`)
+                  window.confirm(
+                    `Delete all ${visible.length} projects in Trash? You cannot restore it yourself. Administrators can recover it for 30 days.`,
+                  )
                 ) {
-                  props.onEmptyTrash();
-                  setMessage('Trash emptied.');
+                  void run(props.onEmptyTrash, 'Trash emptied.');
                 }
               }}
             >
@@ -209,7 +263,7 @@ export default function ProjectMenu(props: ProjectMenuProps) {
           <p className="px-4 pb-3 text-xs opacity-65" role="status">
             {message ||
               (trash
-                ? 'Restore projects or empty the trash permanently. No automatic deletion.'
+                ? 'Deleted projects can be recovered by administrators for 30 days.'
                 : 'All changes are saved automatically.')}
           </p>
         </div>

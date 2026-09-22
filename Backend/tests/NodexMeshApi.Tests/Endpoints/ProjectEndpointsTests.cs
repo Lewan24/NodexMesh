@@ -21,6 +21,42 @@ public class ProjectEndpointsTests : IDisposable
     }
 
     [Fact]
+    public async Task ProjectTrash_IsListedForOwner_AndPermanentDeletionRequiresOwnershipAndTrash()
+    {
+        var (owner, _, _, _) = await _factory.CreateSeededUserAsync();
+        var (stranger, _, _, _) = await _factory.CreateSeededUserAsync();
+        var project = await CreateProjectAsync(owner);
+        var path = $"/api/v1/projects/{project.Id}";
+        (await owner.DeleteAsync($"{path}/permanent")).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await owner.DeleteAsync(path)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var trash = await owner.GetFromJsonAsync<List<ProjectRecordDto>>("/api/v1/projects");
+        trash.Should().Contain(p => p.Id == project.Id && p.DeletedAt != null);
+        (await stranger.DeleteAsync($"{path}/permanent")).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await owner.DeleteAsync($"{path}/permanent")).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await owner.GetFromJsonAsync<List<ProjectRecordDto>>("/api/v1/projects"))!
+            .Should().NotContain(p => p.Id == project.Id);
+        (await owner.PostAsync($"{path}/restore", null)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task DefaultProject_IsAccountScoped_RequiresAccess_AndCanBeCleared()
+    {
+        var (owner, _, _, _) = await _factory.CreateSeededUserAsync();
+        var (stranger, _, _, _) = await _factory.CreateSeededUserAsync();
+        var project = await CreateProjectAsync(owner);
+        const string path = "/api/v1/auth/default-project";
+        (await owner.PutAsJsonAsync(path, new { projectId = project.Id })).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var preference = await owner.GetFromJsonAsync<System.Text.Json.JsonElement>(path);
+        preference.GetProperty("projectId").GetGuid().Should().Be(project.Id);
+        (await stranger.PutAsJsonAsync(path, new { projectId = project.Id })).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        var other = await stranger.GetFromJsonAsync<System.Text.Json.JsonElement>(path);
+        other.GetProperty("projectId").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
+        (await owner.PutAsJsonAsync(path, new { projectId = (Guid?)null })).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var cleared = await owner.GetFromJsonAsync<System.Text.Json.JsonElement>(path);
+        cleared.GetProperty("projectId").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
+    }
+
+    [Fact]
     public async Task CreateProject_MakesTheCallerTheOwner_AndProvisionsADefaultBoard()
     {
         var (client, userId, _, _) = await _factory.CreateSeededUserAsync();

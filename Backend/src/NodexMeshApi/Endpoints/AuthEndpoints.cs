@@ -28,9 +28,37 @@ public static class AuthEndpoints
         group.MapPost("/login", LoginAsync).RequireRateLimiting("auth-strict");
         group.MapPost("/refresh", RefreshAsync).RequireRateLimiting("auth-refresh");
         group.MapPost("/revoke", RevokeAsync).RequireAuthorization().RequireRateLimiting("auth-strict");
+        group.MapGet("/default-project", GetDefaultProjectAsync).RequireAuthorization();
+        group.MapPut("/default-project", SetDefaultProjectAsync).RequireAuthorization();
         group.MapGet("/profile", GetProfileAsync).RequireAuthorization();
         group.MapPut("/profile", UpdateProfileAsync).RequireAuthorization().RequireRateLimiting("auth-strict");
         group.MapPost("/password", ChangePasswordAsync).RequireAuthorization().RequireRateLimiting("auth-strict");
+    }
+
+    public sealed record DefaultProjectRequest(Guid? ProjectId);
+
+    private static async Task<Ok<DefaultProjectRequest>> GetDefaultProjectAsync(
+        ClaimsPrincipal principal, AppDbContext db, CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+        var value = await db.UserClaims.Where(c => c.UserId == userId && c.ClaimType == "default_project")
+            .Select(c => c.ClaimValue).FirstOrDefaultAsync(ct);
+        return TypedResults.Ok(new DefaultProjectRequest(Guid.TryParse(value, out var id) ? id : null));
+    }
+
+    private static async Task<NoContent> SetDefaultProjectAsync(
+        DefaultProjectRequest request, ClaimsPrincipal principal, AppDbContext db,
+        IProjectAccessService access, CancellationToken ct)
+    {
+        var userId = principal.GetUserId();
+        if (request.ProjectId is Guid projectId && await access.GetRoleAsync(projectId, userId, ct) == ProjectRole.None)
+            throw new ApiException(404, "not_found", "Project not found.");
+        var claims = await db.UserClaims.Where(c => c.UserId == userId && c.ClaimType == "default_project").ToListAsync(ct);
+        db.UserClaims.RemoveRange(claims);
+        if (request.ProjectId is Guid id)
+            db.UserClaims.Add(new IdentityUserClaim<Guid> { UserId = userId, ClaimType = "default_project", ClaimValue = id.ToString() });
+        await db.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
     }
 
     private static async Task<Ok<object>> RegistrationStatusAsync(AppDbContext db, CancellationToken ct)

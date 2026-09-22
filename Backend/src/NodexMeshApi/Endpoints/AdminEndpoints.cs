@@ -6,6 +6,7 @@ using NodexMeshApi.Common;
 using NodexMeshApi.Data;
 using NodexMeshApi.Dtos;
 using NodexMeshApi.Models;
+using NodexMeshApi.Services;
 
 namespace NodexMeshApi.Endpoints;
 
@@ -24,6 +25,8 @@ public static class AdminEndpoints
         group.MapPost("/users/{userId:guid}/appearance/reset", ResetAppearanceAsync);
         group.MapPatch("/users/{userId:guid}/blocked", SetBlockedAsync);
         group.MapGet("/projects", ListProjectsAsync);
+        group.MapPost("/projects/{projectId:guid}/restore", RestoreProjectAsync);
+        group.MapDelete("/projects/{projectId:guid}/permanent", PurgeProjectAsync);
         group.MapPut("/projects/{projectId:guid}/owner", TransferProjectOwnerAsync);
         group.MapPost("/projects/{projectId:guid}/members", AddMemberAsync);
         group.MapDelete("/projects/{projectId:guid}/members/{userId:guid}", RemoveMemberAsync);
@@ -143,23 +146,9 @@ public static class AdminEndpoints
 
         if (request.Scope is "Defaults" or "All")
         {
-            var profile = await db.AppearanceProfiles.FirstOrDefaultAsync(entry => entry.UserId == userId, ct);
-            if (profile is null)
-            {
-                profile = new AppearanceProfile { UserId = userId };
-                db.AppearanceProfiles.Add(profile);
-            }
-
-            profile.Mode = null;
-            profile.Font = "sans";
-            profile.UiFont = "sans";
-            profile.UiPrimary = "#7941c8";
-            profile.UiSecondary = "#000000";
-            profile.InheritanceVersion = 1;
-            profile.PaletteVersion = 1;
-            profile.LightTheme = DefaultThemes.Light;
-            profile.DarkTheme = DefaultThemes.Dark;
-            profile.UpdatedAt = DateTimeOffset.UtcNow;
+            // No stored override means the client uses appearanceModel.defaultAppearance.
+            var profiles = await db.AppearanceProfiles.Where(entry => entry.UserId == userId).ToListAsync(ct);
+            db.AppearanceProfiles.RemoveRange(profiles);
         }
 
         if (request.Scope is "ProjectOverrides" or "All")
@@ -181,7 +170,8 @@ public static class AdminEndpoints
             project.CreatedAt, project.UpdatedAt, project.DeletedAt,
             project.Members.Select(member => new AdminProjectMemberDto(
                 member.UserId, users.GetValueOrDefault(member.UserId)?.Email ?? "unknown",
-                users.GetValueOrDefault(member.UserId)?.DisplayName ?? "Unknown", member.Role.ToString())).ToList())).ToList();
+                users.GetValueOrDefault(member.UserId)?.DisplayName ?? "Unknown", member.Role.ToString())).ToList(),
+            project.UserDeletedAt, project.UserDeletedAt is not null ? "userdeleted" : project.DeletedAt is not null ? "trashed" : "active")).ToList();
         return TypedResults.Ok(result);
     }
 
@@ -190,6 +180,7 @@ public static class AdminEndpoints
     {
         var project = await db.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == projectId, ct);
         if (project is null) return TypedResults.NotFound(new ErrorResponse("Project not found."));
+        RequireActive(project);
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == request.Email.Trim(), ct);
         if (user is null) return TypedResults.NotFound(new ErrorResponse("User not found."));
         if (user.IsBlocked) return TypedResults.Conflict(new ErrorResponse("Blocked users cannot be added to projects."));
@@ -204,6 +195,9 @@ public static class AdminEndpoints
 
     private static async Task<NoContent> RemoveMemberAsync(Guid projectId, Guid userId, AppDbContext db, CancellationToken ct)
     {
+        var project = await db.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == projectId, ct)
+            ?? throw new ApiException(404, "not_found", "Project not found.");
+        RequireActive(project);
         var member = await db.ProjectMembers.FirstOrDefaultAsync(m => m.ProjectId == projectId && m.UserId == userId, ct)
             ?? throw new ApiException(404, "not_found", "Project member not found.");
         db.ProjectMembers.Remove(member);
@@ -220,6 +214,7 @@ public static class AdminEndpoints
             .Include(entry => entry.Members)
             .FirstOrDefaultAsync(entry => entry.Id == projectId, ct)
             ?? throw new ApiException(404, "not_found", "Project not found.");
+        RequireActive(project);
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
         var nextOwner = await db.Users.FirstOrDefaultAsync(user => user.Email == normalizedEmail, ct)
             ?? throw new ApiException(404, "not_found", "User not found.");
@@ -249,6 +244,37 @@ public static class AdminEndpoints
         project.Revision++;
         project.UpdatedAt = DateTimeOffset.UtcNow;
         project.UpdatedBy = callerId;
+        await db.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
+    }
+
+    private static void RequireActive(Project project)
+    {
+        if (project.DeletedAt is not null || project.UserDeletedAt is not null)
+            throw new ApiException(409, "project_inactive", "Restore the project before changing its owner or members.");
+    }
+
+    private static async Task<NoContent> RestoreProjectAsync(
+        Guid projectId, ClaimsPrincipal principal, AppDbContext db, CancellationToken ct)
+    {
+        var project = await db.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == projectId, ct)
+            ?? throw new ApiException(404, "not_found", "Project not found.");
+        project.DeletedAt = null;
+        project.UserDeletedAt = null;
+        project.Revision++;
+        project.UpdatedAt = DateTimeOffset.UtcNow;
+        project.UpdatedBy = principal.GetUserId();
+        await db.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<NoContent> PurgeProjectAsync(Guid projectId, AppDbContext db, CancellationToken ct)
+    {
+        var project = await db.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == projectId, ct)
+            ?? throw new ApiException(404, "not_found", "Project not found.");
+        if (project.DeletedAt is null && project.UserDeletedAt is null)
+            throw new ApiException(409, "project_active", "Only trashed or user-deleted projects can be permanently deleted.");
+        await ProjectDeletionService.RemoveAsync(db, project, ct);
         await db.SaveChangesAsync(ct);
         return TypedResults.NoContent();
     }

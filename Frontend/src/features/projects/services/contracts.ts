@@ -17,7 +17,14 @@ export interface ProjectRepository {
   purge(id: string, expectedRevision: Revision, clientMutationId: string): Promise<void>;
 }
 
+export interface CommentChanges {
+  expectedBoardRevision: Revision;
+  upserts: { id: string; text: string; status: string }[];
+  deletes: string[];
+}
+
 export interface BoardRepository {
+  saveComments(projectId: string, boardId: string, itemId: string, changes: CommentChanges): Promise<BoardSnapshot>;
   list(projectId: string, signal?: AbortSignal): Promise<BoardRecord[]>;
   create(projectId: string, name: string): Promise<BoardSnapshot>;
   rename(projectId: string, boardId: string, name: string): Promise<BoardRecord>;
