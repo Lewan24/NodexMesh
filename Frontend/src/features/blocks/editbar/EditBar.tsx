@@ -1,17 +1,20 @@
-import { translate } from '@/shared/i18n';
+import { LayoutGrid, Palette, SlidersHorizontal, Type, X } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import SectionTypographyControls from './components/SectionTypographyControls';
-import type { ReactNode } from 'react';
+
 import type { BoardItem } from '@/entities/board/types';
-import DrawingControls from './components/DrawingControls';
+import { translate } from '@/shared/i18n';
+
+import { ITEM_TEXT_SECTIONS } from '../typography/sectionTypography';
 import ColorPanel from './components/ColorPanel';
-import FrameControls from './components/FrameControls';
-import LineControls from './components/LineControls';
-import { EditBarDivider } from './components/EditBarButton';
-import { ITEM_TYPE_LABELS } from './constants';
-import TypographyControls from './components/TypographyControls';
 import ColumnLayoutControls from './components/ColumnLayoutControls';
+import DrawingControls from './components/DrawingControls';
+import FrameControls from './components/FrameControls';
 import LayerControls from './components/LayerControls';
+import LineControls from './components/LineControls';
+import SectionTypographyControls from './components/SectionTypographyControls';
+import TypographyControls from './components/TypographyControls';
+import { ITEM_TYPE_LABELS } from './constants';
 
 interface EditBarProps {
   selectedItems: BoardItem[];
@@ -29,6 +32,41 @@ interface EditBarProps {
   onSendBackward: (id: string) => void;
   onBringToFront: (id: string) => void;
   onSendToBack: (id: string) => void;
+}
+
+type EditTab = 'appearance' | 'text' | 'layout';
+
+function TabButton({
+  id,
+  active,
+  title,
+  icon,
+  onClick,
+}: {
+  id: EditTab;
+  active: boolean;
+  title: string;
+  icon: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      aria-controls={`edit-bar-panel-${id}`}
+      title={title}
+      onClick={onClick}
+      className="edit-bar-tab flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-all"
+      style={{
+        color: active ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+        background: active ? 'var(--color-accent-soft)' : 'transparent',
+      }}
+    >
+      {icon}
+      <span>{title}</span>
+    </button>
+  );
 }
 
 export default function EditBar({
@@ -52,30 +90,22 @@ export default function EditBar({
   const isColumnMode = !!columnItem;
   const isMulti = !isColumnMode && selectedItems.length > 1;
   const single = columnItem ?? (selectedItems.length === 1 ? selectedItems[0] : null);
+  const [activeTab, setActiveTab] = useState<EditTab | null>(null);
+
+  useEffect(() => setActiveTab(null), [single?.id, isMulti]);
 
   if (!columnItem && selectedItems.length === 0) return null;
 
   const ids = selectedItems.map((item) => item.id);
-
   const handleUpdate = (updater: (item: BoardItem) => BoardItem) => {
-    if (isColumnMode && onUpdateColumnItem) {
-      onUpdateColumnItem(updater);
-      return;
-    }
-
-    if (single) onUpdateItem(single.id, updater);
+    if (isColumnMode && onUpdateColumnItem) onUpdateColumnItem(updater);
+    else if (single) onUpdateItem(single.id, updater);
   };
-
   const handleDelete = () => {
-    if (isColumnMode && onDeleteColumnItem) {
-      onDeleteColumnItem();
-    } else {
-      onDeleteItems(ids);
-    }
-
+    if (isColumnMode && onDeleteColumnItem) onDeleteColumnItem();
+    else onDeleteItems(ids);
     onClose();
   };
-
   const typeLabel = isColumnMode
     ? single
       ? translate(ITEM_TYPE_LABELS[single.type] ?? single.type)
@@ -86,196 +116,242 @@ export default function EditBar({
         ? translate(ITEM_TYPE_LABELS[single.type] ?? single.type)
         : '';
 
-  const hasStyleControls = !!single && !isMulti && single.type !== 'icon';
+  const hasAppearance = !!single && single.type !== 'icon';
+  const hasText = !!single && single.type !== 'drawing' && ITEM_TEXT_SECTIONS[single.type].length > 0;
+  const hasLayout = !!single;
+  const toggleTab = (tab: EditTab) => setActiveTab((current) => (current === tab ? null : tab));
 
   return (
     <div
       data-edit-bar="true"
-      className="edit-bar absolute left-1/2 z-50 flex -translate-x-1/2 select-none flex-col overflow-hidden rounded-[22px] border shadow-2xl"
+      className="edit-bar absolute left-1/2 z-50 flex -translate-x-1/2 select-none flex-col overflow-hidden rounded-2xl border shadow-xl"
       style={{
         top: 'var(--canvas-editbar-top, 12px)',
-        background: 'color-mix(in srgb, var(--color-surface-translucent) 96%, transparent)',
+        background: 'var(--edit-bar-bg)',
         borderColor: 'color-mix(in srgb, var(--color-border) 72%, transparent)',
-        boxShadow: '0 18px 60px rgba(24, 12, 40, 0.2), 0 3px 12px rgba(24, 12, 40, 0.1)',
-        backdropFilter: 'blur(18px) saturate(1.25)',
+        boxShadow: '0 12px 38px rgba(24, 12, 40, 0.18), 0 2px 8px rgba(24, 12, 40, 0.08)',
+        backdropFilter: 'blur(18px) saturate(1.2)',
+        width: 'max-content',
         maxWidth: 'calc(100% - 24px)',
       }}
-      onMouseDown={(e) => e.stopPropagation()}
+      onMouseDown={(event) => event.stopPropagation()}
     >
-      <div className="h-[3px] w-full shrink-0 bg-gradient-to-r from-violet-600 via-fuchsia-400 to-amber-300" />
+      <div className="h-0.5 w-full shrink-0 bg-gradient-to-r from-violet-600 via-fuchsia-400 to-amber-300" />
 
-      {/* Main actions */}
-      <div className="edit-bar-row edit-bar-actions flex items-center gap-1 overflow-x-auto px-2.5 py-2">
+      <div className="edit-bar-row edit-bar-actions flex min-h-11 items-center gap-1 overflow-x-auto px-2 py-1.5">
         <button
+          type="button"
           onClick={onClose}
-          className="edit-bar-close w-7 h-7 flex items-center justify-center rounded-lg transition-colors flex-shrink-0 cursor-pointer"
+          className="edit-bar-close flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-black/5"
           style={{ color: 'var(--color-text-faint)' }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
-            e.currentTarget.style.color = 'var(--color-text-primary)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = 'var(--color-text-faint)';
-          }}
           title={translate('Deselect (Esc)')}
+          aria-label={translate('Deselect (Esc)')}
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
+          <X size={15} />
         </button>
 
         <span
-          className="flex-shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em]"
-          style={{
-            color: 'var(--color-text-secondary)',
-            background: 'color-mix(in srgb, var(--color-border) 25%, transparent)',
-          }}
+          className="edit-bar-type shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em]"
+          style={{ color: 'var(--color-text-secondary)', background: 'var(--edit-bar-control)' }}
         >
           {typeLabel}
         </span>
 
-        {(isMulti || single?.type === 'frame') && <EditBarDivider />}
-
-        {single && single.type !== 'frame' && !isColumnMode && (
-          <>
-            <LayerControls
-              onSendToBack={() => onSendToBack(single.id)}
-              onSendBackward={() => onSendBackward(single.id)}
-              onBringForward={() => onBringForward(single.id)}
-              onBringToFront={() => onBringToFront(single.id)}
-            />
-          </>
+        {single && (
+          <div className="edit-bar-tabs flex items-center gap-0.5" role="tablist" aria-label={translate('Item style')}>
+            {hasAppearance && (
+              <TabButton
+                id="appearance"
+                active={activeTab === 'appearance'}
+                title={translate('Appearance')}
+                icon={<Palette size={14} />}
+                onClick={() => toggleTab('appearance')}
+              />
+            )}
+            {hasText && (
+              <TabButton
+                id="text"
+                active={activeTab === 'text'}
+                title={translate('Text')}
+                icon={<Type size={14} />}
+                onClick={() => toggleTab('text')}
+              />
+            )}
+            {hasLayout && (
+              <TabButton
+                id="layout"
+                active={activeTab === 'layout'}
+                title={translate('Layout')}
+                icon={<LayoutGrid size={14} />}
+                onClick={() => toggleTab('layout')}
+              />
+            )}
+          </div>
         )}
 
-        {frameControls}
         {isMulti && onJoinDrawings && (
           <button
+            type="button"
             onClick={onJoinDrawings}
-            className="h-8 px-2.5 rounded-lg text-sm font-medium whitespace-nowrap cursor-pointer hover:bg-violet-500/20"
-            style={{ color: 'var(--color-text-primary)' }}
+            className="h-8 shrink-0 rounded-lg px-2.5 text-xs font-semibold hover:bg-violet-500/15"
           >
             {translate('Join drawings')}
           </button>
         )}
-
         {isMulti && (
           <button
+            type="button"
             onClick={onGroupItems}
-            className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0 cursor-pointer"
-            style={{ color: '#7C3AED', backgroundColor: 'rgba(124,58,237,0.1)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(124,58,237,0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(124,58,237,0.1)';
-            }}
+            className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold"
+            style={{ color: 'var(--color-accent)', background: 'var(--color-accent-soft)' }}
             title={translate('Wrap in a frame')}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="4 2" />
-            </svg>
+            <SlidersHorizontal size={14} />
             {translate('Group')}
           </button>
         )}
 
-        {!isMulti && !isColumnMode && single?.type === 'frame' && (
-          <button
-            onClick={() => onFitFrame(single.id)}
-            className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0 cursor-pointer"
-            style={{ color: 'var(--color-text-secondary)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-            title={translate('Fit frame to contents')}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-            </svg>
-            {translate('Fit')}
-          </button>
-        )}
-
-        <div className="flex-1 min-w-2" />
-
-        <EditBarDivider />
-
+        <span className="min-w-1 flex-1" />
         <button
+          type="button"
           onClick={handleDelete}
-          className="h-8 px-2.5 flex items-center gap-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0 cursor-pointer"
-          style={{ color: 'var(--color-text-faint)' }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(255,107,138,0.1)';
-            e.currentTarget.style.color = 'var(--color-danger-strong)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = 'var(--color-text-faint)';
-          }}
-          title={translate('Delete')}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-rose-500/10"
+          style={{ color: 'var(--color-danger-strong)' }}
+          title={isMulti ? translate('Delete {{value1}}', { value1: selectedItems.length }) : translate('Delete')}
+          aria-label={isMulti ? translate('Delete {{value1}}', { value1: selectedItems.length }) : translate('Delete')}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path
-              d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4h6v2" />
           </svg>
-
-          {isMulti ? translate('Delete {{value1}}', { value1: selectedItems.length }) : translate('Delete')}
         </button>
       </div>
 
       {isMulti && selectedItems.some((item) => item.type === 'drawing') && (
         <div
-          className="edit-bar-row flex items-center gap-3 px-3 py-2 border-t"
+          className="edit-bar-row flex items-center gap-2 border-t px-3 py-2"
           style={{ borderColor: 'var(--color-border-soft)' }}
         >
           <DrawingControls items={selectedItems.filter((item) => item.type === 'drawing')} onUpdate={onUpdateItem} />
         </div>
       )}
-      {/* Style controls */}
-      {hasStyleControls && (
+
+      {single && activeTab === 'appearance' && hasAppearance && (
         <div
-          className="edit-bar-row edit-bar-style-controls flex items-start gap-2 overflow-x-auto px-2.5 py-2.5"
-          style={{
-            borderTop: '1px solid var(--color-border-soft)',
-            background: 'color-mix(in srgb, var(--color-surface-alt) 38%, transparent)',
-          }}
+          id="edit-bar-panel-appearance"
+          role="tabpanel"
+          className="edit-bar-tab-content edit-bar-appearance-panel flex items-start gap-2 overflow-x-auto border-t p-2"
+          style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-panel)' }}
         >
-          {single.type !== 'drawing' && single.type !== 'line' && single.type !== 'frame' && (
+          {single.type === 'line' && !isColumnMode ? (
+            <LineControls item={single} onUpdate={handleUpdate} />
+          ) : single.type === 'drawing' ? (
+            <DrawingControls items={[single]} onUpdate={(_, updater) => handleUpdate(updater)} />
+          ) : single.type === 'frame' ? (
+            <FrameControls item={single} onUpdate={handleUpdate} />
+          ) : (
             <ColorPanel item={single} onUpdate={handleUpdate} />
           )}
+        </div>
+      )}
 
+      {single && activeTab === 'text' && hasText && (
+        <div
+          id="edit-bar-panel-text"
+          role="tabpanel"
+          className="edit-bar-tab-content edit-bar-text-panel flex flex-col border-t"
+          style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-panel)' }}
+        >
+          <div className="flex items-center gap-2 px-2 pt-2">
+            <TypographyControls item={single} onUpdate={handleUpdate} />
+          </div>
+          <SectionTypographyControls key={single.id} item={single} onUpdate={handleUpdate} />
+        </div>
+      )}
+
+      {single && activeTab === 'layout' && hasLayout && (
+        <div
+          id="edit-bar-panel-layout"
+          role="tabpanel"
+          className="edit-bar-tab-content edit-bar-layout-panel flex items-center gap-2 overflow-x-auto border-t p-2"
+          style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-panel)' }}
+        >
+          {!isColumnMode && single.type !== 'frame' && (
+            <div
+              className="edit-bar-control-card flex shrink-0 items-center gap-2 rounded-xl border p-2"
+              style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
+            >
+              <span
+                className="px-1 text-[9px] font-bold uppercase tracking-[0.14em]"
+                style={{ color: 'var(--color-text-faint)' }}
+              >
+                {translate('Layer order')}
+              </span>
+              <LayerControls
+                onSendToBack={() => onSendToBack(single.id)}
+                onSendBackward={() => onSendBackward(single.id)}
+                onBringForward={() => onBringForward(single.id)}
+                onBringToFront={() => onBringToFront(single.id)}
+              />
+            </div>
+          )}
+          {frameControls && (
+            <div
+              className="edit-bar-control-card flex shrink-0 items-center gap-2 rounded-xl border p-2"
+              style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
+            >
+              {frameControls}
+            </div>
+          )}
           {single.type === 'column' && <ColumnLayoutControls item={single} onUpdate={handleUpdate} />}
-
-          {single.type !== 'drawing' && <TypographyControls item={single} onUpdate={handleUpdate} />}
-
-          {!isColumnMode && single.type === 'line' && <LineControls item={single} onUpdate={handleUpdate} />}
-
-          {single.type === 'drawing' && (
-            <DrawingControls items={[single]} onUpdate={(_, updater) => handleUpdate(updater)} />
+          {!isColumnMode && single.type === 'frame' && (
+            <div
+              className="edit-bar-control-card flex shrink-0 items-center gap-2 rounded-xl border p-2"
+              style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
+            >
+              <span
+                className="px-1 text-[9px] font-bold uppercase tracking-[0.14em]"
+                style={{ color: 'var(--color-text-faint)' }}
+              >
+                {translate('Frame size')}
+              </span>
+              <button
+                type="button"
+                onClick={() => onFitFrame(single.id)}
+                className="h-8 shrink-0 rounded-lg px-2.5 text-xs font-semibold"
+                style={{ color: 'var(--color-accent)', background: 'var(--color-accent-soft)' }}
+              >
+                {translate('Fit contents')}
+              </button>
+            </div>
           )}
           {single.type === 'document' && (
-            <button
-              className="px-2 text-xs whitespace-nowrap"
-              onClick={() =>
-                handleUpdate((current) =>
-                  current.type === 'document' ? { ...current, autoHeight: true, height: undefined } : current,
-                )
-              }
+            <div
+              className="edit-bar-control-card flex shrink-0 items-center gap-2 rounded-xl border p-2"
+              style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
             >
-              {translate('Auto-fit height')}
-            </button>
+              <button
+                type="button"
+                className="h-8 shrink-0 rounded-lg px-2.5 text-xs font-semibold"
+                style={{ color: 'var(--color-accent)', background: 'var(--color-accent-soft)' }}
+                onClick={() =>
+                  handleUpdate((current) =>
+                    current.type === 'document' ? { ...current, autoHeight: true, height: undefined } : current,
+                  )
+                }
+              >
+                {translate('Auto-fit height')}
+              </button>
+            </div>
           )}
           {single.type === 'embed' && (
-            <label className="flex gap-2 text-xs whitespace-nowrap">
+            <label
+              className="edit-bar-control-card flex shrink-0 items-center gap-2 rounded-xl border p-2 text-xs font-semibold"
+              style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
+            >
               <input
                 type="checkbox"
                 checked={single.showLabel}
+                className="accent-violet-600"
                 onChange={(event) =>
                   handleUpdate((current) =>
                     current.type === 'embed' ? { ...current, showLabel: event.target.checked } : current,
@@ -286,26 +362,36 @@ export default function EditBar({
             </label>
           )}
           {single.type === 'timeline' && (
-            <select
-              aria-label={translate('Timeline view')}
-              value={single.mode}
-              className="text-xs bg-transparent"
-              onChange={(event) =>
-                handleUpdate((current) =>
-                  current.type === 'timeline'
-                    ? { ...current, mode: event.target.value as 'simple' | 'schedule' }
-                    : current,
-                )
-              }
+            <label
+              className="edit-bar-control-card flex shrink-0 items-center gap-2 rounded-xl border p-2"
+              style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
             >
-              <option value="simple">{translate('Milestones')}</option>
-              <option value="schedule">{translate('Schedule')}</option>
-            </select>
+              <span
+                className="px-1 text-[9px] font-bold uppercase tracking-[0.14em]"
+                style={{ color: 'var(--color-text-faint)' }}
+              >
+                {translate('Timeline view')}
+              </span>
+              <select
+                aria-label={translate('Timeline view')}
+                value={single.mode}
+                className="h-8 shrink-0 rounded-lg border px-2 text-xs font-semibold"
+                style={{ borderColor: 'var(--color-border)', background: 'var(--edit-bar-control)' }}
+                onChange={(event) =>
+                  handleUpdate((current) =>
+                    current.type === 'timeline'
+                      ? { ...current, mode: event.target.value as 'simple' | 'schedule' }
+                      : current,
+                  )
+                }
+              >
+                <option value="simple">{translate('Milestones')}</option>
+                <option value="schedule">{translate('Schedule')}</option>
+              </select>
+            </label>
           )}
-          {!isColumnMode && single.type === 'frame' && <FrameControls item={single} onUpdate={handleUpdate} />}
         </div>
       )}
-      {single && <SectionTypographyControls key={single.id} item={single} onUpdate={handleUpdate} />}
     </div>
   );
 }

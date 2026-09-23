@@ -71,6 +71,10 @@
   --color-surface: #ffffff;
   --color-surface-alt: #f9f9fb;
   --color-surface-translucent: rgba(255, 255, 255, 0.92);
+  --edit-bar-bg: rgba(250, 250, 252, 0.97);
+  --edit-bar-panel: #f1f2f6;
+  --edit-bar-card: #ffffff;
+  --edit-bar-control: #f7f7fa;
 
   /* Borders */
   --color-border: rgba(24, 22, 30, 0.1);
@@ -110,6 +114,10 @@
   --color-surface: #18181b;
   --color-surface-alt: #202024;
   --color-surface-translucent: rgba(24, 24, 27, 0.92);
+  --edit-bar-bg: rgba(13, 12, 17, 0.97);
+  --edit-bar-panel: #121117;
+  --edit-bar-card: #1a1820;
+  --edit-bar-control: #211e28;
 
   /* Borders */
   --color-border: rgba(255, 255, 255, 0.09);
@@ -377,6 +385,6 @@ textarea {
 [data-edit-bar='true'] select option,
 [aria-label='Appearance settings'] select,
 [aria-label='Appearance settings'] select option {
-  background: var(--color-surface);
+  background: var(--edit-bar-control);
   color: var(--color-text-primary);
 }

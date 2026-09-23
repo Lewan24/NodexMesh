@@ -49,7 +49,7 @@ export default function CustomColorInput({
   return (
     <div
       className="flex h-8 items-center gap-1 rounded-xl border p-1 shadow-sm"
-      style={{ borderColor: 'var(--color-border-soft)', background: 'var(--color-surface)' }}
+      style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
       title={title}
     >
       <input

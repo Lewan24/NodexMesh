@@ -131,7 +131,7 @@ function ModePicker({
           onClick={() => onChange(mode)}
           className="flex h-7 w-8 items-center justify-center rounded-lg transition-all hover:-translate-y-px"
           style={{
-            background: value === mode ? 'var(--color-surface)' : 'transparent',
+            background: value === mode ? 'var(--edit-bar-card)' : 'transparent',
             boxShadow: value === mode ? '0 2px 8px rgba(30, 20, 50, 0.14)' : 'none',
           }}
         >
@@ -278,14 +278,11 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
   }
 
   return (
-    <div className="flex items-stretch gap-2 p-0.5">
+    <div className="edit-bar-color-panel flex items-stretch gap-2 p-0.5">
       {showBackground && (
         <section
-          className="flex min-w-[300px] flex-col gap-2 rounded-2xl border p-2.5"
-          style={{
-            borderColor: 'var(--color-border-soft)',
-            background: 'color-mix(in srgb, var(--color-surface) 74%, transparent)',
-          }}
+          className="edit-bar-color-card flex min-w-[300px] flex-col gap-2 rounded-2xl border p-2.5"
+          style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
         >
           <div className="flex items-center justify-between gap-3">
             <PanelTitle icon={<Palette size={15} />}>{translate('Card fill')}</PanelTitle>
@@ -366,11 +363,8 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
       )}
 
       <section
-        className="flex min-w-[300px] flex-col gap-2 rounded-2xl border p-2.5"
-        style={{
-          borderColor: 'var(--color-border-soft)',
-          background: 'color-mix(in srgb, var(--color-surface) 74%, transparent)',
-        }}
+        className="edit-bar-color-card flex min-w-[300px] flex-col gap-2 rounded-2xl border p-2.5"
+        style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
       >
         <div className="flex items-center justify-between gap-3">
           <PanelTitle icon={<Sparkles size={15} />}>{translate('Top accent strip')}</PanelTitle>

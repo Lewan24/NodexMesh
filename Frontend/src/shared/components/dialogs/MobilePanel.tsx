@@ -63,7 +63,7 @@ export default function MobilePanel({
         createPortal(
           <dialog
             ref={dialogRef}
-            className="mobile-panel"
+            className={`mobile-panel mobile-panel-${slot}`}
             role="dialog"
             aria-labelledby={headingId}
             onMouseDown={(event) => event.stopPropagation()}
