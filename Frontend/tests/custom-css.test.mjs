@@ -13,9 +13,8 @@ const server = await createServer({
   server: { middlewareMode: true, watch: null, hmr: false },
 });
 await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
-const { parseCustomCss, customCssRule, MAX_CUSTOM_CSS_LENGTH } = await server.ssrLoadModule(
-  '/src/features/blocks/custom-css/customCss.ts',
-);
+const { parseCustomCss, parseCustomCssRules, customCssRule, customCssSelectorForValidation, MAX_CUSTOM_CSS_LENGTH } =
+  await server.ssrLoadModule('/src/features/blocks/custom-css/customCss.ts');
 const { default: ItemCssScope } = await server.ssrLoadModule('/src/features/blocks/custom-css/ItemCssScope.tsx');
 const { flattenItems, toProjectView } = await server.ssrLoadModule('/src/features/projects/services/boardAdapter.ts');
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
@@ -62,6 +61,39 @@ test('overrides target only the scoped root and disabling retains but does not a
   assert.equal(customCssRule({ ...customCss, enabled: false }, 'one'), '');
   assert.equal(customCssRule(customCss, '"], body'), '');
   assert.equal(customCss.source, 'opacity: .8; border-radius: 24px;');
+});
+
+test('normal selectors are scoped to one item and cannot leak into nested items', () => {
+  const source = '& { padding: 8px; } button a, nav > a:hover { color: red; text-decoration: none; }';
+  assert.deepEqual(parseCustomCssRules(source), [
+    { selector: '&', declarations: [{ property: 'padding', value: '8px' }] },
+    {
+      selector: 'button a, nav > a:hover',
+      declarations: [
+        { property: 'color', value: 'red' },
+        { property: 'text-decoration', value: 'none' },
+      ],
+    },
+  ]);
+  const css = customCssRule({ enabled: true, source }, 'one');
+  assert.match(css, /\[data-item-css-scope="one"\] > :not\(style\)/);
+  assert.match(css, /\[data-item-css-scope="one"\] button a:not\(/);
+  assert.match(css, /\[data-item-css-scope="one"\] nav > a:hover:not\(/);
+  assert.match(css, /color: red !important/);
+  assert.equal(customCssSelectorForValidation('[href*="&"] &'), '[href*="&"] *');
+});
+
+test('at-rules, nested rules, markup and malformed selector lists are rejected', () => {
+  for (const source of [
+    '@media (width > 1px) { a { color: red; } }',
+    'button { a { color: red; } }',
+    'button, { color: red; }',
+    'button { color: red; } trailing',
+    'button { color: red; </style>',
+  ]) {
+    assert.throws(() => parseCustomCssRules(source), source);
+    assert.equal(customCssRule({ enabled: true, source }, 'one'), '', source);
+  }
 });
 
 test('rendered nested items have distinct CSS scopes without extra layout boxes', () => {
