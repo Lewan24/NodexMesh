@@ -78,18 +78,35 @@ export function useCanvasMouse({
         const startX = event.clientX;
         const startY = event.clientY;
         const startPan = { ...panRef.current };
+        let frame: number | null = null;
+        let pendingPan: CanvasPoint | null = null;
+
+        const flushPan = () => {
+          frame = null;
+          if (!pendingPan) return;
+          const nextPan = pendingPan;
+          pendingPan = null;
+          panRef.current = nextPan;
+          onPanChange(nextPan);
+        };
 
         const handleMove = (moveEvent: MouseEvent) => {
-          onPanChange({ x: startPan.x + moveEvent.clientX - startX, y: startPan.y + moveEvent.clientY - startY });
+          pendingPan = { x: startPan.x + moveEvent.clientX - startX, y: startPan.y + moveEvent.clientY - startY };
+          if (frame === null) frame = requestAnimationFrame(flushPan);
         };
 
         const handleUp = () => {
           document.removeEventListener('mousemove', handleMove);
           document.removeEventListener('mouseup', handleUp);
+          window.removeEventListener('blur', handleUp);
+          if (frame !== null) cancelAnimationFrame(frame);
+          frame = null;
+          flushPan();
         };
 
         document.addEventListener('mousemove', handleMove);
         document.addEventListener('mouseup', handleUp);
+        window.addEventListener('blur', handleUp);
 
         return;
       }

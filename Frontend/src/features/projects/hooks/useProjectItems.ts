@@ -137,6 +137,20 @@ export function useProjectItems({ activeProjectId, setProjects }: UseProjectItem
     [updateItems],
   );
 
+  const updateItemsById = useCallback(
+    (updates: ReadonlyMap<string, (item: BoardItem) => BoardItem>) => {
+      if (updates.size === 0) return;
+
+      updateItems((items) =>
+        items.map((item) => {
+          const update = updates.get(item.id);
+          return update ? update(item) : item;
+        }),
+      );
+    },
+    [updateItems],
+  );
+
   const restoreItems = useCallback(
     (items: BoardItem[]) => {
       updateItems(() => items);
@@ -189,6 +203,7 @@ export function useProjectItems({ activeProjectId, setProjects }: UseProjectItem
   return {
     addItem,
     updateItem,
+    updateItemsById,
     restoreItems,
     deleteItem,
     deleteItems,

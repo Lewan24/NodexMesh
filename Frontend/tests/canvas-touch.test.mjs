@@ -14,6 +14,7 @@ const server = await createServer({
 await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
 const { attachCanvasTouch } = await server.ssrLoadModule('/src/features/canvas/hooks/useCanvasTouch.ts');
 const { useLineDrag } = await server.ssrLoadModule('/src/features/canvas/hooks/useLineDrag.ts');
+const { useItemDrag } = await server.ssrLoadModule('/src/features/canvas/hooks/useItemDrag.ts');
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 await server.close();
 
@@ -56,11 +57,17 @@ function setup(t, locked = false) {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const original = {
     Element: globalThis.Element,
+    HTMLInputElement: globalThis.HTMLInputElement,
+    HTMLTextAreaElement: globalThis.HTMLTextAreaElement,
     MouseEvent: globalThis.MouseEvent,
+    requestAnimationFrame: globalThis.requestAnimationFrame,
+    cancelAnimationFrame: globalThis.cancelAnimationFrame,
     window: globalThis.window,
     document: globalThis.document,
   };
   globalThis.Element = TouchSurface;
+  globalThis.HTMLInputElement = class extends TouchSurface {};
+  globalThis.HTMLTextAreaElement = class extends TouchSurface {};
   globalThis.MouseEvent = class extends Event {
     constructor(type, options) {
       super(type, options);
@@ -75,6 +82,8 @@ function setup(t, locked = false) {
     return nextFrame;
   };
   window.cancelAnimationFrame = (id) => frames.delete(id);
+  globalThis.requestAnimationFrame = window.requestAnimationFrame;
+  globalThis.cancelAnimationFrame = window.cancelAnimationFrame;
   const renderFrame = () => {
     const callbacks = [...frames.values()];
     frames.clear();
@@ -347,4 +356,55 @@ test('pinch batches pan and zoom together and cancels queued updates on unmount'
   assert.equal(frames.size, 0);
   renderFrame();
   assert.equal(options.onZoomChange.mock.callCount(), 1);
+});
+
+test('item dragging stays transient until one batched final commit', (t) => {
+  const { surface, renderFrame } = setup(t);
+  const note = { ...createCanvasItem('note', 0, 0), id: 'note' };
+  const projectRef = { current: { items: [note] } };
+  const commits = [];
+  let drag;
+
+  function Harness() {
+    drag = useItemDrag({
+      projectRef,
+      selectedIdsRef: { current: [] },
+      zoomRef: { current: 1 },
+      measuredSizes: new Map(),
+      snapEnabled: true,
+      snapValue: (value) => Math.round(value / 16) * 16,
+      pushHistory() {},
+      onSelectItems() {},
+      onSelectTool() {},
+      onUpdateItems(updates) {
+        commits.push(updates);
+        projectRef.current.items = projectRef.current.items.map((item) => updates.get(item.id)?.(item) ?? item);
+      },
+      onDropOnColumn() {},
+      clearColumnSelection() {},
+    });
+    return null;
+  }
+
+  renderToStaticMarkup(createElement(Harness));
+  drag.handleItemMouseDown('note', {
+    button: 0,
+    target: surface,
+    clientX: 0,
+    clientY: 0,
+    shiftKey: false,
+    preventDefault() {},
+    stopPropagation() {},
+  });
+  document.dispatchEvent(new MouseEvent('mousemove', { clientX: 21, clientY: 9 }));
+  document.dispatchEvent(new MouseEvent('mousemove', { clientX: 45, clientY: 20 }));
+  renderFrame();
+  assert.equal(commits.length, 0);
+  assert.deepEqual(projectRef.current.items[0], note);
+
+  document.dispatchEvent(new MouseEvent('mouseup', { clientX: 45, clientY: 20 }));
+  assert.equal(commits.length, 1);
+  assert.equal(commits[0].size, 1);
+  assert.equal(projectRef.current.items[0].x, 48);
+  assert.equal(projectRef.current.items[0].y, 16);
 });

@@ -34,6 +34,22 @@ export function useCanvasZoom({ containerRef, panRef, zoomRef, onPanChange, onZo
       return;
     }
 
+    let frame: number | null = null;
+    let pendingCamera: { pan: CanvasPoint; zoom: number } | null = null;
+
+    const flushCamera = () => {
+      frame = null;
+      const camera = pendingCamera;
+      pendingCamera = null;
+      if (!camera) return;
+
+      // Keep coordinate conversion current before React publishes the render.
+      panRef.current = camera.pan;
+      zoomRef.current = camera.zoom;
+      onPanChange(camera.pan);
+      onZoomChange(camera.zoom);
+    };
+
     const handleWheel = (event: WheelEvent) => {
       const target = event.target;
 
@@ -53,25 +69,28 @@ export function useCanvasZoom({ containerRef, panRef, zoomRef, onPanChange, onZo
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
 
-      const currentZoom = zoomRef.current;
-      const currentPan = panRef.current;
+      const currentZoom = pendingCamera?.zoom ?? zoomRef.current;
+      const currentPan = pendingCamera?.pan ?? panRef.current;
 
       const factor = event.ctrlKey || event.metaKey ? 1 - event.deltaY * 0.008 : event.deltaY > 0 ? 0.92 : 1 / 0.92;
 
       const nextZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Number((currentZoom * factor).toFixed(4))));
 
-      onPanChange({
-        x: mouseX - (mouseX - currentPan.x) * (nextZoom / currentZoom),
-        y: mouseY - (mouseY - currentPan.y) * (nextZoom / currentZoom),
-      });
-
-      onZoomChange(nextZoom);
+      pendingCamera = {
+        pan: {
+          x: mouseX - (mouseX - currentPan.x) * (nextZoom / currentZoom),
+          y: mouseY - (mouseY - currentPan.y) * (nextZoom / currentZoom),
+        },
+        zoom: nextZoom,
+      };
+      if (frame === null) frame = requestAnimationFrame(flushCamera);
     };
 
     element.addEventListener('wheel', handleWheel, { passive: false });
 
     return () => {
       element.removeEventListener('wheel', handleWheel);
+      if (frame !== null) cancelAnimationFrame(frame);
     };
   }, [containerRef, panRef, zoomRef, onPanChange, onZoomChange]);
 

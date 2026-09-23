@@ -86,6 +86,7 @@ interface CanvasProps {
   onGroupSelected: () => void;
   onAddItem: (item: BoardItem) => void;
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
+  onUpdateItems: (updates: ReadonlyMap<string, (item: BoardItem) => BoardItem>) => void;
   onDeleteItem: (id: string) => void;
   onDeleteItems: (ids: string[]) => void;
   onBringForward: (id: string) => void;
@@ -116,6 +117,7 @@ export default function Canvas({
   onGroupSelected,
   onAddItem: addItemRaw,
   onUpdateItem,
+  onUpdateItems,
   onDeleteItem,
   onDeleteItems,
   onBringForward,
@@ -594,7 +596,7 @@ export default function Canvas({
     deleteNested: selectedColumnItem ? () => requestDelete(deleteSelectedColumnItem) : undefined,
   });
 
-  const { dragOverColumnId, draggingIds, settlingIds, dropPreview, dragTilt, alignmentGuides, handleItemMouseDown } =
+  const { dragOverColumnId, draggingIds, dragOverrides, dropPreview, dragTilt, alignmentGuides, handleItemMouseDown } =
     useItemDrag({
       projectRef,
       selectedIdsRef,
@@ -606,7 +608,7 @@ export default function Canvas({
       pushHistory,
       onSelectItems,
       onSelectTool,
-      onUpdateItem,
+      onUpdateItems,
       onDropOnColumn,
       clearColumnSelection,
     });
@@ -880,20 +882,37 @@ export default function Canvas({
     return { matchingIds, nestedColumnMatches, contextFrameIds };
   }, [project.items, normalizedSearch, searchActive]);
 
-  const frames = useMemo(() => project.items.filter((item) => item.type === 'frame'), [project.items]);
+  const effectiveItems = useMemo(
+    () =>
+      dragOverrides.size === 0
+        ? project.items
+        : project.items.map((item) => {
+            const geometry = dragOverrides.get(item.id);
+            return geometry ? { ...item, ...geometry } : item;
+          }),
+    [project.items, dragOverrides],
+  );
+  const frames = useMemo(() => effectiveItems.filter((item) => item.type === 'frame'), [effectiveItems]);
   const regularItems = useMemo(
     () => project.items.filter((item) => item.type !== 'frame').sort((a, b) => a.zIndex - b.zIndex),
     [project.items],
   );
+  const effectiveItemsById = useMemo(() => new Map(effectiveItems.map((item) => [item.id, item])), [effectiveItems]);
   const renderedItems = useMemo(
     () =>
       new Map(
         regularItems.map((item) => [
           item.id,
-          item.type === 'line' ? resolveLineItem(item, project.items, measuredSizes) : item,
+          item.type === 'line'
+            ? resolveLineItem(
+                (effectiveItemsById.get(item.id) as typeof item | undefined) ?? item,
+                effectiveItems,
+                measuredSizes,
+              )
+            : (effectiveItemsById.get(item.id) ?? item),
         ]),
       ),
-    [regularItems, project.items, measuredSizes],
+    [regularItems, effectiveItems, effectiveItemsById, measuredSizes],
   );
   const lockedFrameIds = useMemo(
     () =>
@@ -1159,7 +1178,6 @@ export default function Canvas({
             item={frame}
             movementLocked={lockedFrameIds.has(frame.id)}
             onItemResize={handleItemResize}
-            isSettling={settlingIds.includes(frame.id)}
             zoom={zoom}
             isSelected={safeSelectedIds.includes(frame.id)}
             isDragging={draggingIds.includes(frame.id)}
@@ -1196,7 +1214,6 @@ export default function Canvas({
               selectedColumnItemId={
                 item.type === 'column' && selectedColumnItem?.columnId === item.id ? selectedColumnItem.item.id : null
               }
-              isSettling={settlingIds.includes(item.id)}
               isDragging={draggingIds.includes(item.id)}
               dragTilt={draggingIds.includes(item.id) ? dragTilt : 0}
               onQuickConnectStart={handleQuickConnectStart}

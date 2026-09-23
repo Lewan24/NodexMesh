@@ -6,7 +6,19 @@ Reviewed: 2026-09-23.
 
 Preserve the findings from a source-code review of board rendering, mouse and touch navigation, dragging, resizing, geometry, and persistence. The goal is smoother interaction and faster rendering, particularly on older or weaker devices and large boards.
 
-These are code-based findings and proposed improvements, not measured browser bottlenecks. No application changes or performance benchmarks were performed as part of this review. Recheck the referenced code before implementing because it may have changed since the review.
+These are code-based findings and proposed improvements, not measured browser bottlenecks. The first implementation pass described below was completed without claiming a measured speedup. Recheck the referenced code before implementing later phases because it may have changed since the review.
+
+## Implementation status
+
+Completed in the first independently reviewable pass:
+
+- Item and frame-group dragging now keeps frame-scheduled geometry outside persisted project data and commits all final positions through one batched update on release.
+- Attached lines resolve against the transient geometry, while the final patch is applied to the latest project state so unrelated remote fields are retained.
+- Mouse middle-button panning and wheel zoom now publish at most once per animation frame, flush final pan movement, and keep coordinate refs synchronized before React renders.
+- Drag listeners and scheduled work are cleaned up on blur or unmount. A focused regression test verifies that pointer movement causes no durable writes before one final commit.
+- Copying a connected selection now detaches line endpoints and dispenser references that point outside the copied graph.
+
+Viewport culling, dedicated camera ownership, lightweight inactive previews, and geometry indexes remain follow-up work. They should be profiled and landed separately because each has broader focus, mounting, or rendering correctness implications.
 
 ## Current architecture and existing optimizations
 
@@ -18,13 +30,15 @@ These are code-based findings and proposed improvements, not measured browser bo
 - Low-detail placeholders replace eligible items at zoom <= 0.2 on mobile and <= 0.25 on desktop. Selected, focused, dragged, hovered, remotely attended, and certain item types are exempt. Active search disables this simplification.
 - Several expensive block types use lazy imports. Images already use lazy loading in `ImageBlock`.
 - Item measurements are published to React at most once per animation frame. Number normalization uses a WeakMap cache and preserves unchanged object identities.
-- Persistence starts a batch after 250 ms from the first edit. It is not a network request for every mouse event, but saving can run during continuous dragging.
+- Persistence starts a batch after 250 ms from the first durable edit. Item dragging stays transient until release, so saving cannot start from intermediate drag positions.
 
 ## Prioritized improvements
 
 ### 1. Separate temporary dragging from persisted board data
 
-**Finding:** `useItemDrag` calls `onUpdateItem` once per captured item on every mouse move. Moving a frame also captures its contents. Each update passes through whole-board mapping, number normalization, frame-membership normalization, and workspace publication. React batching does not eliminate the synchronous work inside each update.
+**Status:** Implemented for item, multi-item, and frame-with-contents dragging. Resize and line-endpoint manipulation still use the durable update path and remain candidates for the same pattern after profiling.
+
+**Original finding:** `useItemDrag` called `onUpdateItem` once per captured item on every mouse move. Moving a frame also captures its contents. Each update passed through whole-board mapping, number normalization, frame-membership normalization, and workspace publication. React batching did not eliminate the synchronous work inside each update.
 
 **Proposal:**
 
@@ -74,7 +88,9 @@ These are code-based findings and proposed improvements, not measured browser bo
 
 ### 4. Schedule mouse and touch work consistently
 
-**Finding:** Touch pan and pinch already use animation-frame scheduling. Mouse panning, wheel zoom, item dragging, resizing, and line manipulation generally process events directly. Touch item movement dispatches synthetic mouse events into the existing mouse pipeline.
+**Status:** Implemented for mouse panning, wheel zoom, and item dragging. Resize and line manipulation remain direct and should be converted only with equivalent final-flush and cancellation coverage.
+
+**Original finding:** Touch pan and pinch already used animation-frame scheduling. Mouse panning, wheel zoom, item dragging, resizing, and line manipulation generally processed events directly. Touch item movement dispatches synthetic mouse events into the existing mouse pipeline.
 
 **Proposal:**
 
@@ -193,29 +209,29 @@ Verify undo, snapping, final coordinates, column drops, frame ownership, locks, 
 
 Paths are relative to this document.
 
-| Area | Source |
-| --- | --- |
-| Camera state | [useBoardView.ts](../Frontend/src/features/board/hooks/useBoardView.ts) |
-| Page integration | [BoardPage.tsx](../Frontend/src/features/board/pages/BoardPage.tsx) |
-| Canvas rendering and grid | [Canvas.tsx](../Frontend/src/features/canvas/components/Canvas.tsx) |
-| Item content memoization and detail levels | [CanvasItem.tsx](../Frontend/src/features/canvas/components/CanvasItem.tsx) |
-| Frame rendering | [CanvasFrame.tsx](../Frontend/src/features/canvas/components/CanvasFrame.tsx) |
-| Mouse navigation | [useCanvasMouse.ts](../Frontend/src/features/canvas/hooks/useCanvasMouse.ts) |
-| Wheel zoom | [useCanvasZoom.ts](../Frontend/src/features/canvas/hooks/useCanvasZoom.ts) |
-| Touch gestures | [useCanvasTouch.ts](../Frontend/src/features/canvas/hooks/useCanvasTouch.ts) |
-| Item dragging | [useItemDrag.ts](../Frontend/src/features/canvas/hooks/useItemDrag.ts) |
-| Resize and line interaction | [useItemResize.ts](../Frontend/src/features/canvas/hooks/useItemResize.ts), [useLineDrag.ts](../Frontend/src/features/canvas/hooks/useLineDrag.ts) |
-| Board mutations | [useProjectItems.ts](../Frontend/src/features/projects/hooks/useProjectItems.ts) |
-| Number normalization | [normalizeNumbers.ts](../Frontend/src/entities/board/normalizeNumbers.ts) |
-| Geometry and snapping | [lineGeometry.ts](../Frontend/src/features/canvas/utils/lineGeometry.ts), [frameGeometry.ts](../Frontend/src/features/canvas/utils/frameGeometry.ts), [alignmentGuides.ts](../Frontend/src/features/canvas/utils/alignmentGuides.ts) |
-| Visibility detection | [useCanvasLostState.ts](../Frontend/src/features/canvas/hooks/useCanvasLostState.ts) |
-| Measurements | [ItemWatcher.tsx](../Frontend/src/features/canvas/components/ItemWatcher.tsx), [useCanvasMeasurements.ts](../Frontend/src/features/canvas/hooks/useCanvasMeasurements.ts) |
-| Block dispatch and lazy imports | [BlockRenderer.tsx](../Frontend/src/features/blocks/BlockRenderer.tsx) |
-| Document editor | [DocumentBlock.tsx](../Frontend/src/features/blocks/document/DocumentBlock.tsx) |
-| Persistence and diffing | [workspaceController.ts](../Frontend/src/features/projects/services/workspaceController.ts), [boardAdapter.ts](../Frontend/src/features/projects/services/boardAdapter.ts) |
-| Drag styling | [index.css](../Frontend/src/app/styles/index.css) |
-| Mobile layout subscriptions | [MobilePanel.tsx](../Frontend/src/shared/components/dialogs/MobilePanel.tsx) |
-| Existing touch coverage | [canvas-touch.test.mjs](../Frontend/tests/canvas-touch.test.mjs) |
+| Area                                       | Source                                                                                                                                                                                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Camera state                               | [useBoardView.ts](../Frontend/src/features/board/hooks/useBoardView.ts)                                                                                                                                                              |
+| Page integration                           | [BoardPage.tsx](../Frontend/src/features/board/pages/BoardPage.tsx)                                                                                                                                                                  |
+| Canvas rendering and grid                  | [Canvas.tsx](../Frontend/src/features/canvas/components/Canvas.tsx)                                                                                                                                                                  |
+| Item content memoization and detail levels | [CanvasItem.tsx](../Frontend/src/features/canvas/components/CanvasItem.tsx)                                                                                                                                                          |
+| Frame rendering                            | [CanvasFrame.tsx](../Frontend/src/features/canvas/components/CanvasFrame.tsx)                                                                                                                                                        |
+| Mouse navigation                           | [useCanvasMouse.ts](../Frontend/src/features/canvas/hooks/useCanvasMouse.ts)                                                                                                                                                         |
+| Wheel zoom                                 | [useCanvasZoom.ts](../Frontend/src/features/canvas/hooks/useCanvasZoom.ts)                                                                                                                                                           |
+| Touch gestures                             | [useCanvasTouch.ts](../Frontend/src/features/canvas/hooks/useCanvasTouch.ts)                                                                                                                                                         |
+| Item dragging                              | [useItemDrag.ts](../Frontend/src/features/canvas/hooks/useItemDrag.ts)                                                                                                                                                               |
+| Resize and line interaction                | [useItemResize.ts](../Frontend/src/features/canvas/hooks/useItemResize.ts), [useLineDrag.ts](../Frontend/src/features/canvas/hooks/useLineDrag.ts)                                                                                   |
+| Board mutations                            | [useProjectItems.ts](../Frontend/src/features/projects/hooks/useProjectItems.ts)                                                                                                                                                     |
+| Number normalization                       | [normalizeNumbers.ts](../Frontend/src/entities/board/normalizeNumbers.ts)                                                                                                                                                            |
+| Geometry and snapping                      | [lineGeometry.ts](../Frontend/src/features/canvas/utils/lineGeometry.ts), [frameGeometry.ts](../Frontend/src/features/canvas/utils/frameGeometry.ts), [alignmentGuides.ts](../Frontend/src/features/canvas/utils/alignmentGuides.ts) |
+| Visibility detection                       | [useCanvasLostState.ts](../Frontend/src/features/canvas/hooks/useCanvasLostState.ts)                                                                                                                                                 |
+| Measurements                               | [ItemWatcher.tsx](../Frontend/src/features/canvas/components/ItemWatcher.tsx), [useCanvasMeasurements.ts](../Frontend/src/features/canvas/hooks/useCanvasMeasurements.ts)                                                            |
+| Block dispatch and lazy imports            | [BlockRenderer.tsx](../Frontend/src/features/blocks/BlockRenderer.tsx)                                                                                                                                                               |
+| Document editor                            | [DocumentBlock.tsx](../Frontend/src/features/blocks/document/DocumentBlock.tsx)                                                                                                                                                      |
+| Persistence and diffing                    | [workspaceController.ts](../Frontend/src/features/projects/services/workspaceController.ts), [boardAdapter.ts](../Frontend/src/features/projects/services/boardAdapter.ts)                                                           |
+| Drag styling                               | [index.css](../Frontend/src/app/styles/index.css)                                                                                                                                                                                    |
+| Mobile layout subscriptions                | [MobilePanel.tsx](../Frontend/src/shared/components/dialogs/MobilePanel.tsx)                                                                                                                                                         |
+| Existing touch coverage                    | [canvas-touch.test.mjs](../Frontend/tests/canvas-touch.test.mjs)                                                                                                                                                                     |
 
 ## External references
 

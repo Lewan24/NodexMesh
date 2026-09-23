@@ -18,7 +18,7 @@ sequenceDiagram
     B->>API: Fetch authorized current data and merge local edits
 ```
 
-Canvas writes commit directly to the database. The browser batches edits starting after 250 ms; the HTTP adapter spaces mutations by at least 1.1 seconds to respect the 60 mutations/minute/user limit. Each mutation contains changed items, not an entire replacement board. A transaction checks the board revision, each touched item revision, permissions and graph references. A persisted mutation ID makes retries of a lost response safe.
+Canvas writes commit directly to the database. The browser batches edits starting after 250 ms; the HTTP adapter spaces mutations by at least 1.1 seconds to respect the 60 mutations/minute/user limit. Item dragging is kept as frame-scheduled visual geometry and commits the final positions in one board update on release, so pointer movement does not enter the durable write queue. Each mutation contains changed items, not an entire replacement board. A transaction checks the board revision, each touched item revision, permissions and graph references. A persisted mutation ID makes retries of a lost response safe.
 
 Successful canvas writes now publish a small SignalR invalidation after commit. Notification failure does not turn a committed write into an API error. Clients coalesce notifications with background reads. Polling remains a fallback for missed events, disconnected clients, and changes made through other endpoints (including comments, membership and trash). A notification is not authoritative data: the following HTTP request checks access again.
 

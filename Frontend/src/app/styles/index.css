@@ -271,7 +271,7 @@ body {
   transition:
     transform 70ms ease-out,
     filter 120ms ease;
-  will-change: left, top, transform;
+  will-change: transform;
 }
 
 .item-rounded {

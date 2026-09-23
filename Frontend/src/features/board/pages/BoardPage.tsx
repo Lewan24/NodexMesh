@@ -148,6 +148,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
   const {
     addItem,
     updateItem,
+    updateItemsById,
     restoreItems,
     deleteItem,
     deleteItems,
@@ -711,6 +712,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             onOpenBoard={handleOpenBoard}
             onRenameBoard={handleRenameBoard}
             onUpdateItem={updateItem}
+            onUpdateItems={updateItemsById}
             onDeleteItem={handleDeleteItem}
             onDeleteItems={handleDeleteItems}
             onBringForward={bringForward}
