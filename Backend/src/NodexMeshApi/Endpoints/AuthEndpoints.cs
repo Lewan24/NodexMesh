@@ -103,13 +103,7 @@ public static class AuthEndpoints
 
         // Every user starts with a default appearance profile so the SPA always has
         // something to load — mirrors the frontend's `defaults` object.
-        db.AppearanceProfiles.Add(new AppearanceProfile
-        {
-            UserId = user.Id,
-            LightTheme = DefaultThemes.Light,
-            DarkTheme = DefaultThemes.Dark,
-            UpdatedAt = DateTimeOffset.UtcNow
-        });
+        db.AppearanceProfiles.Add(DefaultThemes.CreateProfile(user.Id, DateTimeOffset.UtcNow));
         await db.SaveChangesAsync();
 
         logger.LogInformation("New user registered: {UserId}", user.Id);
@@ -388,14 +382,28 @@ public static class AuthEndpoints
 internal static class DefaultThemes
 {
     public const string Light = """
-        {"primary":"#2b0066","secondary":"#ff00f7","canvas":"#f4f1f9","default":"#ffffff",
-        "accent1":"#ede4fa","accent2":"#dceff2","accent3":"#e3f1e4","accent4":"#fff0d5","accent5":"#f8e2eb",
-        "gradients":{"default":{"from":"accent1","to":"accent5","angle":120,"kind":"linear"}}}
+        {"primary":"#903df5","secondary":"#ff0000","canvas":"#f5f5f7","default":"#ffffff",
+        "accent1":"#6e5fa8","accent2":"#56718f","accent3":"#537f83","accent4":"#66836d","accent5":"#946a6a",
+        "gradients":{}}
         """;
 
     public const string Dark = """
-        {"primary":"#5500cc","secondary":"#ff00f7","canvas":"#14101d","default":"#241b30",
-        "accent1":"#39264f","accent2":"#163b43","accent3":"#243e2d","accent4":"#463722","accent5":"#482839",
-        "gradients":{"default":{"from":"accent1","to":"accent5","angle":120,"kind":"linear"}}}
+        {"primary":"#903df5","secondary":"#ff0000","canvas":"#0b0b0c","default":"#18181b",
+        "accent1":"#8272ba","accent2":"#6984a1","accent3":"#669297","accent4":"#78967f","accent5":"#aa7d7d",
+        "gradients":{}}
         """;
+
+    public static AppearanceProfile CreateProfile(Guid userId, DateTimeOffset updatedAt) => new()
+    {
+        UserId = userId,
+        Font = "short-stack",
+        UiFont = "sans",
+        UiPrimary = "#8000ff",
+        UiSecondary = "#6a00eb",
+        InheritanceVersion = 1,
+        PaletteVersion = 2,
+        LightTheme = Light,
+        DarkTheme = Dark,
+        UpdatedAt = updatedAt
+    };
 }

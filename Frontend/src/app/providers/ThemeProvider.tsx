@@ -34,6 +34,13 @@ interface ThemeContextValue {
 }
 const appearanceApi = httpClient ? createHttpAppearance(httpClient) : null;
 const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+function surfaceAltColor(surface: string) {
+  return readableText(surface) === '#000000'
+    ? `color-mix(in srgb, ${surface} 96%, #64748b)`
+    : `color-mix(in srgb, ${surface} 82%, #050507)`;
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useTranslation();
   const [globalTheme, setGlobalTheme] = useState<Theme>(() => {
@@ -197,7 +204,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       '--color-secondary': palette.secondary,
       '--color-app-bg': palette.canvas,
       '--color-surface': palette.default,
-      '--color-surface-alt': palette.accent1,
+      '--color-surface-alt': surfaceAltColor(palette.default),
       '--color-surface-translucent': `color-mix(in srgb, ${palette.default} 94%, transparent)`,
       '--chrome-gradient': `linear-gradient(135deg, color-mix(in srgb, ${preferences.uiPrimary} 35%, #10071d), color-mix(in srgb, ${preferences.uiSecondary} 15%, #130921))`,
       '--ui-accent': preferences.uiPrimary,
@@ -273,7 +280,7 @@ export function PublicAppearanceProvider({
             '--color-text-muted': readableText(palette.default),
             '--color-text-faint': readableText(palette.default),
             '--color-on-accent': readableText(palette.primary),
-            '--color-surface-alt': palette.accent1,
+            '--color-surface-alt': surfaceAltColor(palette.default),
             '--color-accent': palette.primary,
             '--project-font': getFontFamilyCss(appearance.font),
           } as React.CSSProperties

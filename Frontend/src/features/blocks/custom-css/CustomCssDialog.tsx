@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { BoardItem } from '@/entities/board/types';
-import { MAX_CUSTOM_CSS_LENGTH, parseCustomCss } from './customCss';
+import { customCssSelectorForValidation, MAX_CUSTOM_CSS_LENGTH, parseCustomCssRules } from './customCss';
 
 interface Props {
   item: BoardItem;
@@ -33,8 +33,17 @@ export default function CustomCssDialog({ item, onUpdate, onClose }: Props & { o
   const save = () => {
     try {
       if (enabled) {
-        const declarations = parseCustomCss(source);
-        const unsupported = declarations.find(({ property, value }) => !CSS.supports(property, value));
+        const rules = parseCustomCssRules(source);
+        const unsupportedSelector = rules.find(
+          ({ selector }) => selector && !CSS.supports(`selector(${customCssSelectorForValidation(selector)})`),
+        )?.selector;
+        if (unsupportedSelector)
+          throw new Error(
+            translate('This browser does not support the selector: {{value1}}', { value1: unsupportedSelector }),
+          );
+        const unsupported = rules
+          .flatMap(({ declarations }) => declarations)
+          .find(({ property, value }) => !CSS.supports(property, value));
         if (unsupported)
           throw new Error(
             translate('This browser does not support: {{value1}}: {{value2}}', {
@@ -46,7 +55,7 @@ export default function CustomCssDialog({ item, onUpdate, onClose }: Props & { o
       onUpdate((current) => ({ ...current, customCss: { enabled, source } }));
       onClose();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate('Check the CSS declarations.'));
+      setError(cause instanceof Error ? cause.message : translate('Check the custom CSS.'));
     }
   };
 
@@ -99,11 +108,11 @@ export default function CustomCssDialog({ item, onUpdate, onClose }: Props & { o
         </label>
         <p id={helpId} className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
           {translate(
-            'Add CSS declarations to the item root, without a selector or braces. These override matching root styles; other settings stay in place. Children inherit properties unless they have their own styles.',
+            'Write normal CSS selectors to style elements inside this item. Use & to target the item root. Declaration-only CSS remains supported and targets the root.',
           )}
         </p>
         <label className="flex flex-col gap-2 text-sm">
-          {translate('CSS declarations')}
+          {translate('Item CSS')}
           <textarea
             autoFocus
             rows={10}
@@ -112,7 +121,9 @@ export default function CustomCssDialog({ item, onUpdate, onClose }: Props & { o
             spellCheck={false}
             aria-describedby={`${helpId}${error ? ` ${errorId}` : ''}`}
             aria-invalid={!!error}
-            placeholder={'border-radius: 24px;\nbox-shadow: 0 12px 32px #00000030;\nletter-spacing: 0.03em;'}
+            placeholder={
+              '& { border-radius: 24px; }\nbutton a { color: red; }\nbutton:hover { transform: translateY(-1px); }'
+            }
             onChange={(event) => {
               setSource(event.target.value);
               setError('');

@@ -15,6 +15,12 @@ export interface ProjectMember {
   createdAt: string;
 }
 
+export interface ProjectParticipant {
+  userId: string;
+  displayName: string;
+  role: MemberRole | 'Owner';
+}
+
 export interface ShareLink {
   id: string;
   projectId: string;

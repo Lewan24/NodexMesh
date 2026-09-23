@@ -5,6 +5,7 @@ import { TypographyContext } from './typography/TypographyContext';
 import IconBlock from './icon/IconBlock';
 import SectionTitleBlock from './section-title/SectionTitleBlock';
 import type { BoardItem } from '@/entities/board/types';
+import type { ProjectParticipant } from '@/entities/project/shareTypes';
 import { lazy, Suspense } from 'react';
 
 import ChecklistBlock from '@/features/blocks/checklist/ChecklistBlock';
@@ -62,6 +63,7 @@ export interface BlockRendererProps {
   zoom?: number;
   readOnly?: boolean;
   item: BoardItem;
+  projectParticipants?: ProjectParticipant[];
   isSelected: boolean;
   isDragOver?: boolean;
   selectedColumnItemId?: string | null;
@@ -86,6 +88,7 @@ function BlockContent({
   zoom = 1,
   readOnly = false,
   item,
+  projectParticipants = [],
   isSelected,
   isDragOver,
   selectedColumnItemId,
@@ -116,7 +119,7 @@ function BlockContent({
     case 'timeline':
       return (
         <Suspense fallback={<LoadingBlock item={item} />}>
-          <TimelineBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />
+          <TimelineBlock item={item} participants={projectParticipants} onUpdate={onUpdate} onDelete={onDelete} />
         </Suspense>
       );
     case 'database':

@@ -13,6 +13,7 @@ using NodexMeshApi.Data;
 using NodexMeshApi.Endpoints;
 using NodexMeshApi.Models;
 using NodexMeshApi.OpenApi;
+using NodexMeshApi.Options;
 using NodexMeshApi.Services;
 
 Log.Logger = new LoggerConfiguration()
@@ -257,12 +258,21 @@ try
     // Injected rather than calling DateTimeOffset.UtcNow directly, so expiry and
     // revocation logic in ShareLinkService is testable without waiting in real time.
     builder.Services.AddSingleton(TimeProvider.System);
+    builder.Services.Configure<AppVersionOptions>(builder.Configuration.GetSection(AppVersionOptions.SectionName));
+    builder.Services.AddMemoryCache();
+    builder.Services.AddHttpClient("GitHubReleases", client =>
+    {
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("NodexMesh-VersionChecker");
+        client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+        client.Timeout = TimeSpan.FromSeconds(10);
+    });
 
     builder.Services.AddScoped<ITokenService, TokenService>();
     builder.Services.AddScoped<IProjectAccessService, ProjectAccessService>();
     builder.Services.AddScoped<IBoardMutationService, BoardMutationService>();
     builder.Services.AddScoped<IShareLinkService, ShareLinkService>();
     builder.Services.AddScoped<TagService>();
+    builder.Services.AddSingleton<IGitHubReleaseService, GitHubReleaseService>();
 
     // idempotency_keys and refresh_tokens grow on every save and every token refresh;
     // nothing else deletes them.
@@ -346,6 +356,7 @@ try
     app.MapBoardEndpoints();
     app.MapCommentEndpoints();
     app.MapPublicEndpoints();
+    app.MapVersionEndpoints();
 
     app.Run();
 }

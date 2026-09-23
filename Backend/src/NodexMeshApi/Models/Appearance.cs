@@ -5,12 +5,12 @@ public sealed class AppearanceProfile
 {
     public Guid UserId { get; set; }
     public string? Mode { get; set; }
-    public string Font { get; set; } = "sans";
+    public string Font { get; set; } = "short-stack";
     public string UiFont { get; set; } = "sans";
-    public string UiPrimary { get; set; } = "#7941c8";
-    public string UiSecondary { get; set; } = "#000000";
+    public string UiPrimary { get; set; } = "#8000ff";
+    public string UiSecondary { get; set; } = "#6a00eb";
     public int InheritanceVersion { get; set; } = 1;
-    public int PaletteVersion { get; set; } = 1;
+    public int PaletteVersion { get; set; } = 2;
     public string LightTheme { get; set; } = "{}"; // jsonb: primary/secondary/canvas/default/accent1-5/gradients
     public string DarkTheme { get; set; } = "{}";
     public DateTimeOffset UpdatedAt { get; set; }

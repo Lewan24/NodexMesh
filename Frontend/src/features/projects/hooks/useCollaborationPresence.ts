@@ -6,7 +6,16 @@ export interface RemotePresence {
   displayName: string;
   itemIds: string[];
   mode: 'selected' | 'editing';
+  cursorX?: number | null;
+  cursorY?: number | null;
   expiresAt: string;
+}
+
+export interface RemoteCursor {
+  userId: string;
+  displayName: string;
+  x: number;
+  y: number;
 }
 
 interface PresenceEvent extends RemotePresence {
@@ -28,10 +37,51 @@ export function useCollaborationPresence(
   const connection = useRef<HubConnection | undefined>(undefined);
   const selectedRef = useRef(selectedIds);
   selectedRef.current = selectedIds;
+  const cursorRef = useRef<{ x: number; y: number } | null>(null);
+  const lastPublishedAt = useRef(0);
+  const publishTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const identity = `${projectId}:${boardId ?? ''}:${userId}`;
+
+  const publish = () => {
+    const active = connection.current;
+    if (!boardId || !active || active.state !== HubConnectionState.Connected) return;
+    const activeElement = document.activeElement;
+    const activeItem = activeElement?.closest<HTMLElement>('[data-board-item-id]')?.dataset.boardItemId;
+    const editing = Boolean(
+      activeItem &&
+        selectedRef.current.includes(activeItem) &&
+        activeElement?.matches('textarea, input, [contenteditable="true"]'),
+    );
+    lastPublishedAt.current = Date.now();
+    void active
+      .invoke('UpdatePresence', {
+        projectId,
+        boardId,
+        itemIds: selectedRef.current.slice(0, 50),
+        mode: editing ? 'editing' : 'selected',
+        cursorX: cursorRef.current?.x ?? null,
+        cursorY: cursorRef.current?.y ?? null,
+      })
+      .catch(() => undefined);
+  };
+
+  const schedulePublish = () => {
+    if (publishTimer.current) return;
+    const delay = Math.max(0, 250 - (Date.now() - lastPublishedAt.current));
+    publishTimer.current = setTimeout(() => {
+      publishTimer.current = undefined;
+      publish();
+    }, delay);
+  };
+
+  const updateCursor = (cursor: { x: number; y: number } | null) => {
+    cursorRef.current = cursor;
+    schedulePublish();
+  };
 
   useEffect(() => {
     if (!projectId || !boardId || !userId) return;
+    cursorRef.current = null;
     let disposed = false;
     const next = new HubConnectionBuilder()
       .withUrl(hubUrl, {
@@ -66,6 +116,7 @@ export function useCollaborationPresence(
     const join = async () => {
       if (disposed) return;
       await next.invoke('JoinProject', projectId);
+      publish();
       window.dispatchEvent(new CustomEvent('nodexmesh:board-changed', { detail: { projectId, boardId } }));
     };
     const start = async () => {
@@ -95,6 +146,8 @@ export function useCollaborationPresence(
     return () => {
       disposed = true;
       clearTimeout(retryTimer);
+      clearTimeout(publishTimer.current);
+      publishTimer.current = undefined;
       if (next.state === HubConnectionState.Connected)
         void next.invoke('ClearPresence', projectId).catch(() => undefined);
       void next.stop();
@@ -105,27 +158,12 @@ export function useCollaborationPresence(
 
   useEffect(() => {
     if (!boardId) return;
-    const publish = () => {
-      const active = connection.current;
-      if (!active || active.state !== HubConnectionState.Connected) return;
-      const activeElement = document.activeElement;
-      const activeItem = activeElement?.closest<HTMLElement>('[data-board-item-id]')?.dataset.boardItemId;
-      const editing = Boolean(
-        activeItem &&
-          selectedRef.current.includes(activeItem) &&
-          activeElement?.matches('textarea, input, [contenteditable="true"]'),
-      );
-      void active
-        .invoke('UpdatePresence', {
-          projectId,
-          boardId,
-          itemIds: selectedRef.current.slice(0, 50),
-          mode: editing ? 'editing' : 'selected',
-        })
-        .catch(() => undefined);
+    const clearCursor = () => {
+      cursorRef.current = null;
+      schedulePublish();
     };
-    publish();
-    const timer = window.setInterval(publish, 5000);
+    schedulePublish();
+    const timer = window.setInterval(schedulePublish, 5000);
     const expire = window.setInterval(
       () =>
         setRemote((current) => {
@@ -134,21 +172,35 @@ export function useCollaborationPresence(
         }),
       1000,
     );
-    document.addEventListener('focusin', publish);
-    document.addEventListener('focusout', publish);
+    document.addEventListener('focusin', schedulePublish);
+    document.addEventListener('focusout', schedulePublish);
+    window.addEventListener('blur', clearCursor);
     return () => {
       window.clearInterval(timer);
       window.clearInterval(expire);
-      document.removeEventListener('focusin', publish);
-      document.removeEventListener('focusout', publish);
+      document.removeEventListener('focusin', schedulePublish);
+      document.removeEventListener('focusout', schedulePublish);
+      window.removeEventListener('blur', clearCursor);
     };
   }, [projectId, boardId, selectedIds]);
 
-  return useMemo(() => {
+  const byItem = useMemo(() => {
     const byItem: Record<string, RemotePresence[]> = {};
     for (const presence of Object.values(remote)) {
       for (const itemId of presence.itemIds) (byItem[itemId] ??= []).push(presence);
     }
     return byItem;
   }, [remote]);
+
+  const cursors = useMemo(
+    () =>
+      Object.values(remote).flatMap((presence) =>
+        typeof presence.cursorX === 'number' && typeof presence.cursorY === 'number'
+          ? [{ userId: presence.userId, displayName: presence.displayName, x: presence.cursorX, y: presence.cursorY }]
+          : [],
+      ),
+    [remote],
+  );
+
+  return { byItem, cursors, updateCursor };
 }

@@ -4,10 +4,13 @@ import { memo, useCallback, useMemo, useRef, useState, type SyntheticEvent } fro
 import { useReadOnlyNavigation } from '../hooks/useReadOnlyNavigation';
 import ItemInspector from '@/features/inspector/ItemInspector';
 import type { BoardItem } from '@/entities/board/types';
+import type { ProjectParticipant } from '@/entities/project/shareTypes';
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
 import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
 import ItemWatcher from '@/features/canvas/components/ItemWatcher';
+import RemoteCursors from '@/features/canvas/components/RemoteCursors';
+import type { RemoteCursor } from '@/features/projects/hooks/useCollaborationPresence';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import './sharing.css';
 
@@ -19,11 +22,13 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({
   onSelect,
   onOpenBoard,
   selected,
+  projectParticipants,
 }: {
   item: BoardItem;
   onSelect?: (id: string) => void;
   onOpenBoard?: (id: string) => void;
   selected: boolean;
+  projectParticipants?: ProjectParticipant[];
 }) {
   useTranslation();
   const stopBoardNavigation = (event: SyntheticEvent) => {
@@ -81,6 +86,7 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({
     >
       <BlockRenderer
         item={item}
+        projectParticipants={projectParticipants}
         readOnly
         isSelected={selected}
         onOpenBoard={onOpenBoard}
@@ -100,6 +106,9 @@ export default function ReadOnlyBoard({
   currentUserId,
   onSaveComments,
   onOpenBoard,
+  remoteCursors = [],
+  onCursorMove,
+  projectParticipants = [],
 }: {
   items: BoardItem[];
   inspect?: boolean;
@@ -107,6 +116,9 @@ export default function ReadOnlyBoard({
   currentUserId?: string;
   onSaveComments?: (itemId: string, comments: import('@/entities/board/types').ItemComment[]) => Promise<void>;
   onOpenBoard?: (boardId: string) => void;
+  remoteCursors?: RemoteCursor[];
+  onCursorMove?: (position: { x: number; y: number } | null) => void;
+  projectParticipants?: ProjectParticipant[];
 }) {
   useTranslation();
   const [selectedId, setSelectedId] = useState('');
@@ -179,7 +191,18 @@ export default function ReadOnlyBoard({
         ref={navigation.viewport}
         className={`relative flex-1 min-h-0 ${touchMode ? 'overflow-auto' : 'overflow-hidden'}`}
         onPointerDownCapture={navigation.pointerDown}
-        onPointerMove={navigation.pointerMove}
+        onPointerMove={(event) => {
+          navigation.pointerMove(event);
+          if (event.pointerType !== 'mouse') return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          onCursorMove?.({
+            x: (event.clientX - rect.left - camera.x) / zoom + offsetX,
+            y: (event.clientY - rect.top - camera.y) / zoom + offsetY,
+          });
+        }}
+        onPointerLeave={(event) => {
+          if (event.pointerType === 'mouse') onCursorMove?.(null);
+        }}
         onPointerUp={navigation.endDrag}
         onPointerCancel={navigation.endDrag}
         onLostPointerCapture={navigation.endDrag}
@@ -235,6 +258,7 @@ export default function ReadOnlyBoard({
                   <ItemWatcher itemId={item.id} onResize={handleItemResize}>
                     <ReadOnlyBlock
                       item={item}
+                      projectParticipants={projectParticipants}
                       selected={
                         selectedId === item.id ||
                         (item.type === 'column' && item.items.some((child) => child.id === selectedId))
@@ -247,6 +271,13 @@ export default function ReadOnlyBoard({
               ))}
             </div>
           </div>
+        )}
+        {!touchMode && (
+          <RemoteCursors
+            cursors={remoteCursors}
+            pan={{ x: camera.x - offsetX * zoom, y: camera.y - offsetY * zoom }}
+            zoom={zoom}
+          />
         )}
       </div>
       {inspect && selected && (

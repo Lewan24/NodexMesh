@@ -71,6 +71,7 @@ export interface TimelineTask {
   end: string;
   done: boolean;
   color: string;
+  assigneeUserId?: string;
   checklist: ChecklistEntry[];
 }
 export interface TimelineItem extends BaseItem {

@@ -71,6 +71,25 @@ public class ProjectEndpointsTests : IDisposable
     }
 
     [Fact]
+    public async Task Participants_ListsTheOwnerAndCollaboratorsForTaskAssignment()
+    {
+        var (owner, ownerId, _, _) = await _factory.CreateSeededUserAsync("Project Owner");
+        var (editor, editorId, editorEmail, _) = await _factory.CreateSeededUserAsync("Timeline Editor");
+        var project = await CreateProjectAsync(owner);
+        await owner.PostAsJsonAsync(
+            $"/api/v1/projects/{project.Id}/members",
+            new InviteMemberRequest(editorEmail, "Editor"));
+
+        var participants = await editor.GetFromJsonAsync<List<ProjectParticipantDto>>(
+            $"/api/v1/projects/{project.Id}/participants");
+
+        participants.Should().BeEquivalentTo([
+            new ProjectParticipantDto(ownerId, "Project Owner", "Owner"),
+            new ProjectParticipantDto(editorId, "Timeline Editor", "Editor")
+        ]);
+    }
+
+    [Fact]
     public async Task ListProjects_RequiresAuthentication()
     {
         var client = _factory.CreateClientNoRedirect();

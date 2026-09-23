@@ -2,7 +2,7 @@
 
 ## Implemented
 
-- Authenticated SignalR presence hub: collaborators join only after project access is checked; server-derived display names, 50-item payload cap, one heartbeat per second per connection, 15-second TTL, disconnect cleanup, and no persistence in board revisions. The frontend sends selection presence and detects an active text editor as `editing`.
+- Authenticated SignalR presence hub: collaborators join only after project access is checked; server-derived display names, 50-item payload cap, throttled live board-space cursor coordinates, a 15-second TTL, disconnect cleanup, and no persistence in board revisions. The frontend sends selection presence, detects an active text editor as `editing`, and renders named collaborator pointers for editors and read-only members.
 - Save scheduling: batch 250 ms from the first edit instead of debouncing 1,100 ms after the last edit. Continuous typing now reaches the save queue. The existing 1,100 ms write spacing remains because the API allows 60 mutations per minute per user.
 - Active authenticated project polling: 1,500 ms plus request duration, previously 2,000 ms. Project metadata and board revision checks run concurrently. Hidden-tab pause, reconnect backoff, role checks and conflict preservation remain.
 - Untagged mutations skip the full-board GET previously used only to resolve tag names. They still reload the acknowledged snapshot after saving; tagged edits retain fresh tag resolution and idempotent retries.

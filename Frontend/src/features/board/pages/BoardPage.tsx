@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 
 import type { BoardItem, ColumnItem, FrameItem } from '@/entities/board/types';
 import type { BoardRecord } from '@/entities/board/records';
+import type { ProjectParticipant } from '@/entities/project/shareTypes';
 
 import { useBoardView } from '@/features/board/hooks/useBoardView';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
@@ -91,6 +92,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
   const [trashOpen, setTrashOpen] = useState(false);
   const [trashLoading, setTrashLoading] = useState(false);
   const [trashedItems, setTrashedItems] = useState<TrashedItemRecord[]>([]);
+  const [projectParticipants, setProjectParticipants] = useState<ProjectParticipant[]>([]);
+  const [participantsRevision, setParticipantsRevision] = useState(0);
   useEffect(() => {
     if (!activeProject) {
       setBoards([]);
@@ -114,6 +117,25 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     setTrashOpen(false);
     setTrashedItems([]);
   }, [activeProject?.id]);
+  useEffect(() => {
+    if (!activeProject || !sharingApi) {
+      setProjectParticipants([]);
+      return;
+    }
+    if (status !== 'saved') return;
+    let cancelled = false;
+    void sharingApi
+      .participants(activeProject.id)
+      .then((participants) => {
+        if (!cancelled) setProjectParticipants(participants);
+      })
+      .catch(() => {
+        if (!cancelled) setProjectParticipants([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeProject?.id, participantsRevision, status]);
 
   const { setScope } = useTheme();
   const [appearanceOpen, setAppearanceOpen] = useState(false);
@@ -138,13 +160,11 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     resetBoardView,
   } = useBoardView();
 
-  const remotePresence = useCollaborationPresence(
-    activeProjectId,
-    activeProject?.boardId,
-    userId,
-    selectedIds,
-    collaborationToken,
-  );
+  const {
+    byItem: remotePresence,
+    cursors: remoteCursors,
+    updateCursor: updateCollaborationCursor,
+  } = useCollaborationPresence(activeProjectId, activeProject?.boardId, userId, selectedIds, collaborationToken);
 
   const {
     addItem,
@@ -552,9 +572,13 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
           key={activeProject.id}
           project={activeProject}
           userId={userId}
-          onClose={() => setSharingOpen(false)}
+          onClose={() => {
+            setSharingOpen(false);
+            setParticipantsRevision((current) => current + 1);
+          }}
           onLeave={() => {
             setSharingOpen(false);
+            setParticipantsRevision((current) => current + 1);
             void reload();
           }}
         />
@@ -689,17 +713,23 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             inspect
             canComment={activeProject.role === 'Commenter'}
             currentUserId={userId}
+            projectParticipants={projectParticipants}
             onSaveComments={(itemId, comments) => saveComments(activeProjectId, itemId, comments)}
             onOpenBoard={(boardId) => {
               void selectBoard(activeProjectId, boardId).catch(() => toast.error(translate('Could not open board.')));
             }}
+            remoteCursors={remoteCursors}
+            onCursorMove={updateCollaborationCursor}
           />
         ) : (
           <Canvas
             key={`${activeProjectId}:${activeProject.boardId ?? ''}`}
             project={activeProject}
+            projectParticipants={projectParticipants}
             remoteVersion={remoteVersion}
             remotePresence={remotePresence}
+            remoteCursors={remoteCursors}
+            onCursorMove={updateCollaborationCursor}
             selectedTool={selectedTool}
             pan={pan}
             zoom={zoom}

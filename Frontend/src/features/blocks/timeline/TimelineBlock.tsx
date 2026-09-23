@@ -5,7 +5,9 @@ import { getSectionStyle } from '@/features/blocks/typography/sectionTypography'
 import { createId } from '@/shared/lib/createId';
 import TimelineTaskDialog from './TimelineTaskDialog';
 import { useEffect, useRef, useState } from 'react';
+import { CalendarDays, Check, LayoutList, Pencil, Plus, Rows3 } from 'lucide-react';
 import type { TimelineItem, TimelineTask } from '@/entities/board/types';
+import type { ProjectParticipant } from '@/entities/project/shareTypes';
 import type { BlockDeleteHandler, BlockUpdateHandler } from '../types';
 import ContentBlockShell from '../shared/ContentBlockShell';
 import {
@@ -20,14 +22,37 @@ import {
 } from './timelineUtils';
 import '../shared/planning.css';
 
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+function AssigneeBadge({ participant, compact = false }: { participant?: ProjectParticipant; compact?: boolean }) {
+  if (!participant) return null;
+  return (
+    <span className={`timeline-assignee ${compact ? 'timeline-assignee-compact' : ''}`} title={participant.displayName}>
+      <span className="timeline-avatar" aria-hidden="true">
+        {initials(participant.displayName)}
+      </span>
+      {!compact && <span className="truncate">{participant.displayName}</span>}
+    </span>
+  );
+}
+
 export default function TimelineBlock({
   item,
   onUpdate,
   onDelete,
+  participants = [],
 }: {
   item: TimelineItem;
   onUpdate: BlockUpdateHandler;
   onDelete: BlockDeleteHandler;
+  participants?: ProjectParticipant[];
 }) {
   useTranslation();
   const [editing, setEditing] = useState(false);
@@ -35,6 +60,9 @@ export default function TimelineBlock({
   const movedBar = useRef(false);
   const [draggedRow, setDraggedRow] = useState<string | null>(null);
   const [dropRow, setDropRow] = useState<string | null>(null);
+  const participantsById = new Map(participants.map((participant) => [participant.userId, participant]));
+  const completedTasks = item.tasks.filter((task) => task.done).length;
+  const completion = item.tasks.length ? Math.round((completedTasks / item.tasks.length) * 100) : 0;
   const update = (fn: (current: TimelineItem) => TimelineItem) =>
     onUpdate((current) => (current.type === 'timeline' ? fn(current) : current));
   const resetHeight = () => {
@@ -74,7 +102,16 @@ export default function TimelineBlock({
   };
   const addTask = () => {
     const id = createId();
-    setDraft({ id, title: '', start: todayDate(), end: todayDate(), done: false, color: '#7c3aed', checklist: [] });
+    setDraft({
+      id,
+      title: '',
+      start: todayDate(),
+      end: todayDate(),
+      done: false,
+      color: '#7c3aed',
+      assigneeUserId: undefined,
+      checklist: [],
+    });
   };
   const moveBar = (
     event: React.PointerEvent<HTMLDivElement>,
@@ -123,28 +160,33 @@ export default function TimelineBlock({
           <span className="truncate" style={getSectionStyle(item.typography, 'title')}>
             {item.title}
           </span>
-          <span className="text-xs opacity-50">
-            {item.tasks.filter((task) => task.done).length}/{item.tasks.length} {' ' + translate('done')}
+          <span className="timeline-title-progress">
+            <span className="timeline-title-progress-track">
+              <span style={{ width: `${completion}%` }} />
+            </span>
+            {completedTasks}/{item.tasks.length} {' ' + translate('done')}
           </span>
         </span>
       }
     >
-      <div className="planning-toolbar" onMouseDown={(event) => event.stopPropagation()}>
-        <button
-          className="planning-button"
-          aria-pressed={item.mode === 'simple'}
-          onClick={() => update((current) => ({ ...current, mode: 'simple' }))}
-        >
-          {translate('Milestones')}
-        </button>
+      <div className="planning-toolbar timeline-main-toolbar" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="timeline-view-switcher" aria-label={translate('Timeline view')}>
+          <button
+            className="planning-button"
+            aria-pressed={item.mode === 'simple'}
+            onClick={() => update((current) => ({ ...current, mode: 'simple' }))}
+          >
+            <LayoutList size={14} /> {translate('Milestones')}
+          </button>
 
-        <button
-          className="planning-button"
-          aria-pressed={item.mode === 'schedule'}
-          onClick={() => update((current) => ({ ...current, mode: 'schedule' }))}
-        >
-          {translate('Schedule')}
-        </button>
+          <button
+            className="planning-button"
+            aria-pressed={item.mode === 'schedule'}
+            onClick={() => update((current) => ({ ...current, mode: 'schedule' }))}
+          >
+            <Rows3 size={14} /> {translate('Schedule')}
+          </button>
+        </div>
 
         {item.mode === 'schedule' && (
           <label className="text-xs flex items-center gap-2">
@@ -172,11 +214,12 @@ export default function TimelineBlock({
             </button>
           )}
 
-          <button className="planning-button" onClick={addTask}>
-            {translate('+ Add task')}
+          <button className="planning-button timeline-primary-button" onClick={addTask}>
+            <Plus size={14} /> {translate('Add task')}
           </button>
 
           <button className="planning-button" aria-pressed={editing} onClick={() => setEditing(!editing)}>
+            {editing ? <Check size={14} /> : <Pencil size={14} />}
             {editing ? translate('Done editing') : translate('Edit timeline')}
           </button>
         </div>
@@ -198,7 +241,7 @@ export default function TimelineBlock({
             {translate('Week →')}
           </button>
           <button className="planning-button" onClick={() => scrollToDay(dateDay(todayDate())!)}>
-            {translate('Today')}
+            <CalendarDays size={14} /> {translate('Today')}
           </button>
           <label className="text-xs">
             {translate('Go to date')}{' '}
@@ -255,35 +298,34 @@ export default function TimelineBlock({
           </div>
         )}
         {item.mode === 'simple' ? (
-          <div className="p-5">
+          <div className="timeline-milestone-list">
             {item.tasks.map((task, index) => (
-              <article key={task.id} className="timeline-card pr-20">
-                <div
-                  className="absolute right-0 top-0 z-10 flex gap-1"
-                  onMouseDown={(event) => event.stopPropagation()}
-                >
-                  {([-1, 1] as const).map((direction) => (
-                    <button
-                      key={direction}
-                      className="planning-button"
-                      aria-label={`${direction === -1 ? translate('Move up') : translate('Move down')} ${task.title}`}
-                      disabled={!item.tasks[index + direction]}
-                      onClick={() =>
-                        update((current) => ({
-                          ...current,
-                          tasks: reorderTasks(current.tasks, task.id, item.tasks[index + direction]!.id),
-                        }))
-                      }
-                    >
-                      {direction === -1 ? '↑' : '↓'}
-                    </button>
-                  ))}
-                </div>
+              <article key={task.id} className="timeline-card">
+                {editing && (
+                  <div
+                    className="absolute right-2 top-2 z-10 flex gap-1"
+                    onMouseDown={(event) => event.stopPropagation()}
+                  >
+                    {([-1, 1] as const).map((direction) => (
+                      <button
+                        key={direction}
+                        className="planning-button"
+                        aria-label={`${direction === -1 ? translate('Move up') : translate('Move down')} ${task.title}`}
+                        disabled={!item.tasks[index + direction]}
+                        onClick={() =>
+                          update((current) => ({
+                            ...current,
+                            tasks: reorderTasks(current.tasks, task.id, item.tasks[index + direction]!.id),
+                          }))
+                        }
+                      >
+                        {direction === -1 ? '↑' : '↓'}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <span className="timeline-dot" style={{ background: task.done ? '#059669' : task.color }} />
-                <div
-                  className="text-xs font-medium text-theme-muted mb-1"
-                  style={getSectionStyle(item.typography, 'labels')}
-                >
+                <div className="timeline-card-date" style={getSectionStyle(item.typography, 'labels')}>
                   {task.start || 'Unscheduled'}
                   {task.end && task.end !== task.start ? ` → ${task.end}` : ''}
                 </div>
@@ -297,7 +339,7 @@ export default function TimelineBlock({
                     style={getSectionStyle(item.typography, 'body')}
                   />
                   <h3
-                    className={`font-semibold text-sm ${task.done ? 'line-through' : ''}`}
+                    className={`timeline-card-title ${task.done ? 'line-through opacity-60' : ''}`}
                     style={getSectionStyle(item.typography, 'body')}
                   >
                     {task.title || translate('Untitled task')}
@@ -311,6 +353,14 @@ export default function TimelineBlock({
                       {translate('Edit task')}
                     </button>
                   }
+                </div>
+                <div className="timeline-card-meta">
+                  <AssigneeBadge participant={participantsById.get(task.assigneeUserId ?? '')} />
+                  {!!task.checklist.length && (
+                    <span className="timeline-checklist-progress">
+                      <Check size={12} /> {task.checklist.filter((entry) => entry.done).length}/{task.checklist.length}
+                    </span>
+                  )}
                 </div>
                 {task.checklist.map((entry) => (
                   <label
@@ -347,8 +397,8 @@ export default function TimelineBlock({
                 gridTemplateColumns: `${item.taskColumnWidth ?? 180}px 1fr`,
               }}
             >
-              <div className="timeline-label font-semibold">{translate('Task / outcome')}</div>
-              <div className="flex">
+              <div className="timeline-label timeline-grid-header">{translate('Task / outcome')}</div>
+              <div className="flex timeline-grid-header">
                 {Array.from({ length: Math.ceil(range.days / 7) }, (_, index) => (
                   <div
                     key={index}
@@ -426,7 +476,7 @@ export default function TimelineBlock({
                         ⠿
                       </button>
                       <button
-                        className="truncate flex-1 text-left py-2"
+                        className="timeline-row-title flex-1 text-left py-2"
                         onClick={() => {
                           setDraft({ ...task, checklist: task.checklist.map((entry) => ({ ...entry })) });
                           setEditing(true);
@@ -436,6 +486,7 @@ export default function TimelineBlock({
                         {task.done ? '✓ ' : ''}
                         {task.title}
                       </button>
+                      <AssigneeBadge participant={participantsById.get(task.assigneeUserId ?? '')} compact />
                       <div className="flex flex-col text-[10px]" style={getSectionStyle(item.typography, 'labels')}>
                         {([-1, 1] as const).map((direction) => (
                           <button
@@ -500,10 +551,13 @@ export default function TimelineBlock({
                           }}
                         >
                           <span
-                            className="block truncate px-2 leading-7 pointer-events-none"
+                            className="block truncate px-2 pr-8 leading-7 pointer-events-none"
                             style={getSectionStyle(item.typography, 'body')}
                           >
                             {task.title}
+                          </span>
+                          <span className="timeline-bar-avatar">
+                            <AssigneeBadge participant={participantsById.get(task.assigneeUserId ?? '')} compact />
                           </span>
                           {editing && (
                             <div
@@ -537,6 +591,7 @@ export default function TimelineBlock({
       {draft && (
         <TimelineTaskDialog
           task={draft}
+          participants={participants}
           isNew={!item.tasks.some((task) => task.id === draft.id)}
           onClose={() => setDraft(null)}
           onSave={(task) => {
