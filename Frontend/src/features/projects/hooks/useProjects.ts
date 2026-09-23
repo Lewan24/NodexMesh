@@ -6,6 +6,7 @@ import { createDefaultProjectFor } from '@/entities/project/projectFactory';
 
 import { createWorkspaceServices, httpClient, isMockDataSource } from '@/app/services';
 import { importProjectJson, exportWorkspaceProject, persistImportedProject } from '../services/projectJson';
+import { browserRecoveryStore } from '../services/recoveryDrafts';
 import { toast } from 'sonner';
 import { WorkspaceController, type WorkspaceState } from '../services/workspaceController';
 import { registerSaveGuard } from '@/shared/api/pendingChanges';
@@ -15,6 +16,8 @@ interface UseProjectsResult {
   remoteVersion: number;
   liveStatus: string;
   error: string;
+  recoveryDrafts: WorkspaceState['recoveryDrafts'];
+  clearRecoveryDrafts: () => void;
   retry: () => Promise<void>;
   reload: () => Promise<void>;
   projects: Project[];
@@ -60,8 +63,13 @@ interface UseProjectsResult {
 }
 
 export function useProjects(userId: string): UseProjectsResult {
-  const [controller] = useState(() => new WorkspaceController(createWorkspaceServices(userId)));
-  const { projects, status, error } = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  const [controller] = useState(
+    () => new WorkspaceController(createWorkspaceServices(userId), browserRecoveryStore(userId)),
+  );
+  const { projects, status, error, recoveryDrafts } = useSyncExternalStore(
+    controller.subscribe,
+    controller.getSnapshot,
+  );
   const setProjects = controller.update;
 
   const [defaultProjectId, setDefaultProjectId] = useState('');
@@ -113,9 +121,14 @@ export function useProjects(userId: string): UseProjectsResult {
     const abort = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
     let running = false;
+    let queued = false;
     let failures = 0;
     const tick = async () => {
-      if (running || abort.signal.aborted) return;
+      if (abort.signal.aborted) return;
+      if (running) {
+        queued = true;
+        return;
+      }
       clearTimeout(timer);
       if (document.hidden) {
         timer = setTimeout(() => void tick(), 2000);
@@ -131,19 +144,28 @@ export function useProjects(userId: string): UseProjectsResult {
         if (!abort.signal.aborted) setLiveStatus('Live updates reconnecting...');
       } finally {
         running = false;
-        if (!abort.signal.aborted) timer = setTimeout(() => void tick(), Math.min(30000, 1500 * 2 ** failures));
+        if (!abort.signal.aborted)
+          timer = setTimeout(() => void tick(), queued && !failures ? 150 : Math.min(30000, 1500 * 2 ** failures));
+        queued = false;
       }
     };
     const wake = () => {
       if (!document.hidden) void tick();
     };
+    const changed = (event: Event) => {
+      const detail = (event as CustomEvent<{ projectId: string; boardId: string }>).detail;
+      const current = controller.getSnapshot().projects.find((project) => project.id === viewedProjectId);
+      if (detail?.projectId === viewedProjectId && detail.boardId === current?.boardId) wake();
+    };
     void tick();
+    window.addEventListener('nodexmesh:board-changed', changed);
     window.addEventListener('online', wake);
     window.addEventListener('focus', wake);
     document.addEventListener('visibilitychange', wake);
     return () => {
       abort.abort();
       clearTimeout(timer);
+      window.removeEventListener('nodexmesh:board-changed', changed);
       window.removeEventListener('online', wake);
       window.removeEventListener('focus', wake);
       document.removeEventListener('visibilitychange', wake);
@@ -290,6 +312,8 @@ export function useProjects(userId: string): UseProjectsResult {
         : translate(liveStatus),
     status,
     error,
+    recoveryDrafts,
+    clearRecoveryDrafts: controller.clearRecoveryDrafts,
     retry: controller.retry,
     reload: () => controller.load(),
     projects,

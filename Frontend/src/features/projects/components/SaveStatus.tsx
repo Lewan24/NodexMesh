@@ -23,13 +23,19 @@ export default function SaveStatus({
   projects,
   retry,
   reload,
-}: WorkspaceState & { retry: () => Promise<void>; reload: () => Promise<void> }) {
+  recoveryDrafts = [],
+  clearRecoveryDrafts,
+}: WorkspaceState & { retry: () => Promise<void>; reload: () => Promise<void>; clearRecoveryDrafts?: () => void }) {
   useTranslation();
   const [confirmReload, setConfirmReload] = useState(false);
   const failed = status === 'error' || status === 'conflict';
   return (
     <div
-      className={status === 'saved' ? 'sr-only' : 'save-status flex flex-wrap items-center gap-3 text-xs'}
+      className={
+        status === 'saved' && !recoveryDrafts.length
+          ? 'sr-only'
+          : 'save-status flex flex-wrap items-center gap-3 text-xs'
+      }
       role={failed ? 'alert' : 'status'}
     >
       <span>
@@ -44,6 +50,31 @@ export default function SaveStatus({
               } as const
             )[status]}
       </span>
+      {!!recoveryDrafts.length && (
+        <span className="flex flex-wrap items-center gap-3" role="status">
+          {translate(
+            'The board was refreshed after a collaboration conflict. Your unsaved version is kept in a recovery copy.',
+          )}
+          <button className="underline" onClick={() => downloadDraft(recoveryDrafts.map((draft) => draft.project))}>
+            {translate('Download recovery copies')}
+          </button>
+          {clearRecoveryDrafts && (
+            <button
+              className="underline"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    translate('Delete the recovery copies? Download them first if you need your unsaved edits.'),
+                  )
+                )
+                  clearRecoveryDrafts();
+              }}
+            >
+              {translate('Delete recovery copies')}
+            </button>
+          )}
+        </span>
+      )}
       {failed && (
         <>
           <button className="underline" onClick={() => downloadDraft(projects)}>

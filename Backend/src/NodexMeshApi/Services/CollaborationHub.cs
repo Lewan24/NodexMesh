@@ -21,6 +21,7 @@ public sealed record CollaboratorPresence(
 
 public interface ICollaborationClient
 {
+    Task BoardChanged(Guid projectId, Guid boardId, string revision);
     Task PresenceChanged(CollaboratorPresence presence);
     Task PresenceCleared(Guid userId, string connectionId);
 }
@@ -86,7 +87,7 @@ public sealed class PresenceRegistry
     {
         RemoveExpired();
         return states.Values
-            .Where(value => value.ProjectId == projectId && value.BoardId == boardId && value.UserId != userId)
+            .Where(value => value.ProjectId == projectId && value.BoardId == boardId && value.UserId != userId && value.Mode == "editing")
             .SelectMany(value => value.ItemIds)
             .ToHashSet();
     }
@@ -135,7 +136,10 @@ public sealed class CollaborationHub(
             throw new HubException("Join the project before publishing presence.");
 
         var userId = CurrentUserId();
-        await access.RequireAsync(request.ProjectId, userId, Common.ProjectRole.Viewer, Context.ConnectionAborted);
+        var role = await access.GetRoleAsync(request.ProjectId, userId, Context.ConnectionAborted);
+        if (role < Common.ProjectRole.Viewer) throw new HubException("Project is unavailable.");
+        // Viewing/inspecting must not prevent editors from saving.
+        if (role < Common.ProjectRole.Editor) request = request with { Mode = "selected" };
         var displayName = await db.Users.AsNoTracking()
             .Where(user => user.Id == userId)
             .Select(user => user.DisplayName)
@@ -174,6 +178,6 @@ public sealed class CollaborationHub(
         return Guid.TryParse(raw, out var id) ? id : throw new HubException("Invalid user identity.");
     }
 
-    private static string Group(Guid projectId) => $"project:{projectId:N}";
+    public static string Group(Guid projectId) => $"project:{projectId:N}";
     private const string ProjectKey = "collaboration-project";
 }

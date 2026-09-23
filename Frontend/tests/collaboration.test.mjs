@@ -19,6 +19,9 @@ const { diffBoard, toProjectView } = await server.ssrLoadModule('/src/features/p
 const { mergeChanges } = await server.ssrLoadModule('/src/features/projects/services/collaborationMerge.ts');
 const { ItemHistory } = await server.ssrLoadModule('/src/features/canvas/utils/itemHistory.ts');
 const { zoomCamera } = await server.ssrLoadModule('/src/features/projects/hooks/useReadOnlyNavigation.ts');
+const { ApiError } = await server.ssrLoadModule('/src/shared/api/errors.ts');
+const { browserRecoveryStore } = await server.ssrLoadModule('/src/features/projects/services/recoveryDrafts.ts');
+const { createHttpClient } = await server.ssrLoadModule('/src/shared/api/httpClient.ts');
 await server.close();
 
 async function setup() {
@@ -88,14 +91,18 @@ test('different properties of the same item merge without replacing content', as
   assert.equal(item(a, itemA).x, 123);
 });
 
-test('same-property conflicts preserve the local draft and do not overwrite the server', async () => {
+test('same-property conflicts refresh automatically and preserve a separate recovery draft', async () => {
   const { api, a, b, itemA } = await setup();
   change(a, itemA, { content: 'First writer' });
   change(b, itemA, { content: 'Unsent draft' });
   await a.flush();
   await b.flush();
-  assert.equal(b.getSnapshot().status, 'conflict');
-  assert.equal(item(b, itemA).content, 'Unsent draft');
+  assert.equal(b.getSnapshot().status, 'saved');
+  assert.equal(item(b, itemA).content, 'First writer');
+  assert.equal(
+    b.getSnapshot().recoveryDrafts[0].project.items.find((item) => item.id === itemA).content,
+    'Unsent draft',
+  );
   const saved = toProjectView((await api.projects.list())[0]);
   assert.equal(saved.items.find((entry) => entry.id === itemA).content, 'First writer');
 });
@@ -299,7 +306,7 @@ test('concurrent project metadata edits rebase when different fields changed', a
   assert.equal(project(b).color, '#123456');
 });
 
-test('role downgrade preserves unsaved metadata instead of trying to write with viewer access', async () => {
+test('role downgrade refreshes permissions and archives unsaved metadata', async () => {
   const { api, id } = await setup();
   const controller = new WorkspaceController({
     ...api,
@@ -312,8 +319,9 @@ test('role downgrade preserves unsaved metadata instead of trying to write with 
   controller.update((projects) => projects.map((p) => ({ ...p, name: 'Unsent rename' })));
   await controller.syncProject(id);
   await controller.flush();
-  assert.equal(controller.getSnapshot().status, 'conflict');
-  assert.equal(project(controller).name, 'Unsent rename');
+  assert.equal(controller.getSnapshot().status, 'saved');
+  assert.equal(controller.getSnapshot().recoveryDrafts[0].project.name, 'Unsent rename');
+  assert.equal(project(controller).role, 'Viewer');
   assert.notEqual((await api.projects.list())[0].project.name, 'Unsent rename');
 });
 
@@ -352,4 +360,185 @@ test('continuous edits start saving before the user stops typing', async () => {
     clearInterval(typing);
     await a.discardForReset();
   }
+});
+
+test('recovery copies are persisted before the shared board replaces local edits', async () => {
+  const { api, a, itemA } = await setup();
+  const copies = [];
+  const b = new WorkspaceController(api, {
+    load: () => [],
+    save: (draft) => copies.push(structuredClone(draft)),
+    remove: () => {},
+  });
+  await b.load();
+  change(b, itemA, { content: 'Keep my unsent text' });
+  change(a, itemA, { content: 'Shared text' });
+  await a.flush();
+  await b.flush();
+  assert.equal(copies.length, 1);
+  assert.equal(copies[0].project.items.find((item) => item.id === itemA).content, 'Keep my unsent text');
+  assert.equal(item(b, itemA).content, 'Shared text');
+  const reopened = new WorkspaceController(api, { load: () => copies, save: () => {}, remove: () => {} });
+  await reopened.load();
+  assert.equal(
+    reopened.getSnapshot().recoveryDrafts[0].project.items.find((item) => item.id === itemA).content,
+    'Keep my unsent text',
+  );
+});
+
+test('unavailable recovery storage never discards the local draft', async () => {
+  const { api, a, itemA } = await setup();
+  const b = new WorkspaceController(api, {
+    load: () => [],
+    save: () => {
+      throw new Error('Storage full');
+    },
+    remove: () => {},
+  });
+  await b.load();
+  change(b, itemA, { content: 'Unsent text' });
+  change(a, itemA, { content: 'Shared text' });
+  await a.flush();
+  await b.flush();
+  assert.equal(b.getSnapshot().status, 'error');
+  assert.equal(item(b, itemA).content, 'Unsent text');
+  const child = await api.boards.create(project(b).id, 'Other');
+  await assert.rejects(b.switchBoard(project(b).id, child.board.id), /Save pending changes/);
+  assert.equal(item(b, itemA).content, 'Unsent text');
+});
+
+test('a lost response after commit retries the identical mutation without duplicating changes', async () => {
+  const { api, itemA } = await setup();
+  const calls = [];
+  const controller = new WorkspaceController({
+    ...api,
+    boards: {
+      ...api.boards,
+      mutate: async (...args) => {
+        calls.push(args[2]);
+        const result = await api.boards.mutate(...args);
+        if (calls.length === 1) throw new TypeError('Failed to fetch');
+        return result;
+      },
+    },
+  });
+  await controller.load();
+  change(controller, itemA, { content: 'Saved once' });
+  await controller.flush();
+  assert.equal(controller.getSnapshot().status, 'saved');
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0], calls[1]);
+  assert.equal(item(controller, itemA).content, 'Saved once');
+  assert.equal(controller.getSnapshot().recoveryDrafts.length, 0);
+});
+
+test('repeated revision conflicts recover without retrying forever', async () => {
+  const { api, itemA } = await setup();
+  let attempts = 0;
+  const controller = new WorkspaceController({
+    ...api,
+    boards: {
+      ...api.boards,
+      mutate: async () => {
+        attempts++;
+        throw new ApiError({ type: 'about:blank', status: 409, code: 'revision_mismatch', title: 'Conflict' });
+      },
+    },
+  });
+  await controller.load();
+  change(controller, itemA, { content: 'Recovery draft' });
+  await controller.flush();
+  assert.equal(attempts, 4);
+  assert.equal(controller.getSnapshot().status, 'saved');
+  assert.equal(controller.getSnapshot().recoveryDrafts.length, 1);
+  assert.equal(
+    controller.getSnapshot().recoveryDrafts[0].project.items.find((item) => item.id === itemA).content,
+    'Recovery draft',
+  );
+});
+
+test('comment saves rebase unrelated board edits automatically', async () => {
+  const { a, b, id, itemA, itemB } = await setup();
+  change(a, itemB, { content: 'Other edit' });
+  await a.flush();
+  const comment = { id: crypto.randomUUID(), text: 'Comment after remote edit', status: 'open' };
+  await b.saveComments(id, itemA, [comment]);
+  assert.equal(item(b, itemA).comments[0].text, comment.text);
+  assert.equal(item(b, itemB).content, 'Other edit');
+  assert.equal(b.getSnapshot().recoveryDrafts.length, 0);
+});
+
+test('competing comment edits refresh and preserve the unsent comment text', async () => {
+  const { a, b, id, itemA } = await setup();
+  const comment = { id: crypto.randomUUID(), text: 'Original', status: 'open' };
+  await a.saveComments(id, itemA, [comment]);
+  await b.syncProject(id);
+  await a.saveComments(id, itemA, [{ ...comment, text: 'Shared comment edit' }]);
+  await b.saveComments(id, itemA, [{ ...comment, text: 'Unsent comment edit' }]);
+  assert.equal(item(b, itemA).comments[0].text, 'Shared comment edit');
+  assert.equal(
+    b.getSnapshot().recoveryDrafts[0].project.items.find((item) => item.id === itemA).comments[0].text,
+    'Unsent comment edit',
+  );
+});
+
+test('mutation conflict reasons survive HTTP transport for lock-aware recovery', async () => {
+  const client = createHttpClient(
+    async () => 'token',
+    async () =>
+      new Response(JSON.stringify({ boardRevision: '2', conflicts: [{ id: 'item', reason: 'presence_locked' }] }), {
+        status: 409,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+  );
+  await assert.rejects(
+    client.request('/boards/board/mutations', { method: 'POST', body: {} }),
+    (error) => error.problem.code === 'presence_locked',
+  );
+});
+
+test('browser recovery copies are scoped to users and independent tabs', () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const values = new Map();
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+      get length() {
+        return values.size;
+      },
+      key: (index) => [...values.keys()][index],
+      getItem: (key) => values.get(key) ?? null,
+      setItem: (key, value) => values.set(key, value),
+      removeItem: (key) => values.delete(key),
+    },
+  });
+  try {
+    const a = browserRecoveryStore('a'),
+      tab = browserRecoveryStore('a'),
+      b = browserRecoveryStore('b');
+    a.save({ id: 'one', createdAt: '2026-01-01', project: { id: 'p', items: [] } });
+    tab.save({ id: 'two', createdAt: '2026-01-02', project: { id: 'p', items: [] } });
+    assert.equal(a.load().length, 2);
+    assert.equal(b.load().length, 0);
+    a.remove('one');
+    assert.equal(tab.load().length, 1);
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'localStorage', original);
+    else delete globalThis.localStorage;
+  }
+});
+
+test('HTTP throttling reports the remaining retry delay without making another request', async () => {
+  let requests = 0;
+  const client = createHttpClient(
+    async () => 'token',
+    async () => {
+      requests++;
+      return new Response('{}', { status: 429, headers: { 'Retry-After': '60' } });
+    },
+  );
+  const throttled = (error) => error.problem.status === 429 && error.problem.retryAfterMs > 59000;
+  await assert.rejects(client.request('/boards/board'), throttled);
+  await assert.rejects(client.request('/boards/board'), throttled);
+  assert.equal(requests, 1);
 });

@@ -50,6 +50,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     remoteVersion,
     liveStatus,
     error,
+    recoveryDrafts,
+    clearRecoveryDrafts,
     retry,
     reload,
     projects,
@@ -534,7 +536,15 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
       />
-      <SaveStatus status={status} error={error} projects={projects} retry={retry} reload={reload} />
+      <SaveStatus
+        status={status}
+        error={error}
+        projects={projects}
+        retry={retry}
+        reload={reload}
+        recoveryDrafts={recoveryDrafts}
+        clearRecoveryDrafts={clearRecoveryDrafts}
+      />
       {sharingOpen && activeProject && sharingApi && (
         <SharingDialog
           key={activeProject.id}

@@ -1097,5 +1097,10 @@
   "Node": "Node",
   "Project identities must be nonempty and unique.": "Project identities must be nonempty and unique.",
   "The main board items do not match the project board collection.": "The main board items do not match the project board collection.",
-  "The project references a missing main board.": "The project references a missing main board."
+  "The project references a missing main board.": "The project references a missing main board.",
+  "The board was refreshed after a collaboration conflict. Your unsaved version is kept in a recovery copy.": "The board was refreshed after a collaboration conflict. Your unsaved version is kept in a recovery copy.",
+  "Download recovery copies": "Download recovery copies",
+  "Delete recovery copies": "Delete recovery copies",
+  "Delete the recovery copies? Download them first if you need your unsaved edits.": "Delete the recovery copies? Download them first if you need your unsaved edits.",
+  "Save pending changes before switching boards.": "Save pending changes before switching boards."
 }

@@ -20,7 +20,16 @@ export function createHttpClient(
       }
       const send = async (token: string) => {
         if (Date.now() < retryAfter)
-          fail(429, 'rate_limited', translate('Too many requests. Please wait before retrying.'));
+          throw new ApiError(
+            {
+              type: 'about:blank',
+              status: 429,
+              code: 'rate_limited',
+              title: translate('Too many requests. Please wait before retrying.'),
+              retryAfterMs: retryAfter - Date.now(),
+            },
+            true,
+          );
         return fetcher(`${baseUrl.replace(/\/$/, '')}${path}`, {
           method: options.method ?? 'GET',
           headers: {
@@ -60,7 +69,14 @@ export function createHttpClient(
         throw new ApiError({
           type: record.type ?? 'about:blank',
           status: response.status,
-          code: record.title ?? record.code ?? 'http_error',
+          code:
+            record.title ??
+            record.code ??
+            (Array.isArray(record.conflicts) && record.conflicts.length
+              ? (record.conflicts.find((conflict: { reason?: string }) => conflict?.reason === 'presence_locked')
+                  ?.reason ?? record.conflicts[0]?.reason)
+              : undefined) ??
+            'http_error',
           title:
             record.detail ??
             record.error ??
@@ -78,6 +94,7 @@ export function createHttpClient(
                   ? translate('Too many requests. Please wait before retrying.')
                   : translate('The API request failed.')),
           errors: record.errors,
+          retryAfterMs: response.status === 429 ? Math.max(0, retryAfter - Date.now()) : undefined,
         });
       }
       return response.status === 204 ? undefined : response.json();

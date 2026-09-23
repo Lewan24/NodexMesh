@@ -5,6 +5,7 @@ export interface ProblemDetails {
   status: number;
   code: string;
   traceId?: string;
+  retryAfterMs?: number;
   errors?: Record<string, string[]>;
 }
 

@@ -1097,5 +1097,10 @@
   "Node": "Węzeł",
   "Project identities must be nonempty and unique.": "Identyfikatory projektu muszą być niepuste i unikalne.",
   "The main board items do not match the project board collection.": "Elementy tablicy głównej nie są zgodne z kolekcją tablic projektu.",
-  "The project references a missing main board.": "Projekt wskazuje nieistniejącą tablicę główną."
+  "The project references a missing main board.": "Projekt wskazuje nieistniejącą tablicę główną.",
+  "The board was refreshed after a collaboration conflict. Your unsaved version is kept in a recovery copy.": "Tablica została odświeżona po konflikcie współpracy. Twoja niezapisana wersja jest zachowana w kopii odzyskiwania.",
+  "Download recovery copies": "Pobierz kopie odzyskiwania",
+  "Delete recovery copies": "Usuń kopie odzyskiwania",
+  "Delete the recovery copies? Download them first if you need your unsaved edits.": "Usunąć kopie odzyskiwania? Pobierz je najpierw, jeśli potrzebujesz niezapisanych zmian.",
+  "Save pending changes before switching boards.": "Zapisz oczekujące zmiany przed przełączeniem tablicy."
 }

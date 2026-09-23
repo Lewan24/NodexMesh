@@ -444,4 +444,19 @@ public class BoardMutationServiceTests : IDisposable
 
         status.Should().Be(200);
     }
+    [Fact]
+    public async Task ApplyAsync_AllowsMutation_WhenAnotherUserOnlySelectedTheItem()
+    {
+        var (projectId, boardId, ownerId) = await SeedBoardAsync();
+        using var context = _db.CreateContext();
+        var itemId = Guid.NewGuid();
+        var service = CreateService(context);
+        await service.ApplyAsync(boardId, ownerId, new BoardMutationDto(Guid.NewGuid(), 1, [InsertOf(itemId, boardId)], []));
+        var presence = new PresenceRegistry();
+        presence.Set("viewer", new PresenceUpdate(projectId, boardId, [itemId], "selected"), Guid.NewGuid(), "Viewer");
+        var (status, _) = await CreateService(context, presence).ApplyAsync(boardId, ownerId,
+            new BoardMutationDto(Guid.NewGuid(), 2, [UpdateOf(itemId, boardId, 1)], []));
+        status.Should().Be(200);
+    }
+
 }

@@ -1,4 +1,5 @@
 import { translate } from '@/shared/i18n';
+import type { RecoveryDraft, RecoveryStore } from './recoveryDrafts';
 import { mergeProject } from './collaborationMerge';
 import { canonicalJson } from '@/shared/api/canonicalJson';
 import { createId } from '@/shared/lib/createId';
@@ -11,6 +12,7 @@ export interface WorkspaceState {
   projects: Project[];
   status: 'loading' | 'saved' | 'pending' | 'saving' | 'error' | 'conflict';
   error: string;
+  recoveryDrafts?: RecoveryDraft[];
 }
 
 /** Serializes writes, retaining the exact failed request for idempotent retry. */
@@ -27,26 +29,43 @@ export class WorkspaceController {
   private rebases = 0;
   getRemoteVersion = (id: string) => this.remoteVersions.get(id) ?? 0;
 
-  private acceptRemote(previous: ProjectSnapshot, remote: ProjectSnapshot, base = toProjectView(previous)) {
+  private acceptRemote(
+    previous: ProjectSnapshot,
+    remote: ProjectSnapshot,
+    base = toProjectView(previous),
+    forceRefresh = false,
+  ) {
     const local = this.state.projects.find((project) => project.id === previous.project.id);
     if (!local) return;
     const remoteView = toProjectView(remote);
-    const merged = mergeProject(base, local, remoteView, remote);
+    let merged = remoteView;
+    let recovered = forceRefresh && canonicalJson(local) !== canonicalJson(remoteView);
+    if (!forceRefresh) {
+      try {
+        merged = mergeProject(base, local, remoteView, remote);
+      } catch (error) {
+        if (!(error instanceof ApiError) || error.problem.code !== 'collaboration_conflict') throw error;
+        recovered = true;
+      }
+    }
     if (
       (remote.project.role === 'Viewer' || remote.project.role === 'Commenter') &&
       canonicalJson(merged) !== canonicalJson(remoteView)
-    ) {
-      throw new ApiError({
-        status: 409,
-        code: 'access_changed',
-        title: translate('Your editing access changed. Your local draft is preserved; download it before reloading.'),
-        type: 'about:blank',
-      });
+    )
+      recovered = true;
+    if (recovered) {
+      // Persist a recovery copy before replacing any unsent edits with the shared state.
+      // If storage is unavailable, keep the draft on screen and use the existing error UI.
+      this.preserveRecovery(local);
+      merged = remoteView;
     }
     if (canonicalJson(local.items) !== canonicalJson(merged.items))
       this.remoteVersions.set(local.id, this.getRemoteVersion(local.id) + 1);
     this.confirmed.set(local.id, remote);
-    this.publish({ projects: this.state.projects.map((project) => (project.id === local.id ? merged : project)) });
+    this.publish({
+      projects: this.state.projects.map((project) => (project.id === local.id ? merged : project)),
+      ...(recovered ? { error: '', status: this.running ? ('saving' as const) : ('pending' as const) } : {}),
+    });
   }
 
   /** Background reads never reset the loading state, viewport, selection or pending draft. */
@@ -78,25 +97,69 @@ export class WorkspaceController {
         if (signal?.aborted || generation !== this.generation) return;
         if (error instanceof ApiError && error.problem.status === 409) this.report(error);
         else if (error instanceof ApiError && [403, 404].includes(error.problem.status)) {
-          const local = this.state.projects.find((project) => project.id === id);
-          if (local && canonicalJson(local) === canonicalJson(toProjectView(previous))) {
-            this.confirmed.delete(id);
-            this.publish({ projects: this.state.projects.filter((project) => project.id !== id) });
-          } else
-            this.report(
-              new Error(translate('This project is no longer accessible. Download your local draft before reloading.')),
-            );
+          await this.recoverUnavailable(previous, signal);
         } else throw error;
       }
     })().finally(() => {
       this.syncing = undefined;
+      if (this.state.status === 'pending' && !this.timer) this.timer = setTimeout(() => void this.flush(), 0);
     });
     return this.syncing;
   };
+  private async recoverUnavailable(previous: ProjectSnapshot, signal?: AbortSignal) {
+    const generation = this.generation;
+    const id = previous.project.id;
+    const snapshots = await this.services.projects.list(signal);
+    let available = snapshots.find(
+      (entry) => entry.project.id === id && !entry.project.deletedAt && !entry.project.userDeletedAt,
+    );
+    if (available && available.board.board.id !== previous.board.board.id) {
+      try {
+        available = { ...available, board: await this.services.boards.get(id, previous.board.board.id, signal) };
+      } catch (error) {
+        if (!(error instanceof ApiError) || ![403, 404].includes(error.problem.status)) throw error;
+        // The child board was removed: the project list supplies its surviving main board.
+      }
+    }
+    if (signal?.aborted || generation !== this.generation || this.confirmed.get(id) !== previous) return;
+    if (available) {
+      this.acceptRemote(previous, available, toProjectView(previous), true);
+      return;
+    }
+    const local = this.state.projects.find((project) => project.id === id);
+    if (local && canonicalJson(local) !== canonicalJson(toProjectView(previous))) this.preserveRecovery(local);
+    this.confirmed.delete(id);
+    this.publish({
+      projects: this.state.projects.filter((project) => project.id !== id),
+      status: this.running ? 'saving' : 'pending',
+      error: '',
+    });
+  }
+
   private projectIds = new Map<string, string>();
   resolveProjectId = (id: string) => this.projectIds.get(id) ?? id;
 
-  constructor(private readonly services: WorkspaceServices) {}
+  constructor(
+    private readonly services: WorkspaceServices,
+    private readonly recoveryStore?: RecoveryStore,
+  ) {
+    this.state.recoveryDrafts = recoveryStore?.load() ?? [];
+  }
+
+  private preserveRecovery(project: Project) {
+    const draft: RecoveryDraft = {
+      id: createId(),
+      createdAt: new Date().toISOString(),
+      project: structuredClone(project),
+    };
+    this.recoveryStore?.save(draft);
+    this.publish({ recoveryDrafts: [...(this.state.recoveryDrafts ?? []), draft] });
+  }
+
+  clearRecoveryDrafts = () => {
+    for (const draft of this.state.recoveryDrafts ?? []) this.recoveryStore?.remove(draft.id);
+    this.publish({ recoveryDrafts: [] });
+  };
 
   addImportedProject(snapshot: ProjectSnapshot) {
     this.confirmed.set(snapshot.project.id, snapshot);
@@ -129,14 +192,53 @@ export class WorkspaceController {
       .filter((old) => !comments.some((comment) => comment.id === old.id))
       .map((comment) => comment.id);
     if (!upserts.length && !deletes.length) return;
-    const board = await this.services.boards.saveComments(projectId, previous.board.board.id, itemId, {
-      expectedBoardRevision: previous.board.board.revision,
-      upserts,
-      deletes,
-    });
-    // A board switch during the request must not bring the previous board back.
-    if (this.confirmed.get(projectId)?.board.board.id === board.board.id)
-      this.acceptRemote(previous, { ...previous, board });
+    let latest = previous;
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const board = await this.services.boards.saveComments(projectId, latest.board.board.id, itemId, {
+          expectedBoardRevision: latest.board.board.revision,
+          upserts,
+          deletes,
+        });
+        // A board switch during the request must not bring the previous board back.
+        if (this.confirmed.get(projectId)?.board.board.id === board.board.id)
+          this.acceptRemote(previous, { ...latest, board });
+        return;
+      } catch (error) {
+        if (
+          !(error instanceof ApiError) ||
+          error.problem.status !== 409 ||
+          !['revision_mismatch', 'revision_conflict', 'http_error'].includes(error.problem.code)
+        )
+          throw error;
+        const board = await this.services.boards.get(projectId, latest.board.board.id);
+        latest = { ...latest, board };
+        const oldComments = new Map(before.map((comment) => [comment.id, comment]));
+        const remoteComments = new Map(
+          board.comments.filter((comment) => !comment.deletedAt).map((comment) => [comment.id, comment]),
+        );
+        const content = (comment: { text: string; status?: string } | undefined) =>
+          comment && { text: comment.text, status: comment.status ?? 'open' };
+        const overlapping = [...upserts.map((comment) => comment.id), ...deletes].some((id) => {
+          const remote = content(remoteComments.get(id));
+          return (
+            canonicalJson(content(oldComments.get(id))) !== canonicalJson(remote) &&
+            canonicalJson(content(upserts.find((comment) => comment.id === id))) !== canonicalJson(remote)
+          );
+        });
+        if (overlapping || attempt >= 2 || !board.items.some((item) => item.id === itemId && !item.deletedAt)) {
+          const withComments = (items: Project['items']): Project['items'] =>
+            items.map((item) => {
+              if (item.id === itemId) return { ...item, comments };
+              return item.type === 'column' ? { ...item, items: withComments(item.items) } : item;
+            });
+          const draft = toProjectView(previous);
+          this.preserveRecovery({ ...draft, items: withComments(draft.items) });
+          if (this.confirmed.get(projectId)?.board.board.id === board.board.id) this.acceptRemote(previous, latest);
+          return;
+        }
+      }
+    }
   }
 
   async listBoards(projectId: string, signal?: AbortSignal) {
@@ -211,6 +313,7 @@ export class WorkspaceController {
 
   async switchBoard(projectId: string, boardId: string): Promise<void> {
     await this.flush();
+    if (this.state.status !== 'saved') throw new Error(translate('Save pending changes before switching boards.'));
     const previous = this.confirmed.get(projectId);
     if (!previous || previous.board.board.id === boardId) return;
     const board = await this.services.boards.get(projectId, boardId);
@@ -379,17 +482,20 @@ export class WorkspaceController {
               this.acceptRemote(previous, { ...previous, board });
             }
           } catch (error) {
+            if (error instanceof ApiError && [403, 404].includes(error.problem.status)) {
+              await this.recoverUnavailable(previous);
+              return;
+            }
             if (
               !(error instanceof ApiError) ||
               error.problem.status !== 409 ||
-              error.problem.code === 'idempotency_conflict' ||
-              !this.services.sync ||
-              ++this.rebases > 3
+              !['revision_mismatch', 'revision_conflict', 'http_error'].includes(error.problem.code) ||
+              !this.services.sync
             )
               throw error;
             const remote = await this.services.sync(previous);
             if (!remote) throw error;
-            this.acceptRemote(previous, remote);
+            this.acceptRemote(previous, remote, toProjectView(previous), ++this.rebases > 3);
           }
         };
       }
@@ -397,18 +503,28 @@ export class WorkspaceController {
         return async () => {
           let board;
           try {
-            board = await this.services.boards.mutate(desired.id, previous.board.board.id, boardMutation);
+            board = await retryTransient(() =>
+              this.services.boards.mutate(desired.id, previous.board.board.id, boardMutation),
+            );
           } catch (error) {
+            if (error instanceof ApiError && [403, 404].includes(error.problem.status)) {
+              await this.recoverUnavailable(previous);
+              return;
+            }
             if (
               !(error instanceof ApiError) ||
               error.problem.status !== 409 ||
-              error.problem.code === 'idempotency_conflict' ||
-              ++this.rebases > 3
+              !['revision_mismatch', 'revision_conflict', 'http_error', 'presence_locked'].includes(error.problem.code)
             )
               throw error;
             // A rejected revision has not committed. Rebase independent edits and mint a new mutation ID.
             const remote = await this.services.boards.get(desired.id, previous.board.board.id);
-            this.acceptRemote(previous, { ...previous, board: remote });
+            this.acceptRemote(
+              previous,
+              { ...previous, board: remote },
+              toProjectView(previous),
+              error.problem.code === 'presence_locked' || ++this.rebases > 3,
+            );
             return;
           }
           if (BigInt(board.board.revision) < BigInt(previous.board.board.revision))
@@ -443,5 +559,24 @@ export class WorkspaceController {
       };
     }
     return undefined;
+  }
+}
+
+async function retryTransient<T>(operation: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      const transient =
+        error instanceof TypeError ||
+        (error instanceof DOMException && ['TimeoutError', 'NetworkError'].includes(error.name)) ||
+        (error instanceof ApiError && [429, 502, 503, 504].includes(error.problem.status));
+      if (!transient || attempt >= 2) throw error;
+      const delay =
+        error instanceof ApiError && error.problem.status === 429
+          ? Math.min(60000, Math.max(300, error.problem.retryAfterMs ?? 1000))
+          : 300 * 2 ** attempt;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
   }
 }

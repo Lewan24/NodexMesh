@@ -152,7 +152,15 @@ export default function Canvas({
   } | null>(null);
 
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
-  const collaboratorLockedIds = useMemo(() => new Set(Object.keys(remotePresence ?? {})), [remotePresence]);
+  const collaboratorLockedIds = useMemo(
+    () =>
+      new Set(
+        Object.entries(remotePresence ?? {})
+          .filter(([, entries]) => entries.some((entry) => entry.mode === 'editing'))
+          .map(([id]) => id),
+      ),
+    [remotePresence],
+  );
 
   const panRef = useRef(pan);
   panRef.current = pan;
