@@ -4,6 +4,7 @@ import { memo, useCallback, useMemo, useRef, useState, type SyntheticEvent } fro
 import { useReadOnlyNavigation } from '../hooks/useReadOnlyNavigation';
 import ItemInspector from '@/features/inspector/ItemInspector';
 import type { BoardItem } from '@/entities/board/types';
+import type { ProjectParticipant } from '@/entities/project/shareTypes';
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
 import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
@@ -21,11 +22,13 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({
   onSelect,
   onOpenBoard,
   selected,
+  projectParticipants,
 }: {
   item: BoardItem;
   onSelect?: (id: string) => void;
   onOpenBoard?: (id: string) => void;
   selected: boolean;
+  projectParticipants?: ProjectParticipant[];
 }) {
   useTranslation();
   const stopBoardNavigation = (event: SyntheticEvent) => {
@@ -83,6 +86,7 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({
     >
       <BlockRenderer
         item={item}
+        projectParticipants={projectParticipants}
         readOnly
         isSelected={selected}
         onOpenBoard={onOpenBoard}
@@ -104,6 +108,7 @@ export default function ReadOnlyBoard({
   onOpenBoard,
   remoteCursors = [],
   onCursorMove,
+  projectParticipants = [],
 }: {
   items: BoardItem[];
   inspect?: boolean;
@@ -113,6 +118,7 @@ export default function ReadOnlyBoard({
   onOpenBoard?: (boardId: string) => void;
   remoteCursors?: RemoteCursor[];
   onCursorMove?: (position: { x: number; y: number } | null) => void;
+  projectParticipants?: ProjectParticipant[];
 }) {
   useTranslation();
   const [selectedId, setSelectedId] = useState('');
@@ -252,6 +258,7 @@ export default function ReadOnlyBoard({
                   <ItemWatcher itemId={item.id} onResize={handleItemResize}>
                     <ReadOnlyBlock
                       item={item}
+                      projectParticipants={projectParticipants}
                       selected={
                         selectedId === item.id ||
                         (item.type === 'column' && item.items.some((child) => child.id === selectedId))

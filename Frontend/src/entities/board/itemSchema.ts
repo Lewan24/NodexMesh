@@ -147,7 +147,16 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
       mode: choice('simple', 'schedule'),
       taskColumnWidth: optional(number),
       tasks: list(
-        object({ id: text, ...title, start: day, end: day, done: bool, color: text, checklist: list(entry) }),
+        object({
+          id: text,
+          ...title,
+          start: day,
+          end: day,
+          done: bool,
+          color: text,
+          assigneeUserId: optional(text),
+          checklist: list(entry),
+        }),
       ),
     }),
   },

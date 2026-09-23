@@ -9,6 +9,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 
 import type { BoardItem, FrameItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
+import type { ProjectParticipant } from '@/entities/project/shareTypes';
 import type { ToolType } from '@/entities/board/toolTypes';
 import type { RemoteCursor, RemotePresence } from '@/features/projects/hooks/useCollaborationPresence';
 import { TRASH_ITEM_MIME } from '@/features/projects/components/ItemTrashPanel';
@@ -72,6 +73,7 @@ interface ToolDragGhostState extends ToolDragDetail {
 
 interface CanvasProps {
   project: Project;
+  projectParticipants?: ProjectParticipant[];
   remoteVersion?: number;
   remotePresence?: Record<string, RemotePresence[]>;
   remoteCursors?: RemoteCursor[];
@@ -108,6 +110,7 @@ interface CanvasProps {
 
 export default function Canvas({
   project,
+  projectParticipants = [],
   remoteVersion = 0,
   remotePresence,
   remoteCursors = [],
@@ -1206,6 +1209,7 @@ export default function Canvas({
           <CanvasFrame
             key={frame.id}
             item={frame}
+            projectParticipants={projectParticipants}
             movementLocked={lockedFrameIds.has(frame.id)}
             onItemResize={handleItemResize}
             zoom={zoom}
@@ -1235,6 +1239,7 @@ export default function Canvas({
             <CanvasItem
               key={item.id}
               item={item}
+              projectParticipants={projectParticipants}
               renderedItem={renderedItem}
               measuredSize={measuredSizes.get(item.id)}
               remotePresence={remotePresence?.[item.id]}

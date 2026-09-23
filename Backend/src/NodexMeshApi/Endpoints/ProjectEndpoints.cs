@@ -28,6 +28,7 @@ public static class ProjectEndpoints
 
         group.MapPost("/{projectId:guid}/tags", CreateTagAsync);
 
+        group.MapGet("/{projectId:guid}/participants", ListParticipantsAsync);
         group.MapGet("/{projectId:guid}/members", ListMembersAsync);
         group.MapPost("/{projectId:guid}/members", InviteMemberAsync);
         group.MapPatch("/{projectId:guid}/members/{userId:guid}", UpdateMemberRoleAsync);
@@ -214,6 +215,30 @@ public static class ProjectEndpoints
     }
 
     // ---------------- sharing ----------------
+
+    /// <summary>People that can be assigned work in this project, including its owner.</summary>
+    private static async Task<Ok<List<ProjectParticipantDto>>> ListParticipantsAsync(
+        Guid projectId, ClaimsPrincipal principal, AppDbContext db,
+        IProjectAccessService access, CancellationToken ct)
+    {
+        var userId = CurrentUserId(principal);
+        if (await access.GetRoleAsync(projectId, userId, ct) == ProjectRole.None)
+            throw new ApiException(404, "not_found", "Project not found.");
+
+        var project = await db.Projects.AsNoTracking()
+            .Where(p => p.Id == projectId)
+            .Join(db.Users, p => p.OwnerId, u => u.Id, (p, u) => new { p.OwnerId, OwnerName = u.DisplayName })
+            .SingleAsync(ct);
+
+        var members = await db.ProjectMembers.AsNoTracking()
+            .Where(m => m.ProjectId == projectId)
+            .Join(db.Users, m => m.UserId, u => u.Id,
+                (m, u) => new ProjectParticipantDto(u.Id, u.DisplayName, m.Role.ToString()))
+            .ToListAsync(ct);
+
+        members.Insert(0, new ProjectParticipantDto(project.OwnerId, project.OwnerName, ProjectRole.Owner.ToString()));
+        return TypedResults.Ok(members);
+    }
 
     /// <summary>
     /// Collaborators on the project. Non-owners see display names but MASKED email

@@ -34,7 +34,9 @@ public sealed record EmbedData(string Url, string Title, bool ShowLabel);
 public sealed record ChecklistData(string Title, IReadOnlyList<Entry> Entries);
 public sealed record KanbanColumnData(string Id, string Title, string Color, double? Width, IReadOnlyList<Entry> Cards);
 public sealed record KanbanData(string Title, IReadOnlyList<KanbanColumnData> Columns);
-public sealed record TimelineTaskData(string Id, string Title, string Start, string End, bool Done, string Color, IReadOnlyList<Entry> Checklist);
+public sealed record TimelineTaskData(
+    string Id, string Title, string Start, string End, bool Done, string Color,
+    IReadOnlyList<Entry> Checklist, Guid? AssigneeUserId = null);
 public sealed record TimelineData(string Title, string Mode, double? TaskColumnWidth, IReadOnlyList<TimelineTaskData> Tasks);
 public sealed record ColumnData(string Title, string? Layout, double? GridColumns, double? Gap);
 public sealed record FrameData(string Title, double? Opacity);

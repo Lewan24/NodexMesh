@@ -26,6 +26,7 @@ public sealed record UpdateProjectRequest(
     [property: Required, JsonConverter(typeof(RevisionJsonConverter))] long ExpectedRevision);
 
 public sealed record ProjectMemberDto(Guid UserId, string Email, string? DisplayName, string Role, DateTimeOffset CreatedAt);
+public sealed record ProjectParticipantDto(Guid UserId, string DisplayName, string Role);
 
 /// <summary>
 /// Invite by email rather than by user ID: the caller shouldn't be able to enumerate

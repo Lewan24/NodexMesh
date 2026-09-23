@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import SectionLabel, { sectionTitleScale } from '@/features/blocks/shared/SectionLabel';
 
 import type { BoardItem, FrameItem } from '@/entities/board/types';
+import type { ProjectParticipant } from '@/entities/project/shareTypes';
 
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
@@ -12,6 +13,7 @@ import ItemCommentBadge from '@/features/comments/ItemCommentBadge';
 
 interface CanvasFrameProps {
   item: FrameItem;
+  projectParticipants?: ProjectParticipant[];
   movementLocked?: boolean;
   zoom: number;
   isSelected: boolean;
@@ -44,6 +46,7 @@ interface CanvasFrameProps {
 
 export default function CanvasFrame({
   item,
+  projectParticipants = [],
   isSelected,
   isAnimating,
   selectedIds,
@@ -144,6 +147,7 @@ export default function CanvasFrame({
 
       <BlockRenderer
         item={item}
+        projectParticipants={projectParticipants}
         isSelected={isSelected}
         onUpdate={(updater) => onUpdateItem(item.id, updater)}
         onDelete={() =>
