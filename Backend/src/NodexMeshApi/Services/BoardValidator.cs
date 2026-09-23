@@ -133,10 +133,20 @@ public static class BoardValidator
                 {
                     throw new ApiException(422, "invalid_frame", "Invalid frame membership.");
                 }
+
+                var visitedFrames = new HashSet<Guid> { item.Id };
+                Guid? currentFrameId = frameId;
+                while (currentFrameId is { } current)
+                {
+                    if (!visitedFrames.Add(current))
+                        throw new ApiException(422, "invalid_frame", "Invalid frame membership.");
+                    currentFrameId = context.TryGetValue(current, out var currentFrame) ? currentFrame.FrameId : null;
+                }
             }
         }
 
         var linkKeys = new HashSet<string>();
+        var lineEndpoints = new Dictionary<Guid, (Guid? Start, Guid? End)>();
         foreach (var link in links)
         {
             context.TryGetValue(link.SourceItemId, out var source);
@@ -152,9 +162,27 @@ public static class BoardValidator
                     : (link.Kind is "line_start" or "line_end") && source.Type == "line");
 
             if (!valid) throw new ApiException(422, "invalid_link", "Invalid item link.");
+
+            if (link.Kind is "line_start" or "line_end")
+            {
+                lineEndpoints.TryGetValue(link.SourceItemId, out var endpoints);
+                lineEndpoints[link.SourceItemId] = link.Kind == "line_start"
+                    ? (link.TargetItemId, endpoints.End)
+                    : (endpoints.Start, link.TargetItemId);
+            }
+        }
+
+        var connections = new HashSet<string>();
+        foreach (var endpoints in lineEndpoints.Values)
+        {
+            if (endpoints.Start is not { } start || endpoints.End is not { } end) continue;
+            var first = start.CompareTo(end) < 0 ? start : end;
+            var second = start.CompareTo(end) < 0 ? end : start;
+            if (!connections.Add($"{first}:{second}"))
+                throw new ApiException(422, "invalid_link", "Only one line can connect the same two items.");
         }
     }
 }
 
 /// <summary>Minimal projection of an item needed for graph validation.</summary>
-public sealed record ItemGraphNode(Guid Id, string Type, Guid? ParentItemId);
+public sealed record ItemGraphNode(Guid Id, string Type, Guid? ParentItemId, Guid? FrameId = null);

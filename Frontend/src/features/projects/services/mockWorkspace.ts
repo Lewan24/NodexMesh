@@ -264,7 +264,20 @@ export function createMockWorkspace(
             }
             persist(db);
           }
-          return structuredClone(db.projects.filter((entry) => !entry.project.userDeletedAt));
+          return structuredClone(
+            db.projects
+              .filter((entry) => !entry.project.userDeletedAt)
+              .map((entry) => ({
+                ...entry,
+                project: {
+                  ...entry.project,
+                  itemCount: (db.boards[entry.project.id] ?? [entry.board]).reduce(
+                    (count, board) => count + board.items.filter((item) => !item.deletedAt).length,
+                    0,
+                  ),
+                },
+              })),
+          );
         });
       },
       create(input) {

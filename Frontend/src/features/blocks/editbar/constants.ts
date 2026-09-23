@@ -13,7 +13,19 @@ export const LIGHT_BACKGROUNDS = [
 
 export const DARK_BACKGROUNDS = ['#0d2a35', '#1e1b4b', '#14532d', '#1c1917', '#0c4a6e', '#431407'];
 
-export const STRIP_COLORS = ['#7C3AED', '#FFBD65', '#FF6B8A', '#02A0A0', '#059669', '#3b82f6', '#f97316', '#e11d48'];
+export const DEFAULT_LINK_STRIP = 'linear-gradient(to right, #7C3AED, #FFBD65)';
+
+export const STRIP_COLORS = [
+  DEFAULT_LINK_STRIP,
+  '#7C3AED',
+  '#FFBD65',
+  '#FF6B8A',
+  '#02A0A0',
+  '#059669',
+  '#3b82f6',
+  '#f97316',
+  '#e11d48',
+];
 
 export const LINE_COLORS = ['#7C3AED', '#FFBD65', '#FF6B8A', '#02A0A0', '#e8f4f4', '#5a8a94'];
 

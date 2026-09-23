@@ -7,7 +7,7 @@ import { copyItemStyle, pasteItemStyle } from '../utils/itemStyle';
 import type { ItemStyle } from '../utils/itemStyle';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import type { BoardItem } from '@/entities/board/types';
+import type { BoardItem, FrameItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
 import type { ToolType } from '@/entities/board/toolTypes';
 import type { RemotePresence } from '@/features/projects/hooks/useCollaborationPresence';
@@ -57,7 +57,7 @@ import CanvasLostPrompt from './CanvasLostPrompt';
 import CanvasAlignmentGuides from './CanvasAlignmentGuides';
 import { getColumnSearchResult, getSearchTargets, matchesItemSearch } from '@/features/search/utils/itemSearch';
 
-import { isItemInsideFrame, isFrameMovementLocked } from '@/features/canvas/utils/frameGeometry';
+import { isItemInsideFrame, isFrameMovementLocked, wouldCreateFrameCycle } from '@/features/canvas/utils/frameGeometry';
 
 import ItemInspector from '@/features/inspector/ItemInspector';
 import { useCanvasClipboard } from '../hooks/useCanvasClipboard';
@@ -271,13 +271,17 @@ export default function Canvas({
         addItemRaw(item);
         return;
       }
+      const parentFrameId = projectRef.current.items
+        .filter((candidate): candidate is FrameItem => candidate.type === 'frame')
+        .filter((candidate) => isItemInsideFrame(item, candidate, measuredSizes))
+        .sort((a, b) => a.width * a.height - b.width * b.height)[0]?.id;
       onRestoreItems([
         ...projectRef.current.items.map((child) =>
-          child.type !== 'frame' && !child.frameId && !child.locked && isItemInsideFrame(child, item, measuredSizes)
+          !child.frameId && !child.locked && isItemInsideFrame(child, item, measuredSizes)
             ? { ...child, frameId: item.id }
             : child,
         ),
-        { ...item, frameId: null, zIndex: 0 },
+        { ...item, frameId: parentFrameId ?? null, zIndex: 0 },
       ]);
     },
     [addItemRaw, onRestoreItems, measuredSizes],
@@ -1354,7 +1358,14 @@ export default function Canvas({
                 </option>
                 <option value="">{translate('No frame')}</option>
                 {project.items
-                  .filter((item) => item.type === 'frame')
+                  .filter(
+                    (item): item is FrameItem =>
+                      item.type === 'frame' &&
+                      selectedItems.every(
+                        (selected) =>
+                          selected.id !== item.id && !wouldCreateFrameCycle(selected.id, item.id, project.items),
+                      ),
+                  )
                   .map((frame) => (
                     <option key={frame.id} value={frame.id}>
                       {frame.title || translate('Frame')} · {frame.id.slice(0, 4)}
@@ -1373,7 +1384,7 @@ export default function Canvas({
                 pushHistory();
                 onRestoreItems(
                   project.items.map((item) =>
-                    item.type !== 'frame' && !item.locked && isItemInsideFrame(item, frame, measuredSizes)
+                    item.id !== frame.id && !item.locked && isItemInsideFrame(item, frame, measuredSizes)
                       ? { ...item, frameId: frame.id }
                       : item,
                   ),

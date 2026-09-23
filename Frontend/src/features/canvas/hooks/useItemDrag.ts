@@ -5,7 +5,7 @@ import type { ToolType } from '@/entities/board/toolTypes';
 import { DROPPABLE_ON_COLUMN } from '@/features/canvas/constants';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import { getItemSize } from '@/features/canvas/utils/itemGeometry';
-import { isFrameMovementLocked } from '../utils/frameGeometry';
+import { isFrameMovementLocked, isItemInsideFrame, wouldCreateFrameCycle } from '../utils/frameGeometry';
 import { AlignmentGuide, findAlignmentSnap } from '../utils/alignmentGuides';
 import { snapToGrid } from '../utils/gridSnap';
 
@@ -141,23 +141,28 @@ export function useItemDrag({
         });
       };
 
+      const captureFrameContents = (frameId: string) => {
+        items
+          .filter(
+            (child) =>
+              !movementLocked(child) &&
+              !dragIds.includes(child.id) &&
+              !captureMap.has(child.id) &&
+              child.frameId === frameId,
+          )
+          .forEach((child) => {
+            capture(child);
+            if (child.type === 'frame') captureFrameContents(child.id);
+          });
+      };
+
       for (const dragId of dragIds) {
         const item = items.find((current) => current.id === dragId);
         if (!item || movementLocked(item)) continue;
         capture(item);
 
         if (item.type === 'frame') {
-          const frame = item as FrameItem;
-          items
-            .filter(
-              (child) =>
-                !movementLocked(child) &&
-                !dragIds.includes(child.id) &&
-                !captureMap.has(child.id) &&
-                child.type !== 'frame' &&
-                child.frameId === frame.id,
-            )
-            .forEach(capture);
+          captureFrameContents((item as FrameItem).id);
         }
       }
 
@@ -304,6 +309,27 @@ export function useItemDrag({
             const geometry = geometryAt(captured, finalDx, finalDy);
             updates.set(capturedId, (current) => ({ ...current, ...geometry }));
           });
+
+          const droppedItems = items.map((item) => {
+            const captured = captureMap.get(item.id);
+            return captured ? { ...item, ...geometryAt(captured, finalDx, finalDy) } : item;
+          });
+          const targetFrames = droppedItems
+            .filter((item): item is FrameItem => item.type === 'frame' && !capturedIds.has(item.id))
+            .sort((a, b) => a.width * a.height - b.width * b.height || b.zIndex - a.zIndex);
+
+          for (const dragId of dragIds) {
+            const dropped = droppedItems.find((item) => item.id === dragId);
+            if (!dropped || !captureMap.has(dragId)) continue;
+            const frameId =
+              targetFrames.find(
+                (candidate) =>
+                  !wouldCreateFrameCycle(dropped.id, candidate.id, droppedItems) &&
+                  isItemInsideFrame(dropped, candidate, measuredSizes),
+              )?.id ?? null;
+            const previousUpdate = updates.get(dragId);
+            updates.set(dragId, (current) => ({ ...(previousUpdate ? previousUpdate(current) : current), frameId }));
+          }
           onUpdateItems(updates);
         } else if (!event.shiftKey && dragIds.length > 1) {
           onSelectItems([id]);

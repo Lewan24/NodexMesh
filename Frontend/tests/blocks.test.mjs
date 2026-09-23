@@ -808,7 +808,7 @@ test('overlapping frames preserve ownership through movement, transfer, deletion
   const migrated = normalizeFrameMembership([a, b, note]);
   const owned = migrated[2];
   assert.equal(owned.frameId, b.id);
-  assert.deepEqual(getFrameContents(a, migrated), []);
+  assert.deepEqual(getFrameContents(a, migrated), [migrated[1]]);
   assert.deepEqual(getFrameContents(b, migrated), [owned]);
   assert.equal(normalizeFrameMembership([{ ...a, width: 400 }, b, owned])[2].frameId, b.id);
   const transferred = { ...owned, frameId: a.id };

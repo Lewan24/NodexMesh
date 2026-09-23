@@ -52,7 +52,7 @@ interface UseProjectsResult {
   createFirstProject: () => void;
   resetDemo: () => void;
   importProject: (text: string) => Promise<void>;
-  renameProject: (id: string, name: string) => void;
+  renameProject: (id: string, name: string, color: string) => void;
   trashProject: (id: string) => void;
   emptyTrash: () => Promise<void>;
   purgeProject: (id: string) => Promise<void>;
@@ -173,10 +173,10 @@ export function useProjects(userId: string): UseProjectsResult {
   }, [controller, viewedProjectId]);
 
   const renameProject = useCallback(
-    (id: string, name: string) => {
+    (id: string, name: string, color: string) => {
       if (!name.trim()) return;
       setProjects((previous) =>
-        previous.map((project) => (project.id === id ? { ...project, name: name.trim() } : project)),
+        previous.map((project) => (project.id === id ? { ...project, name: name.trim(), color } : project)),
       );
     },
     [setProjects],

@@ -8,6 +8,7 @@ export interface ProjectRecord extends AuditFields {
   ownerId: string;
   name: string;
   color: string;
+  itemCount?: number;
 }
 
 export interface ProjectSnapshot {
@@ -32,6 +33,7 @@ export interface Project {
   id: string;
   name: string;
   color: string;
+  itemCount?: number;
   items: BoardItem[];
   ownerId: string;
 }

@@ -25,7 +25,7 @@ interface AppBarProps {
   onAddProject: (name: string) => void;
   onResetDemo: () => void;
   onImportProject: (text: string) => Promise<void>;
-  onRenameProject: (id: string, name: string) => void;
+  onRenameProject: (id: string, name: string, color: string) => void;
   onTrashProject: (id: string) => void;
   onEmptyTrash: () => Promise<void>;
   onPurgeProject: (id: string) => Promise<void>;

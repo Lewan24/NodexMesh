@@ -2,6 +2,7 @@ import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
+import { DEFAULT_LINK_STRIP } from '../editbar/constants';
 import { useCallback, useState } from 'react';
 
 import type { BoardItem, LinkItem } from '@/entities/board/types';
@@ -74,7 +75,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
         {item.topColor ? (
           <div style={{ height: 5, backgroundColor: item.topColor }} />
         ) : (
-          <div className="h-0.5 bg-gradient-to-r from-[#7C3AED] to-[#FFBD65]" />
+          <div className="h-0.5" style={{ background: DEFAULT_LINK_STRIP }} />
         )}
 
         <div className="p-4">

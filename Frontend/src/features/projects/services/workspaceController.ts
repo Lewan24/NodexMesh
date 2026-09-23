@@ -15,6 +15,10 @@ export interface WorkspaceState {
   recoveryDrafts?: RecoveryDraft[];
 }
 
+function countBoardItems(items: Project['items']): number {
+  return items.reduce((count, item) => count + 1 + (item.type === 'column' ? countBoardItems(item.items) : 0), 0);
+}
+
 /** Serializes writes, retaining the exact failed request for idempotent retry. */
 export class WorkspaceController {
   private state: WorkspaceState = { projects: [], status: 'loading', error: '' };
@@ -369,9 +373,14 @@ export class WorkspaceController {
         return;
       }
     }
-    const projects = next.map((project) =>
-      project.name === project.name.trim() ? project : { ...project, name: project.name.trim() },
-    );
+    const projects = next.map((project) => {
+      const previous = this.state.projects.find((entry) => entry.id === project.id);
+      const itemCount =
+        previous?.itemCount !== undefined && project.items !== previous.items
+          ? previous.itemCount + countBoardItems(project.items) - countBoardItems(previous.items)
+          : project.itemCount;
+      return { ...project, name: project.name.trim(), ...(itemCount === undefined ? {} : { itemCount }) };
+    });
     if (projects === this.state.projects) return;
     const blocked = this.state.status === 'error' || this.state.status === 'conflict';
     this.publish({ projects, ...(blocked ? {} : { status: 'pending' }) });
@@ -529,6 +538,7 @@ export class WorkspaceController {
           }
           if (BigInt(board.board.revision) < BigInt(previous.board.board.revision))
             throw new Error(translate('Stale board response'));
+          previous.project = { ...previous.project, itemCount: desired.itemCount };
           // The follow-up snapshot may already contain another collaborator's commit.
           // Preserve edits made while our own request was in flight as well.
           this.acceptRemote(

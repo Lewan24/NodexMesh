@@ -34,6 +34,18 @@ interface UseLineDragOptions {
   onSelectItems: (ids: string[]) => void;
 }
 
+function hasConnection(items: BoardItem[], firstId: string, secondId: string, excludedLineId?: string): boolean {
+  return items.some(
+    (item) =>
+      item.type === 'line' &&
+      item.id !== excludedLineId &&
+      item.startItemId &&
+      item.endItemId &&
+      ((item.startItemId === firstId && item.endItemId === secondId) ||
+        (item.startItemId === secondId && item.endItemId === firstId)),
+  );
+}
+
 export function useLineDrag({
   projectRef,
   zoomRef,
@@ -57,7 +69,7 @@ export function useLineDrag({
     (x: number, y: number, excludedIds: Set<string>) => {
       const candidates = projectRef.current.items
         .filter((target) => {
-          if (excludedIds.has(target.id) || target.type === 'line') {
+          if (excludedIds.has(target.id) || target.type === 'line' || target.type === 'frame') {
             return false;
           }
 
@@ -164,7 +176,12 @@ export function useLineDrag({
 
         const targetId = attachHoverIdRef.current;
 
-        if (!item.divider && targetId && targetId !== oppositeTargetId) {
+        if (
+          !item.divider &&
+          targetId &&
+          targetId !== oppositeTargetId &&
+          (!oppositeTargetId || !hasConnection(projectRef.current.items, oppositeTargetId, targetId, id))
+        ) {
           const target = projectRef.current.items.find((current) => current.id === targetId);
 
           if (target) {
@@ -205,7 +222,7 @@ export function useLineDrag({
 
       const source = projectRef.current.items.find((item) => item.id === sourceId);
 
-      if (!source || source.type === 'line' || source.locked) {
+      if (!source || source.type === 'line' || source.type === 'frame' || source.locked) {
         return;
       }
 
@@ -352,7 +369,7 @@ export function useLineDrag({
         if (targetId) {
           const target = projectRef.current.items.find((item) => item.id === targetId);
 
-          if (target) {
+          if (target && !hasConnection(projectRef.current.items, sourceId, target.id, lineId)) {
             const dx = (mouseEvent.clientX - startClientX) / zoom;
 
             const dy = (mouseEvent.clientY - startClientY) / zoom;
@@ -377,6 +394,10 @@ export function useLineDrag({
                 y2: point.y,
               };
             });
+          } else if (target) {
+            onDeleteItem(lineId);
+            setAttachHover(null);
+            return;
           }
         }
 

@@ -138,6 +138,7 @@ export function toProjectView(snapshot: ProjectSnapshot): Project {
     role: project.role,
     name: project.name,
     color: project.color,
+    itemCount: project.itemCount,
     deletedAt: project.deletedAt ?? undefined,
     items: roots,
   };

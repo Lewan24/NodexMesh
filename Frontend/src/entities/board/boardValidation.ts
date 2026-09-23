@@ -21,8 +21,16 @@ export function validateBoard(board: BoardSnapshot): void {
     if (item.frameId && (ids.get(item.frameId)?.type !== 'frame' || item.frameId === item.id)) {
       fail(422, 'invalid_frame', translate('Invalid frame membership.'));
     }
+    const visitedFrames = new Set<string>([item.id]);
+    let frameId = item.frameId;
+    while (frameId) {
+      if (visitedFrames.has(frameId)) fail(422, 'invalid_frame', translate('Invalid frame membership.'));
+      visitedFrames.add(frameId);
+      frameId = ids.get(frameId)?.frameId ?? null;
+    }
   }
   const linkKeys = new Set<string>();
+  const lineEndpoints = new Map<string, { start?: string; end?: string }>();
   for (const link of board.links) {
     const source = ids.get(link.sourceItemId);
     const target = ids.get(link.targetItemId);
@@ -39,5 +47,18 @@ export function validateBoard(board: BoardSnapshot): void {
       fail(422, 'invalid_link', translate('Invalid item link.'));
     }
     linkKeys.add(key);
+    if (link.kind === 'line_start' || link.kind === 'line_end') {
+      const endpoints = lineEndpoints.get(link.sourceItemId) ?? {};
+      if (link.kind === 'line_start') endpoints.start = link.targetItemId;
+      else endpoints.end = link.targetItemId;
+      lineEndpoints.set(link.sourceItemId, endpoints);
+    }
+  }
+  const connections = new Set<string>();
+  for (const endpoints of lineEndpoints.values()) {
+    if (!endpoints.start || !endpoints.end) continue;
+    const key = [endpoints.start, endpoints.end].sort().join(':');
+    if (connections.has(key)) fail(422, 'invalid_link', translate('Only one line can connect the same two items.'));
+    connections.add(key);
   }
 }

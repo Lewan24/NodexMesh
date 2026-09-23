@@ -14,7 +14,7 @@ interface ProjectMenuProps {
   onClose: () => void;
   onSelectProject: (id: string) => void;
   onAddProject: (name: string) => void;
-  onRenameProject: (id: string, name: string) => void;
+  onRenameProject: (id: string, name: string, color: string) => void;
   onTrashProject: (id: string) => void;
   onEmptyTrash: () => Promise<void>;
   onPurgeProject: (id: string) => Promise<void>;
@@ -40,6 +40,7 @@ export default function ProjectMenu(props: ProjectMenuProps) {
   const [trash, setTrash] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [name, setName] = useState('');
+  const [color, setColor] = useState('#7C3AED');
   const [message, setMessage] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -53,7 +54,7 @@ export default function ProjectMenu(props: ProjectMenuProps) {
   const save = () => {
     if (!name.trim()) return;
     if (editing === 'new') props.onAddProject(name.trim());
-    else if (editing) props.onRenameProject(editing, name.trim());
+    else if (editing) props.onRenameProject(editing, name.trim(), color);
     setEditing(null);
   };
   return (
@@ -126,6 +127,16 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                 onChange={(event) => setName(event.target.value)}
                 className="min-w-0 flex-1 rounded-lg bg-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-violet-400"
               />
+              {editing !== 'new' && (
+                <input
+                  type="color"
+                  aria-label={translate('Project color')}
+                  title={translate('Project color')}
+                  value={color}
+                  onChange={(event) => setColor(event.target.value)}
+                  className="h-9 w-10 shrink-0 cursor-pointer rounded-lg bg-white/10 p-1"
+                />
+              )}
               <button className="project-action" aria-label={translate('Save project name')} disabled={!name.trim()}>
                 <Check size={17} />
               </button>
@@ -154,7 +165,12 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{project.name}</span>
                     <span className="block text-xs opacity-60">
-                      {translate('itemCount', { count: project.items.length })}{' '}
+                      {translate('itemCount', {
+                        count:
+                          project.itemCount ??
+                          project.boards?.reduce((count, board) => count + board.items.length, 0) ??
+                          project.items.length,
+                      })}{' '}
                       {project.role && project.role !== 'Owner'
                         ? translate(' / Shared / {{value1}}', { value1: displayLabel(project.role) })
                         : ''}
@@ -232,6 +248,7 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                       onClick={() => {
                         setEditing(project.id);
                         setName(project.name);
+                        setColor(project.color);
                       }}
                     >
                       <Pencil size={15} />

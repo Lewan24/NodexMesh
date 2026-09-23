@@ -30,6 +30,8 @@ export function parseProjectRecord(value: unknown): ProjectRecord {
   audit(project);
   if (project.color === null) project.color = '#7C3AED';
   for (const key of ['name', 'color', 'ownerId']) string(project[key]);
+  if (project.itemCount !== undefined && (!Number.isInteger(project.itemCount) || (project.itemCount as number) < 0))
+    fail(422, 'invalid_response', translate('Invalid project item count.'));
   return project as unknown as ProjectRecord;
 }
 
