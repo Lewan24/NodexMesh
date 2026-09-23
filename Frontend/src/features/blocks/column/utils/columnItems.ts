@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import type { BoardItem } from '@/entities/board/types';
 import { createCanvasItem } from '@/features/canvas/utils/createCanvasItem';
 export const COLUMN_BG_COLORS = [
@@ -16,19 +17,67 @@ export const COLUMN_BG_COLORS = [
 export type ColumnChildType = 'note' | 'checklist' | 'link' | 'text' | 'image' | 'document' | 'code' | 'embed';
 
 export const COLUMN_ADD_TYPES: { kind: ColumnChildType; label: string; icon: string }[] = [
-  { kind: 'document', label: 'Document', icon: '📄' },
-  { kind: 'code', label: 'Code', icon: '</>' },
-  { kind: 'embed', label: 'Embed', icon: '▶' },
-  { kind: 'note', label: 'Note', icon: '📝' },
-  { kind: 'checklist', label: 'Checklist', icon: '✅' },
-  { kind: 'link', label: 'Link', icon: '🔗' },
-  { kind: 'text', label: 'Text', icon: 'T' },
-  { kind: 'image', label: 'Image', icon: '🖼' },
+  {
+    kind: 'document',
+    get label() {
+      return translate('Document');
+    },
+    icon: '📄',
+  },
+  {
+    kind: 'code',
+    get label() {
+      return translate('Code');
+    },
+    icon: '</>',
+  },
+  {
+    kind: 'embed',
+    get label() {
+      return translate('Embed');
+    },
+    icon: '▶',
+  },
+  {
+    kind: 'note',
+    get label() {
+      return translate('Note');
+    },
+    icon: '📝',
+  },
+  {
+    kind: 'checklist',
+    get label() {
+      return translate('Checklist');
+    },
+    icon: '✅',
+  },
+  {
+    kind: 'link',
+    get label() {
+      return translate('Link');
+    },
+    icon: '🔗',
+  },
+  {
+    kind: 'text',
+    get label() {
+      return translate('Text');
+    },
+    icon: 'T',
+  },
+  {
+    kind: 'image',
+    get label() {
+      return translate('Image');
+    },
+    icon: '🖼',
+  },
 ];
 
 export function createDefaultColumnItem(kind: ColumnChildType): BoardItem {
   const item = createCanvasItem(kind, 0, 0);
-  if (!item) throw new Error('Unsupported column item: ' + kind);
+  if (!item) throw new Error(translate('Unsupported column item:') + ' ' + kind);
   return item.type === 'document' || item.type === 'code' ? { ...item, autoHeight: true } : item;
 }
 

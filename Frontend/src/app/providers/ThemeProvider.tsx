@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { registerSaveGuard } from '@/shared/api/pendingChanges';
 import { httpClient } from '@/app/services';
 import { createHttpAppearance } from '@/features/appearance/httpAppearance';
@@ -33,6 +35,7 @@ interface ThemeContextValue {
 const appearanceApi = httpClient ? createHttpAppearance(httpClient) : null;
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  useTranslation();
   const [globalTheme, setGlobalTheme] = useState<Theme>(() => {
     try {
       return localStorage.getItem('nodexmesh_theme') === 'dark' ? 'dark' : 'light';
@@ -119,7 +122,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const change = useCallback(
     (fn: (current: AppearancePreferences) => AppearancePreferences) => {
       if (appearanceApi && loadedUser.current !== scope.userId) {
-        toast.error('Wait for appearance settings to load.');
+        toast.error(translate('Wait for appearance settings to load.'));
         return;
       }
       const current = preferencesRef.current;
@@ -248,6 +251,7 @@ export function PublicAppearanceProvider({
   appearance: import('@/entities/project/shareTypes').PublicAppearance | null;
   children: React.ReactNode;
 }) {
+  useTranslation();
   const parent = useTheme();
   const appearance: Appearance = {
     ...parent.appearance,

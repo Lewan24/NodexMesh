@@ -1,3 +1,5 @@
+import { displayLabel } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import type { ItemComment } from '@/entities/board/types';
 
 import { getActiveCommentStatus, getUnresolvedCommentCount } from '@/features/comments/utils/commentUtils';
@@ -7,6 +9,7 @@ interface ItemCommentBadgeProps {
 }
 
 export default function ItemCommentBadge({ comments }: ItemCommentBadgeProps) {
+  useTranslation();
   if (!comments?.length) {
     return null;
   }
@@ -39,7 +42,7 @@ export default function ItemCommentBadge({ comments }: ItemCommentBadgeProps) {
         <>
           <span style={{ opacity: 0.4 }}>·</span>
 
-          <span>{status}</span>
+          <span>{displayLabel(status ?? '')}</span>
         </>
       )}
     </div>

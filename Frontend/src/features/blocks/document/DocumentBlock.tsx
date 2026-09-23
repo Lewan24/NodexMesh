@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle, getDocumentLinkVariables } from '@/features/blocks/typography/sectionTypography';
 import { useEffect, useState } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -16,6 +18,7 @@ export default function DocumentBlock({
   onUpdate: BlockUpdateHandler;
   onDelete: () => void;
 }) {
+  useTranslation();
   const [editing, setEditing] = useState(false);
   const autoHeight = item.autoHeight ?? false;
   const editor = useEditor({
@@ -46,61 +49,61 @@ export default function DocumentBlock({
       ? [
           {
             label: 'B',
-            title: 'Bold',
+            title: translate('Bold'),
             active: editor.isActive('bold'),
             run: () => editor.chain().focus().toggleBold().run(),
           },
           {
             label: 'I',
-            title: 'Italic',
+            title: translate('Italic'),
             active: editor.isActive('italic'),
             run: () => editor.chain().focus().toggleItalic().run(),
           },
           {
             label: 'U',
-            title: 'Underline',
+            title: translate('Underline'),
             active: editor.isActive('underline'),
             run: () => editor.chain().focus().toggleUnderline().run(),
           },
           {
             label: 'H1',
-            title: 'Heading 1',
+            title: translate('Heading 1'),
             active: editor.isActive('heading', { level: 1 }),
             run: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
           },
           {
             label: 'H2',
-            title: 'Heading 2',
+            title: translate('Heading 2'),
             active: editor.isActive('heading', { level: 2 }),
             run: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
           },
           {
-            label: '• List',
-            title: 'Bullet list',
+            label: translate('• List'),
+            title: translate('Bullet list'),
             active: editor.isActive('bulletList'),
             run: () => editor.chain().focus().toggleBulletList().run(),
           },
           {
-            label: '1. List',
-            title: 'Numbered list',
+            label: translate('1. List'),
+            title: translate('Numbered list'),
             active: editor.isActive('orderedList'),
             run: () => editor.chain().focus().toggleOrderedList().run(),
           },
           {
             label: '❞',
-            title: 'Quote',
+            title: translate('Quote'),
             active: editor.isActive('blockquote'),
             run: () => editor.chain().focus().toggleBlockquote().run(),
           },
           {
             label: '<>',
-            title: 'Inline code',
+            title: translate('Inline code'),
             active: editor.isActive('code'),
             run: () => editor.chain().focus().toggleCode().run(),
           },
           {
-            label: 'Clear',
-            title: 'Clear formatting',
+            label: translate('Clear'),
+            title: translate('Clear formatting'),
             active: false,
             run: () => editor.chain().focus().clearNodes().unsetAllMarks().run(),
           },
@@ -116,7 +119,7 @@ export default function DocumentBlock({
         <div className="flex items-center gap-2">
           {editing ? (
             <input
-              aria-label="Document title"
+              aria-label={translate('Document title')}
               disabled={item.locked}
               className="bg-transparent outline-none w-full"
               value={item.title}
@@ -139,7 +142,7 @@ export default function DocumentBlock({
             type="button"
             className="shrink-0 rounded px-2 py-1 text-xs hover:bg-violet-500/10"
             aria-pressed={autoHeight}
-            title="Fit content and grow automatically while writing"
+            title={translate('Fit content and grow automatically while writing')}
             onMouseDown={(e) => e.stopPropagation()}
             onClick={() =>
               onUpdate((current) =>
@@ -147,7 +150,7 @@ export default function DocumentBlock({
               )
             }
           >
-            Auto-fit
+            {translate('Auto-fit')}
           </button>
           <button
             type="button"
@@ -155,7 +158,7 @@ export default function DocumentBlock({
             onMouseDown={(e) => e.stopPropagation()}
             onClick={() => setEditing(!editing)}
           >
-            {editing ? 'Done' : 'Edit'}
+            {editing ? translate('Done') : translate('Edit')}
           </button>
         </div>
       }

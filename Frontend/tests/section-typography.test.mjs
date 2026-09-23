@@ -10,6 +10,7 @@ const server = await createServer({
   resolve: { alias: { '@': fileURLToPath(new URL('../src', import.meta.url)) } },
   server: { middlewareMode: true, watch: null, hmr: false },
 });
+await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
 const { getSectionStyle, updateTextSections } = await server.ssrLoadModule(
   '/src/features/blocks/typography/sectionTypography.ts',
 );

@@ -1,3 +1,6 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
+import LanguageSelect from '@/shared/i18n/LanguageSelect';
 import { useRef } from 'react';
 import { isMockDataSource } from '@/app/services';
 import type { User } from '@/entities/user/types';
@@ -30,6 +33,7 @@ export default function AccountMenu({
   onLogout,
   onResetDemo,
 }: AccountMenuProps) {
+  useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -103,8 +107,9 @@ export default function AccountMenu({
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm"
               style={{ color: 'var(--color-chrome-text)' }}
             >
-              Profile and security
+              {translate('Profile and security')}
             </button>
+            <LanguageSelect />
             <button
               onClick={onToggleTheme}
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm"
@@ -127,7 +132,7 @@ export default function AccountMenu({
                 </svg>
               )}
 
-              {theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+              {theme === 'light' ? translate('Switch to dark mode') : translate('Switch to light mode')}
             </button>
 
             {isAdmin && (
@@ -147,7 +152,7 @@ export default function AccountMenu({
                   <circle cx="9" cy="7" r="4" />
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
-                Manage users
+                {translate('Manage users')}
               </button>
             )}
 
@@ -160,7 +165,9 @@ export default function AccountMenu({
                   onClick={() => {
                     if (
                       !window.confirm(
-                        'Clear ALL local storage for this site? This deletes the local demo data and preferences.',
+                        translate(
+                          'Clear ALL local storage for this site? This deletes the local demo data and preferences.',
+                        ),
                       )
                     )
                       return;
@@ -189,7 +196,7 @@ export default function AccountMenu({
                     <path d="M3 12a9 9 0 1 0 3-6.7" />
                     <path d="M3 3v6h6" />
                   </svg>
-                  Reset demo
+                  {translate('Reset demo')}
                 </button>
               </>
             )}
@@ -210,7 +217,7 @@ export default function AccountMenu({
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
-              Log out
+              {translate('Log out')}
             </button>
           </div>
         </div>

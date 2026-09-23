@@ -8,6 +8,7 @@ export interface ProjectRecord extends AuditFields {
   ownerId: string;
   name: string;
   color: string;
+  itemCount?: number;
 }
 
 export interface ProjectSnapshot {
@@ -17,14 +18,22 @@ export interface ProjectSnapshot {
 
 export type ProjectMemberRole = 'editor' | 'commenter' | 'viewer';
 
+export interface ProjectBoard {
+  id: string;
+  name: string;
+  items: BoardItem[];
+}
+
 /** Canvas projection. Persistence uses ProjectRecord + BoardSnapshot, never this tree. */
 export interface Project {
+  boards?: ProjectBoard[];
   boardId?: string;
   role?: ProjectRecord['role'];
   deletedAt?: string;
   id: string;
   name: string;
   color: string;
+  itemCount?: number;
   items: BoardItem[];
   ownerId: string;
 }

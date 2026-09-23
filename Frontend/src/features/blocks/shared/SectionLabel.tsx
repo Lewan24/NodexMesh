@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { readableText } from '../typography/textContrast';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useState } from 'react';
@@ -19,6 +21,7 @@ export default function SectionLabel({
   zoom: number;
   onChange: (title: string) => void;
 }) {
+  useTranslation();
   const [editingTitle, setEditingTitle] = useState(false);
   const labelMode = zoom >= 0.65 ? 'normal' : zoom >= 0.3 ? 'overview' : 'far';
   const typographyStyle = getTypographyStyle(item);
@@ -83,7 +86,7 @@ export default function SectionLabel({
             if (!item.locked) setEditingTitle(true);
           }}
         >
-          {title || 'Untitled section'}
+          {title || translate('Untitled section')}
         </span>
       )}
     </div>

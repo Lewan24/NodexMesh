@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 
 import ItemLockBadge from '@/features/canvas/components/ItemLockBadge';
@@ -27,6 +29,7 @@ export default function ColumnItemRow({
   onEject,
   onSelect,
 }: ColumnItemRowProps) {
+  useTranslation();
   return (
     <div
       data-column-item="true"
@@ -57,7 +60,7 @@ export default function ColumnItemRow({
       >
         <DragHandle
           color="var(--color-text-faint)"
-          title="Drag to reorder or move out of column"
+          title={translate('Drag to reorder or move out of column')}
           onMouseDown={onDragHandleMouseDown}
         />
       </div>
@@ -100,7 +103,7 @@ export default function ColumnItemRow({
             hover:bg-black/5
           "
           style={{ color: 'var(--color-text-faint)' }}
-          title="Move item to canvas"
+          title={translate('Move item to canvas')}
         >
           <svg
             width="13"

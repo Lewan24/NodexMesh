@@ -1,10 +1,11 @@
+import { translate } from '@/shared/i18n';
 import { createHttpClient } from '@/shared/api/httpClient';
 import { fail } from '@/shared/api/errors';
 import type { PublicBoardSnapshot, PublicProjectSnapshot } from '@/entities/project/shareTypes';
 
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value))
-    fail(422, 'invalid_response', 'Invalid API response.');
+    fail(422, 'invalid_response', translate('Invalid API response.'));
   return value as Record<string, unknown>;
 }
 
@@ -26,7 +27,7 @@ export function createPublicApi(fetcher: typeof fetch = fetch, baseUrl = '/api/v
         !Array.isArray(value.boards) ||
         value.boards.some((board) => typeof record(board).id !== 'string' || typeof record(board).name !== 'string')
       )
-        fail(422, 'invalid_response', 'Invalid share response.');
+        fail(422, 'invalid_response', translate('Invalid share response.'));
       return value as unknown as PublicProjectSnapshot;
     },
     async getBoard(token: string, boardId: string): Promise<PublicBoardSnapshot> {
@@ -42,7 +43,7 @@ export function createPublicApi(fetcher: typeof fetch = fetch, baseUrl = '/api/v
         !Array.isArray(value.tags) ||
         !Array.isArray(value.itemTags)
       )
-        fail(422, 'invalid_response', 'Invalid share response.');
+        fail(422, 'invalid_response', translate('Invalid share response.'));
       return value as unknown as PublicBoardSnapshot;
     },
   };

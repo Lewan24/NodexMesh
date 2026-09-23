@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { FrameDraft, SelectionBox } from '@/features/canvas/types';
 
 interface CanvasOverlaysProps {
@@ -6,6 +7,7 @@ interface CanvasOverlaysProps {
 }
 
 export default function CanvasOverlays({ frameDraft, lasso }: CanvasOverlaysProps) {
+  useTranslation();
   return (
     <>
       {frameDraft && (

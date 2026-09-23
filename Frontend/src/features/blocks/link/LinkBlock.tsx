@@ -1,5 +1,8 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
+import { DEFAULT_LINK_STRIP } from '../editbar/constants';
 import { useCallback, useState } from 'react';
 
 import type { BoardItem, LinkItem } from '@/entities/board/types';
@@ -16,6 +19,7 @@ interface LinkBlockProps {
 }
 
 export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) {
+  useTranslation();
   const [editing, setEditing] = useState(false);
 
   const typographyStyle = getTypographyStyle(item);
@@ -69,9 +73,9 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
         {/* Top accent */}
 
         {item.topColor ? (
-          <div style={{ height: 5, backgroundColor: item.topColor }} />
+          <div style={{ height: 5, background: item.topColor }} />
         ) : (
-          <div className="h-0.5 bg-gradient-to-r from-[#7C3AED] to-[#FFBD65]" />
+          <div className="h-0.5" style={{ background: DEFAULT_LINK_STRIP }} />
         )}
 
         <div className="p-4">
@@ -110,7 +114,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                 onMouseLeave={(event) => {
                   event.currentTarget.style.color = mutedColor;
                 }}
-                title="Edit link"
+                title={translate('Edit link')}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -128,7 +132,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                 onMouseLeave={(event) => {
                   event.currentTarget.style.color = mutedColor;
                 }}
-                title="Delete link"
+                title={translate('Delete link')}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M18 6 6 18M6 6l12 12" />
@@ -174,7 +178,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                 value={item.title}
                 onChange={(event) => update({ title: event.target.value })}
                 onKeyDown={handleEditorKeyDown}
-                placeholder="Title"
+                placeholder={translate('Title')}
                 className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border transition-colors"
                 style={{
                   ...typographyStyle,
@@ -191,7 +195,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                 onKeyDown={(event) => {
                   if (event.key === 'Escape') setEditing(false);
                 }}
-                placeholder="Description"
+                placeholder={translate('Description')}
                 rows={3}
                 className="w-full text-xs px-2.5 py-1.5 rounded-xl outline-none border transition-colors resize-none"
                 style={{
@@ -209,7 +213,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                 className="text-sm font-semibold leading-snug mb-1"
                 style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'title') }}
               >
-                {item.title || 'Untitled link'}
+                {item.title || translate('Untitled link')}
               </h4>
 
               {item.description && (
@@ -235,7 +239,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                   className="inline-flex items-center gap-1 underline text-xs hover:opacity-80 transition-colors"
                   style={{ color: textColor, ...getSectionStyle(item.typography, 'links') }}
                 >
-                  Open link
+                  {translate('Open link')}
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                     <polyline points="15 3 21 3 21 9" />

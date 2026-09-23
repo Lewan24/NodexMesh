@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using NodexMeshApi.Common;
 using NodexMeshApi.Data;
@@ -23,7 +24,7 @@ public static class CommentEndpoints
 
     private static async Task<Ok<BoardSnapshotDto>> UpdateAsync(
         Guid boardId, Guid itemId, UpdateCommentsRequest request, ClaimsPrincipal principal,
-        AppDbContext db, IProjectAccessService access, IBoardMutationService boards, CancellationToken ct)
+        AppDbContext db, IProjectAccessService access, IBoardMutationService boards, IHubContext<CollaborationHub, ICollaborationClient> hub, CancellationToken ct)
     {
         var userId = principal.GetUserId();
         var board = await db.Boards.FirstOrDefaultAsync(b => b.Id == boardId, ct)
@@ -84,7 +85,26 @@ public static class CommentEndpoints
         item.Revision++;
         item.UpdatedAt = now;
         item.UpdatedBy = userId;
-        await db.SaveChangesAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // A writer can commit after the revision check. SaveChanges rolls back this batch;
+            // report a recoverable conflict rather than an unexpected server error.
+            throw new ApiException(409, "revision_mismatch", "Comments changed. Refresh the board and try again.");
+        }
+        try
+        {
+            await hub.Clients.Group(CollaborationHub.Group(board.ProjectId))
+                .BoardChanged(board.ProjectId, boardId, board.Revision.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                .WaitAsync(TimeSpan.FromSeconds(2));
+        }
+        catch
+        {
+            // The comment is committed; a missed hint is recovered by the client's reconciliation poll.
+        }
         return TypedResults.Ok(await boards.GetSnapshotAsync(boardId, ct));
     }
 }

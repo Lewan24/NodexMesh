@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useSectionStyle } from '../typography/TypographyContext';
 import { readableText } from '../typography/textContrast';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
@@ -38,6 +40,7 @@ import '../shared/planning.css';
 
 type FlowNode = Node<DiagramNode['data'], 'shape'>;
 function ShapeNode({ data, selected }: NodeProps<FlowNode>) {
+  useTranslation();
   const labelStyle = useSectionStyle('labels');
   return (
     <div className="diagram-node" data-selected={selected}>
@@ -46,7 +49,7 @@ function ShapeNode({ data, selected }: NodeProps<FlowNode>) {
         data-shape={data.shape}
         style={{ background: data.color, color: readableText(data.color), ...labelStyle }}
       >
-        {data.label || 'Untitled'}
+        {data.label || translate('Untitled')}
       </div>
       {(
         [
@@ -63,13 +66,48 @@ function ShapeNode({ data, selected }: NodeProps<FlowNode>) {
 }
 const nodeTypes = { shape: ShapeNode };
 const shapes: { value: DiagramShape; label: string }[] = [
-  { value: 'process', label: 'Process' },
-  { value: 'decision', label: 'Decision' },
-  { value: 'terminal', label: 'Start / End' },
-  { value: 'database', label: 'Database' },
-  { value: 'input', label: 'Input / Output' },
-  { value: 'document', label: 'Document' },
-  { value: 'service', label: 'Service' },
+  {
+    value: 'process',
+    get label() {
+      return translate('Process');
+    },
+  },
+  {
+    value: 'decision',
+    get label() {
+      return translate('Decision');
+    },
+  },
+  {
+    value: 'terminal',
+    get label() {
+      return translate('Start / End');
+    },
+  },
+  {
+    value: 'database',
+    get label() {
+      return translate('Database');
+    },
+  },
+  {
+    value: 'input',
+    get label() {
+      return translate('Input / Output');
+    },
+  },
+  {
+    value: 'document',
+    get label() {
+      return translate('Document');
+    },
+  },
+  {
+    value: 'service',
+    get label() {
+      return translate('Service');
+    },
+  },
 ];
 const edgeOptions = {
   type: 'smoothstep',
@@ -100,6 +138,7 @@ export default function DiagramBlock({
   onUpdate: BlockUpdateHandler;
   onDelete: BlockDeleteHandler;
 }) {
+  useTranslation();
   const [layoutDirection, setLayoutDirection] = useState<'vertical' | 'horizontal'>('vertical');
   const [snap, setSnap] = useState(true);
   const mobile = useMobileLayout();
@@ -187,30 +226,30 @@ export default function DiagramBlock({
       <div className="planning-toolbar" onMouseDown={(event) => event.stopPropagation()}>
         <span className="text-xs text-theme-muted">
           {editing
-            ? 'Shift-click to select several · Drag ports to connect · Right-drag to pan'
+            ? translate('Shift-click to select several · Drag ports to connect · Right-drag to pan')
             : mobile
-              ? 'Diagram editing is available on desktop'
-              : 'Double-click to edit diagram'}
+              ? translate('Diagram editing is available on desktop')
+              : translate('Double-click to edit diagram')}
         </span>
         {editing && (
           <button
             className="planning-button ml-auto"
             onClick={() => flow.current?.fitView({ padding: 0.2, duration: 200 })}
           >
-            Fit view
+            {translate('Fit view')}
           </button>
         )}
         <button
           className="planning-button"
           aria-pressed={editing}
           disabled={mobile}
-          title={mobile ? 'Diagram editing is available on desktop' : undefined}
+          title={mobile ? translate('Diagram editing is available on desktop') : undefined}
           onClick={() => {
             setEditing(!editing);
             setSelection({});
           }}
         >
-          {editing ? 'Done editing' : 'Edit diagram'}
+          {editing ? translate('Done editing') : translate('Edit diagram')}
         </button>
       </div>
       {editing && (
@@ -222,10 +261,10 @@ export default function DiagramBlock({
               setNodes((current) => current.map((node) => ({ ...node, selected: true })));
             }}
           >
-            Select all nodes
+            {translate('Select all nodes')}
           </button>
           <button className="planning-button" aria-pressed={snap} onClick={() => setSnap((value) => !value)}>
-            Snap to grid
+            {translate('Snap to grid')}
           </button>
           {(['x', 'y'] as const).map((axis) => (
             <button
@@ -239,7 +278,7 @@ export default function DiagramBlock({
                 )
               }
             >
-              {axis === 'x' ? 'Align left' : 'Align top'}
+              {axis === 'x' ? translate('Align left') : translate('Align top')}
             </button>
           ))}
           {shapes.map((shape) => (
@@ -248,13 +287,13 @@ export default function DiagramBlock({
             </button>
           ))}
           <select
-            aria-label="Layout direction"
+            aria-label={translate('Layout direction')}
             className="planning-input"
             value={layoutDirection}
             onChange={(event) => setLayoutDirection(event.target.value as 'vertical' | 'horizontal')}
           >
-            <option value="vertical">Vertical layout</option>
-            <option value="horizontal">Horizontal layout</option>
+            <option value="vertical">{translate('Vertical layout')}</option>
+            <option value="horizontal">{translate('Horizontal layout')}</option>
           </select>
           <button
             className="planning-button ml-auto"
@@ -264,7 +303,7 @@ export default function DiagramBlock({
               requestAnimationFrame(() => flow.current?.fitView({ padding: 0.2, duration: 200 }));
             }}
           >
-            Auto layout
+            {translate('Auto layout')}
           </button>
         </div>
       )}
@@ -366,7 +405,9 @@ export default function DiagramBlock({
         </div>
         {!nodes.length && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none">
-            <p className="text-sm text-theme-muted">Map a process, a decision or your system architecture.</p>
+            <p className="text-sm text-theme-muted">
+              {translate('Map a process, a decision or your system architecture.')}
+            </p>
             <button
               disabled={mobile}
               className="planning-button pointer-events-auto"
@@ -378,7 +419,7 @@ export default function DiagramBlock({
                 requestAnimationFrame(() => flow.current?.fitView({ padding: 0.2 }));
               }}
             >
-              Start with request flow
+              {translate('Start with request flow')}
             </button>
           </div>
         )}
@@ -389,7 +430,7 @@ export default function DiagramBlock({
             <>
               <input
                 className="planning-input flex-1"
-                aria-label="Node label"
+                aria-label={translate('Node label')}
                 value={selectedNode.data.label}
                 onChange={(event) =>
                   save(
@@ -404,7 +445,7 @@ export default function DiagramBlock({
               />
               <select
                 className="planning-input"
-                aria-label="Node shape"
+                aria-label={translate('Node shape')}
                 value={selectedNode.data.shape}
                 onChange={(event) =>
                   save(
@@ -425,7 +466,7 @@ export default function DiagramBlock({
               </select>
               <input
                 type="color"
-                aria-label="Node color"
+                aria-label={translate('Node color')}
                 value={selectedNode.data.color}
                 className="h-8 w-8"
                 onChange={(event) =>
@@ -443,8 +484,8 @@ export default function DiagramBlock({
           ) : selectedEdge ? (
             <input
               className="planning-input flex-1"
-              aria-label="Connection label"
-              placeholder="e.g. Yes / No / Success"
+              aria-label={translate('Connection label')}
+              placeholder={translate('e.g. Yes / No / Success')}
               value={typeof selectedEdge.label === 'string' ? selectedEdge.label : ''}
               onChange={(event) =>
                 save(
@@ -456,7 +497,7 @@ export default function DiagramBlock({
           ) : (
             <input
               className="planning-input flex-1"
-              aria-label="Diagram title"
+              aria-label={translate('Diagram title')}
               value={item.title}
               onChange={(event) =>
                 onUpdate((current) =>
@@ -467,7 +508,7 @@ export default function DiagramBlock({
           )}
           {(selectedNode || selectedEdge) && (
             <button className="planning-button text-rose-500" onClick={deleteSelection}>
-              Delete selected
+              {translate('Delete selected')}
             </button>
           )}
         </div>
@@ -475,10 +516,10 @@ export default function DiagramBlock({
       {editing && selectedEdge && (
         <div className="planning-toolbar">
           <label className="text-sm">
-            Connection style{' '}
+            {translate('Connection style')}{' '}
             <select
               className="planning-input"
-              aria-label="Connection style"
+              aria-label={translate('Connection style')}
               value={selectedEdge.type ?? 'smoothstep'}
               onChange={(event) =>
                 save(
@@ -487,12 +528,12 @@ export default function DiagramBlock({
                 )
               }
             >
-              <option value="smoothstep">Rounded elbow</option>
-              <option value="default">Curve</option>
-              <option value="straight">Straight</option>
+              <option value="smoothstep">{translate('Rounded elbow')}</option>
+              <option value="default">{translate('Curve')}</option>
+              <option value="straight">{translate('Straight')}</option>
             </select>
           </label>
-          <span className="text-xs text-theme-muted">Drag either endpoint to reconnect.</span>
+          <span className="text-xs text-theme-muted">{translate('Drag either endpoint to reconnect.')}</span>
         </div>
       )}
       {editing && selectedNode && (
@@ -501,7 +542,7 @@ export default function DiagramBlock({
           data-wheel-scroll="true"
           onMouseDown={(event) => event.stopPropagation()}
         >
-          <span className="text-xs text-theme-muted">Connections</span>
+          <span className="text-xs text-theme-muted">{translate('Connections')}</span>
           {edges
             .filter((edge) => edge.source === selectedNode.id || edge.target === selectedNode.id)
             .map((edge) => (
@@ -513,12 +554,12 @@ export default function DiagramBlock({
                 <button className="planning-button" onClick={() => setSelection({ edge: edge.id })}>
                   {edge.source === selectedNode.id ? '→ ' : '← '}
                   {nodes.find((node) => node.id === (edge.source === selectedNode.id ? edge.target : edge.source))?.data
-                    .label || 'Node'}
+                    .label || translate('Node')}
                   {edge.label ? ` · ${edge.label}` : ''}
                 </button>
                 <button
                   className="planning-button text-rose-500"
-                  aria-label={`Delete connection ${edge.label || edge.id}`}
+                  aria-label={translate('Delete connection {{value1}}', { value1: edge.label || edge.id })}
                   onClick={() =>
                     save(
                       nodes,
@@ -540,7 +581,7 @@ export default function DiagramBlock({
               )
             }
           >
-            Disconnect node
+            {translate('Disconnect node')}
           </button>
         </div>
       )}
@@ -556,14 +597,15 @@ export default function DiagramBlock({
             {item.title}
           </span>
           <span className="text-xs opacity-50">
-            {nodes.length} nodes · {edges.length} connections
+            {nodes.length} {' ' + translate('nodes ·') + ' '}
+            {edges.length} {' ' + translate('connections')}
           </span>
         </span>
       }
     >
       {editing ? (
         <>
-          <div className="planning-empty">Diagram is open in the editor.</div>
+          <div className="planning-empty">{translate('Diagram is open in the editor.')}</div>
           {createPortal(
             <div
               className="fixed inset-0 flex items-center justify-center bg-black/45 p-4"
@@ -576,7 +618,7 @@ export default function DiagramBlock({
                 role="dialog"
                 data-board-history="true"
                 aria-modal="true"
-                aria-label={`Edit ${item.title}`}
+                aria-label={translate('Edit {{value1}}', { value1: item.title })}
                 tabIndex={-1}
                 className="diagram-editor"
                 style={
@@ -615,7 +657,9 @@ export default function DiagramBlock({
               >
                 <div className="px-4 pt-4 font-semibold text-sm">
                   {item.title}
-                  <span className="float-right text-xs font-normal text-theme-muted">Changes saved automatically</span>
+                  <span className="float-right text-xs font-normal text-theme-muted">
+                    {translate('Changes saved automatically')}
+                  </span>
                 </div>
                 {content}
               </div>

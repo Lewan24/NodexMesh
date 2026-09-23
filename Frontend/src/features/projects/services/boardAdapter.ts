@@ -138,6 +138,7 @@ export function toProjectView(snapshot: ProjectSnapshot): Project {
     role: project.role,
     name: project.name,
     color: project.color,
+    itemCount: project.itemCount,
     deletedAt: project.deletedAt ?? undefined,
     items: roots,
   };
@@ -184,20 +185,19 @@ export function renewProjectIds<T extends Project>(project: T): T {
     return Object.fromEntries(
       Object.entries(value).map(([key, entry]) => [
         key,
-        typeof entry === 'string' &&
-        [
-          'id',
-          'boardId',
-          'frameId',
-          'dispenserId',
-          'startItemId',
-          'endItemId',
-          'source',
-          'target',
-          'sourceField',
-          'targetField',
-          'parentId',
-        ].includes(key)
+        (typeof entry === 'string' &&
+          [
+            'id',
+            'boardId',
+            'frameId',
+            'dispenserId',
+            'startItemId',
+            'endItemId',
+            'sourceField',
+            'targetField',
+            'parentId',
+          ].includes(key)) ||
+        (typeof entry === 'string' && ['source', 'target'].includes(key) && 'source' in value && 'target' in value)
           ? (ids.get(entry) ?? entry)
           : rewrite(entry),
       ]),

@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { publicApi } from '@/app/services';
 import type { PublicBoardSnapshot, PublicProjectSnapshot, PublicProjectView } from '@/entities/project/shareTypes';
@@ -7,6 +9,7 @@ import { PublicAppearanceProvider } from '@/app/providers/ThemeProvider';
 import ReadOnlyBoard from './ReadOnlyBoard';
 
 export default function PublicProjectPage({ token }: { token: string }) {
+  useTranslation();
   const [snapshot, setSnapshot] = useState<PublicProjectSnapshot | null>(null);
   const [boardId, setBoardId] = useState('');
   const [view, setView] = useState<{
@@ -99,14 +102,14 @@ export default function PublicProjectPage({ token }: { token: string }) {
       <meta name="referrer" content="no-referrer" />
       <header className="flex flex-wrap items-center gap-4 p-4 border-b">
         <a href={import.meta.env.BASE_URL}>NodexMesh</a>
-        <h1 className="font-semibold">{snapshot?.project.name ?? 'Shared project'}</h1>
-        <span>Public / Read-only</span>
+        <h1 className="font-semibold">{snapshot?.project.name ?? translate('Shared project')}</h1>
+        <span>{translate('Public / Read-only')}</span>
         <span className="text-xs" role="status">
-          {liveStatus}
+          {translate(liveStatus)}
         </span>
         {snapshot && snapshot.boards.length > 1 && (
           <select
-            aria-label="Board"
+            aria-label={translate('Board')}
             value={boardId}
             onChange={(event) => {
               setView(null);
@@ -134,7 +137,7 @@ export default function PublicProjectPage({ token }: { token: string }) {
               setAttempt(attempt + 1);
             }}
           >
-            Try again
+            {translate('Try again')}
           </button>
         </div>
       ) : view ? (
@@ -143,7 +146,9 @@ export default function PublicProjectPage({ token }: { token: string }) {
         </PublicAppearanceProvider>
       ) : (
         <p className="p-8" role="status">
-          {snapshot && !snapshot.boards.length ? 'This project has no boards.' : 'Loading shared project...'}
+          {snapshot && !snapshot.boards.length
+            ? translate('This project has no boards.')
+            : translate('Loading shared project...')}
         </p>
       )}
     </div>
@@ -151,6 +156,6 @@ export default function PublicProjectPage({ token }: { token: string }) {
 }
 function message(error: unknown) {
   return error instanceof ApiError && error.problem.status === 404
-    ? 'This link is no longer available.'
+    ? translate('This link is no longer available.')
     : errorMessage(error);
 }

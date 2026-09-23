@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useMemo, useState } from 'react';
 import type { BoardItem, ChecklistEntry, KanbanCard } from '@/entities/board/types';
 
@@ -108,6 +110,7 @@ export default function CanvasItem({
   onOpenBoard,
   onRenameBoard,
 }: CanvasItemProps) {
+  useTranslation();
   const [hasFocus, setHasFocus] = useState(false);
   const mobile = useMobileLayout();
   const lodThreshold = mobile ? 0.2 : 0.25;
@@ -252,10 +255,10 @@ export default function CanvasItem({
           type="button"
           data-touch-drag="true"
           className="canvas-item-move-handle"
-          aria-label="Move selected item"
+          aria-label={translate('Move selected item')}
           style={{ transform: `scale(${1 / zoom})`, transformOrigin: 'bottom left' }}
         >
-          Move ⠿
+          {translate('Move ⠿')}
         </button>
       )}
       {item.locked && <ItemLockBadge />}
@@ -279,7 +282,9 @@ export default function CanvasItem({
             style={{ background: '#0891B2' }}
           >
             {remotePresence.map((presence) => presence.displayName).join(', ')}
-            {remotePresence.some((presence) => presence.mode === 'editing') ? ' editing' : ' viewing'}
+            {remotePresence.some((presence) => presence.mode === 'editing')
+              ? ' ' + translate('editing')
+              : ' ' + translate('viewing')}
           </span>
         </div>
       ) : null}

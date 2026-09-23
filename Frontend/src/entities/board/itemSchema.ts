@@ -1,3 +1,4 @@
+import { translate, displayLabel } from '@/shared/i18n';
 import { validMindmapTree } from '@/features/blocks/mindmap/mindmapUtils';
 import type { MindmapNode } from './types';
 import type { BoardItem } from './types';
@@ -288,7 +289,7 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
 export function validateItem(item: ItemWrite): void {
   const schema = itemSchemas[item.type];
   if (!schema || item.schemaVersion !== schema.version) {
-    fail(422, 'unsupported_schema', 'This board needs a newer client. Editing has been stopped.');
+    fail(422, 'unsupported_schema', translate('This board needs a newer client. Editing has been stopped.'));
   }
   if (
     !uuid(item.id) ||
@@ -303,6 +304,10 @@ export function validateItem(item: ItemWrite): void {
     !Number.isSafeInteger(item.sortOrder) ||
     JSON.stringify(item).length > 2_000_000
   ) {
-    fail(422, 'invalid_item', `Invalid ${item.type} content or geometry.`);
+    fail(
+      422,
+      'invalid_item',
+      translate('Invalid {{value1}} content or geometry.', { value1: displayLabel(item.type) }),
+    );
   }
 }

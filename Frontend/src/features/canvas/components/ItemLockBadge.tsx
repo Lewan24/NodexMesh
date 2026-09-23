@@ -1,7 +1,10 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { LockKeyhole } from 'lucide-react';
 
 export default function ItemLockBadge({ inherited = false }: { inherited?: boolean }) {
-  const label = inherited ? 'Movement locked: contains a locked item' : 'Item locked';
+  useTranslation();
+  const label = inherited ? translate('Movement locked: contains a locked item') : translate('Item locked');
   return (
     <span
       role="img"

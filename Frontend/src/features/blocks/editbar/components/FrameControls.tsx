@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import type { BoardItem, FrameItem } from '@/entities/board/types';
 
 import ColorSwatch from './ColorSwatch';
@@ -11,6 +13,7 @@ interface FrameControlsProps {
 }
 
 export default function FrameControls({ item, onUpdate }: FrameControlsProps) {
+  useTranslation();
   const opacity = item.opacity ?? 0.2;
 
   const update = (patch: Partial<FrameItem>) => {
@@ -24,7 +27,11 @@ export default function FrameControls({ item, onUpdate }: FrameControlsProps) {
           <ColorSwatch key={color} color={color} active={item.color === color} onClick={() => update({ color })} />
         ))}
 
-        <CustomColorInput value={item.color} onChange={(color) => update({ color })} title="Custom frame color" />
+        <CustomColorInput
+          value={item.color}
+          onChange={(color) => update({ color })}
+          title={translate('Custom frame color')}
+        />
       </div>
 
       <EditBarDivider />
@@ -34,7 +41,7 @@ export default function FrameControls({ item, onUpdate }: FrameControlsProps) {
           className="text-[10px] font-semibold uppercase tracking-wide flex-shrink-0"
           style={{ color: 'var(--color-text-faint)' }}
         >
-          Opacity
+          {translate('Opacity')}
         </span>
 
         <input
@@ -45,7 +52,7 @@ export default function FrameControls({ item, onUpdate }: FrameControlsProps) {
           value={opacity}
           onChange={(event) => update({ opacity: Number(event.target.value) })}
           className="w-24 cursor-pointer"
-          title={`Opacity ${Math.round(opacity * 100)}%`}
+          title={translate('Opacity {{value1}}%', { value1: Math.round(opacity * 100) })}
         />
 
         <span

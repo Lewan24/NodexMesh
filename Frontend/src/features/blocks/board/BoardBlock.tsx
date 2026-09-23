@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { LayoutDashboard, ExternalLink } from 'lucide-react';
 import type { BoardBlockItem, BoardItem } from '@/entities/board/types';
@@ -12,6 +14,7 @@ interface BoardBlockProps {
 }
 
 export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard }: BoardBlockProps) {
+  useTranslation();
   const color = item.color ?? '#7C3AED';
   const appearance = useCardAppearance(color, item.gradient, item.colorRole);
   const typographyStyle = getTypographyStyle(item);
@@ -29,7 +32,7 @@ export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard 
         background: appearance.background,
       }}
       onDoubleClick={open}
-      title={item.boardId ? 'Double-click to open board' : 'This board is not connected yet'}
+      title={item.boardId ? translate('Double-click to open board') : translate('This board is not connected yet')}
     >
       {item.topColor ? (
         <div className="h-2" style={{ background: item.topColor }} />
@@ -47,7 +50,7 @@ export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard 
           </div>
           <div className="min-w-0 flex-1">
             <input
-              aria-label="Board block title"
+              aria-label={translate('Board block title')}
               className="w-full bg-transparent font-semibold outline-none"
               value={item.title}
               onChange={(event) =>
@@ -66,7 +69,7 @@ export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard 
               }}
             />
             <textarea
-              aria-label="Board block description"
+              aria-label={translate('Board block description')}
               className="mt-1 w-full resize-none bg-transparent text-sm outline-none"
               rows={2}
               value={item.description}
@@ -100,7 +103,7 @@ export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard 
           }}
           disabled={!item.boardId}
         >
-          {item.boardId ? 'Open board' : 'Board setup pending'} <ExternalLink size={13} />
+          {item.boardId ? translate('Open board') : translate('Board setup pending')} <ExternalLink size={13} />
         </button>
       </div>
     </div>

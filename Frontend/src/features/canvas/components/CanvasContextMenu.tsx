@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Copy, CopyPlus, ClipboardPaste, Trash2, Layers, Lock, Unlock, Code } from 'lucide-react';
@@ -44,6 +46,7 @@ export default function CanvasContextMenu({
   onLock: () => void;
   onGroup: () => void;
 }) {
+  useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: menu.x, y: menu.y });
   useLayoutEffect(() => {
@@ -73,26 +76,35 @@ export default function CanvasContextMenu({
   const actions = [
     ...(menu.hasSelection
       ? [
-          ...(count === 1 && onCustomCss ? [{ name: 'Custom CSS…', keys: '', icon: Code, run: onCustomCss }] : []),
-          ...(count === 1 ? [{ name: 'Copy style', keys: '', icon: Copy, run: onCopyStyle }] : []),
+          ...(count === 1 && onCustomCss
+            ? [{ name: translate('Custom CSS…'), keys: '', icon: Code, run: onCustomCss }]
+            : []),
+          ...(count === 1 ? [{ name: translate('Copy style'), keys: '', icon: Copy, run: onCopyStyle }] : []),
           {
-            name: 'Paste style',
+            name: translate('Paste style'),
             keys: '',
             icon: ClipboardPaste,
             run: onPasteStyle,
             disabled: !canPasteStyle || allLocked,
           },
-          { name: 'Copy', keys: 'Ctrl C', icon: Copy, run: onCopy },
-          { name: 'Duplicate', keys: 'Ctrl D', icon: CopyPlus, run: onDuplicate },
+          { name: translate('Copy'), keys: 'Ctrl C', icon: Copy, run: onCopy },
+          { name: translate('Duplicate'), keys: 'Ctrl D', icon: CopyPlus, run: onDuplicate },
         ]
       : []),
-    { name: 'Paste here', keys: 'Ctrl V', icon: ClipboardPaste, run: onPaste, disabled: !canPaste },
+    { name: translate('Paste here'), keys: 'Ctrl V', icon: ClipboardPaste, run: onPaste, disabled: !canPaste },
     ...(menu.hasSelection
       ? [
-          { name: allLocked ? 'Unlock' : 'Lock position', keys: '', icon: allLocked ? Unlock : Lock, run: onLock },
-          ...(count > 1 ? [{ name: 'Group in frame', keys: '', icon: Layers, run: onGroup }] : []),
-          ...(onJoinDrawings ? [{ name: 'Join drawings', keys: '', icon: Layers, run: onJoinDrawings }] : []),
-          { name: 'Delete', keys: 'Del', icon: Trash2, run: onDelete },
+          {
+            name: allLocked ? translate('Unlock') : translate('Lock position'),
+            keys: '',
+            icon: allLocked ? Unlock : Lock,
+            run: onLock,
+          },
+          ...(count > 1 ? [{ name: translate('Group in frame'), keys: '', icon: Layers, run: onGroup }] : []),
+          ...(onJoinDrawings
+            ? [{ name: translate('Join drawings'), keys: '', icon: Layers, run: onJoinDrawings }]
+            : []),
+          { name: translate('Delete'), keys: 'Del', icon: Trash2, run: onDelete },
         ]
       : []),
   ];
@@ -100,7 +112,7 @@ export default function CanvasContextMenu({
     <div
       ref={ref}
       role="menu"
-      aria-label="Canvas actions"
+      aria-label={translate('Canvas actions')}
       className="canvas-context-menu"
       style={{ left: position.x, top: position.y }}
       onMouseDown={(event) => event.stopPropagation()}
@@ -125,7 +137,9 @@ export default function CanvasContextMenu({
         }
       }}
     >
-      <div className="px-3 py-2 text-xs text-theme-muted">{menu.hasSelection ? `${count} selected` : 'Canvas'}</div>
+      <div className="px-3 py-2 text-xs text-theme-muted">
+        {menu.hasSelection ? translate('{{value1}} selected', { value1: count }) : translate('Canvas')}
+      </div>
       {actions.map((action) => (
         <button
           key={action.name}

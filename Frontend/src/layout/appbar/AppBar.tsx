@@ -1,9 +1,13 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 
 import type { Project } from '@/entities/project/types';
 
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useTheme } from '@/app/providers/ThemeProvider';
+import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 
 import AppLogo from './components/AppLogo';
 import AccountMenu from './components/AccountMenu';
@@ -23,7 +27,7 @@ interface AppBarProps {
   onAddProject: (name: string) => void;
   onResetDemo: () => void;
   onImportProject: (text: string) => Promise<void>;
-  onRenameProject: (id: string, name: string) => void;
+  onRenameProject: (id: string, name: string, color: string) => void;
   onTrashProject: (id: string) => void;
   onEmptyTrash: () => Promise<void>;
   onPurgeProject: (id: string) => Promise<void>;
@@ -61,10 +65,13 @@ export default function AppBar({
   searchQuery,
   onSearchQueryChange,
 }: AppBarProps) {
+  useTranslation();
   const { currentUser, isAdmin, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const mobile = useMobileLayout();
 
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  const [mobileCollapsed, setMobileCollapsed] = useState(false);
 
   const toggleMenu = (menu: Exclude<OpenMenu, null>) => {
     setOpenMenu((current) => (current === menu ? null : menu));
@@ -80,6 +87,20 @@ export default function AppBar({
     onOpenProfile();
   };
 
+  if (mobile && mobileCollapsed) {
+    return (
+      <button
+        type="button"
+        className="app-bar-reveal"
+        data-canvas-ui="true"
+        aria-label={translate('Show app navigation')}
+        onClick={() => setMobileCollapsed(false)}
+      >
+        <ChevronDown size={17} aria-hidden="true" />
+      </button>
+    );
+  }
+
   return (
     <>
       <header
@@ -89,11 +110,22 @@ export default function AppBar({
       >
         <AppLogo />
         <button
+          type="button"
+          className="app-bar-collapse-toggle"
+          aria-label={translate('Hide app navigation')}
+          onClick={() => {
+            setOpenMenu(null);
+            setMobileCollapsed(true);
+          }}
+        >
+          <ChevronUp size={16} aria-hidden="true" />
+        </button>
+        <button
           onClick={onAppearance}
           className="px-3 py-2 text-sm text-white/90 hover:text-white"
-          title="Personal project appearance"
+          title={translate('Personal project appearance')}
         >
-          Appearance
+          {translate('Appearance')}
         </button>
 
         <ProjectMenu
@@ -116,24 +148,28 @@ export default function AppBar({
         <button
           onClick={onShare}
           disabled={!onShare}
-          title={onShare ? 'Manage project sharing' : 'Sharing requires a saved project connected to the API'}
+          title={
+            onShare
+              ? translate('Manage project sharing')
+              : translate('Sharing requires a saved project connected to the API')
+          }
           className="px-3 py-2 text-sm text-white disabled:opacity-40"
         >
-          Share
+          {translate('Share')}
         </button>
         <button
           onClick={() => void onRefresh()}
           className="px-3 py-2 text-sm text-white"
-          title="Save your changes and reload projects"
+          title={translate('Save your changes and reload projects')}
         >
-          Refresh
+          {translate('Refresh')}
         </button>
         {liveStatus && (
           <span
             className="hidden lg:inline-flex items-center rounded-full px-2 py-1 text-[11px]"
             style={{ background: 'var(--color-chrome-bg-alt)', color: 'var(--color-chrome-text-faint)' }}
             role="status"
-            title="Collaboration status"
+            title={translate('Collaboration status')}
           >
             {liveStatus}
           </span>
@@ -175,7 +211,7 @@ export default function AppBar({
                     event.currentTarget.blur();
                   }
                 }}
-                placeholder="Search text or #tag or status:xxxx..."
+                placeholder={translate('Search text or #tag or status:xxxx...')}
                 className="flex-1 min-w-0 bg-transparent outline-none text-xs"
                 style={{ color: 'var(--color-chrome-text)' }}
               />
@@ -186,7 +222,7 @@ export default function AppBar({
                   onClick={() => onSearchQueryChange('')}
                   className="w-5 h-5 flex items-center justify-center rounded-md"
                   style={{ color: 'var(--color-chrome-text-faint)' }}
-                  title="Clear search"
+                  title={translate('Clear search')}
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M18 6 6 18M6 6l12 12" />

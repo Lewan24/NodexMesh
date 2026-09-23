@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { BoardItem } from '@/entities/board/types';
 import type { NestedDragPayload } from '@/features/canvas/utils/nestedDrag';
 
@@ -8,6 +10,7 @@ interface NestedDragGhostProps {
 }
 
 export default function NestedDragGhost({ payload, clientX, clientY }: NestedDragGhostProps) {
+  useTranslation();
   return (
     <div
       className="
@@ -79,10 +82,10 @@ export default function NestedDragGhost({ payload, clientX, clientY }: NestedDra
 function getTypeLabel(payload: NestedDragPayload): string {
   switch (payload.kind) {
     case 'kanban-card':
-      return 'Kanban card';
+      return translate('Kanban card');
 
     case 'checklist-entry':
-      return 'Checklist item';
+      return translate('Checklist item');
 
     case 'column-item':
       return payload.item.type;
@@ -92,10 +95,10 @@ function getTypeLabel(payload: NestedDragPayload): string {
 function getText(payload: NestedDragPayload): string {
   switch (payload.kind) {
     case 'kanban-card':
-      return payload.card.text || 'Untitled card';
+      return payload.card.text || translate('Untitled card');
 
     case 'checklist-entry':
-      return payload.entry.text || 'Untitled item';
+      return payload.entry.text || translate('Untitled item');
 
     case 'column-item':
       return getBoardItemText(payload.item);
@@ -105,26 +108,27 @@ function getText(payload: NestedDragPayload): string {
 function getBoardItemText(item: BoardItem): string {
   switch (item.type) {
     case 'note':
-      return item.content || 'Note';
+      return item.content || translate('Note');
 
     case 'text':
-      return item.content || 'Text';
+      return item.content || translate('Text');
 
     case 'link':
-      return item.title || 'Link';
+      return item.title || translate('Link');
 
     case 'checklist':
-      return item.title || 'Checklist';
+      return item.title || translate('Checklist');
 
     case 'image':
-      return item.caption || 'Image';
+      return item.caption || translate('Image');
 
     default:
-      return 'Item';
+      return translate('Item');
   }
 }
 
 function DragIcon() {
+  useTranslation();
   return (
     <div
       className="

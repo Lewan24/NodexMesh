@@ -22,19 +22,10 @@ export function cloneItems(items: BoardItem[], dx: number, dy: number, firstZInd
       Object.entries(value).map(([key, entry]) => {
         if (key === 'frameId') return [key, typeof entry === 'string' ? (ids.get(entry) ?? null) : null];
         if (key === 'id' && typeof entry === 'string') return [key, ids.get(entry)];
-        if (
-          [
-            'startItemId',
-            'endItemId',
-            'dispenserId',
-            'source',
-            'target',
-            'sourceField',
-            'targetField',
-            'parentId',
-          ].includes(key) &&
-          typeof entry === 'string'
-        )
+        if (['startItemId', 'endItemId', 'dispenserId'].includes(key) && typeof entry === 'string') {
+          return [key, ids.get(entry)];
+        }
+        if (['source', 'target', 'sourceField', 'targetField', 'parentId'].includes(key) && typeof entry === 'string')
           return [key, ids.get(entry) ?? entry];
         return [key, copy(entry)];
       }),

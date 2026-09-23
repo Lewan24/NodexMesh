@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import type { User } from '@/entities/user/types';
 import type { AuthService } from './authService';
 import { ApiError, fail } from '@/shared/api/errors';
@@ -11,7 +12,7 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
   const anonymous = createHttpClient(async () => '', fetcher, undefined, baseUrl);
   const acceptToken = (value: unknown): User => {
     if (!value || typeof value !== 'object' || !('accessToken' in value) || typeof value.accessToken !== 'string')
-      fail(422, 'invalid_token', 'Invalid authentication response.');
+      fail(422, 'invalid_token', translate('Invalid authentication response.'));
     try {
       if ('user' in value && value.user && typeof value.user === 'object') {
         const profile = value.user as Record<string, unknown>;
@@ -44,7 +45,7 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
       accessToken = value.accessToken;
       return user;
     } catch {
-      return fail(422, 'invalid_token', 'Invalid authentication response.');
+      return fail(422, 'invalid_token', translate('Invalid authentication response.'));
     }
   };
   const refresh = () => {

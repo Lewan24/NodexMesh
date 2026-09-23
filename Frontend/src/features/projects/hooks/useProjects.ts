@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 
 import type { Project } from '@/entities/project/types';
@@ -5,6 +6,7 @@ import { createDefaultProjectFor } from '@/entities/project/projectFactory';
 
 import { createWorkspaceServices, httpClient, isMockDataSource } from '@/app/services';
 import { importProjectJson, exportWorkspaceProject, persistImportedProject } from '../services/projectJson';
+import { browserRecoveryStore } from '../services/recoveryDrafts';
 import { toast } from 'sonner';
 import { WorkspaceController, type WorkspaceState } from '../services/workspaceController';
 import { registerSaveGuard } from '@/shared/api/pendingChanges';
@@ -14,6 +16,8 @@ interface UseProjectsResult {
   remoteVersion: number;
   liveStatus: string;
   error: string;
+  recoveryDrafts: WorkspaceState['recoveryDrafts'];
+  clearRecoveryDrafts: () => void;
   retry: () => Promise<void>;
   reload: () => Promise<void>;
   projects: Project[];
@@ -48,7 +52,7 @@ interface UseProjectsResult {
   createFirstProject: () => void;
   resetDemo: () => void;
   importProject: (text: string) => Promise<void>;
-  renameProject: (id: string, name: string) => void;
+  renameProject: (id: string, name: string, color: string) => void;
   trashProject: (id: string) => void;
   emptyTrash: () => Promise<void>;
   purgeProject: (id: string) => Promise<void>;
@@ -59,8 +63,13 @@ interface UseProjectsResult {
 }
 
 export function useProjects(userId: string): UseProjectsResult {
-  const [controller] = useState(() => new WorkspaceController(createWorkspaceServices(userId)));
-  const { projects, status, error } = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  const [controller] = useState(
+    () => new WorkspaceController(createWorkspaceServices(userId), browserRecoveryStore(userId)),
+  );
+  const { projects, status, error, recoveryDrafts } = useSyncExternalStore(
+    controller.subscribe,
+    controller.getSnapshot,
+  );
   const setProjects = controller.update;
 
   const [defaultProjectId, setDefaultProjectId] = useState('');
@@ -82,7 +91,7 @@ export function useProjects(userId: string): UseProjectsResult {
           setActiveProjectId(preference.projectId ?? '');
         }
       } catch {
-        if (!abort.signal.aborted) toast.error('Could not load your default project.');
+        if (!abort.signal.aborted) toast.error(translate('Could not load your default project.'));
       }
       if (!abort.signal.aborted) await controller.load(abort.signal);
     })();
@@ -112,9 +121,14 @@ export function useProjects(userId: string): UseProjectsResult {
     const abort = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
     let running = false;
+    let queued = false;
     let failures = 0;
     const tick = async () => {
-      if (running || abort.signal.aborted) return;
+      if (abort.signal.aborted) return;
+      if (running) {
+        queued = true;
+        return;
+      }
       clearTimeout(timer);
       if (document.hidden) {
         timer = setTimeout(() => void tick(), 2000);
@@ -130,19 +144,28 @@ export function useProjects(userId: string): UseProjectsResult {
         if (!abort.signal.aborted) setLiveStatus('Live updates reconnecting...');
       } finally {
         running = false;
-        if (!abort.signal.aborted) timer = setTimeout(() => void tick(), Math.min(30000, 1500 * 2 ** failures));
+        if (!abort.signal.aborted)
+          timer = setTimeout(() => void tick(), queued && !failures ? 150 : Math.min(30000, 1500 * 2 ** failures));
+        queued = false;
       }
     };
     const wake = () => {
       if (!document.hidden) void tick();
     };
+    const changed = (event: Event) => {
+      const detail = (event as CustomEvent<{ projectId: string; boardId: string }>).detail;
+      const current = controller.getSnapshot().projects.find((project) => project.id === viewedProjectId);
+      if (detail?.projectId === viewedProjectId && detail.boardId === current?.boardId) wake();
+    };
     void tick();
+    window.addEventListener('nodexmesh:board-changed', changed);
     window.addEventListener('online', wake);
     window.addEventListener('focus', wake);
     document.addEventListener('visibilitychange', wake);
     return () => {
       abort.abort();
       clearTimeout(timer);
+      window.removeEventListener('nodexmesh:board-changed', changed);
       window.removeEventListener('online', wake);
       window.removeEventListener('focus', wake);
       document.removeEventListener('visibilitychange', wake);
@@ -150,10 +173,10 @@ export function useProjects(userId: string): UseProjectsResult {
   }, [controller, viewedProjectId]);
 
   const renameProject = useCallback(
-    (id: string, name: string) => {
+    (id: string, name: string, color: string) => {
       if (!name.trim()) return;
       setProjects((previous) =>
-        previous.map((project) => (project.id === id ? { ...project, name: name.trim() } : project)),
+        previous.map((project) => (project.id === id ? { ...project, name: name.trim(), color } : project)),
       );
     },
     [setProjects],
@@ -174,7 +197,8 @@ export function useProjects(userId: string): UseProjectsResult {
 
   const removeProjects = async (ids: string[]) => {
     await controller.flush();
-    if (controller.getSnapshot().status !== 'saved') throw new Error('Save pending changes before deleting projects.');
+    if (controller.getSnapshot().status !== 'saved')
+      throw new Error(translate('Save pending changes before deleting projects.'));
     for (const id of ids) await controller.purgeProject(id);
   };
   const purgeProject = (id: string) => removeProjects([id]);
@@ -186,7 +210,8 @@ export function useProjects(userId: string): UseProjectsResult {
     );
   const setDefaultProject = async (id: string) => {
     await controller.flush();
-    if (controller.getSnapshot().status !== 'saved') throw new Error('Save the project before setting it as default.');
+    if (controller.getSnapshot().status !== 'saved')
+      throw new Error(translate('Save the project before setting it as default.'));
     id = controller.resolveProjectId(id);
     if (httpClient)
       await httpClient.request('/auth/default-project', { method: 'PUT', body: { projectId: id || null } });
@@ -195,8 +220,9 @@ export function useProjects(userId: string): UseProjectsResult {
   };
   const exportProject = async () => {
     await controller.flush();
-    if (controller.getSnapshot().status !== 'saved') throw new Error('Save pending changes before exporting.');
-    if (!activeProject) throw new Error('Select a project to export.');
+    if (controller.getSnapshot().status !== 'saved')
+      throw new Error(translate('Save pending changes before exporting.'));
+    if (!activeProject) throw new Error(translate('Select a project to export.'));
     return exportWorkspaceProject(createWorkspaceServices(userId), controller.resolveProjectId(activeProject.id));
   };
 
@@ -208,16 +234,17 @@ export function useProjects(userId: string): UseProjectsResult {
           localStorage.clear();
           window.location.reload();
         })
-        .catch(() => toast.error('Could not clear browser storage.'));
+        .catch(() => toast.error(translate('Could not clear browser storage.')));
       return;
     }
-    toast.error('Demo reset is only available in mock mode.');
+    toast.error(translate('Demo reset is only available in mock mode.'));
   }, [controller]);
 
   const importProject = async (text: string) => {
     const project = await importProjectJson(text, userId);
     await controller.flush();
-    if (controller.getSnapshot().status !== 'saved') throw new Error('Save pending changes before importing.');
+    if (controller.getSnapshot().status !== 'saved')
+      throw new Error(translate('Save pending changes before importing.'));
     const snapshot = await persistImportedProject(createWorkspaceServices(userId), project);
     controller.addImportedProject(snapshot);
     setActiveProjectId(snapshot.project.id);
@@ -281,10 +308,12 @@ export function useProjects(userId: string): UseProjectsResult {
     liveStatus: isMockDataSource
       ? ''
       : status === 'conflict' || status === 'error'
-        ? 'Live updates paused - resolve unsaved changes'
-        : liveStatus,
+        ? translate('Live updates paused - resolve unsaved changes')
+        : translate(liveStatus),
     status,
     error,
+    recoveryDrafts,
+    clearRecoveryDrafts: controller.clearRecoveryDrafts,
     retry: controller.retry,
     reload: () => controller.load(),
     projects,

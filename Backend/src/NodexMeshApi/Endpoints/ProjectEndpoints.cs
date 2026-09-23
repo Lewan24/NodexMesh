@@ -60,8 +60,16 @@ public static class ProjectEndpoints
                 p => p.Id, m => m.ProjectId, (p, m) => new { Project = p, m.Role })
             .ToListAsync(ct);
 
-        var result = owned.Select(p => ToDto(p, ProjectRole.Owner))
-            .Concat(shared.Select(s => ToDto(s.Project, s.Role)))
+        var projectIds = owned.Select(p => p.Id).Concat(shared.Select(s => s.Project.Id)).Distinct().ToList();
+        var itemCounts = await db.BoardItems.AsNoTracking()
+            .Join(db.Boards.AsNoTracking(), item => item.BoardId, board => board.Id, (item, board) => new { item, board })
+            .Where(entry => projectIds.Contains(entry.board.ProjectId))
+            .GroupBy(entry => entry.board.ProjectId)
+            .Select(group => new { ProjectId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(entry => entry.ProjectId, entry => entry.Count, ct);
+
+        var result = owned.Select(p => ToDto(p, ProjectRole.Owner, itemCounts.GetValueOrDefault(p.Id)))
+            .Concat(shared.Select(s => ToDto(s.Project, s.Role, itemCounts.GetValueOrDefault(s.Project.Id))))
             .OrderByDescending(p => p.UpdatedAt)
             .ToList();
 
@@ -115,7 +123,8 @@ public static class ProjectEndpoints
         if (role == ProjectRole.None) throw new ApiException(404, "not_found", "Project not found.");
 
         var project = await db.Projects.AsNoTracking().FirstAsync(p => p.Id == projectId, ct);
-        return TypedResults.Ok(ToDto(project, role));
+        var itemCount = await ProjectItemCountAsync(db, projectId, ct);
+        return TypedResults.Ok(ToDto(project, role, itemCount));
     }
 
     private static async Task<Ok<ProjectRecordDto>> UpdateAsync(
@@ -138,7 +147,8 @@ public static class ProjectEndpoints
         await db.SaveChangesAsync(ct);
 
         var role = await access.GetRoleAsync(projectId, userId, ct);
-        return TypedResults.Ok(ToDto(project, role));
+        var itemCount = await ProjectItemCountAsync(db, projectId, ct);
+        return TypedResults.Ok(ToDto(project, role, itemCount));
     }
 
     /// <summary>Soft delete (trash bin) — only the owner may trash a shared project.</summary>
@@ -374,7 +384,12 @@ public static class ProjectEndpoints
         return TypedResults.NoContent();
     }
 
-    private static ProjectRecordDto ToDto(Project p, ProjectRole role) => new(
+    private static ProjectRecordDto ToDto(Project p, ProjectRole role, int itemCount = 0) => new(
         p.Id, p.OwnerId, p.Name, p.Color, p.Revision,
-        p.CreatedAt, p.UpdatedAt, p.CreatedBy, p.UpdatedBy, p.DeletedAt, role.ToString());
+        p.CreatedAt, p.UpdatedAt, p.CreatedBy, p.UpdatedBy, p.DeletedAt, role.ToString(), itemCount);
+
+    private static Task<int> ProjectItemCountAsync(AppDbContext db, Guid projectId, CancellationToken ct) =>
+        db.BoardItems.AsNoTracking()
+            .Join(db.Boards.AsNoTracking(), item => item.BoardId, board => board.Id, (item, board) => new { item, board })
+            .CountAsync(entry => entry.board.ProjectId == projectId, ct);
 }

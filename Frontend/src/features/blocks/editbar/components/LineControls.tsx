@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import type { BoardItem, LineItem } from '@/entities/board/types';
 import ColorSwatch from './ColorSwatch';
 import EditBarButton, { EditBarDivider } from './EditBarButton';
@@ -11,6 +13,7 @@ interface LineControlsProps {
 }
 
 export default function LineControls({ item, onUpdate }: LineControlsProps) {
+  useTranslation();
   const update = (patch: Partial<LineItem>) => {
     onUpdate((current) => (current.type === 'line' ? { ...current, ...patch } : current));
   };
@@ -19,7 +22,7 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
     <>
       <EditBarButton
         active={!!item.divider}
-        title="Divider: snap to grid, no connections"
+        title={translate('Divider: snap to grid, no connections')}
         onClick={() =>
           update(
             item.divider
@@ -38,20 +41,24 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
           )
         }
       >
-        Divider
+        {translate('Divider')}
       </EditBarButton>
       <div className="flex items-center gap-1 px-1">
         {LINE_COLORS.map((color) => (
           <ColorSwatch key={color} color={color} active={item.color === color} onClick={() => update({ color })} />
         ))}
 
-        <CustomColorInput value={item.color} onChange={(color) => update({ color })} title="Custom line color" />
+        <CustomColorInput
+          value={item.color}
+          onChange={(color) => update({ color })}
+          title={translate('Custom line color')}
+        />
       </div>
 
       <label className="flex items-center gap-2 text-xs whitespace-nowrap">
-        Curve
+        {translate('Curve')}
         <input
-          aria-label="Line curvature"
+          aria-label={translate('Line curvature')}
           type="range"
           min="-1"
           max="1"
@@ -61,18 +68,18 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
           className="w-24"
         />
       </label>
-      <EditBarButton title="Straight line" onClick={() => update({ curve: 0 })}>
-        Straight
+      <EditBarButton title={translate('Straight line')} onClick={() => update({ curve: 0 })}>
+        {translate('Straight')}
       </EditBarButton>
       <select
-        aria-label="Line cap"
+        aria-label={translate('Line cap')}
         className="h-8 text-xs bg-transparent"
         value={item.lineCap ?? 'round'}
         onChange={(event) => update({ lineCap: event.target.value as LineItem['lineCap'] })}
       >
-        <option value="round">Round ends</option>
-        <option value="butt">Flat ends</option>
-        <option value="square">Square ends</option>
+        <option value="round">{translate('Round ends')}</option>
+        <option value="butt">{translate('Flat ends')}</option>
+        <option value="square">{translate('Square ends')}</option>
       </select>
       <EditBarDivider />
 
@@ -81,7 +88,7 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
           key={thickness}
           active={item.strokeWidth === thickness}
           onClick={() => update({ strokeWidth: thickness })}
-          title={`Thickness ${thickness}`}
+          title={translate('Thickness {{value1}}', { value1: thickness })}
         >
           <div className="w-5 flex items-center justify-center">
             <div className="w-4 rounded-full" style={{ height: thickness, backgroundColor: 'currentColor' }} />
@@ -97,9 +104,9 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
         onClick={() => {
           if (!item.divider) update({ arrowStart: !item.arrowStart });
         }}
-        title="Arrow at start"
+        title={translate('Arrow at start')}
       >
-        ← S
+        ← {translate('Start')}
       </EditBarButton>
 
       <EditBarButton
@@ -108,9 +115,9 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
         onClick={() => {
           if (!item.divider) update({ arrowEnd: !item.arrowEnd });
         }}
-        title="Arrow at end"
+        title={translate('Arrow at end')}
       >
-        E →
+        {translate('End')} →
       </EditBarButton>
 
       <EditBarDivider />
@@ -120,20 +127,20 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
           type="text"
           value={item.label ?? ''}
           onChange={(event) => update({ label: event.target.value })}
-          placeholder="Label..."
+          placeholder={translate('Label...')}
           className="h-8 w-32 px-2 rounded-lg border bg-transparent outline-none text-xs"
           style={{
             color: 'var(--color-text-primary)',
             backgroundColor: 'var(--color-surface)',
             borderColor: 'var(--color-border)',
           }}
-          title="Line label"
+          title={translate('Line label')}
         />
 
         <EditBarButton
           active={(item.labelMode ?? 'horizontal') === 'horizontal'}
           onClick={() => update({ labelMode: 'horizontal' })}
-          title="Keep label horizontal"
+          title={translate('Keep label horizontal')}
         >
           Aa
         </EditBarButton>
@@ -141,13 +148,13 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
         <EditBarButton
           active={item.labelMode === 'follow-line'}
           onClick={() => update({ labelMode: 'follow-line' })}
-          title="Rotate label with line"
+          title={translate('Rotate label with line')}
         >
           ↗Aa
         </EditBarButton>
       </div>
 
-      <div className="flex items-center gap-1.5 px-1" title="Label distance from line">
+      <div className="flex items-center gap-1.5 px-1" title={translate('Label distance from line')}>
         <input
           type="range"
           min="0"
@@ -185,7 +192,7 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
           }}
           className="w-11 h-full px-1.5 text-xs text-right bg-transparent outline-none"
           style={{ color: 'var(--color-text-primary)' }}
-          title="Label font size"
+          title={translate('Label font size')}
         />
 
         <span className="text-[9px] pr-2" style={{ color: 'var(--color-text-faint)' }}>

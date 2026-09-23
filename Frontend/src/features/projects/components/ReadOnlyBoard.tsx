@@ -1,3 +1,5 @@
+import { translate, displayLabel } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { memo, useCallback, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { useReadOnlyNavigation } from '../hooks/useReadOnlyNavigation';
 import ItemInspector from '@/features/inspector/ItemInspector';
@@ -23,6 +25,7 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({
   onOpenBoard?: (id: string) => void;
   selected: boolean;
 }) {
+  useTranslation();
   const stopBoardNavigation = (event: SyntheticEvent) => {
     // Keep native selection, scrolling, links and copy actions working without
     // allowing a block interaction to start canvas navigation.
@@ -45,7 +48,7 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({
   return (
     <div
       className="read-only-block"
-      aria-label={`${item.type} block (read-only)`}
+      aria-label={translate('{{value1}} block (read-only)', { value1: displayLabel(item.type) })}
       tabIndex={onSelect ? 0 : undefined}
       style={{ outline: selected ? '2px solid var(--color-accent)' : undefined }}
       onKeyDown={(event) => {
@@ -105,6 +108,7 @@ export default function ReadOnlyBoard({
   onSaveComments?: (itemId: string, comments: import('@/entities/board/types').ItemComment[]) => Promise<void>;
   onOpenBoard?: (boardId: string) => void;
 }) {
+  useTranslation();
   const [selectedId, setSelectedId] = useState('');
   const findItem = (entries: BoardItem[]): BoardItem | undefined => {
     for (const item of entries) {
@@ -155,19 +159,21 @@ export default function ReadOnlyBoard({
   const offsetX = touchMode ? minX : origin.current.x;
   const offsetY = touchMode ? minY : origin.current.y;
   return (
-    <section className="relative flex min-h-0 min-w-0 flex-1 flex-col" aria-label="Read-only board">
+    <section className="relative flex min-h-0 min-w-0 flex-1 flex-col" aria-label={translate('Read-only board')}>
       <div className="flex items-center gap-3 p-2 border-b" style={{ background: 'var(--color-surface)' }}>
-        <span>{canComment ? 'Commenter — select an item to comment' : 'Read-only'}</span>
-        <button aria-label="Zoom out" onClick={() => navigation.zoomBy(1 / 1.25)}>
+        <span>{canComment ? translate('Commenter — select an item to comment') : translate('Read-only')}</span>
+        <button aria-label={translate('Zoom out')} onClick={() => navigation.zoomBy(1 / 1.25)}>
           -
         </button>
-        <button aria-label="Reset zoom" onClick={navigation.reset}>
+        <button aria-label={translate('Reset zoom')} onClick={navigation.reset}>
           {Math.round(zoom * 100)}%
         </button>
-        <button aria-label="Zoom in" onClick={() => navigation.zoomBy(1.25)}>
+        <button aria-label={translate('Zoom in')} onClick={() => navigation.zoomBy(1.25)}>
           +
         </button>
-        <span className="text-sm">{touchMode ? 'Scroll to explore' : 'Drag to pan / Scroll to zoom'}</span>
+        <span className="text-sm">
+          {touchMode ? translate('Scroll to explore') : translate('Drag to pan / Scroll to zoom')}
+        </span>
       </div>
       <div
         ref={navigation.viewport}
@@ -185,7 +191,11 @@ export default function ReadOnlyBoard({
           }
         }}
         tabIndex={0}
-        aria-label={touchMode ? 'Scrollable board' : 'Board navigation: drag to pan, scroll to zoom, or use arrow keys'}
+        aria-label={
+          touchMode
+            ? translate('Scrollable board')
+            : translate('Board navigation: drag to pan, scroll to zoom, or use arrow keys')
+        }
         style={{
           background: 'var(--canvas-background)',
           cursor: touchMode ? undefined : navigation.dragging ? 'grabbing' : 'grab',
@@ -193,7 +203,7 @@ export default function ReadOnlyBoard({
         }}
       >
         {!items.length ? (
-          <p className="p-8">This board is empty.</p>
+          <p className="p-8">{translate('This board is empty.')}</p>
         ) : (
           <div
             style={{

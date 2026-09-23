@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 
 interface CustomColorInputProps {
@@ -19,7 +21,12 @@ function normalizeHex(value: string): string | null {
   return null;
 }
 
-export default function CustomColorInput({ value, onChange, title = 'Custom color' }: CustomColorInputProps) {
+export default function CustomColorInput({
+  value,
+  onChange,
+  title = translate('Custom color'),
+}: CustomColorInputProps) {
+  useTranslation();
   const fallback = normalizeHex(value ?? '') ?? '#7C3AED';
   const [text, setText] = useState(fallback);
 
@@ -40,7 +47,11 @@ export default function CustomColorInput({ value, onChange, title = 'Custom colo
   };
 
   return (
-    <div className="flex items-center gap-1" title={title}>
+    <div
+      className="flex h-8 items-center gap-1 rounded-xl border p-1 shadow-sm"
+      style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
+      title={title}
+    >
       <input
         type="color"
         value={fallback}
@@ -49,7 +60,7 @@ export default function CustomColorInput({ value, onChange, title = 'Custom colo
           setText(color);
           onChange(color);
         }}
-        className="w-6 h-6 p-0 border-0 rounded-md cursor-pointer bg-transparent"
+        className="h-5 w-5 cursor-pointer rounded-md border-0 bg-transparent p-0"
       />
 
       <input
@@ -69,8 +80,8 @@ export default function CustomColorInput({ value, onChange, title = 'Custom colo
           }
         }}
         spellCheck={false}
-        className="w-[72px] h-6 px-1.5 rounded-md text-[10px] font-mono outline-none"
-        style={{ color: '#172033', backgroundColor: '#ffffff', border: '1px solid var(--color-border)' }}
+        className="h-5 w-[62px] bg-transparent px-1 text-[10px] font-semibold uppercase outline-none"
+        style={{ color: 'var(--color-text-secondary)' }}
       />
     </div>
   );

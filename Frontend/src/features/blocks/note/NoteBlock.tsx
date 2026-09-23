@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -16,6 +18,7 @@ interface NoteBlockProps {
 }
 
 export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: NoteBlockProps) {
+  useTranslation();
   const [editing, setEditing] = useState(false);
   const typographyStyle = {
     ...getTypographyStyle(item),
@@ -98,7 +101,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
       >
         {/* Top accent */}
 
-        {item.topColor && <div style={{ height: 5, backgroundColor: item.topColor }} />}
+        {item.topColor && <div style={{ height: 5, background: item.topColor }} />}
 
         {/* Header */}
 
@@ -109,9 +112,9 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
               onClick={() => update({ height: undefined })}
               className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5"
               style={{ color: mutedColor }}
-              title="Reset to auto height"
+              title={translate('Reset to auto height')}
             >
-              Auto-fit
+              {translate('Auto-fit')}
             </button>
           )}
 
@@ -166,7 +169,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
                 ...typographyStyle,
                 ...getSectionStyle(item.typography, 'body'),
               }}
-              placeholder="Type your note…"
+              placeholder={translate('Type your note…')}
               rows={1}
             />
           ) : (
@@ -175,7 +178,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
               className={`leading-relaxed whitespace-pre-wrap wrap-break-word cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'body') }}
             >
-              {item.content || 'Double-click to edit…'}
+              {item.content || translate('Double-click to edit…')}
             </div>
           )}
         </div>

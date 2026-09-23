@@ -124,6 +124,8 @@ export interface MindmapItem extends BaseItem {
 }
 
 export interface DocumentItem extends BaseItem {
+  contentFormat?: 'tiptap-html';
+  contentVersion?: 1;
   autoHeight?: boolean;
   type: 'document';
   title: string;

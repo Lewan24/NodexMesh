@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 interface LineEndpointHandleProps {
   x: number;
   y: number;
@@ -7,6 +8,7 @@ interface LineEndpointHandleProps {
 }
 
 export default function LineEndpointHandle({ x, y, attached, color, onMouseDown }: LineEndpointHandleProps) {
+  useTranslation();
   const handleMouseDown = (event: React.MouseEvent) => {
     if (event.button !== 0) return;
 

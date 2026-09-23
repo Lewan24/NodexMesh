@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import type { BaseItem } from '@/entities/board/types';
 
 export const MAX_CUSTOM_CSS_LENGTH = 10_000;
@@ -8,7 +9,7 @@ export interface CssDeclaration {
 
 /** Parse declaration lists only. Rules, at-rules and markup cannot escape the item scope. */
 export function parseCustomCss(source: string): CssDeclaration[] {
-  if (source.length > MAX_CUSTOM_CSS_LENGTH) throw new Error('Custom CSS is limited to 10,000 characters.');
+  if (source.length > MAX_CUSTOM_CSS_LENGTH) throw new Error(translate('Custom CSS is limited to 10,000 characters.'));
   const declarations: CssDeclaration[] = [];
   let buffer = '';
   let quote = '';
@@ -25,7 +26,7 @@ export function parseCustomCss(source: string): CssDeclaration[] {
       .replace(/\s*!important\s*$/i, '')
       .trim();
     if (colon < 1 || !/^(?:--[\w-]+|-?[a-zA-Z][\w-]*)$/.test(property) || !value) {
-      throw new Error('Use CSS declarations such as border-radius: 24px;');
+      throw new Error(translate('Use CSS declarations such as border-radius: 24px;'));
     }
     declarations.push({ property, value });
   };
@@ -33,10 +34,11 @@ export function parseCustomCss(source: string): CssDeclaration[] {
   for (let index = 0; index < source.length; index++) {
     const character = source[index]!;
     // These characters are unnecessary in declarations and unsafe in a style element.
-    if (/[{}<>]/.test(character)) throw new Error('Enter declarations only, without selectors, braces or markup.');
+    if (/[{}<>]/.test(character))
+      throw new Error(translate('Enter declarations only, without selectors, braces or markup.'));
     if (character === '\\') {
       if (index + 1 >= source.length || /[{}<>\r\n]/.test(source[index + 1]!)) {
-        throw new Error('Invalid CSS escape.');
+        throw new Error(translate('Invalid CSS escape.'));
       }
       buffer += character + source[++index];
       continue;
@@ -48,7 +50,7 @@ export function parseCustomCss(source: string): CssDeclaration[] {
     }
     if (character === '/' && source[index + 1] === '*') {
       const end = source.indexOf('*/', index + 2);
-      if (end < 0) throw new Error('Close the CSS comment with */.');
+      if (end < 0) throw new Error(translate('Close the CSS comment with */.'));
       buffer += ' ';
       index = end + 1;
       continue;
@@ -57,15 +59,15 @@ export function parseCustomCss(source: string): CssDeclaration[] {
     else if (character === '(' || character === '[') brackets.push(character);
     else if (character === ')' || character === ']') {
       if (brackets.pop() !== (character === ')' ? '(' : '['))
-        throw new Error('Unbalanced CSS parentheses or brackets.');
-    } else if (character === '@') throw new Error('At-rules are not supported in item CSS.');
+        throw new Error(translate('Unbalanced CSS parentheses or brackets.'));
+    } else if (character === '@') throw new Error(translate('At-rules are not supported in item CSS.'));
     else if (character === ';' && !brackets.length) {
       commit();
       continue;
     }
     buffer += character;
   }
-  if (quote || brackets.length) throw new Error('Close CSS quotes, parentheses and brackets.');
+  if (quote || brackets.length) throw new Error(translate('Close CSS quotes, parentheses and brackets.'));
   commit();
   return declarations;
 }

@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -16,6 +18,7 @@ interface TextBlockProps {
 }
 
 export default function TextBlock({ item, onUpdate, fillWidth = false }: TextBlockProps) {
+  useTranslation();
   const [editing, setEditing] = useState(false);
 
   const typographyStyle = getTypographyStyle(item);
@@ -97,9 +100,7 @@ export default function TextBlock({ item, onUpdate, fillWidth = false }: TextBlo
       >
         {/* Top accent */}
 
-        {isCard && item.topColor && (
-          <div style={{ height: 5, backgroundColor: item.topColor, margin: '-14px -18px 8px' }} />
-        )}
+        {isCard && item.topColor && <div style={{ height: 5, background: item.topColor, margin: '-14px -18px 8px' }} />}
 
         <div
           className="flex flex-col"
@@ -109,7 +110,7 @@ export default function TextBlock({ item, onUpdate, fillWidth = false }: TextBlo
 
           {editing ? (
             <textarea
-              aria-label="Text content"
+              aria-label={translate('Text content')}
               rows={1}
               ref={inputRef}
               value={item.content}
@@ -145,7 +146,7 @@ export default function TextBlock({ item, onUpdate, fillWidth = false }: TextBlo
               }}
               onDoubleClick={() => setEditing(true)}
             >
-              {item.content || 'Text'}
+              {item.content || translate('Text')}
             </span>
           )}
         </div>

@@ -1,6 +1,9 @@
+import { displayLabel, translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export default function UserList() {
+  useTranslation();
   const { users, currentUser, removeUser } = useAuth();
 
   return (
@@ -20,7 +23,7 @@ export default function UserList() {
             </p>
 
             <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
-              @{user.username} · {user.role}
+              @{user.username} · {displayLabel(user.role)}
             </p>
           </div>
 
@@ -36,7 +39,7 @@ export default function UserList() {
                 event.currentTarget.style.color = 'var(--color-text-muted)';
               }}
             >
-              Remove
+              {translate('Remove')}
             </button>
           )}
         </div>

@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 interface LayerControlsProps {
   onBringForward: () => void;
   onSendBackward: () => void;
@@ -11,30 +13,19 @@ export default function LayerControls({
   onBringToFront,
   onSendToBack,
 }: LayerControlsProps) {
+  useTranslation();
   const buttonClass =
-    'w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer flex-shrink-0';
-
-  const handleEnter = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
-    event.currentTarget.style.color = 'var(--color-text-primary)';
-  };
-
-  const handleLeave = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.currentTarget.style.backgroundColor = 'transparent';
-    event.currentTarget.style.color = 'var(--color-text-faint)';
-  };
+    'w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer flex-shrink-0 hover:bg-violet-500/15';
 
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center gap-1 rounded-lg p-1" style={{ background: 'var(--edit-bar-control)' }}>
       {/* Send to back */}
       <button
         type="button"
         onClick={onSendToBack}
         className={buttonClass}
-        style={{ color: 'var(--color-text-faint)' }}
-        onMouseEnter={handleEnter}
-        onMouseLeave={handleLeave}
-        title="Send to back"
+        style={{ color: 'var(--color-text-secondary)' }}
+        title={translate('Send to back')}
       >
         <svg
           width="17"
@@ -58,10 +49,8 @@ export default function LayerControls({
         type="button"
         onClick={onSendBackward}
         className={buttonClass}
-        style={{ color: 'var(--color-text-faint)' }}
-        onMouseEnter={handleEnter}
-        onMouseLeave={handleLeave}
-        title="Send backward"
+        style={{ color: 'var(--color-text-secondary)' }}
+        title={translate('Send backward')}
       >
         <svg
           width="17"
@@ -86,10 +75,8 @@ export default function LayerControls({
         type="button"
         onClick={onBringForward}
         className={buttonClass}
-        style={{ color: 'var(--color-text-faint)' }}
-        onMouseEnter={handleEnter}
-        onMouseLeave={handleLeave}
-        title="Bring forward"
+        style={{ color: 'var(--color-text-secondary)' }}
+        title={translate('Bring forward')}
       >
         <svg
           width="17"
@@ -114,10 +101,8 @@ export default function LayerControls({
         type="button"
         onClick={onBringToFront}
         className={buttonClass}
-        style={{ color: 'var(--color-text-faint)' }}
-        onMouseEnter={handleEnter}
-        onMouseLeave={handleLeave}
-        title="Bring to front"
+        style={{ color: 'var(--color-text-secondary)' }}
+        title={translate('Bring to front')}
       >
         <svg
           width="17"
