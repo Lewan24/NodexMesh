@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { BoardItem } from '@/entities/board/types';
 import { translate } from '@/shared/i18n';
+import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 
 import { ITEM_TEXT_SECTIONS } from '../typography/sectionTypography';
 import ColorPanel from './components/ColorPanel';
@@ -87,12 +88,23 @@ export default function EditBar({
   onDeleteColumnItem,
 }: EditBarProps) {
   useTranslation();
+  const mobile = useMobileLayout();
   const isColumnMode = !!columnItem;
   const isMulti = !isColumnMode && selectedItems.length > 1;
   const single = columnItem ?? (selectedItems.length === 1 ? selectedItems[0] : null);
+  const hasAppearance = !!single && single.type !== 'icon';
+  const hasText = !!single && single.type !== 'drawing' && ITEM_TEXT_SECTIONS[single.type].length > 0;
+  const hasLayout = !!single;
+  const firstAvailableTab: EditTab | null = hasAppearance
+    ? 'appearance'
+    : hasText
+      ? 'text'
+      : hasLayout
+        ? 'layout'
+        : null;
   const [activeTab, setActiveTab] = useState<EditTab | null>(null);
 
-  useEffect(() => setActiveTab(null), [single?.id, isMulti]);
+  useEffect(() => setActiveTab(mobile ? firstAvailableTab : null), [single?.id, isMulti, mobile, firstAvailableTab]);
 
   if (!columnItem && selectedItems.length === 0) return null;
 
@@ -116,9 +128,6 @@ export default function EditBar({
         ? translate(ITEM_TYPE_LABELS[single.type] ?? single.type)
         : '';
 
-  const hasAppearance = !!single && single.type !== 'icon';
-  const hasText = !!single && single.type !== 'drawing' && ITEM_TEXT_SECTIONS[single.type].length > 0;
-  const hasLayout = !!single;
   const toggleTab = (tab: EditTab) => setActiveTab((current) => (current === tab ? null : tab));
 
   return (
@@ -138,7 +147,11 @@ export default function EditBar({
     >
       <div className="h-0.5 w-full shrink-0 bg-gradient-to-r from-violet-600 via-fuchsia-400 to-amber-300" />
 
-      <div className="edit-bar-row edit-bar-actions flex min-h-11 items-center gap-1 overflow-x-auto px-2 py-1.5">
+      <div
+        className={`edit-bar-row edit-bar-actions flex min-h-11 items-center gap-1 overflow-x-auto px-2 py-1.5 ${
+          single ? 'edit-bar-actions-single' : ''
+        }`}
+      >
         <button
           type="button"
           onClick={onClose}
@@ -211,7 +224,7 @@ export default function EditBar({
           </button>
         )}
 
-        <span className="min-w-1 flex-1" />
+        <span className="edit-bar-spacer min-w-1 flex-1" />
         <button
           type="button"
           onClick={handleDelete}

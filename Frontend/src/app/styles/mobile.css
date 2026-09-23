@@ -143,6 +143,8 @@
 
 .mobile-panel-body {
   flex: 1 1 auto;
+  width: 100%;
+  box-sizing: border-box;
   min-height: 0;
   max-height: calc(82dvh - 58px);
   overflow-x: hidden;
@@ -322,23 +324,43 @@
 
   .mobile-panel.mobile-panel-edit {
     position: relative;
-    height: min(82dvh, calc(100dvh - 16px - env(safe-area-inset-top)));
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch;
+    height: auto;
     width: 100vw;
     max-width: 100vw !important;
+    max-height: min(72dvh, calc(100dvh - 24px - env(safe-area-inset-top)));
     margin: 0;
     border-right: 0;
     border-left: 0;
   }
 
+  .mobile-panel-edit > .mobile-panel-heading,
+  .mobile-panel-edit > .mobile-panel-body {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobile-panel-edit > .mobile-panel-heading {
+    flex: 0 0 auto;
+  }
+
+  .mobile-panel-edit > .mobile-panel-body {
+    display: block;
+    flex: 0 1 auto;
+    max-height: min(62dvh, calc(100dvh - 90px - env(safe-area-inset-top)));
+  }
+
   .mobile-panel [data-edit-bar] {
     position: relative !important;
-    inset: auto !important;
-    left: auto !important;
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
     transform: none !important;
     translate: none !important;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .mobile-panel [data-edit-bar] .edit-bar-row {
@@ -361,8 +383,33 @@
     background: var(--edit-bar-bg, var(--color-surface));
   }
 
-  .mobile-panel [data-edit-bar] .edit-bar-tabs {
+  .mobile-panel [data-edit-bar] .edit-bar-actions-single {
+    display: flex !important;
+    width: 100%;
+    min-width: 0;
     flex-wrap: nowrap;
+    overflow: visible;
+    padding: 8px 10px;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-tabs {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-actions-single .edit-bar-tabs {
+    flex: 1 1 auto;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-actions-single .edit-bar-spacer {
+    display: none;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-actions-single > button:last-child {
+    flex: 0 0 44px;
+    margin-left: 4px;
   }
 
   .mobile-panel [data-edit-bar] .edit-bar-type {
@@ -370,9 +417,11 @@
   }
 
   .mobile-panel [data-edit-bar] .edit-bar-tab {
+    flex: 1 1 0;
     min-width: auto;
     min-height: 40px;
-    padding-inline: 10px;
+    justify-content: center;
+    padding-inline: 6px;
   }
 
   .mobile-panel [data-edit-bar] .edit-bar-tab-content {
