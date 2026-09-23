@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import SharingDialog from '@/features/projects/components/SharingDialog';
 import ReadOnlyBoard from '@/features/projects/components/ReadOnlyBoard';
 import { collaborationToken, sharingApi } from '@/app/services';
@@ -42,6 +44,7 @@ function linkedBoardIdFromTrash(entry: TrashedItemRecord): string | undefined {
 }
 
 export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: BoardPageProps) {
+  useTranslation();
   const {
     status,
     remoteVersion,
@@ -97,7 +100,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         if (!cancelled) setBoards(value);
       })
       .catch(() => {
-        if (!cancelled) toast.error('Could not load the project boards.');
+        if (!cancelled) toast.error(translate('Could not load the project boards.'));
       });
     return () => {
       cancelled = true;
@@ -183,7 +186,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         ]);
         resetBoardView();
       } catch {
-        toast.error('Could not open this board.');
+        toast.error(translate('Could not open this board.'));
       }
     },
     [activeProject, boards, selectBoard, resetBoardView],
@@ -202,7 +205,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         }
         resetBoardView();
       } catch {
-        toast.error('Could not open this board.');
+        toast.error(translate('Could not open this board.'));
       }
     },
     [activeProject, boardTrail.length, boards, selectBoard, resetBoardView],
@@ -224,7 +227,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
           );
           addItem({ ...item, boardId: board.board.id });
         })
-        .catch(() => toast.error('Could not create the linked board. Please try again.'));
+        .catch(() => toast.error(translate('Could not create the linked board. Please try again.')));
     },
     [activeProject, createBoard, addItem],
   );
@@ -234,7 +237,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       if (!activeProject || !name.trim()) return;
       void renameBoard(activeProject.id, boardId, name.trim())
         .then((record) => setBoards((current) => current.map((board) => (board.id === record.id ? record : board))))
-        .catch(() => toast.error('Could not rename this board.'));
+        .catch(() => toast.error(translate('Could not rename this board.')));
     },
     [activeProject, renameBoard],
   );
@@ -243,7 +246,11 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     async (boardId: string) => {
       if (!activeProject || boardId === boards[0]?.id) return;
       const board = boards.find((entry) => entry.id === boardId);
-      if (!board || !window.confirm(`Delete board “${board.name}” and all its content?`)) return;
+      if (
+        !board ||
+        !window.confirm(translate('Delete board “{{value1}}” and all its content?', { value1: board.name }))
+      )
+        return;
 
       const mainBoardId = boards[0]?.id;
       try {
@@ -262,7 +269,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
           ),
         );
       } catch {
-        toast.error('Could not delete this board.');
+        toast.error(translate('Could not delete this board.'));
       }
     },
     [activeProject, boards, deleteBoard, resetBoardView, selectBoard, setProjects],
@@ -276,7 +283,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       const items = await listItemTrash(activeProject.id);
       if (request === trashRequest.current) setTrashedItems(items);
     } catch {
-      if (request === trashRequest.current) toast.error('Could not load the item trash.');
+      if (request === trashRequest.current) toast.error(translate('Could not load the item trash.'));
     } finally {
       if (request === trashRequest.current) setTrashLoading(false);
     }
@@ -323,9 +330,9 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         await restoreTrashItem(activeProject.id, entry.item.id, targetBoardId, position);
         setBoards(await listBoards(activeProject.id));
         setTrashedItems((items) => items.filter((item) => item.item.id !== entry.item.id));
-        toast.success(position ? 'Item restored to the canvas.' : 'Item restored.');
+        toast.success(position ? translate('Item restored to the canvas.') : translate('Item restored.'));
       } catch {
-        toast.error('Could not restore this item.');
+        toast.error(translate('Could not restore this item.'));
       }
     },
     [activeProject, listBoards, restoreTrashItem],
@@ -333,7 +340,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
 
   const handlePurgeTrashItem = useCallback(
     async (entry: TrashedItemRecord) => {
-      if (!activeProject || !window.confirm('Permanently delete this item? This cannot be undone.')) return;
+      if (!activeProject || !window.confirm(translate('Permanently delete this item? This cannot be undone.'))) return;
       try {
         ++trashRequest.current;
         await purgeTrashItem(activeProject.id, entry.item.id);
@@ -345,14 +352,14 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         await refreshItemTrash();
       } catch {
         setTrashLoading(false);
-        toast.error('Could not permanently delete this item.');
+        toast.error(translate('Could not permanently delete this item.'));
       }
     },
     [activeProject, purgeTrashItem, refreshItemTrash],
   );
 
   const handleEmptyItemTrash = useCallback(async () => {
-    if (!activeProject || !window.confirm('Permanently delete every item in this project trash?')) return;
+    if (!activeProject || !window.confirm(translate('Permanently delete every item in this project trash?'))) return;
     try {
       ++trashRequest.current;
       await emptyItemTrash(activeProject.id);
@@ -365,7 +372,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       setTrashedItems([]);
     } catch {
       setTrashLoading(false);
-      toast.error('Could not empty the item trash.');
+      toast.error(translate('Could not empty the item trash.'));
     }
   }, [activeProject, emptyItemTrash, trashedItems]);
 
@@ -480,7 +487,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       x: minX - padding,
       y: minY - padding,
       zIndex: Math.max(0, Math.min(...selectedItems.map((item) => item.zIndex)) - 1),
-      title: 'Group',
+      title: translate('Group'),
       width: maxX - minX + padding * 2,
       height: maxY - minY + padding * 2,
       color: '#7C3AED',
@@ -551,7 +558,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
   if (status === 'loading') {
     return (
       <div className="flex h-dvh items-center justify-center" role="status">
-        Loading projects…
+        {translate('Loading projects…')}
       </div>
     );
   }
@@ -561,9 +568,9 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       <div className="flex flex-col h-dvh w-full" style={{ backgroundColor: 'var(--color-app-bg)' }}>
         {appBar}
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-theme-muted">
-          <p>No active projects. Create a board or restore one from the project trash.</p>
+          <p>{translate('No active projects. Create a board or restore one from the project trash.')}</p>
           <button className="btn-accent rounded-xl px-4 py-2.5 text-sm font-semibold" onClick={createFirstProject}>
-            Create your first board
+            {translate('Create your first board')}
           </button>
         </div>
       </div>
@@ -595,7 +602,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
                 if (mainBoardId) void handleSelectListedBoard(mainBoardId);
               }}
             >
-              ← Main board
+              {translate('← Main board')}
             </button>
             <span style={{ color: 'var(--color-text-muted)' }}>/</span>
             {boards.map((board) => (
@@ -603,7 +610,9 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
                 key={board.id}
                 className={`inline-flex items-center rounded ${board.deletedAt ? 'cursor-not-allowed opacity-45' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
                 title={
-                  board.deletedAt ? 'This board is in item trash. Restore its board card to access it.' : undefined
+                  board.deletedAt
+                    ? translate('This board is in item trash. Restore its board card to access it.')
+                    : undefined
                 }
               >
                 <button
@@ -611,7 +620,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
                   className="rounded px-1.5 py-0.5"
                   aria-current={board.id === activeProject.boardId ? 'page' : undefined}
                   disabled={Boolean(board.deletedAt)}
-                  aria-label={board.deletedAt ? `${board.name} (deleted)` : board.name}
+                  aria-label={board.deletedAt ? translate('{{value1}} (deleted)', { value1: board.name }) : board.name}
                   onClick={() => void handleSelectListedBoard(board.id)}
                 >
                   {board.name}
@@ -620,8 +629,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
                   <button
                     type="button"
                     className="rounded px-1 text-[10px] opacity-50 hover:bg-rose-500/15 hover:text-rose-600 hover:opacity-100"
-                    aria-label={`Delete board ${board.name}`}
-                    title="Delete board"
+                    aria-label={translate('Delete board {{value1}}', { value1: board.name })}
+                    title={translate('Delete board')}
                     onClick={(event) => {
                       event.stopPropagation();
                       void handleDeleteBoard(board.id);
@@ -635,8 +644,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             <button
               type="button"
               className="-mr-1 flex size-6 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10"
-              aria-label="Hide board navigation"
-              title="Hide board navigation"
+              aria-label={translate('Hide board navigation')}
+              title={translate('Hide board navigation')}
               onClick={() => setBoardNavigationVisible(false)}
             >
               <ChevronUp size={16} aria-hidden="true" />
@@ -652,8 +661,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
               borderColor: 'var(--color-border)',
               color: 'var(--color-text-primary)',
             }}
-            aria-label="Show board navigation"
-            title="Show board navigation"
+            aria-label={translate('Show board navigation')}
+            title={translate('Show board navigation')}
             onClick={() => setBoardNavigationVisible(true)}
           >
             <ChevronDown size={17} aria-hidden="true" />
@@ -670,7 +679,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             currentUserId={userId}
             onSaveComments={(itemId, comments) => saveComments(activeProjectId, itemId, comments)}
             onOpenBoard={(boardId) => {
-              void selectBoard(activeProjectId, boardId).catch(() => toast.error('Could not open board.'));
+              void selectBoard(activeProjectId, boardId).catch(() => toast.error(translate('Could not open board.')));
             }}
           />
         ) : (

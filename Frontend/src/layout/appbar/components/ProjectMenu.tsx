@@ -1,3 +1,5 @@
+import { locale, translate, displayLabel } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useRef, useState } from 'react';
 import { ChevronDown, Plus, Pencil, Trash2, RotateCcw, Check, X, Folder, Star } from 'lucide-react';
 import type { Project } from '@/entities/project/types';
@@ -21,6 +23,7 @@ interface ProjectMenuProps {
   onRestoreProject: (id: string) => void;
 }
 export default function ProjectMenu(props: ProjectMenuProps) {
+  useTranslation();
   const { projects, activeProjectId, open, onToggle, onClose } = props;
   const [busy, setBusy] = useState(false);
   const run = async (action: () => Promise<void>, success: string) => {
@@ -29,7 +32,7 @@ export default function ProjectMenu(props: ProjectMenuProps) {
       await action();
       setMessage(success);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Operation failed.');
+      setMessage(error instanceof Error ? error.message : translate('Operation failed.'));
     } finally {
       setBusy(false);
     }
@@ -57,7 +60,7 @@ export default function ProjectMenu(props: ProjectMenuProps) {
     <div className="relative ml-3">
       <button ref={buttonRef} onClick={onToggle} aria-expanded={open} className="project-trigger">
         <Folder size={16} style={{ color: active?.color }} />
-        <span className="truncate max-w-48">{active?.name ?? 'Projects'}</span>
+        <span className="truncate max-w-48">{active?.name ?? translate('Projects')}</span>
         <ChevronDown size={14} />
       </button>
       {open && (
@@ -80,7 +83,7 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                 setEditing(null);
               }}
             >
-              Projects
+              {translate('Projects')}
             </button>
             <button
               className="project-tab"
@@ -90,11 +93,12 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                 setEditing(null);
               }}
             >
-              Trash · {projects.filter((p) => p.deletedAt).length}
+              {translate('Trash ·') + ' '}
+              {projects.filter((p) => p.deletedAt).length}
             </button>
             <button
-              title="Add project"
-              aria-label="Add project"
+              title={translate('Add project')}
+              aria-label={translate('Add project')}
               className="project-action ml-auto"
               onClick={() => {
                 setTrash(false);
@@ -115,20 +119,20 @@ export default function ProjectMenu(props: ProjectMenuProps) {
             >
               <input
                 autoFocus
-                aria-label="Project name"
-                placeholder="Project name"
+                aria-label={translate('Project name')}
+                placeholder={translate('Project name')}
                 maxLength={120}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 className="min-w-0 flex-1 rounded-lg bg-white/10 px-3 py-2 outline-none focus:ring-2 focus:ring-violet-400"
               />
-              <button className="project-action" aria-label="Save project name" disabled={!name.trim()}>
+              <button className="project-action" aria-label={translate('Save project name')} disabled={!name.trim()}>
                 <Check size={17} />
               </button>
               <button
                 type="button"
                 className="project-action"
-                aria-label="Cancel rename"
+                aria-label={translate('Cancel rename')}
                 onClick={() => setEditing(null)}
               >
                 <X size={17} />
@@ -150,9 +154,15 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{project.name}</span>
                     <span className="block text-xs opacity-60">
-                      {project.items.length} items{' '}
-                      {project.role && project.role !== 'Owner' ? ` / Shared / ${project.role}` : ''}
-                      {project.deletedAt ? ` · Deleted ${new Date(project.deletedAt).toLocaleDateString()}` : ''}
+                      {translate('itemCount', { count: project.items.length })}{' '}
+                      {project.role && project.role !== 'Owner'
+                        ? translate(' / Shared / {{value1}}', { value1: displayLabel(project.role) })
+                        : ''}
+                      {project.deletedAt
+                        ? translate(' · Deleted {{value1}}', {
+                            value1: new Date(project.deletedAt).toLocaleDateString(locale()),
+                          })
+                        : ''}
                     </span>
                   </span>
                 </button>
@@ -160,11 +170,11 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                   <>
                     <button
                       className="project-action"
-                      aria-label={`Restore ${project.name}`}
-                      title="Restore project"
+                      aria-label={translate('Restore {{value1}}', { value1: project.name })}
+                      title={translate('Restore project')}
                       onClick={() => {
                         props.onRestoreProject(project.id);
-                        setMessage(`${project.name} restored`);
+                        setMessage(translate('{{value1}} restored', { value1: project.name }));
                         setTrash(false);
                       }}
                     >
@@ -173,15 +183,21 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                     <button
                       className="project-action"
                       disabled={busy || (!!project.role && project.role !== 'Owner')}
-                      aria-label={`Delete ${project.name}`}
-                      title="Delete project"
+                      aria-label={translate('Delete {{value1}}', { value1: project.name })}
+                      title={translate('Delete project')}
                       onClick={() => {
                         if (
                           window.confirm(
-                            `Delete “${project.name}”? You cannot restore it yourself. Administrators can recover it for 30 days.`,
+                            translate(
+                              'Delete “{{value1}}”? You cannot restore it yourself. Administrators can recover it for 30 days.',
+                              { value1: project.name },
+                            ),
                           )
                         )
-                          void run(() => props.onPurgeProject(project.id), `${project.name} deleted.`);
+                          void run(
+                            () => props.onPurgeProject(project.id),
+                            translate('{{value1}} deleted.', { value1: project.name }),
+                          );
                       }}
                     >
                       <Trash2 size={15} />
@@ -192,17 +208,17 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                     <button
                       className="project-action"
                       disabled={busy}
-                      aria-label={`${props.defaultProjectId === project.id ? 'Clear default project' : 'Set as default project'}: ${project.name}`}
+                      aria-label={`${props.defaultProjectId === project.id ? translate('Clear default project') : translate('Set as default project')}: ${project.name}`}
                       title={
                         props.defaultProjectId === project.id
-                          ? 'Default project — click to clear'
-                          : 'Open this project after login'
+                          ? translate('Default project — click to clear')
+                          : translate('Open this project after login')
                       }
                       aria-pressed={props.defaultProjectId === project.id}
                       onClick={() =>
                         void run(
                           () => props.onSetDefaultProject(props.defaultProjectId === project.id ? '' : project.id),
-                          'Default project updated.',
+                          translate('Default project updated.'),
                         )
                       }
                     >
@@ -211,8 +227,8 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                     <button
                       className="project-action"
                       disabled={project.role === 'Viewer' || project.role === 'Commenter'}
-                      aria-label={`Rename ${project.name}`}
-                      title="Rename project"
+                      aria-label={translate('Rename {{value1}}', { value1: project.name })}
+                      title={translate('Rename project')}
                       onClick={() => {
                         setEditing(project.id);
                         setName(project.name);
@@ -223,11 +239,15 @@ export default function ProjectMenu(props: ProjectMenuProps) {
                     <button
                       className="project-action"
                       disabled={!!project.role && project.role !== 'Owner'}
-                      aria-label={`Move ${project.name} to trash`}
-                      title="Move to trash"
+                      aria-label={translate('Move {{value1}} to trash', { value1: project.name })}
+                      title={translate('Move to trash')}
                       onClick={() => {
                         props.onTrashProject(project.id);
-                        setMessage(`${project.name} moved to trash. You can restore it in the Trash tab.`);
+                        setMessage(
+                          translate('{{value1}} moved to trash. You can restore it in the Trash tab.', {
+                            value1: project.name,
+                          }),
+                        );
                         setEditing(null);
                       }}
                     >
@@ -239,7 +259,9 @@ export default function ProjectMenu(props: ProjectMenuProps) {
             ))}
             {!visible.length && (
               <p className="py-8 text-center text-sm opacity-65">
-                {trash ? 'Your project trash is empty.' : 'No projects yet. Create your first board.'}
+                {trash
+                  ? translate('Your project trash is empty.')
+                  : translate('No projects yet. Create your first board.')}
               </p>
             )}
           </div>
@@ -250,21 +272,24 @@ export default function ProjectMenu(props: ProjectMenuProps) {
               onClick={() => {
                 if (
                   window.confirm(
-                    `Delete all ${visible.length} projects in Trash? You cannot restore it yourself. Administrators can recover it for 30 days.`,
+                    translate(
+                      'Delete all {{value1}} projects in Trash? You cannot restore it yourself. Administrators can recover it for 30 days.',
+                      { value1: visible.length },
+                    ),
                   )
                 ) {
-                  void run(props.onEmptyTrash, 'Trash emptied.');
+                  void run(props.onEmptyTrash, translate('Trash emptied.'));
                 }
               }}
             >
-              Empty trash
+              {translate('Empty trash')}
             </button>
           )}
           <p className="px-4 pb-3 text-xs opacity-65" role="status">
             {message ||
               (trash
-                ? 'Deleted projects can be recovered by administrators for 30 days.'
-                : 'All changes are saved automatically.')}
+                ? translate('Deleted projects can be recovered by administrators for 30 days.')
+                : translate('All changes are saved automatically.'))}
           </p>
         </div>
       )}

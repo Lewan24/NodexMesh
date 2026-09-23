@@ -8,6 +8,7 @@ const server = await createServer({
   resolve: { alias: { '@': fileURLToPath(new URL('../src', import.meta.url)) } },
   server: { middlewareMode: true, watch: null, hmr: false },
 });
+await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
 const { createHttpAuthService } = await server.ssrLoadModule('/src/features/auth/services/httpAuthService.ts');
 const { createHttpWorkspace } = await server.ssrLoadModule('/src/features/projects/services/httpWorkspace.ts');
 const { WorkspaceController } = await server.ssrLoadModule('/src/features/projects/services/workspaceController.ts');

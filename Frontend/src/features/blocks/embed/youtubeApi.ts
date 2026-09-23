@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 export interface YouTubePlayer {
   playVideo(): void;
   pauseVideo(): void;
@@ -37,7 +38,7 @@ export function loadYouTubeApi(): Promise<YouTubeApi> {
     script.onerror = () => {
       pending = undefined;
       script.remove();
-      reject(new Error('Could not load YouTube'));
+      reject(new Error(translate('Could not load YouTube')));
     };
     document.head.appendChild(script);
   });

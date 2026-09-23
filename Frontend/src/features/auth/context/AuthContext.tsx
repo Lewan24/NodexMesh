@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { toast } from 'sonner';
@@ -48,6 +50,7 @@ interface AuthContextValue {
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -96,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     if (!(await flushPendingChanges())) {
-      toast.error('Resolve the save error or reload the board before signing out.');
+      toast.error(translate('Resolve the save error or reload the board before signing out.'));
       return;
     }
     try {
@@ -247,9 +250,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
       <div role="alert">
         {loadError}
-        <button onClick={() => window.location.reload()}>Retry</button>
+        <button onClick={() => window.location.reload()}>{translate('Retry')}</button>
       </div>
     );
-  if (!hydrated) return <div role="status">Loading session…</div>;
+  if (!hydrated) return <div role="status">{translate('Loading session…')}</div>;
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

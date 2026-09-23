@@ -1,3 +1,5 @@
+import { translate, displayLabel } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import type { BoardItem, TextItem } from '@/entities/board/types';
 import EditBarButton, { EditBarDivider } from './EditBarButton';
 
@@ -12,6 +14,7 @@ interface TextControlsProps {
 }
 
 export default function TextControls({ item, onUpdate }: TextControlsProps) {
+  useTranslation();
   const update = (patch: Partial<TextItem>) => {
     onUpdate((current) => (current.type === 'text' ? { ...current, ...patch } : current));
   };
@@ -25,7 +28,7 @@ export default function TextControls({ item, onUpdate }: TextControlsProps) {
           key={alignment}
           active={(item.textAlign ?? 'left') === alignment}
           onClick={() => update({ textAlign: alignment })}
-          title={`Align ${alignment}`}
+          title={translate('Align {{value1}}', { value1: displayLabel(alignment) })}
         >
           {alignment === 'left' && (
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -50,7 +53,12 @@ export default function TextControls({ item, onUpdate }: TextControlsProps) {
       <EditBarDivider />
 
       {SIZES.map((size) => (
-        <EditBarButton key={size} active={item.size === size} onClick={() => update({ size })} title={`Size ${size}`}>
+        <EditBarButton
+          key={size}
+          active={item.size === size}
+          onClick={() => update({ size })}
+          title={translate('Size {{value1}}', { value1: displayLabel(size) })}
+        >
           <span style={{ fontSize: size === 'sm' ? 9 : size === 'md' ? 11 : size === 'lg' ? 13 : 15 }}>
             {size.toUpperCase()}
           </span>
@@ -59,11 +67,15 @@ export default function TextControls({ item, onUpdate }: TextControlsProps) {
 
       <EditBarDivider />
 
-      <EditBarButton active={!!item.bold} onClick={() => update({ bold: !item.bold })} title="Bold">
+      <EditBarButton active={!!item.bold} onClick={() => update({ bold: !item.bold })} title={translate('Bold')}>
         <span style={{ fontWeight: 800, fontSize: 13 }}>B</span>
       </EditBarButton>
 
-      <EditBarButton active={!!item.italic} onClick={() => update({ italic: !item.italic })} title="Italic">
+      <EditBarButton
+        active={!!item.italic}
+        onClick={() => update({ italic: !item.italic })}
+        title={translate('Italic')}
+      >
         <span style={{ fontStyle: 'italic', fontFamily: 'Georgia, serif', fontSize: 13 }}>I</span>
       </EditBarButton>
     </>

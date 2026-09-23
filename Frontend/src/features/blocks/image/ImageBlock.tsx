@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useState } from 'react';
@@ -16,6 +18,7 @@ interface ImageBlockProps {
 }
 
 export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps) {
+  useTranslation();
   const [editingUrl, setEditingUrl] = useState(false);
   const [editingCaption, setEditingCaption] = useState(false);
   const [urlInput, setUrlInput] = useState(item.url);
@@ -82,7 +85,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
                 src={item.url}
                 loading="lazy"
                 decoding="async"
-                alt={item.caption || 'Board image'}
+                alt={item.caption || translate('Board image')}
                 className="w-full h-full object-cover"
                 draggable={false}
               />
@@ -104,7 +107,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
               </div>
 
               <span className="text-sm" style={{ color: mutedColor }}>
-                Click to add image URL
+                {translate('Click to add image URL')}
               </span>
             </div>
           )}
@@ -128,7 +131,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
                       color: !isSticker ? '#fff' : '#8aacb8',
                       backgroundColor: !isSticker ? 'rgba(124,58,237,0.5)' : 'transparent',
                     }}
-                    title="Card with caption"
+                    title={translate('Card with caption')}
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -143,7 +146,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
                       color: isSticker ? '#fff' : '#8aacb8',
                       backgroundColor: isSticker ? 'rgba(124,58,237,0.5)' : 'transparent',
                     }}
-                    title="Sticker (image only)"
+                    title={translate('Sticker (image only)')}
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M4 16.5V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10.5a3.5 3.5 0 0 1-3.5 3.5H7.5A3.5 3.5 0 0 1 4 16.5z" />
@@ -165,7 +168,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
                   onMouseLeave={(event) => {
                     event.currentTarget.style.color = '#8aacb8';
                   }}
-                  title="Change image URL"
+                  title={translate('Change image URL')}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -188,7 +191,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
               onMouseLeave={(event) => {
                 event.currentTarget.style.color = '#8aacb8';
               }}
-              title="Delete"
+              title={translate('Delete')}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M18 6 6 18M6 6l12 12" />
@@ -218,7 +221,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
                 if (event.key === 'Escape') cancelUrlEdit();
               }}
               onBlur={commitUrl}
-              placeholder="Paste image URL…"
+              placeholder={translate('Paste image URL…')}
               className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border border-[#7C3AED]/40 focus:border-[#7C3AED] transition-colors"
               style={{
                 backgroundColor: isSticker ? 'var(--color-surface-alt)' : inputBackground,
@@ -242,7 +245,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
                 }}
                 value={item.caption}
                 onChange={(event) => update({ caption: event.target.value })}
-                placeholder="Add caption…"
+                placeholder={translate('Add caption…')}
                 className="w-full bg-transparent text-sm outline-none transition-colors"
                 style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'caption') }}
               />
@@ -252,7 +255,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
                 className="text-sm whitespace-pre-wrap break-words"
                 style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'caption') }}
               >
-                {item.caption || 'Double-click to add caption…'}
+                {item.caption || translate('Double-click to add caption…')}
               </div>
             )}
           </div>

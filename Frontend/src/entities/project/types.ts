@@ -17,8 +17,15 @@ export interface ProjectSnapshot {
 
 export type ProjectMemberRole = 'editor' | 'commenter' | 'viewer';
 
+export interface ProjectBoard {
+  id: string;
+  name: string;
+  items: BoardItem[];
+}
+
 /** Canvas projection. Persistence uses ProjectRecord + BoardSnapshot, never this tree. */
 export interface Project {
+  boards?: ProjectBoard[];
   boardId?: string;
   role?: ProjectRecord['role'];
   deletedAt?: string;

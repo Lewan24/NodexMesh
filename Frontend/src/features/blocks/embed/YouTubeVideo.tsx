@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useState } from 'react';
 import { loadYouTubeApi } from './youtubeApi';
 import type { YouTubePlayer } from './youtubeApi';
@@ -11,6 +13,7 @@ export default function YouTubeVideo({
   title: string;
   interactive?: boolean;
 }) {
+  useTranslation();
   const host = useRef<HTMLDivElement>(null);
   const player = useRef<YouTubePlayer | null>(null);
   const gesture = useRef<{ x: number; y: number; time: number; moved: boolean } | null>(null);
@@ -93,7 +96,7 @@ export default function YouTubeVideo({
             className="absolute inset-0 h-full w-full object-cover pointer-events-none"
           />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="rounded-xl bg-black/75 px-5 py-3 text-white">▶ Load video</span>
+            <span className="rounded-xl bg-black/75 px-5 py-3 text-white">{translate('▶ Load video')}</span>
           </div>
         </>
       )}
@@ -101,11 +104,11 @@ export default function YouTubeVideo({
         <div
           role="button"
           tabIndex={0}
-          aria-label={`${!activated ? 'Load' : playing ? 'Pause' : 'Play'} ${title || 'video'}`}
+          aria-label={`${!activated ? translate('Load') : playing ? translate('Pause') : translate('Play')} ${title || 'video'}`}
           aria-disabled={activated && !ready}
           className="absolute inset-x-0 top-0 cursor-grab active:cursor-grabbing outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
           style={{ bottom: ready ? 44 : 0 }}
-          title="Click to play or pause · Drag to move"
+          title={translate('Click to play or pause · Drag to move')}
           onMouseDown={(event) => {
             if (event.button === 0)
               gesture.current = { x: event.clientX, y: event.clientY, time: performance.now(), moved: false };
@@ -146,10 +149,10 @@ export default function YouTubeVideo({
               rel="noopener noreferrer"
               onMouseDown={(event) => event.stopPropagation()}
             >
-              Video unavailable here — open on YouTube ↗
+              {translate('Video unavailable here — open on YouTube ↗')}
             </a>
           ) : (
-            'Loading video…'
+            translate('Loading video…')
           )}
         </div>
       )}

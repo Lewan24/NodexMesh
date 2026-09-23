@@ -12,6 +12,7 @@ const server = await createServer({
   resolve: { alias: { '@': fileURLToPath(new URL('../src', import.meta.url)) } },
   server: { middlewareMode: true, watch: null, hmr: false },
 });
+await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
 const { createPublicApi } = await server.ssrLoadModule('/src/features/projects/services/publicApi.ts');
 const { createSharingApi } = await server.ssrLoadModule('/src/features/projects/services/sharingApi.ts');
 const { toPublicProjectView } = await server.ssrLoadModule('/src/features/projects/services/publicBoardAdapter.ts');

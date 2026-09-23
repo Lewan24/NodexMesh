@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 interface LayerControlsProps {
   onBringForward: () => void;
   onSendBackward: () => void;
@@ -11,6 +13,7 @@ export default function LayerControls({
   onBringToFront,
   onSendToBack,
 }: LayerControlsProps) {
+  useTranslation();
   const buttonClass =
     'w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer flex-shrink-0';
 
@@ -34,7 +37,7 @@ export default function LayerControls({
         style={{ color: 'var(--color-text-faint)' }}
         onMouseEnter={handleEnter}
         onMouseLeave={handleLeave}
-        title="Send to back"
+        title={translate('Send to back')}
       >
         <svg
           width="17"
@@ -61,7 +64,7 @@ export default function LayerControls({
         style={{ color: 'var(--color-text-faint)' }}
         onMouseEnter={handleEnter}
         onMouseLeave={handleLeave}
-        title="Send backward"
+        title={translate('Send backward')}
       >
         <svg
           width="17"
@@ -89,7 +92,7 @@ export default function LayerControls({
         style={{ color: 'var(--color-text-faint)' }}
         onMouseEnter={handleEnter}
         onMouseLeave={handleLeave}
-        title="Bring forward"
+        title={translate('Bring forward')}
       >
         <svg
           width="17"
@@ -117,7 +120,7 @@ export default function LayerControls({
         style={{ color: 'var(--color-text-faint)' }}
         onMouseEnter={handleEnter}
         onMouseLeave={handleLeave}
-        title="Bring to front"
+        title={translate('Bring to front')}
       >
         <svg
           width="17"

@@ -1,24 +1,25 @@
+import { translate } from '@/shared/i18n';
 import type { BoardSnapshot } from './records';
 import { itemSchemas, validateItem } from './itemSchema';
 import { fail } from '@/shared/api/errors';
 
 export function validateBoard(board: BoardSnapshot): void {
-  if (board.items.length > 20_000) fail(422, 'board_limit', 'The board item limit has been reached.');
+  if (board.items.length > 20_000) fail(422, 'board_limit', translate('The board item limit has been reached.'));
   const active = board.items.filter((i) => !i.deletedAt);
   const ids = new Map(active.map((i) => [i.id, i]));
   if (new Set(board.items.map((i) => i.id)).size !== board.items.length)
-    fail(422, 'duplicate_id', 'Duplicate item ID.');
+    fail(422, 'duplicate_id', translate('Duplicate item ID.'));
   for (const item of active) {
     validateItem(item);
-    if (item.boardId !== board.board.id) fail(422, 'invalid_scope', 'Item belongs to another board.');
+    if (item.boardId !== board.board.id) fail(422, 'invalid_scope', translate('Item belongs to another board.'));
     if (item.parentItemId) {
       const parent = ids.get(item.parentItemId);
       if (!itemSchemas[item.type].canNest || parent?.type !== 'column' || parent.parentItemId) {
-        fail(422, 'invalid_parent', 'Invalid column membership.');
+        fail(422, 'invalid_parent', translate('Invalid column membership.'));
       }
     }
     if (item.frameId && (ids.get(item.frameId)?.type !== 'frame' || item.frameId === item.id)) {
-      fail(422, 'invalid_frame', 'Invalid frame membership.');
+      fail(422, 'invalid_frame', translate('Invalid frame membership.'));
     }
   }
   const linkKeys = new Set<string>();
@@ -35,7 +36,7 @@ export function validateBoard(board: BoardSnapshot): void {
         ? source.type !== 'note' || target.type !== 'dispenser'
         : !['line_start', 'line_end'].includes(link.kind) || source.type !== 'line')
     ) {
-      fail(422, 'invalid_link', 'Invalid item link.');
+      fail(422, 'invalid_link', translate('Invalid item link.'));
     }
     linkKeys.add(key);
   }

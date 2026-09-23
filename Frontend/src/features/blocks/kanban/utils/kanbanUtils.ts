@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { readableText } from '../../typography/textContrast';
 import { createId } from '@/shared/lib/createId';
 import type { KanbanCard, KanbanColumn } from '@/entities/board/types';
@@ -62,7 +63,7 @@ export function createKanbanCard(text: string): KanbanCard {
 export function createKanbanColumn(index: number): KanbanColumn {
   const color = KANBAN_COLUMN_COLORS[index % KANBAN_COLUMN_COLORS.length] ?? KANBAN_COLUMN_COLORS[0];
 
-  return { id: createId(), title: 'New', color, cards: [], width: DEFAULT_KANBAN_COLUMN_WIDTH };
+  return { id: createId(), title: translate('New'), color, cards: [], width: DEFAULT_KANBAN_COLUMN_WIDTH };
 }
 
 export function isLightColor(hex: string): boolean {

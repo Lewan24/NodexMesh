@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { ApiError, fail } from './errors';
 
 export interface HttpClient {
@@ -15,10 +16,11 @@ export function createHttpClient(
   return {
     async request(path, options = {}) {
       if (!path.startsWith('/') || path.startsWith('//') || path.includes('..') || path.includes('\\')) {
-        fail(422, 'invalid_path', 'Invalid API path.');
+        fail(422, 'invalid_path', translate('Invalid API path.'));
       }
       const send = async (token: string) => {
-        if (Date.now() < retryAfter) fail(429, 'rate_limited', 'Too many requests. Please wait before retrying.');
+        if (Date.now() < retryAfter)
+          fail(429, 'rate_limited', translate('Too many requests. Please wait before retrying.'));
         return fetcher(`${baseUrl.replace(/\/$/, '')}${path}`, {
           method: options.method ?? 'GET',
           headers: {
@@ -69,12 +71,12 @@ export function createHttpClient(
                   .join(' ') || undefined
               : undefined) ??
             (response.status === 409
-              ? 'The data changed in another session. Local changes are preserved.'
+              ? translate('The data changed in another session. Local changes are preserved.')
               : response.status === 401
-                ? 'Sign in again. Too many attempts? Try again later.'
+                ? translate('Sign in again. Too many attempts? Try again later.')
                 : response.status === 429
-                  ? 'Too many requests. Please wait before retrying.'
-                  : 'The API request failed.'),
+                  ? translate('Too many requests. Please wait before retrying.')
+                  : translate('The API request failed.')),
           errors: record.errors,
         });
       }

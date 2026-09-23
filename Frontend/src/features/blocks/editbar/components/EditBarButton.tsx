@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 
 interface EditBarButtonProps {
@@ -15,6 +16,7 @@ export default function EditBarButton({
   onClick,
   children,
 }: EditBarButtonProps) {
+  useTranslation();
   return (
     <button
       disabled={disabled}
@@ -40,5 +42,6 @@ export default function EditBarButton({
 }
 
 export function EditBarDivider() {
+  useTranslation();
   return <div className="w-px h-5 mx-1 flex-shrink-0" style={{ backgroundColor: 'var(--color-border)' }} />;
 }

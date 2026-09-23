@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import CustomCssDialog from '@/features/blocks/custom-css/CustomCssDialog';
 import { useCanvasTouch } from '../hooks/useCanvasTouch';
 import PasteStyleDialog from './PasteStyleDialog';
@@ -129,6 +131,7 @@ export default function Canvas({
   onOpenTrash,
   onRestoreTrashItem,
 }: CanvasProps) {
+  useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
   const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
@@ -1028,13 +1031,13 @@ export default function Canvas({
           onContextMenu={(event) => event.stopPropagation()}
         >
           <span role="status">
-            {searchTargets.length ? `${searchIndex + 1} / ${searchTargets.length}` : 'No results'}
+            {searchTargets.length ? `${searchIndex + 1} / ${searchTargets.length}` : translate('No results')}
           </span>
           <button disabled={!searchTargets.length} onClick={() => goToSearchResult(-1)} className="disabled:opacity-40">
-            Previous
+            {translate('Previous')}
           </button>
           <button disabled={!searchTargets.length} onClick={() => goToSearchResult(1)} className="disabled:opacity-40">
-            Go to next
+            {translate('Go to next')}
           </button>
         </div>
       )}
@@ -1226,7 +1229,7 @@ export default function Canvas({
             y={dropPreview.y}
             width={dropPreview.width}
             height={dropPreview.height}
-            label={alignmentGuides.length > 0 ? 'Aligned' : 'Grid snap'}
+            label={alignmentGuides.length > 0 ? translate('Aligned') : translate('Grid snap')}
           />
         )}
 
@@ -1236,7 +1239,7 @@ export default function Canvas({
             y={toolDropPreview.y}
             width={toolDropPreview.width}
             height={toolDropPreview.height}
-            label="Place here"
+            label={translate('Place here')}
           />
         )}
 
@@ -1254,7 +1257,7 @@ export default function Canvas({
       </div>
 
       {selectedTool === 'drawing' && (
-        <div className="absolute inset-0 z-40 cursor-crosshair" aria-label="Drawing surface" />
+        <div className="absolute inset-0 z-40 cursor-crosshair" aria-label={translate('Drawing surface')} />
       )}
       {toolDragGhost && (
         <ToolDragGhost
@@ -1300,9 +1303,9 @@ export default function Canvas({
         frameControls={
           selectedItems.length > 0 && selectedItems.every((item) => item.type !== 'frame') ? (
             <label className="flex items-center gap-2 text-sm whitespace-nowrap">
-              Frame
+              {translate('Frame')}
               <select
-                aria-label="Assign to frame"
+                aria-label={translate('Assign to frame')}
                 className="h-8 max-w-40 rounded-sm px-2"
                 style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}
                 disabled={selectedItems.some((item) => item.locked)}
@@ -1322,14 +1325,14 @@ export default function Canvas({
                 }}
               >
                 <option value="__mixed" disabled>
-                  Mixed frames
+                  {translate('Mixed frames')}
                 </option>
-                <option value="">No frame</option>
+                <option value="">{translate('No frame')}</option>
                 {project.items
                   .filter((item) => item.type === 'frame')
                   .map((frame) => (
                     <option key={frame.id} value={frame.id}>
-                      {frame.title || 'Frame'} · {frame.id.slice(0, 4)}
+                      {frame.title || translate('Frame')} · {frame.id.slice(0, 4)}
                     </option>
                   ))}
               </select>
@@ -1338,7 +1341,7 @@ export default function Canvas({
             <button
               className="h-8 px-2 text-sm hover:bg-violet-500/20"
               disabled={selectedItems[0]!.locked}
-              title="Assign enclosed unlocked items to this frame, including items owned by another frame"
+              title={translate('Assign enclosed unlocked items to this frame, including items owned by another frame')}
               onClick={() => {
                 const frame = selectedItems[0]!;
                 if (frame.type !== 'frame') return;
@@ -1352,7 +1355,7 @@ export default function Canvas({
                 );
               }}
             >
-              Take over enclosed items
+              {translate('Take over enclosed items')}
             </button>
           ) : undefined
         }
@@ -1379,8 +1382,12 @@ export default function Canvas({
 
       {pendingDelete && (
         <ConfirmDialog
-          title={pendingDelete.count > 1 ? `Delete ${pendingDelete.count} items?` : 'Delete this item?'}
-          message="The item will move to this project's trash and can be restored later."
+          title={
+            pendingDelete.count > 1
+              ? translate('Delete {{value1}} items?', { value1: pendingDelete.count })
+              : translate('Delete this item?')
+          }
+          message={translate("The item will move to this project's trash and can be restored later.")}
           onConfirm={confirmDelete}
           onCancel={cancelDelete}
         />

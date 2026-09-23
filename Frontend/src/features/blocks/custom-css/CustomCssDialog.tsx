@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { BoardItem } from '@/entities/board/types';
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export default function CustomCssDialog({ item, onUpdate, onClose }: Props & { onClose: () => void }) {
+  useTranslation();
   const [source, setSource] = useState(item.customCss?.source ?? '');
   const [enabled, setEnabled] = useState(item.customCss?.enabled ?? false);
   const [error, setError] = useState('');
@@ -33,12 +36,17 @@ export default function CustomCssDialog({ item, onUpdate, onClose }: Props & { o
         const declarations = parseCustomCss(source);
         const unsupported = declarations.find(({ property, value }) => !CSS.supports(property, value));
         if (unsupported)
-          throw new Error(`This browser does not support: ${unsupported.property}: ${unsupported.value}`);
+          throw new Error(
+            translate('This browser does not support: {{value1}}: {{value2}}', {
+              value1: unsupported.property,
+              value2: unsupported.value,
+            }),
+          );
       }
       onUpdate((current) => ({ ...current, customCss: { enabled, source } }));
       onClose();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Check the CSS declarations.');
+      setError(cause instanceof Error ? cause.message : translate('Check the CSS declarations.'));
     }
   };
 
@@ -74,22 +82,28 @@ export default function CustomCssDialog({ item, onUpdate, onClose }: Props & { o
       >
         <div className="flex items-center justify-between gap-3">
           <h2 id={titleId} className="text-lg font-semibold">
-            Custom CSS
+            {translate('Custom CSS')}
           </h2>
-          <button type="button" onClick={onClose} aria-label="Close custom CSS" className="rounded-lg px-3 py-1">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={translate('Close custom CSS')}
+            className="rounded-lg px-3 py-1"
+          >
             ×
           </button>
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} />
-          Enable custom CSS for this item
+          {translate('Enable custom CSS for this item')}
         </label>
         <p id={helpId} className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-          Add CSS declarations to the item root, without a selector or braces. These override matching root styles;
-          other settings stay in place. Children inherit properties unless they have their own styles.
+          {translate(
+            'Add CSS declarations to the item root, without a selector or braces. These override matching root styles; other settings stay in place. Children inherit properties unless they have their own styles.',
+          )}
         </p>
         <label className="flex flex-col gap-2 text-sm">
-          CSS declarations
+          {translate('CSS declarations')}
           <textarea
             autoFocus
             rows={10}
@@ -118,18 +132,18 @@ export default function CustomCssDialog({ item, onUpdate, onClose }: Props & { o
         )}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-            Disabling keeps your CSS for later.
+            {translate('Disabling keeps your CSS for later.')}
           </span>
           <div className="flex gap-2">
             <button type="button" className="rounded-lg border px-3 py-2 text-sm" onClick={onClose}>
-              Cancel
+              {translate('Cancel')}
             </button>
             <button
               type="submit"
               className="rounded-lg px-3 py-2 text-sm"
               style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
             >
-              Apply
+              {translate('Apply')}
             </button>
           </div>
         </div>

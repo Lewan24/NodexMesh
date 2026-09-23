@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 interface CanvasLostPromptProps {
   visible: boolean;
   onReturnToBoard: () => void;
@@ -5,6 +7,7 @@ interface CanvasLostPromptProps {
 }
 
 export default function CanvasLostPrompt({ visible, onReturnToBoard, onGoToFirstItem }: CanvasLostPromptProps) {
+  useTranslation();
   if (!visible) return null;
 
   return (
@@ -39,18 +42,18 @@ export default function CanvasLostPrompt({ visible, onReturnToBoard, onGoToFirst
         </div>
 
         <p className="text-2xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-          Are you lost?
+          {translate('Are you lost?')}
         </p>
 
         <span
           className="text-[9px] italic select-none"
           style={{ marginTop: 1, color: 'var(--color-text-faint)', opacity: 0.45, letterSpacing: '0.03em' }}
         >
-          baby girl
+          {translate('baby girl')}
         </span>
 
         <p className="text-xl mt-1 mb-4 text-center" style={{ color: 'var(--color-text-muted)', maxWidth: 220 }}>
-          Your board is somewhere else on the canvas.
+          {translate('Your board is somewhere else on the canvas.')}
         </p>
 
         <button
@@ -58,7 +61,7 @@ export default function CanvasLostPrompt({ visible, onReturnToBoard, onGoToFirst
           className="h-8 px-4 rounded-lg text-xl font-semibold transition-transform hover:scale-[1.03] active:scale-[0.98]"
           style={{ backgroundColor: 'var(--color-accent)', color: '#fff' }}
         >
-          Return to board
+          {translate('Return to board')}
         </button>
 
         <button
@@ -66,7 +69,7 @@ export default function CanvasLostPrompt({ visible, onReturnToBoard, onGoToFirst
           className="mt-2 h-7 px-3 rounded-lg text-md transition-colors"
           style={{ color: 'var(--color-text-secondary)' }}
         >
-          Go to first item
+          {translate('Go to first item')}
         </button>
       </div>
     </div>

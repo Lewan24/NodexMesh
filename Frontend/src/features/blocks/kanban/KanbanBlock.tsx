@@ -1,3 +1,5 @@
+import { translate, displayLabel } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useRef, useState } from 'react';
@@ -32,6 +34,7 @@ interface KanbanBlockProps {
 }
 
 function DropLine() {
+  useTranslation();
   return (
     <div
       className="h-1 rounded-full my-1"
@@ -41,6 +44,7 @@ function DropLine() {
 }
 
 export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCardDroppedOutside }: KanbanBlockProps) {
+  useTranslation();
   const [columnSettings, setColumnSettings] = useState<string | null>(null);
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [dropColumn, setDropColumn] = useState<string | null>(null);
@@ -333,8 +337,8 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
               disabled={item.columns.length < 2}
               className="w-8 h-8 flex items-center justify-center rounded-xl cursor-pointer hover:bg-violet-500/10 disabled:opacity-30 disabled:cursor-default"
               style={{ color: mutedColor }}
-              title="Equalize column widths"
-              aria-label="Equalize column widths"
+              title={translate('Equalize column widths')}
+              aria-label={translate('Equalize column widths')}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <rect x="3" y="4" width="6" height="16" rx="1" />
@@ -357,7 +361,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                 event.currentTarget.style.color = mutedColor;
                 event.currentTarget.style.backgroundColor = 'transparent';
               }}
-              title="Add column"
+              title={translate('Add column')}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 5v14M5 12h14" />
@@ -377,7 +381,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                   event.currentTarget.style.color = mutedColor;
                   event.currentTarget.style.backgroundColor = 'transparent';
                 }}
-                title="Fit height to content"
+                title={translate('Fit height to content')}
               >
                 <svg
                   width="14"
@@ -411,7 +415,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                 event.currentTarget.style.color = mutedColor;
                 event.currentTarget.style.backgroundColor = 'transparent';
               }}
-              title="Delete Kanban"
+              title={translate('Delete Kanban')}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M18 6 6 18M6 6l12 12" />
@@ -464,8 +468,8 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
               <div className="flex items-center gap-1.5 mb-2.5 group/colhdr" style={{ order: -3 }}>
                 <button
                   draggable
-                  aria-label={`Reorder column ${column.title}`}
-                  title="Drag column · Alt+← / Alt+→"
+                  aria-label={translate('Reorder column {{value1}}', { value1: column.title })}
+                  title={translate('Drag column · Alt+← / Alt+→')}
                   className="cursor-grab"
                   style={{ color: mutedColor }}
                   onMouseDown={(event) => event.stopPropagation()}
@@ -493,7 +497,10 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                 {([-1, 1] as const).map((direction) => (
                   <button
                     key={direction}
-                    aria-label={`Move ${column.title} ${direction === -1 ? 'left' : 'right'}`}
+                    aria-label={translate('Move {{value1}} {{value2}}', {
+                      value1: column.title,
+                      value2: displayLabel(direction === -1 ? 'left' : 'right'),
+                    })}
                     className="text-xs disabled:opacity-20"
                     style={{ color: mutedColor }}
                     disabled={!item.columns[columnIndex + direction]}
@@ -504,8 +511,8 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                   </button>
                 ))}
                 <button
-                  aria-label={`Settings for ${column.title}`}
-                  title="Column settings"
+                  aria-label={translate('Settings for {{value1}}', { value1: column.title })}
+                  title={translate('Column settings')}
                   aria-expanded={columnSettings === column.id}
                   className="w-5 h-5 shrink-0 cursor-pointer border border-current rounded-sm"
                   style={{ color: column.color, background: `${column.color}22` }}
@@ -520,7 +527,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                   style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'labels') }}
                   onMouseDown={(event) => event.stopPropagation()}
                   onClick={() => setColumnSettings(column.id)}
-                  title="Edit column"
+                  title={translate('Edit column')}
                 >
                   {column.title}
                 </button>
@@ -552,14 +559,14 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
               <button
                 className="text-xs text-left py-1.5 px-2 mb-1 hover:bg-violet-500/10"
                 style={{ color: mutedColor, order: -2 }}
-                aria-label={`Add card at top of ${column.title}`}
+                aria-label={translate('Add card at top of {{value1}}', { value1: column.title })}
                 onMouseDown={(event) => event.stopPropagation()}
                 onClick={() => {
                   setAddAtTop(true);
                   setAddingCardColumnId(column.id);
                 }}
               >
-                + Add card
+                {translate('+ Add card')}
               </button>
               {/* Cards */}
 
@@ -648,7 +655,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                         setNewCardText('');
                       }
                     }}
-                    placeholder="Card title…"
+                    placeholder={translate('Card title…')}
                     className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border transition-colors"
                     style={{
                       ...typographyStyle,
@@ -680,7 +687,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <path d="M12 5v14M5 12h14" />
                   </svg>
-                  Add card
+                  {translate('Add card')}
                 </button>
               )}
 
@@ -692,7 +699,9 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                   event.stopPropagation();
                   resetColumnWidth(column.id);
                 }}
-                title={`Resize column (${(getColumnShare(item.columns, column.id) * 100).toFixed(1)}%) · Double-click to reset`}
+                title={translate('Resize column ({{value1}}%) · Double-click to reset', {
+                  value1: (getColumnShare(item.columns, column.id) * 100).toFixed(1),
+                })}
               >
                 <div
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-8 rounded-full opacity-0 group-hover/col:opacity-50 group-hover/resize:opacity-100 transition-all"

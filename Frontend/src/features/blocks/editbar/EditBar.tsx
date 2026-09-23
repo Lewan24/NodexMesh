@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import SectionTypographyControls from './components/SectionTypographyControls';
 import type { ReactNode } from 'react';
 import type { BoardItem } from '@/entities/board/types';
@@ -46,6 +48,7 @@ export default function EditBar({
   onUpdateColumnItem,
   onDeleteColumnItem,
 }: EditBarProps) {
+  useTranslation();
   const isColumnMode = !!columnItem;
   const isMulti = !isColumnMode && selectedItems.length > 1;
   const single = columnItem ?? (selectedItems.length === 1 ? selectedItems[0] : null);
@@ -75,12 +78,12 @@ export default function EditBar({
 
   const typeLabel = isColumnMode
     ? single
-      ? (ITEM_TYPE_LABELS[single.type] ?? single.type)
+      ? translate(ITEM_TYPE_LABELS[single.type] ?? single.type)
       : ''
     : isMulti
-      ? `${selectedItems.length} items`
+      ? translate('{{value1}} items', { value1: selectedItems.length })
       : single
-        ? (ITEM_TYPE_LABELS[single.type] ?? single.type)
+        ? translate(ITEM_TYPE_LABELS[single.type] ?? single.type)
         : '';
 
   const hasStyleControls = !!single && !isMulti && single.type !== 'icon';
@@ -113,7 +116,7 @@ export default function EditBar({
             e.currentTarget.style.backgroundColor = 'transparent';
             e.currentTarget.style.color = 'var(--color-text-faint)';
           }}
-          title="Deselect (Esc)"
+          title={translate('Deselect (Esc)')}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M18 6 6 18M6 6l12 12" />
@@ -147,7 +150,7 @@ export default function EditBar({
             className="h-8 px-2.5 rounded-lg text-sm font-medium whitespace-nowrap cursor-pointer hover:bg-violet-500/20"
             style={{ color: 'var(--color-text-primary)' }}
           >
-            Join drawings
+            {translate('Join drawings')}
           </button>
         )}
 
@@ -162,12 +165,12 @@ export default function EditBar({
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'rgba(124,58,237,0.1)';
             }}
-            title="Wrap in a frame"
+            title={translate('Wrap in a frame')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="18" height="18" rx="2" strokeDasharray="4 2" />
             </svg>
-            Group
+            {translate('Group')}
           </button>
         )}
 
@@ -182,12 +185,12 @@ export default function EditBar({
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
             }}
-            title="Fit frame to contents"
+            title={translate('Fit frame to contents')}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
             </svg>
-            Fit
+            {translate('Fit')}
           </button>
         )}
 
@@ -207,7 +210,7 @@ export default function EditBar({
             e.currentTarget.style.backgroundColor = 'transparent';
             e.currentTarget.style.color = 'var(--color-text-faint)';
           }}
-          title="Delete"
+          title={translate('Delete')}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path
@@ -217,7 +220,7 @@ export default function EditBar({
             />
           </svg>
 
-          {isMulti ? `Delete ${selectedItems.length}` : 'Delete'}
+          {isMulti ? translate('Delete {{value1}}', { value1: selectedItems.length }) : translate('Delete')}
         </button>
       </div>
 
@@ -257,7 +260,7 @@ export default function EditBar({
                 )
               }
             >
-              Auto-fit height
+              {translate('Auto-fit height')}
             </button>
           )}
           {single.type === 'embed' && (
@@ -271,12 +274,12 @@ export default function EditBar({
                   )
                 }
               />
-              Show label
+              {translate('Show label')}
             </label>
           )}
           {single.type === 'timeline' && (
             <select
-              aria-label="Timeline view"
+              aria-label={translate('Timeline view')}
               value={single.mode}
               className="text-xs bg-transparent"
               onChange={(event) =>
@@ -287,8 +290,8 @@ export default function EditBar({
                 )
               }
             >
-              <option value="simple">Milestones</option>
-              <option value="schedule">Schedule</option>
+              <option value="simple">{translate('Milestones')}</option>
+              <option value="schedule">{translate('Schedule')}</option>
             </select>
           )}
           {!isColumnMode && single.type === 'frame' && <FrameControls item={single} onUpdate={handleUpdate} />}

@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 interface DragHandleProps {
   onMouseDown: (event: React.MouseEvent<HTMLButtonElement>) => void;
 
@@ -8,10 +10,11 @@ interface DragHandleProps {
 
 export default function DragHandle({
   onMouseDown,
-  title = 'Drag',
+  title = translate('Drag'),
   color = 'currentColor',
   compact = false,
 }: DragHandleProps) {
+  useTranslation();
   return (
     <button
       type="button"

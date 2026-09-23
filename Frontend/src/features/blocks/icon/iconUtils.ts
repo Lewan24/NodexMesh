@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import type { IconItem } from '@/entities/board/types';
 
 export function getIconImageSource(mode: IconItem['iconMode'], source: string | undefined): string | undefined {
@@ -18,7 +19,7 @@ export function getIconImageSource(mode: IconItem['iconMode'], source: string | 
 }
 
 export function prepareIconSvg(source: string): string {
-  if (source.length > 200_000) throw new Error('SVG is too large (maximum 200,000 characters).');
+  if (source.length > 200_000) throw new Error(translate('SVG is too large (maximum 200,000 characters).'));
   const document = new DOMParser().parseFromString(source, 'image/svg+xml');
   if (document.querySelector('parsererror') || document.documentElement.localName !== 'svg') {
     throw new Error('Paste a valid SVG with an <svg> root element.');

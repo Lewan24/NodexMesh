@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -26,6 +28,7 @@ export default function MobilePanel({
   title: string;
   slot: 'edit' | 'details' | 'tools';
 }) {
+  useTranslation();
   const mobile = useMobileLayout();
   const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -85,10 +88,10 @@ export default function MobilePanel({
               <button
                 className="mobile-panel-done"
                 type="button"
-                aria-label={`Close ${title}`}
+                aria-label={translate('Close {{value1}}', { value1: title })}
                 onClick={() => setOpen(false)}
               >
-                Done
+                {translate('Done')}
               </button>
             </div>
             <div className="mobile-panel-body">{children}</div>

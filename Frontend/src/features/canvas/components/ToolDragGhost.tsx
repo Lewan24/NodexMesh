@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import type { ToolType } from '@/entities/board/toolTypes';
 import { Star } from 'lucide-react';
 
@@ -16,28 +18,143 @@ interface GhostConfig {
 }
 
 const GHOST_CONFIG: Partial<Record<ToolType, GhostConfig>> = {
-  timeline: { label: 'Timeline', width: 260, height: 160 },
-  database: { label: 'Database diagram', width: 280, height: 180 },
-  mindmap: { label: 'Mind map', width: 300, height: 180 },
-  diagram: { label: 'Diagram', width: 260, height: 180 },
-  document: { label: 'Document', width: 240, height: 170 },
-  embed: { label: 'Embed', width: 240, height: 140 },
-  code: { label: 'Code', width: 220, height: 140 },
-  dispenser: { label: 'Note dispenser', width: 180, height: 130 },
-  divider: { label: 'Divider', width: 180, height: 36 },
-  note: { label: 'Note', width: 180, height: 110 },
-  kanban: { label: 'Kanban', width: 260, height: 150 },
-  icon: { label: 'Icon / Emoji', width: 96, height: 96 },
-  image: { label: 'Image', width: 200, height: 125 },
-  link: { label: 'Link', width: 200, height: 100 },
-  text: { label: 'Text', width: 150, height: 48 },
-  frame: { label: 'Frame', width: 260, height: 160 },
-  checklist: { label: 'Checklist', width: 190, height: 125 },
-  column: { label: 'Column', width: 210, height: 150 },
-  line: { label: 'Line', width: 180, height: 36 },
+  timeline: {
+    get label() {
+      return translate('Timeline');
+    },
+    width: 260,
+    height: 160,
+  },
+  database: {
+    get label() {
+      return translate('Database diagram');
+    },
+    width: 280,
+    height: 180,
+  },
+  mindmap: {
+    get label() {
+      return translate('Mind map');
+    },
+    width: 300,
+    height: 180,
+  },
+  diagram: {
+    get label() {
+      return translate('Diagram');
+    },
+    width: 260,
+    height: 180,
+  },
+  document: {
+    get label() {
+      return translate('Document');
+    },
+    width: 240,
+    height: 170,
+  },
+  embed: {
+    get label() {
+      return translate('Embed');
+    },
+    width: 240,
+    height: 140,
+  },
+  code: {
+    get label() {
+      return translate('Code');
+    },
+    width: 220,
+    height: 140,
+  },
+  dispenser: {
+    get label() {
+      return translate('Note dispenser');
+    },
+    width: 180,
+    height: 130,
+  },
+  divider: {
+    get label() {
+      return translate('Divider');
+    },
+    width: 180,
+    height: 36,
+  },
+  note: {
+    get label() {
+      return translate('Note');
+    },
+    width: 180,
+    height: 110,
+  },
+  kanban: {
+    get label() {
+      return translate('Kanban');
+    },
+    width: 260,
+    height: 150,
+  },
+  icon: {
+    get label() {
+      return translate('Icon / Emoji');
+    },
+    width: 96,
+    height: 96,
+  },
+  image: {
+    get label() {
+      return translate('Image');
+    },
+    width: 200,
+    height: 125,
+  },
+  link: {
+    get label() {
+      return translate('Link');
+    },
+    width: 200,
+    height: 100,
+  },
+  text: {
+    get label() {
+      return translate('Text');
+    },
+    width: 150,
+    height: 48,
+  },
+  frame: {
+    get label() {
+      return translate('Frame');
+    },
+    width: 260,
+    height: 160,
+  },
+  checklist: {
+    get label() {
+      return translate('Checklist');
+    },
+    width: 190,
+    height: 125,
+  },
+  column: {
+    get label() {
+      return translate('Column');
+    },
+    width: 210,
+    height: 150,
+  },
+  line: {
+    get label() {
+      return translate('Line');
+    },
+    width: 180,
+    height: 36,
+  },
 };
 
 export default function ToolDragGhost({ color, tool, clientX, clientY, overCanvas }: ToolDragGhostProps) {
+  useTranslation();
   const config = GHOST_CONFIG[tool];
 
   if (!config || tool === 'select') return null;
@@ -137,6 +254,7 @@ export default function ToolDragGhost({ color, tool, clientX, clientY, overCanva
 }
 
 function GhostContent({ tool }: { tool: ToolType }) {
+  useTranslation();
   switch (tool) {
     case 'note':
       return (
@@ -215,10 +333,12 @@ function GhostContent({ tool }: { tool: ToolType }) {
 }
 
 function GhostLine({ width }: { width: string }) {
+  useTranslation();
   return <div className="rounded-full" style={{ width, height: 6, backgroundColor: 'var(--color-border)' }} />;
 }
 
 function GhostChecklistRow() {
+  useTranslation();
   return (
     <div className="flex items-center gap-2">
       <div className="rounded" style={{ width: 10, height: 10, border: '1px solid var(--color-text-faint)' }} />

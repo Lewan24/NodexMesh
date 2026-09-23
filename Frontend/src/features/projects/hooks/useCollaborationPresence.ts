@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { HubConnectionBuilder, HubConnectionState, LogLevel, type HubConnection } from '@microsoft/signalr';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -92,7 +93,7 @@ export function useCollaborationPresence(
           projectId,
           boardId,
           itemIds: selectedRef.current.slice(0, 50),
-          mode: editing ? 'editing' : 'selected',
+          mode: editing ? translate('editing') : 'selected',
         })
         .catch(() => undefined);
     };

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import SectionLabel, { sectionTitleScale } from '@/features/blocks/shared/SectionLabel';
 
 import type { BoardItem, FrameItem } from '@/entities/board/types';
@@ -68,6 +69,7 @@ export default function CanvasFrame({
   onQuickConnectStart,
   movementLocked = false,
 }: CanvasFrameProps) {
+  useTranslation();
   const labelScale = sectionTitleScale(zoom);
 
   return (

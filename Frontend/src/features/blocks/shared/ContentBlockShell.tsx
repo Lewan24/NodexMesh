@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import type { ReactNode, CSSProperties } from 'react';
 import type { BaseItem } from '@/entities/board/types';
@@ -19,6 +21,7 @@ export default function ContentBlockShell({
   autoHeight?: boolean;
   minHeight?: number;
 }) {
+  useTranslation();
   const { background, textColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
   return (
     <section
@@ -56,7 +59,7 @@ export default function ContentBlockShell({
         className="flex items-center gap-2 px-4 py-2 border-b cursor-grab text-sm font-medium"
         style={{ borderColor: 'var(--color-border)' }}
       >
-        <span aria-hidden="true" className="opacity-35 select-none" title="Drag block">
+        <span aria-hidden="true" className="opacity-35 select-none" title={translate('Drag block')}>
           ⠿
         </span>
         <div className="flex-1 min-w-0" style={getSectionStyle(item.typography, 'title')}>
@@ -64,8 +67,8 @@ export default function ContentBlockShell({
         </div>
         <button
           type="button"
-          title="Delete block"
-          aria-label="Delete block"
+          title={translate('Delete block')}
+          aria-label={translate('Delete block')}
           onMouseDown={(e) => e.stopPropagation()}
           onClick={onDelete}
           className="px-2 rounded hover:bg-black/10"

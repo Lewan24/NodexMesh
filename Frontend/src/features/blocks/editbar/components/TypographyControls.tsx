@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import type { BoardItem, FontFamily } from '@/entities/board/types';
 import { FONT_FAMILIES, updateTypography } from '../../typography/typographyUtils';
 export default function TypographyControls({
@@ -7,6 +9,7 @@ export default function TypographyControls({
   item: BoardItem;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
 }) {
+  useTranslation();
   const typography = item.typography;
   const update = (patch: Partial<NonNullable<BoardItem['typography']>>) =>
     onUpdate((current) => updateTypography(current, patch));
@@ -22,10 +25,10 @@ export default function TypographyControls({
         backgroundColor: 'var(--color-surface)',
         borderColor: 'var(--color-border)',
       }}
-      title="Font family"
-      aria-label="Item font family"
+      title={translate('Font family')}
+      aria-label={translate('Item font family')}
     >
-      <option value="">Project default</option>
+      <option value="">{translate('Project default')}</option>
       {FONT_FAMILIES.map((font) => (
         <option key={font.value} value={font.value} style={{ fontFamily: font.css }}>
           {font.label}

@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import type { Project } from '@/entities/project/types';
 import type { WorkspaceState } from '../services/workspaceController';
@@ -22,6 +24,7 @@ export default function SaveStatus({
   retry,
   reload,
 }: WorkspaceState & { retry: () => Promise<void>; reload: () => Promise<void> }) {
+  useTranslation();
   const [confirmReload, setConfirmReload] = useState(false);
   const failed = status === 'error' || status === 'conflict';
   return (
@@ -32,28 +35,33 @@ export default function SaveStatus({
       <span>
         {failed
           ? error
-          : ({ loading: 'Loading projects…', pending: 'Unsaved changes', saving: 'Saving…', saved: 'Saved' } as const)[
-              status
-            ]}
+          : (
+              {
+                loading: translate('Loading projects…'),
+                pending: translate('Unsaved changes'),
+                saving: translate('Saving…'),
+                saved: translate('Saved'),
+              } as const
+            )[status]}
       </span>
       {failed && (
         <>
           <button className="underline" onClick={() => downloadDraft(projects)}>
-            Download local draft
+            {translate('Download local draft')}
           </button>
           {status === 'error' && (
             <button className="underline" onClick={() => void retry()}>
-              Retry
+              {translate('Retry')}
             </button>
           )}
           <button className="underline" onClick={() => setConfirmReload(true)}>
-            Reload saved data
+            {translate('Reload saved data')}
           </button>
         </>
       )}
       {confirmReload && (
         <span>
-          Discard local changes?
+          {translate('Discard local changes?')}
           <button
             className="underline mx-2"
             onClick={() => {
@@ -61,10 +69,10 @@ export default function SaveStatus({
               void reload();
             }}
           >
-            Discard and reload
+            {translate('Discard and reload')}
           </button>
           <button className="underline" onClick={() => setConfirmReload(false)}>
-            Cancel
+            {translate('Cancel')}
           </button>
         </span>
       )}

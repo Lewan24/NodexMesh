@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 
 interface CustomColorInputProps {
@@ -19,7 +21,12 @@ function normalizeHex(value: string): string | null {
   return null;
 }
 
-export default function CustomColorInput({ value, onChange, title = 'Custom color' }: CustomColorInputProps) {
+export default function CustomColorInput({
+  value,
+  onChange,
+  title = translate('Custom color'),
+}: CustomColorInputProps) {
+  useTranslation();
   const fallback = normalizeHex(value ?? '') ?? '#7C3AED';
   const [text, setText] = useState(fallback);
 

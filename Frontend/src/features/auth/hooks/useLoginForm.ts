@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { authService } from '@/app/services';
 import { errorMessage } from '@/shared/api/errors';
 import { useEffect, useState } from 'react';
@@ -30,7 +31,7 @@ export function useLoginForm() {
     if (submitting) return;
 
     if (!username.trim() || !password) {
-      setError('Enter your username and password.');
+      setError(translate('Enter your username and password.'));
       return;
     }
 

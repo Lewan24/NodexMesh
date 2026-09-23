@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { mergeProject } from './collaborationMerge';
 import { canonicalJson } from '@/shared/api/canonicalJson';
 import { createId } from '@/shared/lib/createId';
@@ -38,7 +39,7 @@ export class WorkspaceController {
       throw new ApiError({
         status: 409,
         code: 'access_changed',
-        title: 'Your editing access changed. Your local draft is preserved; download it before reloading.',
+        title: translate('Your editing access changed. Your local draft is preserved; download it before reloading.'),
         type: 'about:blank',
       });
     }
@@ -82,7 +83,9 @@ export class WorkspaceController {
             this.confirmed.delete(id);
             this.publish({ projects: this.state.projects.filter((project) => project.id !== id) });
           } else
-            this.report(new Error('This project is no longer accessible. Download your local draft before reloading.'));
+            this.report(
+              new Error(translate('This project is no longer accessible. Download your local draft before reloading.')),
+            );
         } else throw error;
       }
     })().finally(() => {
@@ -102,7 +105,7 @@ export class WorkspaceController {
 
   async purgeProject(id: string) {
     const previous = this.confirmed.get(id);
-    if (!previous?.project.deletedAt) throw new Error('Only trashed projects can be deleted permanently.');
+    if (!previous?.project.deletedAt) throw new Error(translate('Only trashed projects can be deleted permanently.'));
     await this.services.projects.purge(id, previous.project.revision, createId());
     this.confirmed.delete(id);
     this.publish({ projects: this.state.projects.filter((project) => project.id !== id) });
@@ -110,9 +113,9 @@ export class WorkspaceController {
 
   async saveComments(projectId: string, itemId: string, comments: import('@/entities/board/types').ItemComment[]) {
     await this.flush();
-    if (this.state.status !== 'saved') throw new Error('Resolve pending changes before commenting.');
+    if (this.state.status !== 'saved') throw new Error(translate('Resolve pending changes before commenting.'));
     const previous = this.confirmed.get(projectId);
-    if (!previous) throw new Error('Project is unavailable.');
+    if (!previous) throw new Error(translate('Project is unavailable.'));
     const before = previous.board.comments.filter((comment) => comment.itemId === itemId && !comment.deletedAt);
     const upserts = comments
       .filter(
@@ -211,7 +214,7 @@ export class WorkspaceController {
     const previous = this.confirmed.get(projectId);
     if (!previous || previous.board.board.id === boardId) return;
     const board = await this.services.boards.get(projectId, boardId);
-    if (board.board.projectId !== projectId) throw new Error('Board belongs to another project.');
+    if (board.board.projectId !== projectId) throw new Error(translate('Board belongs to another project.'));
     const next = { ...previous, board };
     this.confirmed.set(projectId, next);
     this.publish({
@@ -371,7 +374,7 @@ export class WorkspaceController {
             if (previous.board.board.id === previous.project.id && !previous.project.deletedAt) {
               const boards = await this.services.boards.list(desired.id);
               const first = boards.find((board) => !board.deletedAt);
-              if (!first) throw new Error('Restored project has no active board.');
+              if (!first) throw new Error(translate('Restored project has no active board.'));
               const board = await this.services.boards.get(desired.id, first.id);
               this.acceptRemote(previous, { ...previous, board });
             }
@@ -409,7 +412,7 @@ export class WorkspaceController {
             return;
           }
           if (BigInt(board.board.revision) < BigInt(previous.board.board.revision))
-            throw new Error('Stale board response');
+            throw new Error(translate('Stale board response'));
           // The follow-up snapshot may already contain another collaborator's commit.
           // Preserve edits made while our own request was in flight as well.
           this.acceptRemote(

@@ -1,3 +1,5 @@
+import { translate, displayLabel } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useSectionStyle } from '../typography/TypographyContext';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { createId } from '@/shared/lib/createId';
@@ -32,6 +34,7 @@ import '../shared/planning.css';
 
 type TableNode = Node<{ table: DatabaseTable; foreignKeys: string[] }, 'table'>;
 function TableView({ data, selected }: NodeProps<TableNode>) {
+  useTranslation();
   const labelStyle = useSectionStyle('labels');
   const bodyStyle = useSectionStyle('body');
   return (
@@ -45,19 +48,25 @@ function TableView({ data, selected }: NodeProps<TableNode>) {
       }}
     >
       <div className="px-3 py-2 bg-violet-600 text-white font-semibold" style={labelStyle}>
-        {data.table.name || 'Untitled table'}
+        {data.table.name || translate('Untitled table')}
       </div>
       {data.table.fields.map((field) => (
         <div key={field.id} className="relative flex items-center gap-2 px-3 py-2 border-b border-current/10 text-xs">
           <Handle type="source" position={Position.Left} id={field.id + ':left'} style={{ width: 10, height: 10 }} />
           <span
             className="font-mono text-amber-600 min-w-6"
-            title={field.primaryKey ? 'Primary key' : data.foreignKeys.includes(field.id) ? 'Foreign key' : ''}
+            title={
+              field.primaryKey
+                ? translate('Primary key')
+                : data.foreignKeys.includes(field.id)
+                  ? translate('Foreign key')
+                  : ''
+            }
           >
             {field.primaryKey ? 'PK' : data.foreignKeys.includes(field.id) ? 'FK' : ''}
           </span>
           <span className="flex-1 truncate" title={field.name} style={bodyStyle}>
-            {field.name || 'field'}
+            {field.name || translate('Field')}
           </span>
           <span className="max-w-28 truncate" title={field.dataType} style={bodyStyle}>
             {field.dataType}
@@ -66,7 +75,7 @@ function TableView({ data, selected }: NodeProps<TableNode>) {
           <Handle type="source" position={Position.Right} id={field.id + ':right'} style={{ width: 10, height: 10 }} />
         </div>
       ))}
-      {!data.table.fields.length && <div className="p-3 text-xs opacity-60">No fields</div>}
+      {!data.table.fields.length && <div className="p-3 text-xs opacity-60">{translate('No fields')}</div>}
     </div>
   );
 }
@@ -94,6 +103,7 @@ export default function DatabaseDiagramBlock({
   onUpdate: BlockUpdateHandler;
   onDelete: BlockDeleteHandler;
 }) {
+  useTranslation();
   const mobile = useMobileLayout();
   const [editingRequested, setEditingRequested] = useState(false);
   const editing = editingRequested && !mobile;
@@ -172,7 +182,7 @@ export default function DatabaseDiagramBlock({
       <div className="flex flex-col flex-1 min-w-0">
         <div className="planning-toolbar" onMouseDown={(event) => event.stopPropagation()}>
           <button className="planning-button" onClick={fit}>
-            Fit view
+            {translate('Fit view')}
           </button>
           {editing ? (
             <>
@@ -186,7 +196,7 @@ export default function DatabaseDiagramBlock({
                   fit();
                 }}
               >
-                + Table
+                {translate('+ Table')}
               </button>
               <button
                 className="planning-button"
@@ -205,11 +215,13 @@ export default function DatabaseDiagramBlock({
                   fit();
                 }}
               >
-                Arrange tables
+                {translate('Arrange tables')}
               </button>
-              <span className="text-xs opacity-60">Drag field port to referenced field · Grid 16 px</span>
+              <span className="text-xs opacity-60">
+                {translate('Drag field port to referenced field · Grid 16 px')}
+              </span>
               <button className="planning-button ml-auto" onClick={() => setEditing(false)}>
-                Done
+                {translate('Done')}
               </button>
             </>
           ) : (
@@ -218,7 +230,7 @@ export default function DatabaseDiagramBlock({
               disabled={item.locked || mobile}
               onClick={() => setEditing(true)}
             >
-              {mobile ? 'Edit on desktop' : 'Edit database'}
+              {mobile ? translate('Edit on desktop') : translate('Edit database')}
             </button>
           )}
         </div>
@@ -277,7 +289,7 @@ export default function DatabaseDiagramBlock({
                     setRelationId(relation.id);
                     setSelected(null);
                     setMessage('');
-                  } else setMessage('This relationship already exists or its fields are invalid.');
+                  } else setMessage(translate('This relationship already exists or its fields are invalid.'));
                 }}
                 nodesDraggable={editing}
                 nodesConnectable={editing}
@@ -311,7 +323,7 @@ export default function DatabaseDiagramBlock({
                   fit();
                 }}
               >
-                Start with users and posts
+                {translate('Start with users and posts')}
               </button>
             </div>
           )}
@@ -323,7 +335,7 @@ export default function DatabaseDiagramBlock({
           data-wheel-scroll="true"
         >
           <label className="block text-sm">
-            Diagram title
+            {translate('Diagram title')}
             <input
               className="planning-input w-full"
               value={item.title}
@@ -337,14 +349,14 @@ export default function DatabaseDiagramBlock({
           {table ? (
             <>
               <label className="block text-sm">
-                Table name
+                {translate('Table name')}
                 <input
                   className="planning-input w-full"
                   value={table.name}
                   onChange={(event) => updateTable({ name: event.target.value })}
                 />
               </label>
-              <h3 className="font-semibold text-sm">Fields</h3>
+              <h3 className="font-semibold text-sm">{translate('Fields')}</h3>
               <datalist id={item.id + '-types'}>
                 {types.map((type) => (
                   <option key={type} value={type} />
@@ -352,9 +364,12 @@ export default function DatabaseDiagramBlock({
               </datalist>
               {table.fields.map((field, index) => (
                 <fieldset key={field.id} className="p-2 bg-violet-500/5 space-y-2 rounded-sm">
-                  <legend className="text-xs opacity-60">Field {index + 1}</legend>
+                  <legend className="text-xs opacity-60">
+                    {translate('Field') + ' '}
+                    {index + 1}
+                  </legend>
                   <input
-                    aria-label={'Field name ' + (index + 1)}
+                    aria-label={translate('Field name') + ' ' + (index + 1)}
                     className="planning-input w-full"
                     value={field.name}
                     onChange={(event) =>
@@ -366,7 +381,7 @@ export default function DatabaseDiagramBlock({
                     }
                   />
                   <input
-                    aria-label={'Field type ' + (index + 1)}
+                    aria-label={translate('Field type') + ' ' + (index + 1)}
                     list={item.id + '-types'}
                     className="planning-input w-full"
                     value={field.dataType}
@@ -399,13 +414,13 @@ export default function DatabaseDiagramBlock({
                             })
                           }
                         />{' '}
-                        {key === 'primaryKey' ? 'PK' : key === 'nullable' ? 'Nullable' : 'Unique'}
+                        {key === 'primaryKey' ? 'PK' : key === 'nullable' ? translate('Nullable') : translate('Unique')}
                       </label>
                     ))}
                   </div>
                   <input
-                    aria-label={'Default value ' + (index + 1)}
-                    placeholder="Default value"
+                    aria-label={translate('Default value') + ' ' + (index + 1)}
+                    placeholder={translate('Default value')}
                     className="planning-input w-full"
                     value={field.defaultValue}
                     onChange={(event) =>
@@ -420,7 +435,10 @@ export default function DatabaseDiagramBlock({
                     {([-1, 1] as const).map((direction) => (
                       <button
                         key={direction}
-                        aria-label={`Move field ${index + 1} ${direction === -1 ? 'up' : 'down'}`}
+                        aria-label={translate('Move field {{value1}} {{value2}}', {
+                          value1: index + 1,
+                          value2: displayLabel(direction === -1 ? 'up' : 'down'),
+                        })}
                         disabled={!table.fields[index + direction]}
                         className="planning-button disabled:opacity-30"
                         onClick={() => {
@@ -436,7 +454,7 @@ export default function DatabaseDiagramBlock({
                       className="planning-button text-rose-500"
                       onClick={() => updateTable({ fields: table.fields.filter((entry) => entry.id !== field.id) })}
                     >
-                      Remove field
+                      {translate('Remove field')}
                     </button>
                   </div>
                 </fieldset>
@@ -447,7 +465,7 @@ export default function DatabaseDiagramBlock({
                   updateTable({ fields: [...table.fields, createDatabaseField('field_' + (table.fields.length + 1))] })
                 }
               >
-                + Field
+                {translate('+ Field')}
               </button>
               <button
                 className="planning-button text-rose-500"
@@ -456,12 +474,12 @@ export default function DatabaseDiagramBlock({
                   setSelected(null);
                 }}
               >
-                Delete table
+                {translate('Delete table')}
               </button>
             </>
           ) : relation ? (
             <>
-              <h3 className="text-sm font-semibold">Relationship</h3>
+              <h3 className="text-sm font-semibold">{translate('Relationship')}</h3>
               <p className="text-xs">
                 {item.tables.find((table) => table.id === relation.source)?.name}.
                 {
@@ -477,7 +495,7 @@ export default function DatabaseDiagramBlock({
                 }
               </p>
               <label className="block text-sm">
-                Cardinality
+                {translate('Cardinality')}
                 <select
                   className="planning-input w-full"
                   value={relation.cardinality}
@@ -498,8 +516,9 @@ export default function DatabaseDiagramBlock({
                 </select>
               </label>
               <p className="text-xs opacity-60">
-                Source field references target field. N:N represents a conceptual relation; model a junction table for a
-                physical schema.
+                {translate(
+                  'Source field references target field. N:N represents a conceptual relation; model a junction table for a physical schema.',
+                )}
               </p>
               <button
                 className="planning-button text-rose-500"
@@ -511,11 +530,13 @@ export default function DatabaseDiagramBlock({
                   setRelationId(null);
                 }}
               >
-                Delete relationship
+                {translate('Delete relationship')}
               </button>
             </>
           ) : (
-            <p className="text-sm opacity-60">Select a table to edit its fields, or select a relationship.</p>
+            <p className="text-sm opacity-60">
+              {translate('Select a table to edit its fields, or select a relationship.')}
+            </p>
           )}
           {message && (
             <p role="status" className="text-sm text-amber-600">
@@ -532,13 +553,13 @@ export default function DatabaseDiagramBlock({
       onDelete={onDelete}
       title={
         <span style={getSectionStyle(item.typography, 'title')}>
-          {item.title} · {item.tables.length} tables
+          {item.title} · {item.tables.length} {' ' + translate('tables')}
         </span>
       }
     >
       {editing ? (
         <>
-          <div className="planning-empty">Database schema is open in the editor.</div>
+          <div className="planning-empty">{translate('Database schema is open in the editor.')}</div>
           {createPortal(
             <div
               className="fixed inset-0 bg-black/45 flex items-center justify-center p-4"
@@ -550,7 +571,7 @@ export default function DatabaseDiagramBlock({
                 ref={dialog}
                 role="dialog"
                 aria-modal="true"
-                aria-label="Edit database schema"
+                aria-label={translate('Edit database schema')}
                 data-board-history="true"
                 tabIndex={-1}
                 className="diagram-editor"

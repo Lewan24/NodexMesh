@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { ImageOff } from 'lucide-react';
 import type { IconItem } from '@/entities/board/types';
@@ -5,6 +7,7 @@ import { getPresetIcon } from './iconPresets';
 import { getIconImageSource } from './iconUtils';
 
 export default function IconVisual({ item, size }: { item: IconItem; size: number }) {
+  useTranslation();
   const [failedSource, setFailedSource] = useState<string | null>(null);
   if (item.iconMode === 'preset') {
     const Icon = getPresetIcon(item.source);
@@ -19,7 +22,14 @@ export default function IconVisual({ item, size }: { item: IconItem; size: numbe
   }
   const source = getIconImageSource(item.iconMode, item.source);
   if (!source || failedSource === source) {
-    return <ImageOff size={size} color="var(--color-text-muted)" role="img" aria-label="Icon could not be loaded" />;
+    return (
+      <ImageOff
+        size={size}
+        color="var(--color-text-muted)"
+        role="img"
+        aria-label={translate('Icon could not be loaded')}
+      />
+    );
   }
   return (
     <img

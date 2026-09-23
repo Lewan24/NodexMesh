@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { createId } from '@/shared/lib/createId';
 import type { User } from '@/entities/user/types';
 import type {
@@ -52,7 +53,7 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
   let current: User | null = null;
   const publicUser = ({ id, username, name, role }: User): User => ({ id, username, name, role });
   const requireAdmin = () => {
-    if (current?.role !== 'admin') fail(403, 'forbidden', 'Administrator access is required.');
+    if (current?.role !== 'admin') fail(403, 'forbidden', translate('Administrator access is required.'));
   };
   return {
     currentUserId: () => current?.id ?? null,
@@ -63,7 +64,7 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
       const found = accounts.find(
         (a) => a.username.toLowerCase() === input.username.trim().toLowerCase() && a.password === input.password,
       );
-      if (!found) fail(401, 'invalid_credentials', 'Incorrect username or password.');
+      if (!found) fail(401, 'invalid_credentials', translate('Incorrect username or password.'));
       current = publicUser(found);
       return current;
     },
@@ -71,7 +72,7 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
       current = null;
     },
     async updateProfile(input) {
-      if (!current) return fail(401, 'unauthorized', 'Sign in to update your profile.');
+      if (!current) return fail(401, 'unauthorized', translate('Sign in to update your profile.'));
       const account = accounts.find((candidate) => candidate.id === current?.id)!;
       const email = input.email.trim();
       if (
@@ -79,20 +80,21 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
           (candidate) => candidate.id !== account.id && candidate.username.toLowerCase() === email.toLowerCase(),
         )
       )
-        return fail(409, 'profile_conflict', 'Unable to update the profile with the provided details.');
+        return fail(409, 'profile_conflict', translate('Unable to update the profile with the provided details.'));
       if (email.toLowerCase() !== account.username.toLowerCase() && input.currentPassword !== account.password)
-        return fail(400, 'invalid_credentials', 'The current password is incorrect.');
+        return fail(400, 'invalid_credentials', translate('The current password is incorrect.'));
       account.username = email;
       account.name = input.displayName.trim();
       current = publicUser(account);
       return current;
     },
     async changePassword(input) {
-      if (!current) return fail(401, 'unauthorized', 'Sign in to change your password.');
+      if (!current) return fail(401, 'unauthorized', translate('Sign in to change your password.'));
       const account = accounts.find((candidate) => candidate.id === current?.id)!;
       if (account.password !== input.currentPassword)
-        return fail(422, 'invalid_password', 'The current password is incorrect.');
-      if (input.newPassword !== input.confirmPassword) return fail(422, 'invalid_password', 'Passwords do not match.');
+        return fail(422, 'invalid_password', translate('The current password is incorrect.'));
+      if (input.newPassword !== input.confirmPassword)
+        return fail(422, 'invalid_password', translate('Passwords do not match.'));
       account.password = input.newPassword;
       return current;
     },
@@ -104,12 +106,12 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
       requireAdmin();
       const result = validateNewUser(input, accounts);
       if (!result.ok) fail(422, 'invalid_user', result.error);
-      if (!['admin', 'user'].includes(input.role)) fail(422, 'invalid_role', 'Invalid role.');
+      if (!['admin', 'user'].includes(input.role)) fail(422, 'invalid_role', translate('Invalid role.'));
       accounts.push({ ...input, username: input.username.trim(), name: input.name.trim(), id: createId() });
     },
     async removeUser(id) {
       requireAdmin();
-      if (id === current?.id) fail(409, 'self_removal', 'You cannot remove the active administrator.');
+      if (id === current?.id) fail(409, 'self_removal', translate('You cannot remove the active administrator.'));
       const index = accounts.findIndex((a) => a.id === id);
       if (index >= 0) accounts.splice(index, 1);
     },
@@ -153,9 +155,9 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
     async updateAdminUser(id, input) {
       requireAdmin();
       const account = accounts.find((candidate) => candidate.id === id);
-      if (!account) return fail(404, 'not_found', 'User not found.');
+      if (!account) return fail(404, 'not_found', translate('User not found.'));
       if (id === current?.id && (account.role === 'admin') !== input.isAdmin)
-        return fail(409, 'self_role_change', 'You cannot change your own administrator role.');
+        return fail(409, 'self_role_change', translate('You cannot change your own administrator role.'));
       account.username = input.email.trim();
       account.name = input.displayName.trim();
       account.role = input.isAdmin ? 'admin' : 'user';
@@ -171,11 +173,11 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
     },
     async restoreAdminProject() {
       requireAdmin();
-      return fail(501, 'unsupported', 'Project administration is unavailable in demo mode.');
+      return fail(501, 'unsupported', translate('Project administration is unavailable in demo mode.'));
     },
     async purgeAdminProject() {
       requireAdmin();
-      return fail(501, 'unsupported', 'Project administration is unavailable in demo mode.');
+      return fail(501, 'unsupported', translate('Project administration is unavailable in demo mode.'));
     },
     async adminProjects() {
       requireAdmin();
@@ -183,14 +185,14 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
     },
     async addProjectMember() {
       requireAdmin();
-      return fail(501, 'unsupported', 'Project administration is unavailable in demo mode.');
+      return fail(501, 'unsupported', translate('Project administration is unavailable in demo mode.'));
     },
     async removeProjectMember() {
       requireAdmin();
     },
     async transferProjectOwner() {
       requireAdmin();
-      return fail(501, 'unsupported', 'Project administration is unavailable in demo mode.');
+      return fail(501, 'unsupported', translate('Project administration is unavailable in demo mode.'));
     },
     async registrationEnabled() {
       return true;

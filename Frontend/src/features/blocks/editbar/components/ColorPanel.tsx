@@ -1,3 +1,5 @@
+import { displayLabel, translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { paletteBackground, paletteKeys } from '@/features/appearance/appearanceModel';
 import { isDefaultCardColor, resolvePaletteColor } from '../../shared/cardAppearance';
@@ -67,6 +69,7 @@ function updateBackgroundColor(item: BoardItem, color: string | undefined): Boar
 }
 
 export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
+  useTranslation();
   const { appearance, theme } = useTheme();
   const palette = appearance[theme];
   const backgroundColor = getBackgroundColor(item) ?? (item.type === 'text' ? undefined : '#ffffff');
@@ -85,7 +88,7 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
   if (item.type === 'section-title')
     return (
       <div className="flex items-center gap-2 px-1">
-        <span className="text-xs">Label color</span>
+        <span className="text-xs">{translate('Label color')}</span>
         {FRAME_COLORS.map((color) => (
           <ColorSwatch
             key={color}
@@ -98,7 +101,7 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
         <CustomColorInput
           value={item.colorRole ? palette[item.colorRole] : (item.color ?? '#7C3AED')}
           onChange={setBackgroundColor}
-          title="Section label color"
+          title={translate('Section label color')}
         />
       </div>
     );
@@ -111,7 +114,7 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
             {canClearBackground && (
               <button
                 onClick={() => setBackgroundColor(undefined)}
-                title="No background"
+                title={translate('No background')}
                 className="rounded-full flex-shrink-0 transition-all hover:scale-125"
                 style={{
                   width: !backgroundColor ? 15 : 12,
@@ -127,8 +130,8 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
             {paletteKeys.map((role, index) => (
               <button
                 key={role}
-                title={index === 0 ? 'Default' : 'Accent ' + index}
-                aria-label={index === 0 ? 'Default card color' : 'Accent ' + index}
+                title={index === 0 ? translate('Default') : translate('Accent') + ' ' + index}
+                aria-label={index === 0 ? translate('Default card color') : translate('Accent') + ' ' + index}
                 onClick={() => onUpdate((current) => ({ ...current, colorRole: role, gradient: undefined }))}
                 className="w-5 h-5 rounded-full border-2"
                 style={{
@@ -141,12 +144,12 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
           <CustomColorInput
             value={item.colorRole ? palette[item.colorRole] : backgroundColor}
             onChange={setBackgroundColor}
-            title="Custom fixed background"
+            title={translate('Custom fixed background')}
           />
           <label className="flex items-center gap-1 text-xs">
-            Fill
+            {translate('Fill')}
             <select
-              aria-label="Card fill"
+              aria-label={translate('Card fill')}
               className="h-8 bg-transparent"
               value={item.gradient ? item.gradient.kind : 'solid'}
               onChange={(event) =>
@@ -165,9 +168,9 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
                 }))
               }
             >
-              <option value="solid">Solid</option>
-              <option value="linear">Linear gradient</option>
-              <option value="radial">Radial gradient</option>
+              <option value="solid">{translate('Solid')}</option>
+              <option value="linear">{translate('Linear gradient')}</option>
+              <option value="radial">{translate('Radial gradient')}</option>
             </select>
           </label>
           {item.gradient && (
@@ -175,7 +178,7 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
               {(['from', 'to'] as const).map((key) => (
                 <div key={key} className="flex gap-1 items-center">
                   <select
-                    aria-label={'Gradient ' + key}
+                    aria-label={translate('Gradient') + ' ' + displayLabel(key)}
                     className="h-8 bg-transparent text-xs"
                     value={paletteKeys.some((role) => role === item.gradient![key]) ? item.gradient![key] : 'custom'}
                     onChange={(event) => {
@@ -191,14 +194,14 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
                   >
                     {paletteKeys.map((role) => (
                       <option key={role} value={role}>
-                        {role}
+                        {displayLabel(role)}
                       </option>
                     ))}
-                    <option value="custom">Custom</option>
+                    <option value="custom">{translate('Custom')}</option>
                   </select>
                   <input
                     type="color"
-                    aria-label={'Custom gradient ' + key}
+                    aria-label={translate('Custom gradient') + ' ' + displayLabel(key)}
                     className="w-7 h-7"
                     value={resolvePaletteColor(item.gradient![key], palette)}
                     onChange={(event) => {
@@ -210,9 +213,9 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
               ))}
               {item.gradient.kind === 'linear' && (
                 <label className="text-xs flex items-center gap-1">
-                  Angle
+                  {translate('Angle')}
                   <input
-                    aria-label="Gradient angle"
+                    aria-label={translate('Gradient angle')}
                     type="range"
                     min="0"
                     max="360"
@@ -233,7 +236,7 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
         </>
       )}
 
-      <div className="flex items-center gap-1 px-1" title="Top accent strip">
+      <div className="flex items-center gap-1 px-1" title={translate('Top accent strip')}>
         <svg
           width="13"
           height="13"
@@ -255,14 +258,14 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
           />
         ))}
 
-        <CustomColorInput value={stripColor} onChange={setStripColor} title="Custom accent color" />
+        <CustomColorInput value={stripColor} onChange={setStripColor} title={translate('Custom accent color')} />
 
         {stripColor && (
           <button
             onClick={() => setStripColor(undefined)}
             className="ml-0.5 text-xs rounded px-1 py-0.5 flex-shrink-0"
             style={{ color: '#9ca3af', backgroundColor: 'rgba(0,0,0,0.05)' }}
-            title="Remove strip"
+            title={translate('Remove strip')}
           >
             ✕
           </button>

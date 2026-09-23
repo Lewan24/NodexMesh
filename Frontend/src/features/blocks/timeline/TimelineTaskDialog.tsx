@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { createId } from '@/shared/lib/createId';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -16,6 +18,7 @@ export default function TimelineTaskDialog({
   onDelete: () => void;
   onClose: () => void;
 }) {
+  useTranslation();
   const [draft, setDraft] = useState(task);
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function TimelineTaskDialog({
         ref={ref}
         role="dialog"
         aria-modal="true"
-        aria-label={isNew ? 'Add timeline task' : 'Edit timeline task'}
+        aria-label={isNew ? translate('Add timeline task') : translate('Edit timeline task')}
         className="w-full max-w-lg max-h-[90dvh] overflow-auto shadow-2xl p-6 space-y-4"
         data-wheel-scroll="true"
         style={{ background: 'var(--color-surface)', color: 'var(--color-text-primary)', borderRadius: 2 }}
@@ -67,9 +70,9 @@ export default function TimelineTaskDialog({
           }
         }}
       >
-        <h2 className="text-lg font-semibold">{isNew ? 'New task' : 'Edit task'}</h2>
+        <h2 className="text-lg font-semibold">{isNew ? translate('New task') : translate('Edit task')}</h2>
         <label className="block text-sm">
-          Task name
+          {translate('Task name')}
           <input
             required
             className="planning-input block w-full mt-1"
@@ -79,7 +82,7 @@ export default function TimelineTaskDialog({
         </label>
         <div className="flex flex-wrap gap-3 text-sm">
           <label className="flex-1">
-            Start
+            {translate('Start')}
             <input
               required
               type="date"
@@ -94,7 +97,7 @@ export default function TimelineTaskDialog({
             />
           </label>
           <label className="flex-1">
-            End
+            {translate('End')}
             <input
               required
               type="date"
@@ -108,20 +111,20 @@ export default function TimelineTaskDialog({
         <div className="flex items-center justify-between text-sm">
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={draft.done} onChange={(event) => patch({ done: event.target.checked })} />
-            Completed
+            {translate('Completed')}
           </label>
           <label className="flex items-center gap-2">
-            Color
+            {translate('Color')}
             <input type="color" value={draft.color} onChange={(event) => patch({ color: event.target.value })} />
           </label>
         </div>
         <fieldset className="space-y-2">
-          <legend className="text-sm font-medium mb-2">Checklist</legend>
+          <legend className="text-sm font-medium mb-2">{translate('Checklist')}</legend>
           {draft.checklist.map((entry) => (
             <div key={entry.id} className="flex items-center gap-2">
               <input
                 type="checkbox"
-                aria-label={`Complete ${entry.text || 'checklist item'}`}
+                aria-label={translate('Complete {{value1}}', { value1: entry.text || translate('Checklist item') })}
                 checked={entry.done}
                 onChange={(event) =>
                   patch({
@@ -132,7 +135,7 @@ export default function TimelineTaskDialog({
                 }
               />
               <input
-                aria-label="Checklist item text"
+                aria-label={translate('Checklist item text')}
                 className="planning-input flex-1"
                 value={entry.text}
                 onChange={(event) =>
@@ -145,7 +148,7 @@ export default function TimelineTaskDialog({
               />
               <button
                 type="button"
-                aria-label="Remove checklist item"
+                aria-label={translate('Remove checklist item')}
                 className="planning-button"
                 onClick={() => patch({ checklist: draft.checklist.filter((check) => check.id !== entry.id) })}
               >
@@ -158,17 +161,17 @@ export default function TimelineTaskDialog({
             className="planning-button"
             onClick={() => patch({ checklist: [...draft.checklist, { id: createId(), text: '', done: false }] })}
           >
-            + Checklist item
+            {translate('+ Checklist item')}
           </button>
         </fieldset>
         <div className="flex gap-2 pt-3">
           {!isNew && (
             <button type="button" className="planning-button text-rose-500" onClick={onDelete}>
-              Delete task
+              {translate('Delete task')}
             </button>
           )}
           <button type="button" className="planning-button ml-auto" onClick={onClose}>
-            Cancel
+            {translate('Cancel')}
           </button>
           <button
             type="submit"
@@ -176,7 +179,7 @@ export default function TimelineTaskDialog({
             className="planning-button"
             style={{ background: 'var(--color-accent)', color: 'white' }}
           >
-            Save task
+            {translate('Save task')}
           </button>
         </div>
       </form>

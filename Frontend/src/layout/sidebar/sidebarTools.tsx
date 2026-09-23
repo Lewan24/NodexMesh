@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import type { ReactNode } from 'react';
 import type { ToolType } from '@/entities/board/toolTypes';
 import {
@@ -24,22 +25,102 @@ export interface SidebarTool {
 }
 
 export const SIDEBAR_TOOLS: SidebarTool[] = [
-  { id: 'board', label: 'Board', icon: <LayoutDashboard size={TOOL_ICON_SIZE} /> },
-  { id: 'icon', label: 'Icon / Emoji', icon: <Smile size={TOOL_ICON_SIZE} /> },
-  { id: 'section-title', label: 'Section title', icon: <FileText size={TOOL_ICON_SIZE} /> },
-  { id: 'drawing', label: 'Pencil', icon: <Pencil size={TOOL_ICON_SIZE} /> },
-  { id: 'timeline', label: 'Timeline', icon: <GanttChart size={TOOL_ICON_SIZE} /> },
-  { id: 'database', label: 'Database diagram', icon: <Database size={TOOL_ICON_SIZE} /> },
-  { id: 'mindmap', label: 'Mind map', icon: <GitFork size={TOOL_ICON_SIZE} /> },
-  { id: 'diagram', label: 'Diagram', icon: <Workflow size={TOOL_ICON_SIZE} /> },
-  { id: 'document', label: 'Document', icon: <FileText size={TOOL_ICON_SIZE} /> },
-  { id: 'code', label: 'Code', icon: <Code size={TOOL_ICON_SIZE} /> },
-  { id: 'embed', label: 'Embed', icon: <PanelsTopLeft size={TOOL_ICON_SIZE} /> },
-  { id: 'dispenser', label: 'Note dispenser', icon: <Layers size={TOOL_ICON_SIZE} /> },
-  { id: 'divider', label: 'Divider', icon: <Minus size={TOOL_ICON_SIZE} /> },
+  {
+    id: 'board',
+    get label() {
+      return translate('Board');
+    },
+    icon: <LayoutDashboard size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'icon',
+    get label() {
+      return translate('Icon / Emoji');
+    },
+    icon: <Smile size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'section-title',
+    get label() {
+      return translate('Section title');
+    },
+    icon: <FileText size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'drawing',
+    get label() {
+      return translate('Pencil');
+    },
+    icon: <Pencil size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'timeline',
+    get label() {
+      return translate('Timeline');
+    },
+    icon: <GanttChart size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'database',
+    get label() {
+      return translate('Database diagram');
+    },
+    icon: <Database size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'mindmap',
+    get label() {
+      return translate('Mind map');
+    },
+    icon: <GitFork size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'diagram',
+    get label() {
+      return translate('Diagram');
+    },
+    icon: <Workflow size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'document',
+    get label() {
+      return translate('Document');
+    },
+    icon: <FileText size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'code',
+    get label() {
+      return translate('Code');
+    },
+    icon: <Code size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'embed',
+    get label() {
+      return translate('Embed');
+    },
+    icon: <PanelsTopLeft size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'dispenser',
+    get label() {
+      return translate('Note dispenser');
+    },
+    icon: <Layers size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'divider',
+    get label() {
+      return translate('Divider');
+    },
+    icon: <Minus size={TOOL_ICON_SIZE} />,
+  },
   {
     id: 'select',
-    label: 'Select',
+    get label() {
+      return translate('Select');
+    },
     icon: (
       <svg
         width={TOOL_ICON_SIZE}
@@ -55,7 +136,9 @@ export const SIDEBAR_TOOLS: SidebarTool[] = [
   },
   {
     id: 'note',
-    label: 'Sticky Note',
+    get label() {
+      return translate('Sticky Note');
+    },
     icon: (
       <svg
         width={TOOL_ICON_SIZE}
@@ -72,7 +155,9 @@ export const SIDEBAR_TOOLS: SidebarTool[] = [
   },
   {
     id: 'text',
-    label: 'Text',
+    get label() {
+      return translate('Text');
+    },
     icon: (
       <svg
         width={TOOL_ICON_SIZE}
@@ -88,7 +173,9 @@ export const SIDEBAR_TOOLS: SidebarTool[] = [
   },
   {
     id: 'kanban',
-    label: 'Kanban Board',
+    get label() {
+      return translate('Kanban Board');
+    },
     icon: (
       <svg
         width={TOOL_ICON_SIZE}
@@ -106,7 +193,9 @@ export const SIDEBAR_TOOLS: SidebarTool[] = [
   },
   {
     id: 'checklist',
-    label: 'Checklist',
+    get label() {
+      return translate('Checklist');
+    },
     icon: (
       <svg
         width={TOOL_ICON_SIZE}
@@ -123,7 +212,9 @@ export const SIDEBAR_TOOLS: SidebarTool[] = [
   },
   {
     id: 'column',
-    label: 'Column',
+    get label() {
+      return translate('Column');
+    },
     icon: (
       <svg
         width={TOOL_ICON_SIZE}
@@ -140,7 +231,9 @@ export const SIDEBAR_TOOLS: SidebarTool[] = [
   },
   {
     id: 'image',
-    label: 'Image',
+    get label() {
+      return translate('Image');
+    },
     icon: (
       <svg
         width={TOOL_ICON_SIZE}
@@ -158,7 +251,9 @@ export const SIDEBAR_TOOLS: SidebarTool[] = [
   },
   {
     id: 'link',
-    label: 'Link Card',
+    get label() {
+      return translate('Link Card');
+    },
     icon: (
       <svg
         width={TOOL_ICON_SIZE}
@@ -175,7 +270,9 @@ export const SIDEBAR_TOOLS: SidebarTool[] = [
   },
   {
     id: 'line',
-    label: 'Line / Arrow',
+    get label() {
+      return translate('Line / Arrow');
+    },
     icon: (
       <svg
         width={TOOL_ICON_SIZE}
@@ -192,7 +289,9 @@ export const SIDEBAR_TOOLS: SidebarTool[] = [
   },
   {
     id: 'frame',
-    label: 'Frame',
+    get label() {
+      return translate('Frame');
+    },
     icon: (
       <svg
         width={TOOL_ICON_SIZE}

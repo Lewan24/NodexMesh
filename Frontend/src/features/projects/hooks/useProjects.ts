@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 
 import type { Project } from '@/entities/project/types';
@@ -82,7 +83,7 @@ export function useProjects(userId: string): UseProjectsResult {
           setActiveProjectId(preference.projectId ?? '');
         }
       } catch {
-        if (!abort.signal.aborted) toast.error('Could not load your default project.');
+        if (!abort.signal.aborted) toast.error(translate('Could not load your default project.'));
       }
       if (!abort.signal.aborted) await controller.load(abort.signal);
     })();
@@ -174,7 +175,8 @@ export function useProjects(userId: string): UseProjectsResult {
 
   const removeProjects = async (ids: string[]) => {
     await controller.flush();
-    if (controller.getSnapshot().status !== 'saved') throw new Error('Save pending changes before deleting projects.');
+    if (controller.getSnapshot().status !== 'saved')
+      throw new Error(translate('Save pending changes before deleting projects.'));
     for (const id of ids) await controller.purgeProject(id);
   };
   const purgeProject = (id: string) => removeProjects([id]);
@@ -186,7 +188,8 @@ export function useProjects(userId: string): UseProjectsResult {
     );
   const setDefaultProject = async (id: string) => {
     await controller.flush();
-    if (controller.getSnapshot().status !== 'saved') throw new Error('Save the project before setting it as default.');
+    if (controller.getSnapshot().status !== 'saved')
+      throw new Error(translate('Save the project before setting it as default.'));
     id = controller.resolveProjectId(id);
     if (httpClient)
       await httpClient.request('/auth/default-project', { method: 'PUT', body: { projectId: id || null } });
@@ -195,8 +198,9 @@ export function useProjects(userId: string): UseProjectsResult {
   };
   const exportProject = async () => {
     await controller.flush();
-    if (controller.getSnapshot().status !== 'saved') throw new Error('Save pending changes before exporting.');
-    if (!activeProject) throw new Error('Select a project to export.');
+    if (controller.getSnapshot().status !== 'saved')
+      throw new Error(translate('Save pending changes before exporting.'));
+    if (!activeProject) throw new Error(translate('Select a project to export.'));
     return exportWorkspaceProject(createWorkspaceServices(userId), controller.resolveProjectId(activeProject.id));
   };
 
@@ -208,16 +212,17 @@ export function useProjects(userId: string): UseProjectsResult {
           localStorage.clear();
           window.location.reload();
         })
-        .catch(() => toast.error('Could not clear browser storage.'));
+        .catch(() => toast.error(translate('Could not clear browser storage.')));
       return;
     }
-    toast.error('Demo reset is only available in mock mode.');
+    toast.error(translate('Demo reset is only available in mock mode.'));
   }, [controller]);
 
   const importProject = async (text: string) => {
     const project = await importProjectJson(text, userId);
     await controller.flush();
-    if (controller.getSnapshot().status !== 'saved') throw new Error('Save pending changes before importing.');
+    if (controller.getSnapshot().status !== 'saved')
+      throw new Error(translate('Save pending changes before importing.'));
     const snapshot = await persistImportedProject(createWorkspaceServices(userId), project);
     controller.addImportedProject(snapshot);
     setActiveProjectId(snapshot.project.id);
@@ -281,8 +286,8 @@ export function useProjects(userId: string): UseProjectsResult {
     liveStatus: isMockDataSource
       ? ''
       : status === 'conflict' || status === 'error'
-        ? 'Live updates paused - resolve unsaved changes'
-        : liveStatus,
+        ? translate('Live updates paused - resolve unsaved changes')
+        : translate(liveStatus),
     status,
     error,
     retry: controller.retry,

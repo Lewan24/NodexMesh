@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { getTypographyStyle } from '../typography/typographyUtils';
 import { isDefaultCardColor, useCardAppearance } from '../shared/cardAppearance';
@@ -38,6 +40,7 @@ export default function CodeBlock({
   onDelete: () => void;
   readOnly?: boolean;
 }) {
+  useTranslation();
   const { background, textColor, light } = useCardAppearance('#0d1117');
   const codeStyle = {
     ...getTypographyStyle(item),
@@ -65,7 +68,7 @@ export default function CodeBlock({
         <div className="flex items-center gap-2">
           <span className="font-mono opacity-60">&lt;/&gt;</span>
           <select
-            aria-label="Code language"
+            aria-label={translate('Code language')}
             onMouseDown={(e) => e.stopPropagation()}
             className="text-xs flex-1 min-w-0 rounded-sm px-2 py-1"
             style={{
@@ -95,16 +98,16 @@ export default function CodeBlock({
               type="button"
               className="shrink-0 text-xs"
               aria-pressed={autoHeight}
-              title="Fit code and grow automatically while editing"
+              title={translate('Fit code and grow automatically while editing')}
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => update({ autoHeight: true, height: undefined })}
             >
-              Auto-fit
+              {translate('Auto-fit')}
             </button>
           )}
           {!item.locked && !readOnly && (
             <button className="text-xs" onMouseDown={(e) => e.stopPropagation()} onClick={() => setEditing(!editing)}>
-              {editing ? 'Preview' : 'Edit'}
+              {editing ? translate('Preview') : translate('Edit')}
             </button>
           )}
           <button
@@ -120,7 +123,7 @@ export default function CodeBlock({
               }
             }}
           >
-            {copyStatus}
+            {translate(copyStatus)}
           </button>
         </div>
       }
@@ -139,13 +142,13 @@ export default function CodeBlock({
         {editing && !item.locked && !readOnly ? (
           <textarea
             style={{ ...codeStyle, ...getSectionStyle(item.typography, 'body') }}
-            aria-label="Code content"
+            aria-label={translate('Code content')}
             spellCheck={false}
             wrap="off"
             rows={autoHeight ? Math.max(3, item.content.split('\n').length) : undefined}
             className={`block w-full ${autoHeight ? '' : 'h-full'} min-h-24 p-4 resize-none outline-none font-mono text-sm leading-6 bg-transparent`}
             value={item.content}
-            placeholder="Paste or type code…"
+            placeholder={translate('Paste or type code…')}
             onChange={(e) => {
               update({ content: e.target.value });
               setCopyStatus('Copy');

@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { readableText } from '../typography/textContrast';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { createId } from '@/shared/lib/createId';
@@ -27,6 +29,7 @@ export default function TimelineBlock({
   onUpdate: BlockUpdateHandler;
   onDelete: BlockDeleteHandler;
 }) {
+  useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<TimelineTask | null>(null);
   const movedBar = useRef(false);
@@ -121,7 +124,7 @@ export default function TimelineBlock({
             {item.title}
           </span>
           <span className="text-xs opacity-50">
-            {item.tasks.filter((task) => task.done).length}/{item.tasks.length} done
+            {item.tasks.filter((task) => task.done).length}/{item.tasks.length} {' ' + translate('done')}
           </span>
         </span>
       }
@@ -132,7 +135,7 @@ export default function TimelineBlock({
           aria-pressed={item.mode === 'simple'}
           onClick={() => update((current) => ({ ...current, mode: 'simple' }))}
         >
-          Milestones
+          {translate('Milestones')}
         </button>
 
         <button
@@ -140,14 +143,14 @@ export default function TimelineBlock({
           aria-pressed={item.mode === 'schedule'}
           onClick={() => update((current) => ({ ...current, mode: 'schedule' }))}
         >
-          Schedule
+          {translate('Schedule')}
         </button>
 
         {item.mode === 'schedule' && (
           <label className="text-xs flex items-center gap-2">
-            Task column
+            {translate('Task column')}
             <input
-              aria-label="Task column width"
+              aria-label={translate('Task column width')}
               type="range"
               min="160"
               max="600"
@@ -160,35 +163,47 @@ export default function TimelineBlock({
         )}
         <div className="ml-auto flex items-center gap-2">
           {item.height && (
-            <button className="planning-button" onClick={resetHeight} title="Reset timeline to automatic height">
-              Auto-fit
+            <button
+              className="planning-button"
+              onClick={resetHeight}
+              title={translate('Reset timeline to automatic height')}
+            >
+              {translate('Auto-fit')}
             </button>
           )}
 
           <button className="planning-button" onClick={addTask}>
-            + Add task
+            {translate('+ Add task')}
           </button>
 
           <button className="planning-button" aria-pressed={editing} onClick={() => setEditing(!editing)}>
-            {editing ? 'Done editing' : 'Edit timeline'}
+            {editing ? translate('Done editing') : translate('Edit timeline')}
           </button>
         </div>
       </div>
       {item.mode === 'schedule' && (
         <div className="planning-toolbar" onMouseDown={(event) => event.stopPropagation()}>
-          <button className="planning-button" aria-label="Previous week" onClick={() => scrollToDay(windowStart - 7)}>
-            ← Week
+          <button
+            className="planning-button"
+            aria-label={translate('Previous week')}
+            onClick={() => scrollToDay(windowStart - 7)}
+          >
+            {translate('← Week')}
           </button>
-          <button className="planning-button" aria-label="Next week" onClick={() => scrollToDay(windowStart + 7)}>
-            Week →
+          <button
+            className="planning-button"
+            aria-label={translate('Next week')}
+            onClick={() => scrollToDay(windowStart + 7)}
+          >
+            {translate('Week →')}
           </button>
           <button className="planning-button" onClick={() => scrollToDay(dateDay(todayDate())!)}>
-            Today
+            {translate('Today')}
           </button>
           <label className="text-xs">
-            Go to date{' '}
+            {translate('Go to date')}{' '}
             <input
-              aria-label="Timeline visible date"
+              aria-label={translate('Timeline visible date')}
               type="date"
               className="planning-input"
               value={dayDate(windowStart)}
@@ -199,7 +214,8 @@ export default function TimelineBlock({
             />
           </label>
           <span className="text-xs">
-            {visibleTasks.length}/{item.tasks.length} tasks · {dayDate(windowStart)} – {dayDate(windowEnd)}
+            {visibleTasks.length}/{item.tasks.length} {' ' + translate('tasks ·') + ' '}
+            {dayDate(windowStart)} – {dayDate(windowEnd)}
           </span>
         </div>
       )}
@@ -220,21 +236,21 @@ export default function TimelineBlock({
           >
             <input
               className="planning-input w-full"
-              aria-label="Timeline title"
+              aria-label={translate('Timeline title')}
               value={item.title}
               onChange={(event) => update((current) => ({ ...current, title: event.target.value }))}
             />
             <p className="text-xs text-theme-muted mt-2">
-              Select a task to edit. In Schedule, drag a bar to move it or its right edge to resize.
+              {translate('Select a task to edit. In Schedule, drag a bar to move it or its right edge to resize.')}
             </p>
           </div>
         )}
         {!item.tasks.length && (
           <div className="planning-empty">
-            <p className="font-medium mb-2">Turn your plan into milestones</p>
-            <p>Add a date, an outcome and a checklist. Switch to Schedule to plan durations.</p>
+            <p className="font-medium mb-2">{translate('Turn your plan into milestones')}</p>
+            <p>{translate('Add a date, an outcome and a checklist. Switch to Schedule to plan durations.')}</p>
             <button className="planning-button mt-4" onMouseDown={(event) => event.stopPropagation()} onClick={addTask}>
-              + First milestone
+              {translate('+ First milestone')}
             </button>
           </div>
         )}
@@ -250,7 +266,7 @@ export default function TimelineBlock({
                     <button
                       key={direction}
                       className="planning-button"
-                      aria-label={`${direction === -1 ? 'Move up' : 'Move down'} ${task.title}`}
+                      aria-label={`${direction === -1 ? translate('Move up') : translate('Move down')} ${task.title}`}
                       disabled={!item.tasks[index + direction]}
                       onClick={() =>
                         update((current) => ({
@@ -274,7 +290,7 @@ export default function TimelineBlock({
                 <div className="flex gap-2 items-center">
                   <input
                     type="checkbox"
-                    aria-label={`Complete ${task.title}`}
+                    aria-label={translate('Complete {{value1}}', { value1: task.title })}
                     checked={task.done}
                     onMouseDown={(event) => event.stopPropagation()}
                     onChange={() => updateTask(task.id, (current) => ({ ...current, done: !current.done }))}
@@ -284,7 +300,7 @@ export default function TimelineBlock({
                     className={`font-semibold text-sm ${task.done ? 'line-through' : ''}`}
                     style={getSectionStyle(item.typography, 'body')}
                   >
-                    {task.title || 'Untitled task'}
+                    {task.title || translate('Untitled task')}
                   </h3>
                   {
                     <button
@@ -292,7 +308,7 @@ export default function TimelineBlock({
                       onMouseDown={(event) => event.stopPropagation()}
                       onClick={() => setDraft({ ...task, checklist: task.checklist.map((entry) => ({ ...entry })) })}
                     >
-                      Edit task
+                      {translate('Edit task')}
                     </button>
                   }
                 </div>
@@ -315,7 +331,7 @@ export default function TimelineBlock({
                       }
                     />
                     <span className={entry.done ? 'line-through' : ''} style={getSectionStyle(item.typography, 'body')}>
-                      {entry.text || 'Checklist item'}
+                      {entry.text || translate('Checklist item')}
                     </span>
                   </label>
                 ))}
@@ -331,7 +347,7 @@ export default function TimelineBlock({
                 gridTemplateColumns: `${item.taskColumnWidth ?? 180}px 1fr`,
               }}
             >
-              <div className="timeline-label font-semibold">Task / outcome</div>
+              <div className="timeline-label font-semibold">{translate('Task / outcome')}</div>
               <div className="flex">
                 {Array.from({ length: Math.ceil(range.days / 7) }, (_, index) => (
                   <div
@@ -345,7 +361,7 @@ export default function TimelineBlock({
               </div>
               {!visibleTasks.length && (
                 <div className="timeline-label" style={{ gridColumn: 1 }}>
-                  No tasks in this period
+                  {translate('No tasks in this period')}
                 </div>
               )}
               {visibleTasks.map((task) => {
@@ -378,8 +394,8 @@ export default function TimelineBlock({
                       <button
                         className="cursor-grab px-1"
                         draggable
-                        aria-label={`Reorder ${task.title}`}
-                        title="Drag to reorder · Alt+↑ / Alt+↓"
+                        aria-label={translate('Reorder {{value1}}', { value1: task.title })}
+                        title={translate('Drag to reorder · Alt+↑ / Alt+↓')}
                         onDragStart={(event) => {
                           event.stopPropagation();
                           event.dataTransfer.effectAllowed = 'move';
@@ -425,7 +441,7 @@ export default function TimelineBlock({
                           <button
                             key={direction}
                             className="px-1 disabled:opacity-20 cursor-pointer"
-                            aria-label={`${direction === -1 ? 'Move up' : 'Move down'} ${task.title}`}
+                            aria-label={`${direction === -1 ? translate('Move up') : translate('Move down')} ${task.title}`}
                             disabled={
                               !item.tasks[item.tasks.findIndex((current) => current.id === task.id) + direction]
                             }
@@ -452,8 +468,12 @@ export default function TimelineBlock({
                         <div
                           role="button"
                           tabIndex={0}
-                          aria-label={`Move ${task.title}`}
-                          title={`${task.start} → ${task.end || task.start} · ${dates.end - dates.start + 1} days`}
+                          aria-label={translate('Move {{value1}}', { value1: task.title })}
+                          title={translate('{{value1}} → {{value2}} · {{value3}} days', {
+                            value1: task.start,
+                            value2: task.end || task.start,
+                            value3: dates.end - dates.start + 1,
+                          })}
                           className="timeline-bar"
                           style={{
                             left: (dates.start - range.start) * dayWidth,
@@ -488,7 +508,7 @@ export default function TimelineBlock({
                           {editing && (
                             <div
                               className="absolute right-0 top-0 h-full w-3 cursor-ew-resize rounded-r bg-white/25"
-                              title="Drag to change end date"
+                              title={translate('Drag to change end date')}
                               onPointerDown={(event) =>
                                 moveBar(event, task, true, event.currentTarget.parentElement as HTMLDivElement)
                               }
@@ -496,7 +516,9 @@ export default function TimelineBlock({
                           )}
                         </div>
                       ) : (
-                        <span className="text-theme-muted px-3 leading-12">Unscheduled — set a start date</span>
+                        <span className="text-theme-muted px-3 leading-12">
+                          {translate('Unscheduled — set a start date')}
+                        </span>
                       )}
                       {dateDay(todayDate())! >= range.start && dateDay(todayDate())! < range.start + range.days && (
                         <span

@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { createId } from '@/shared/lib/createId';
 import { mindmapTemplate } from '@/features/blocks/mindmap/mindmapUtils';
 import type { BoardItem } from '@/entities/board/types';
@@ -7,13 +8,13 @@ export function createEmptySibling(source: BoardItem): BoardItem | null {
   const base = { ...source, id: createId(), tags: undefined, comments: undefined, locked: false };
   switch (base.type) {
     case 'timeline':
-      return { ...base, title: 'Project timeline', tasks: [] };
+      return { ...base, title: translate('Project timeline'), tasks: [] };
     case 'database':
-      return { ...base, title: 'Database schema', tables: [], relations: [] };
+      return { ...base, title: translate('Database schema'), tables: [], relations: [] };
     case 'mindmap':
-      return { ...base, title: 'Mind map', nodes: mindmapTemplate(false) };
+      return { ...base, title: translate('Mind map'), nodes: mindmapTemplate(false) };
     case 'diagram':
-      return { ...base, title: 'System diagram', nodes: [], edges: [] };
+      return { ...base, title: translate('System diagram'), nodes: [], edges: [] };
     case 'note':
       return {
         ...base,
@@ -27,35 +28,35 @@ export function createEmptySibling(source: BoardItem): BoardItem | null {
     case 'text':
       return { ...base, content: '' };
     case 'document':
-      return { ...base, title: 'Untitled document', content: '' };
+      return { ...base, title: translate('Untitled document'), content: '' };
     case 'code':
       return { ...base, content: '' };
     case 'checklist':
-      return { ...base, title: 'Checklist', entries: [] };
+      return { ...base, title: translate('Checklist'), entries: [] };
     case 'kanban':
       return {
         ...base,
-        title: 'New Board',
+        title: translate('New Board'),
         columns: base.columns.map((column) => ({ ...column, id: createId(), cards: [] })),
       };
     case 'icon':
-      return { ...base, iconMode: 'preset', source: 'star', label: 'Star' };
+      return { ...base, iconMode: 'preset', source: 'star', label: translate('Star') };
     case 'image':
       return { ...base, url: '', caption: '' };
     case 'embed':
       return { ...base, url: '', title: '' };
     case 'link':
-      return { ...base, url: '', title: 'New Link', description: '' };
+      return { ...base, url: '', title: translate('New Link'), description: '' };
     case 'board':
       return {
         ...base,
         boardId: null,
-        title: 'New board',
-        description: 'Double-click to open this board',
+        title: translate('New board'),
+        description: translate('Double-click to open this board'),
         icon: 'layout-dashboard',
       };
     case 'column':
-      return { ...base, title: 'Column', items: [] };
+      return { ...base, title: translate('Column'), items: [] };
     case 'frame':
     case 'drawing':
     case 'dispenser':

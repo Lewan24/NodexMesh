@@ -1,8 +1,11 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import type { Role } from '@/entities/user/types';
 
 import { useAddUserForm } from '@/features/auth/hooks/useAddUserForm';
 
 export default function AddUserForm() {
+  useTranslation();
   const { name, username, password, role, error, notice, setName, setUsername, setPassword, setRole, handleSubmit } =
     useAddUserForm();
 
@@ -18,21 +21,21 @@ export default function AddUserForm() {
         <input
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="Full name"
+          placeholder={translate('Full name')}
           className="input-theme text-sm px-3 py-2 col-span-2"
         />
 
         <input
           value={username}
           onChange={(event) => setUsername(event.target.value)}
-          placeholder="Username"
+          placeholder={translate('Username')}
           className="input-theme text-sm px-3 py-2"
         />
 
         <input
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder="Temporary password"
+          placeholder={translate('Temporary password')}
           className="input-theme text-sm px-3 py-2"
         />
       </div>
@@ -54,7 +57,7 @@ export default function AddUserForm() {
         ))}
 
         <button type="submit" className="ml-auto btn-accent text-xs font-semibold rounded-lg px-4 py-2">
-          Add user
+          {translate('Add user')}
         </button>
       </div>
 

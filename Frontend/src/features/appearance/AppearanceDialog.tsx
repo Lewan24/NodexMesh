@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import PaletteEditor from './PaletteEditor';
 import '@/features/blocks/shared/planning.css';
 import { useEffect, useRef, useState } from 'react';
@@ -10,6 +12,7 @@ import type { Appearance } from './appearanceModel';
 import { activeAppearance, defaultAppearance } from './appearanceModel';
 
 export default function AppearanceDialog({ onClose, projects }: { onClose: () => void; projects: Project[] }) {
+  useTranslation();
   const { preferences, savePreferences } = useTheme();
   const [settings, setSettings] = useState(() => structuredClone(preferences));
   const [tab, setTab] = useState<'ui' | 'canvas'>('ui');
@@ -44,7 +47,7 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        aria-label="Appearance settings"
+        aria-label={translate('Appearance settings')}
         data-wheel-scroll="true"
         className="w-full max-w-2xl max-h-[90vh] overflow-auto p-6 space-y-4 rounded-sm shadow-2xl"
         style={{ background: 'var(--color-surface)', color: 'var(--color-text-primary)' }}
@@ -77,8 +80,8 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
           }
         }}
       >
-        <h2 className="text-lg font-semibold">Appearance</h2>
-        <div role="tablist" aria-label="Appearance sections" className="flex gap-2">
+        <h2 className="text-lg font-semibold">{translate('Appearance')}</h2>
+        <div role="tablist" aria-label={translate('Appearance sections')} className="flex gap-2">
           <button
             type="button"
             role="tab"
@@ -86,7 +89,7 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
             className="planning-button"
             onClick={() => setTab('ui')}
           >
-            UI - all projects
+            {translate('UI - all projects')}
           </button>
           <button
             type="button"
@@ -95,34 +98,36 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
             className="planning-button"
             onClick={() => setTab('canvas')}
           >
-            Canvas - defaults & projects
+            {translate('Canvas - defaults & projects')}
           </button>
         </div>
         {tab === 'ui' ? (
           <section role="tabpanel" className="space-y-4">
             <p className="text-sm opacity-75">
-              Your app bar and tool sidebar keep the same appearance across all projects, in both light and dark modes.
+              {translate(
+                'Your app bar and tool sidebar keep the same appearance across all projects, in both light and dark modes.',
+              )}
             </p>
             <label className="flex justify-between">
-              UI primary color
+              {translate('UI primary color')}
               <input
-                aria-label="UI primary color"
+                aria-label={translate('UI primary color')}
                 type="color"
                 value={settings.uiPrimary}
                 onChange={(event) => setSettings({ ...settings, uiPrimary: event.target.value })}
               />
             </label>
             <label className="flex justify-between">
-              UI secondary color
+              {translate('UI secondary color')}
               <input
-                aria-label="UI secondary color"
+                aria-label={translate('UI secondary color')}
                 type="color"
                 value={settings.uiSecondary}
                 onChange={(event) => setSettings({ ...settings, uiSecondary: event.target.value })}
               />
             </label>
             <label className="block">
-              Interface font
+              {translate('Interface font')}
               <select
                 className="planning-input w-full"
                 value={settings.uiFont}
@@ -139,17 +144,18 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
         ) : (
           <section role="tabpanel" className="space-y-4">
             <p className="text-sm opacity-75">
-              Defaults apply to new projects and projects without custom settings. Choose a project to override its
-              canvas, cards and dialogs for your account.
+              {translate(
+                'Defaults apply to new projects and projects without custom settings. Choose a project to override its canvas, cards and dialogs for your account.',
+              )}
             </p>
             <label className="block">
-              Canvas settings for
+              {translate('Canvas settings for')}
               <select
                 className="planning-input w-full"
                 value={scope}
                 onChange={(event) => setScope(event.target.value)}
               >
-                <option value="">Defaults - new and uncustomized projects</option>
+                <option value="">{translate('Defaults - new and uncustomized projects')}</option>
                 {projects
                   .filter((project) => !project.deletedAt)
                   .map((project) => (
@@ -175,12 +181,12 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
                       });
                     }}
                   />
-                  Use custom project theme
+                  {translate('Use custom project theme')}
                 </label>
                 <p className="text-sm opacity-75" role="status">
                   {customEnabled
-                    ? 'Custom settings are enabled for this project.'
-                    : 'Using general defaults. Enable the checkbox to edit this project’s theme.'}
+                    ? translate('Custom settings are enabled for this project.')
+                    : translate('Using general defaults. Enable the checkbox to edit this project’s theme.')}
                 </p>
               </div>
             )}
@@ -194,7 +200,7 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
                     key={value}
                     onClick={() => setMode(value)}
                   >
-                    {value === 'light' ? 'Light palette' : 'Dark palette'}
+                    {value === 'light' ? translate('Light palette') : translate('Dark palette')}
                   </button>
                 ))}
               </div>
@@ -204,7 +210,7 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
                 onChange={(palette) => updateDraft({ ...draft, [mode]: palette })}
               />
               <label className="block">
-                Preferred mode
+                {translate('Preferred mode')}
                 <select
                   className="planning-input w-full"
                   value={draft.mode ?? ''}
@@ -215,13 +221,13 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
                     })
                   }
                 >
-                  <option value="">Use general mode</option>
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
+                  <option value="">{translate('Use general mode')}</option>
+                  <option value="light">{translate('Light')}</option>
+                  <option value="dark">{translate('Dark')}</option>
                 </select>
               </label>
               <label className="block">
-                Default font for board items
+                {translate('Default font for board items')}
                 <select
                   className="planning-input w-full"
                   value={draft.font}
@@ -240,7 +246,7 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
                   type="button"
                   onClick={() => updateDraft(structuredClone(defaultAppearance))}
                 >
-                  Reset palette
+                  {translate('Reset palette')}
                 </button>
               </div>
             </fieldset>
@@ -248,10 +254,10 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
         )}
         <div className="flex gap-2 justify-end">
           <button className="planning-button ml-auto" type="button" onClick={onClose}>
-            Cancel
+            {translate('Cancel')}
           </button>
           <button className="planning-button" style={{ background: 'var(--color-accent)', color: 'white' }}>
-            Save appearance
+            {translate('Save appearance')}
           </button>
         </div>
       </form>

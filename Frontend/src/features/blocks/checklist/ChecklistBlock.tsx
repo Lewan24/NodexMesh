@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -18,6 +20,7 @@ interface ChecklistBlockProps {
 }
 
 function DropLine() {
+  useTranslation();
   return (
     <div
       className="h-1 rounded-full mx-1 my-1"
@@ -27,6 +30,7 @@ function DropLine() {
 }
 
 export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppedOutside }: ChecklistBlockProps) {
+  useTranslation();
   const [editingTitle, setEditingTitle] = useState(false);
   const [addingEntry, setAddingEntry] = useState(false);
   const [newEntryText, setNewEntryText] = useState('');
@@ -159,9 +163,9 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                 onClick={() => update({ height: undefined })}
                 className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5"
                 style={{ color: mutedColor }}
-                title="Reset to auto height"
+                title={translate('Reset to auto height')}
               >
-                Auto-fit
+                {translate('Auto-fit')}
               </button>
             )}
 
@@ -251,7 +255,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
                   }
                 }}
                 onBlur={commitNewEntry}
-                placeholder="New item…"
+                placeholder={translate('New item…')}
                 className="flex-1 bg-transparent outline-none text-sm"
                 style={{ ...typographyStyle, color: textColor, ...getSectionStyle(item.typography, 'body') }}
               />
@@ -266,7 +270,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M12 5v14M5 12h14" />
               </svg>
-              Add item
+              {translate('Add item')}
             </button>
           )}
         </div>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import BoardPage from '@/features/board/pages/BoardPage';
@@ -6,6 +7,7 @@ import ProfilePage from '@/features/auth/pages/ProfilePage';
 import { useEffect, useState } from 'react';
 
 export default function App() {
+  useTranslation();
   const { currentUser } = useAuth();
   const [view, setView] = useState<'workspace' | 'admin' | 'profile'>('workspace');
 

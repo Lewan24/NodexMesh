@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 interface ColorSwatchProps {
   color: string;
   active?: boolean;
@@ -6,6 +7,7 @@ interface ColorSwatchProps {
 }
 
 export default function ColorSwatch({ color, active = false, size = 12, onClick }: ColorSwatchProps) {
+  useTranslation();
   return (
     <button
       onClick={onClick}

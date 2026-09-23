@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { ZOOM_MAX, ZOOM_MIN } from '@/features/canvas/constants';
 import { Trash2 } from 'lucide-react';
 
@@ -28,6 +30,7 @@ export default function CanvasControls({
   onOpenMenu,
   onOpenTrash,
 }: CanvasControlsProps) {
+  useTranslation();
   const zoomOut = () => {
     const nextZoom = Math.max(ZOOM_MIN, Number((zoom - 0.1).toFixed(2)));
 
@@ -55,30 +58,35 @@ export default function CanvasControls({
         type="button"
         className="touch-selection-toggle"
         aria-pressed={selectionMode}
-        aria-label="Select multiple items"
-        title="Toggle between panning empty space and selecting multiple items"
+        aria-label={translate('Select multiple items')}
+        title={translate('Toggle between panning empty space and selecting multiple items')}
         onClick={onToggleSelectionMode}
       >
-        {selectionMode ? 'Select +' : 'Pan'}
+        {selectionMode ? translate('Select +') : translate('Pan')}
       </button>
-      <button type="button" className="touch-selection-toggle" onClick={onOpenMenu} aria-label="Board and item actions">
+      <button
+        type="button"
+        className="touch-selection-toggle"
+        onClick={onOpenMenu}
+        aria-label={translate('Board and item actions')}
+      >
         ⋯
       </button>
-      <button type="button" className="touch-selection-toggle" onClick={onUndo} aria-label="Undo">
+      <button type="button" className="touch-selection-toggle" onClick={onUndo} aria-label={translate('Undo')}>
         ↶
       </button>
-      <button type="button" className="canvas-fit-button" onClick={onFitView} title="Fit board to screen">
-        Fit
+      <button type="button" className="canvas-fit-button" onClick={onFitView} title={translate('Fit board to screen')}>
+        {translate('Fit')}
       </button>
       <button
         type="button"
         className="canvas-fit-button flex items-center gap-1.5"
         onClick={onOpenTrash}
-        title="Open item trash"
-        aria-label="Open item trash"
+        title={translate('Open item trash')}
+        aria-label={translate('Open item trash')}
       >
         <Trash2 size={14} />
-        <span className="hidden sm:inline">Trash</span>
+        <span className="hidden sm:inline">{translate('Trash')}</span>
       </button>
       <button
         onClick={onToggleSnap}
@@ -89,7 +97,7 @@ export default function CanvasControls({
           color: snapEnabled ? 'white' : 'var(--color-text-secondary)',
           backdropFilter: 'blur(8px)',
         }}
-        title={snapEnabled ? 'Snap to grid: on' : 'Snap to grid: off'}
+        title={snapEnabled ? translate('Snap to grid: on') : translate('Snap to grid: off')}
       >
         <svg
           width="14"
@@ -125,8 +133,8 @@ export default function CanvasControls({
           onMouseLeave={(event) => {
             event.currentTarget.style.backgroundColor = 'transparent';
           }}
-          title="Zoom out"
-          aria-label="Zoom out"
+          title={translate('Zoom out')}
+          aria-label={translate('Zoom out')}
           disabled={zoom <= ZOOM_MIN}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -144,7 +152,7 @@ export default function CanvasControls({
           onMouseLeave={(event) => {
             event.currentTarget.style.backgroundColor = 'transparent';
           }}
-          title="Reset zoom"
+          title={translate('Reset zoom')}
         >
           {Math.round(zoom * 100)}%
         </button>
@@ -159,8 +167,8 @@ export default function CanvasControls({
           onMouseLeave={(event) => {
             event.currentTarget.style.backgroundColor = 'transparent';
           }}
-          title="Zoom in"
-          aria-label="Zoom in"
+          title={translate('Zoom in')}
+          aria-label={translate('Zoom in')}
           disabled={zoom >= ZOOM_MAX}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

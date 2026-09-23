@@ -11,6 +11,7 @@ const server = await createServer({
   resolve: { alias: { '@': fileURLToPath(new URL('../src', import.meta.url)) } },
   server: { middlewareMode: true, watch: null, hmr: false },
 });
+await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
 const { attachCanvasTouch } = await server.ssrLoadModule('/src/features/canvas/hooks/useCanvasTouch.ts');
 const { useLineDrag } = await server.ssrLoadModule('/src/features/canvas/hooks/useLineDrag.ts');
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');

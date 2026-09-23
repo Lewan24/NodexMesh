@@ -1,3 +1,5 @@
+import { displayLabel, translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { GripVertical, RotateCcw, Trash2, X } from 'lucide-react';
 import type { TrashedItemRecord } from '@/entities/board/records';
 
@@ -24,11 +26,12 @@ function itemLabel(entry: TrashedItemRecord) {
 }
 
 export default function ItemTrashPanel({ items, loading, onClose, onRestore, onPurge, onEmpty }: ItemTrashPanelProps) {
+  useTranslation();
   return (
     <section
       role="dialog"
       aria-modal="false"
-      aria-label="Project item trash"
+      aria-label={translate('Project item trash')}
       data-canvas-ui="true"
       className="absolute bottom-16 right-3 top-3 z-[70] flex w-[min(340px,calc(100%-24px))] flex-col overflow-hidden rounded-2xl border shadow-2xl"
       style={{
@@ -45,14 +48,16 @@ export default function ItemTrashPanel({ items, loading, onClose, onRestore, onP
         style={{ borderColor: 'var(--color-border)' }}
       >
         <div>
-          <h2 className="text-sm font-semibold">Item trash</h2>
-          <p className="text-[11px] text-theme-muted">Restore here, or drag an item back onto the canvas.</p>
+          <h2 className="text-sm font-semibold">{translate('Item trash')}</h2>
+          <p className="text-[11px] text-theme-muted">
+            {translate('Restore here, or drag an item back onto the canvas.')}
+          </p>
         </div>
         <button
           type="button"
           className="rounded-lg p-1.5 hover:bg-black/5 dark:hover:bg-white/10"
           onClick={onClose}
-          aria-label="Close item trash"
+          aria-label={translate('Close item trash')}
         >
           <X size={18} />
         </button>
@@ -61,10 +66,10 @@ export default function ItemTrashPanel({ items, loading, onClose, onRestore, onP
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {loading ? (
           <p className="p-4 text-center text-xs text-theme-muted" role="status">
-            Loading trash…
+            {translate('Loading trash…')}
           </p>
         ) : items.length === 0 ? (
-          <p className="p-4 text-center text-xs text-theme-muted">This project’s item trash is empty.</p>
+          <p className="p-4 text-center text-xs text-theme-muted">{translate('This project’s item trash is empty.')}</p>
         ) : (
           <ul className="space-y-2">
             {items.map((entry) => (
@@ -78,21 +83,21 @@ export default function ItemTrashPanel({ items, loading, onClose, onRestore, onP
                 }}
                 className="group flex cursor-grab items-center gap-2 rounded-xl border p-2 active:cursor-grabbing"
                 style={{ background: 'var(--color-surface-alt)', borderColor: 'var(--color-border-soft)' }}
-                title="Drag onto the canvas to restore at a new position"
+                title={translate('Drag onto the canvas to restore at a new position')}
               >
                 <GripVertical size={16} className="shrink-0 text-theme-muted" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-medium">{itemLabel(entry)}</div>
                   <div className="truncate text-[10px] text-theme-muted">
-                    {entry.boardName} · {entry.item.type}
+                    {entry.boardName} · {displayLabel(entry.item.type)}
                   </div>
                 </div>
                 <button
                   type="button"
                   className="rounded-lg p-1.5 hover:bg-emerald-500/10 hover:text-emerald-600"
                   onClick={() => onRestore(entry)}
-                  aria-label={`Restore ${itemLabel(entry)}`}
-                  title="Restore to its original board and position"
+                  aria-label={translate('Restore {{value1}}', { value1: itemLabel(entry) })}
+                  title={translate('Restore to its original board and position')}
                 >
                   <RotateCcw size={15} />
                 </button>
@@ -100,8 +105,8 @@ export default function ItemTrashPanel({ items, loading, onClose, onRestore, onP
                   type="button"
                   className="rounded-lg p-1.5 hover:bg-rose-500/10 hover:text-rose-600"
                   onClick={() => onPurge(entry)}
-                  aria-label={`Permanently delete ${itemLabel(entry)}`}
-                  title="Delete permanently"
+                  aria-label={translate('Permanently delete {{value1}}', { value1: itemLabel(entry) })}
+                  title={translate('Delete permanently')}
                 >
                   <Trash2 size={15} />
                 </button>
@@ -118,7 +123,7 @@ export default function ItemTrashPanel({ items, loading, onClose, onRestore, onP
             className="w-full rounded-lg px-3 py-2 text-xs text-rose-600 hover:bg-rose-500/10"
             onClick={onEmpty}
           >
-            Empty item trash
+            {translate('Empty item trash')}
           </button>
         </footer>
       )}

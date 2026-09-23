@@ -12,6 +12,7 @@ const server = await createServer({
   resolve: { alias: { '@': fileURLToPath(new URL('../src', import.meta.url)) } },
   server: { middlewareMode: true, watch: null, hmr: false },
 });
+await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 const { normalizeItemNumbers } = await server.ssrLoadModule('/src/entities/board/normalizeNumbers.ts');
 const { createEmptySibling } = await server.ssrLoadModule('/src/features/canvas/utils/quickCreate.ts');

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { ResizeDirection } from '@/features/canvas/types';
 
 interface ResizeHandlesProps {
@@ -9,6 +10,7 @@ const EDGE_SIZE = 10;
 const CORNER_SIZE = 12;
 
 export default function ResizeHandles({ visible, onResizeStart }: ResizeHandlesProps) {
+  useTranslation();
   if (!visible) return null;
 
   const start = (direction: ResizeDirection) => (event: React.MouseEvent) => {
@@ -74,6 +76,7 @@ interface ResizeCornerProps {
 }
 
 function ResizeCorner({ top, right, bottom, left, cursor, onMouseDown }: ResizeCornerProps) {
+  useTranslation();
   return (
     <div
       data-manual-resize="true"

@@ -1,3 +1,5 @@
+import { locale, translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useState } from 'react';
 import Modal from '@/shared/components/dialogs/Modal';
@@ -18,10 +20,30 @@ interface CommentsDialogProps {
 }
 
 const STATUSES: { value: CommentStatus; label: string }[] = [
-  { value: 'open', label: 'Open' },
-  { value: 'todo', label: 'To do' },
-  { value: 'in-progress', label: 'In progress' },
-  { value: 'resolved', label: 'Resolved' },
+  {
+    value: 'open',
+    get label() {
+      return translate('Open');
+    },
+  },
+  {
+    value: 'todo',
+    get label() {
+      return translate('To do');
+    },
+  },
+  {
+    value: 'in-progress',
+    get label() {
+      return translate('In progress');
+    },
+  },
+  {
+    value: 'resolved',
+    get label() {
+      return translate('Resolved');
+    },
+  },
 ];
 
 export default function CommentsDialog({
@@ -32,6 +54,7 @@ export default function CommentsDialog({
   ownCommentsOnly = false,
   currentUserId,
 }: CommentsDialogProps) {
+  useTranslation();
   const [busy, setBusy] = useState(false);
   const save = async (updater: (item: BoardItem) => BoardItem) => {
     if (readOnly || busy) return false;
@@ -40,7 +63,7 @@ export default function CommentsDialog({
       await onUpdate(updater);
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not save comments.');
+      toast.error(error instanceof Error ? error.message : translate('Could not save comments.'));
       return false;
     } finally {
       setBusy(false);
@@ -98,7 +121,7 @@ export default function CommentsDialog({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Comments"
+          aria-label={translate('Comments')}
           className="w-full max-w-xl mx-4 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
           style={{
             maxHeight: '85dvh',
@@ -119,11 +142,11 @@ export default function CommentsDialog({
           >
             <div>
               <h2 className="text-sm font-bold" style={{ color: 'var(--color-text-primary)' }}>
-                Comments
+                {translate('Comments')}
               </h2>
 
               <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-faint)' }}>
-                {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+                {translate('commentCount', { count: comments.length })}
               </p>
             </div>
 
@@ -144,7 +167,7 @@ export default function CommentsDialog({
           <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-3">
             {comments.length === 0 && (
               <div className="text-center py-8 text-xs" style={{ color: 'var(--color-text-faint)' }}>
-                No comments yet.
+                {translate('No comments yet.')}
               </div>
             )}
 
@@ -169,7 +192,7 @@ export default function CommentsDialog({
                 rows={3}
                 value={text}
                 onChange={(event) => setText(event.target.value)}
-                placeholder="Write a comment..."
+                placeholder={translate('Write a comment...')}
                 className="w-full resize-none rounded-xl border bg-transparent px-3 py-2.5 text-sm outline-none"
                 style={{
                   color: 'var(--color-text-primary)',
@@ -205,7 +228,7 @@ export default function CommentsDialog({
                   className="h-9 px-4 rounded-xl text-xs font-semibold transition-opacity disabled:opacity-40"
                   style={{ color: 'white', backgroundColor: 'var(--color-accent)' }}
                 >
-                  Add comment
+                  {translate('Add comment')}
                 </button>
               </div>
             </fieldset>
@@ -226,6 +249,7 @@ interface CommentCardProps {
 }
 
 function CommentCard({ comment, onUpdate, onDelete, readOnly }: CommentCardProps) {
+  useTranslation();
   const [editing, setEditing] = useState(false);
 
   const [text, setText] = useState(comment.text);
@@ -276,7 +300,7 @@ function CommentCard({ comment, onUpdate, onDelete, readOnly }: CommentCardProps
           className="text-xs opacity-50 hover:opacity-100"
           style={{ color: 'var(--color-danger)' }}
         >
-          Delete
+          {translate('Delete')}
         </button>
       </div>
 
@@ -303,7 +327,7 @@ function CommentCard({ comment, onUpdate, onDelete, readOnly }: CommentCardProps
       )}
 
       <div className="text-[9px] mt-2" style={{ color: 'var(--color-text-faint)' }}>
-        {new Date(comment.createdAt).toLocaleString()}
+        {new Date(comment.createdAt).toLocaleString(locale())}
       </div>
     </div>
   );

@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -6,7 +8,7 @@ export default function Modal({
   children,
   onClose,
   centered = false,
-  label = 'Dialog',
+  label = translate('Dialog'),
   boardHistory = false,
 }: {
   children: ReactNode;
@@ -15,6 +17,7 @@ export default function Modal({
   label?: string;
   boardHistory?: boolean;
 }) {
+  useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
