@@ -20,7 +20,6 @@ interface CanvasFrameProps {
 
   isSettling?: boolean;
   isDragging?: boolean;
-  dragTilt?: number;
   isAttachTarget?: boolean;
 
   searchActive?: boolean;
@@ -50,7 +49,6 @@ export default function CanvasFrame({
   selectedIds,
   isSettling = false,
   isDragging = false,
-  dragTilt = 0,
   zoom,
 
   searchActive = false,
@@ -83,20 +81,15 @@ export default function CanvasFrame({
         left: item.x,
         top: item.y,
         zIndex: 0,
-        transform: isDragging
-          ? `
-              perspective(900px)
-              rotateY(${dragTilt}deg)
-              rotateZ(${dragTilt * 0.18}deg)
-              translateZ(8px)
-              scale(1.012)
-            `
-          : undefined,
+        // Direction-based 3D rotation is very noticeable on a large frame and
+        // shifts its edges when the pointer reverses. A small, stable lift keeps
+        // the drag feedback without changing the frame's apparent position.
+        transform: isDragging ? 'translate3d(0, -3px, 0) scale(1.003)' : undefined,
         transformOrigin: 'center center',
 
         opacity: !searchActive ? 1 : isSearchMatch ? 1 : isSearchContext ? 0.65 : 0.12,
 
-        transition: 'opacity 0.18s ease, filter 0.18s ease',
+        transition: 'opacity 0.18s ease, filter 0.18s ease, transform 120ms cubic-bezier(0.22, 1, 0.36, 1)',
 
         filter: searchActive && !isSearchMatch && !isSearchContext ? 'saturate(0.45)' : undefined,
       }}

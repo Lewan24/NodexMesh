@@ -1194,7 +1194,6 @@ export default function Canvas({
             zoom={zoom}
             isSelected={safeSelectedIds.includes(frame.id)}
             isDragging={draggingIds.includes(frame.id)}
-            dragTilt={draggingIds.includes(frame.id) ? dragTilt : 0}
             onQuickConnectStart={handleQuickConnectStart}
             isAnimating={animatingIds.has(frame.id)}
             isAttachTarget={attachHoverId === frame.id}

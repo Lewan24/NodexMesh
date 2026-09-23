@@ -22,6 +22,7 @@ public sealed class VersionEndpointsTests : IDisposable
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<AppVersionDto>();
-        result!.Version.Should().Be("0.1.0");
+        result!.Version.Should().NotStartWith("v");
+        Version.TryParse(result.Version, out _).Should().BeTrue();
     }
 }

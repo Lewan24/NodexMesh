@@ -14,7 +14,7 @@ const server = await createServer({
 await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
 const { attachCanvasTouch } = await server.ssrLoadModule('/src/features/canvas/hooks/useCanvasTouch.ts');
 const { useLineDrag } = await server.ssrLoadModule('/src/features/canvas/hooks/useLineDrag.ts');
-const { useItemDrag } = await server.ssrLoadModule('/src/features/canvas/hooks/useItemDrag.ts');
+const { getDragEffectIds, useItemDrag } = await server.ssrLoadModule('/src/features/canvas/hooks/useItemDrag.ts');
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 await server.close();
 
@@ -407,4 +407,14 @@ test('item dragging stays transient until one batched final commit', (t) => {
   assert.equal(commits[0].size, 1);
   assert.equal(projectRef.current.items[0].x, 48);
   assert.equal(projectRef.current.items[0].y, 16);
+});
+
+test('moving a frame animates the frame without independently tilting its captured contents', () => {
+  const capturedIds = new Set(['frame', 'child', 'nested-child']);
+
+  assert.deepEqual(getDragEffectIds(['frame'], capturedIds), ['frame']);
+  assert.deepEqual(getDragEffectIds(['frame', 'explicit-note'], new Set([...capturedIds, 'explicit-note'])), [
+    'frame',
+    'explicit-note',
+  ]);
 });
