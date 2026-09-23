@@ -138,13 +138,11 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     resetBoardView,
   } = useBoardView();
 
-  const remotePresence = useCollaborationPresence(
-    activeProjectId,
-    activeProject?.boardId,
-    userId,
-    selectedIds,
-    collaborationToken,
-  );
+  const {
+    byItem: remotePresence,
+    cursors: remoteCursors,
+    updateCursor: updateCollaborationCursor,
+  } = useCollaborationPresence(activeProjectId, activeProject?.boardId, userId, selectedIds, collaborationToken);
 
   const {
     addItem,
@@ -693,6 +691,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             onOpenBoard={(boardId) => {
               void selectBoard(activeProjectId, boardId).catch(() => toast.error(translate('Could not open board.')));
             }}
+            remoteCursors={remoteCursors}
+            onCursorMove={updateCollaborationCursor}
           />
         ) : (
           <Canvas
@@ -700,6 +700,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             project={activeProject}
             remoteVersion={remoteVersion}
             remotePresence={remotePresence}
+            remoteCursors={remoteCursors}
+            onCursorMove={updateCollaborationCursor}
             selectedTool={selectedTool}
             pan={pan}
             zoom={zoom}

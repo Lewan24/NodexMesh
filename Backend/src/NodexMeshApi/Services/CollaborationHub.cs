@@ -8,7 +8,13 @@ using NodexMeshApi.Data;
 
 namespace NodexMeshApi.Services;
 
-public sealed record PresenceUpdate(Guid ProjectId, Guid BoardId, IReadOnlyList<Guid> ItemIds, string Mode);
+public sealed record PresenceUpdate(
+    Guid ProjectId,
+    Guid BoardId,
+    IReadOnlyList<Guid> ItemIds,
+    string Mode,
+    double? CursorX = null,
+    double? CursorY = null);
 
 public sealed record CollaboratorPresence(
     Guid ProjectId,
@@ -17,6 +23,8 @@ public sealed record CollaboratorPresence(
     string DisplayName,
     IReadOnlyList<Guid> ItemIds,
     string Mode,
+    double? CursorX,
+    double? CursorY,
     DateTimeOffset ExpiresAt);
 
 public interface ICollaborationClient
@@ -52,6 +60,8 @@ public sealed class PresenceRegistry
             displayName,
             request.ItemIds,
             request.Mode,
+            request.CursorX,
+            request.CursorY,
             Expiry);
         states[connectionId] = value;
         return value;
@@ -100,6 +110,7 @@ public sealed class CollaborationHub(
     PresenceRegistry presence) : Hub<ICollaborationClient>
 {
     private const int MaxItems = 50;
+    private const double MaxCursorCoordinate = 10_000_000;
     private static readonly HashSet<string> Modes = ["selected", "editing"];
 
     public async Task JoinProject(Guid projectId)
@@ -128,7 +139,12 @@ public sealed class CollaborationHub(
 
     public async Task UpdatePresence(PresenceUpdate request)
     {
-        if (request.ItemIds is null || request.ItemIds.Count > MaxItems || !Modes.Contains(request.Mode))
+        var hasCompleteCursor = request.CursorX.HasValue == request.CursorY.HasValue;
+        var cursorIsValid = !request.CursorX.HasValue ||
+            (double.IsFinite(request.CursorX.Value) && double.IsFinite(request.CursorY!.Value) &&
+                Math.Abs(request.CursorX.Value) <= MaxCursorCoordinate && Math.Abs(request.CursorY.Value) <= MaxCursorCoordinate);
+        if (request.ItemIds is null || request.ItemIds.Count > MaxItems || !Modes.Contains(request.Mode) ||
+            !hasCompleteCursor || !cursorIsValid)
             throw new HubException("Invalid presence payload.");
         if (!presence.TryAccept(Context.ConnectionId)) //Presence update rate limit exceeded for connection
             return;

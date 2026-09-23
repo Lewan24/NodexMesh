@@ -8,6 +8,8 @@ import BlockRenderer from '@/features/blocks/BlockRenderer';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
 import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
 import ItemWatcher from '@/features/canvas/components/ItemWatcher';
+import RemoteCursors from '@/features/canvas/components/RemoteCursors';
+import type { RemoteCursor } from '@/features/projects/hooks/useCollaborationPresence';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import './sharing.css';
 
@@ -100,6 +102,8 @@ export default function ReadOnlyBoard({
   currentUserId,
   onSaveComments,
   onOpenBoard,
+  remoteCursors = [],
+  onCursorMove,
 }: {
   items: BoardItem[];
   inspect?: boolean;
@@ -107,6 +111,8 @@ export default function ReadOnlyBoard({
   currentUserId?: string;
   onSaveComments?: (itemId: string, comments: import('@/entities/board/types').ItemComment[]) => Promise<void>;
   onOpenBoard?: (boardId: string) => void;
+  remoteCursors?: RemoteCursor[];
+  onCursorMove?: (position: { x: number; y: number } | null) => void;
 }) {
   useTranslation();
   const [selectedId, setSelectedId] = useState('');
@@ -179,7 +185,18 @@ export default function ReadOnlyBoard({
         ref={navigation.viewport}
         className={`relative flex-1 min-h-0 ${touchMode ? 'overflow-auto' : 'overflow-hidden'}`}
         onPointerDownCapture={navigation.pointerDown}
-        onPointerMove={navigation.pointerMove}
+        onPointerMove={(event) => {
+          navigation.pointerMove(event);
+          if (event.pointerType !== 'mouse') return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          onCursorMove?.({
+            x: (event.clientX - rect.left - camera.x) / zoom + offsetX,
+            y: (event.clientY - rect.top - camera.y) / zoom + offsetY,
+          });
+        }}
+        onPointerLeave={(event) => {
+          if (event.pointerType === 'mouse') onCursorMove?.(null);
+        }}
         onPointerUp={navigation.endDrag}
         onPointerCancel={navigation.endDrag}
         onLostPointerCapture={navigation.endDrag}
@@ -247,6 +264,13 @@ export default function ReadOnlyBoard({
               ))}
             </div>
           </div>
+        )}
+        {!touchMode && (
+          <RemoteCursors
+            cursors={remoteCursors}
+            pan={{ x: camera.x - offsetX * zoom, y: camera.y - offsetY * zoom }}
+            zoom={zoom}
+          />
         )}
       </div>
       {inspect && selected && (

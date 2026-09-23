@@ -10,7 +10,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { BoardItem, FrameItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
 import type { ToolType } from '@/entities/board/toolTypes';
-import type { RemotePresence } from '@/features/projects/hooks/useCollaborationPresence';
+import type { RemoteCursor, RemotePresence } from '@/features/projects/hooks/useCollaborationPresence';
 import { TRASH_ITEM_MIME } from '@/features/projects/components/ItemTrashPanel';
 
 import ConfirmDialog from '@/shared/components/dialogs/ConfirmDialog';
@@ -43,6 +43,7 @@ import { useCanvasZoom } from '../hooks/useCanvasZoom';
 import { createCanvasItem } from '@/features/canvas/utils/createCanvasItem';
 import { getItemRect, getToolDefaultSize } from '@/features/canvas/utils/itemGeometry';
 import NestedDragGhost from '@/features/canvas/components/NestedDragGhost';
+import RemoteCursors from '@/features/canvas/components/RemoteCursors';
 
 import {
   NESTED_DRAG_END_EVENT,
@@ -73,6 +74,7 @@ interface CanvasProps {
   project: Project;
   remoteVersion?: number;
   remotePresence?: Record<string, RemotePresence[]>;
+  remoteCursors?: RemoteCursor[];
   selectedTool: ToolType;
   pan: { x: number; y: number };
   zoom: number;
@@ -101,12 +103,14 @@ interface CanvasProps {
   onOpenTrash: () => void;
   onRestoreTrashItem: (itemId: string, position: { x: number; y: number }) => void;
   onEditBarVisibilityChange?: (visible: boolean) => void;
+  onCursorMove?: (position: { x: number; y: number } | null) => void;
 }
 
 export default function Canvas({
   project,
   remoteVersion = 0,
   remotePresence,
+  remoteCursors = [],
   selectedTool,
   pan,
   zoom,
@@ -134,6 +138,7 @@ export default function Canvas({
   onOpenTrash,
   onRestoreTrashItem,
   onEditBarVisibilityChange,
+  onCursorMove,
 }: CanvasProps) {
   useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1009,12 +1014,24 @@ export default function Canvas({
       }}
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={(event) => {
+        if (
+          event.target instanceof Element &&
+          event.target.closest(
+            '[data-canvas-ui], [data-edit-bar], [data-item-inspector], [role="dialog"], [role="menu"]',
+          )
+        ) {
+          onCursorMove?.(null);
+          return;
+        }
         const rect = event.currentTarget.getBoundingClientRect();
-        pointerPosition.current = {
-          x: snapValue((event.clientX - rect.left - panRef.current.x) / zoomRef.current),
-          y: snapValue((event.clientY - rect.top - panRef.current.y) / zoomRef.current),
+        const exactPosition = {
+          x: (event.clientX - rect.left - panRef.current.x) / zoomRef.current,
+          y: (event.clientY - rect.top - panRef.current.y) / zoomRef.current,
         };
+        pointerPosition.current = { x: snapValue(exactPosition.x), y: snapValue(exactPosition.y) };
+        onCursorMove?.({ x: Math.round(exactPosition.x * 10) / 10, y: Math.round(exactPosition.y * 10) / 10 });
       }}
+      onMouseLeave={() => onCursorMove?.(null)}
       onContextMenu={(event) => {
         if (event.defaultPrevented) return;
         const target = event.target;
@@ -1292,6 +1309,8 @@ export default function Canvas({
         )}
         <CanvasOverlays frameDraft={frameDraft} lasso={lasso} />
       </div>
+
+      <RemoteCursors cursors={remoteCursors} pan={pan} zoom={zoom} />
 
       {selectedTool === 'drawing' && (
         <div className="absolute inset-0 z-40 cursor-crosshair" aria-label={translate('Drawing surface')} />
