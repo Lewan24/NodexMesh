@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { KanbanColumn } from '@/entities/board/types';
@@ -15,6 +17,7 @@ export default function KanbanColumnDialog({
   onSave: (patch: Pick<KanbanColumn, 'title' | 'color'> & { share: number }) => void;
   onClose: () => void;
 }) {
+  useTranslation();
   const [title, setTitle] = useState(column.title);
   const [color, setColor] = useState(column.color);
   const [width, setWidth] = useState(share * 100);
@@ -37,7 +40,7 @@ export default function KanbanColumnDialog({
         ref={ref}
         role="dialog"
         aria-modal="true"
-        aria-label="Edit Kanban column"
+        aria-label={translate('Edit Kanban column')}
         className="w-full max-w-md p-6 space-y-4 shadow-2xl rounded-sm"
         style={{ background: 'var(--color-surface)', color: 'var(--color-text-primary)' }}
         onSubmit={(event) => {
@@ -64,9 +67,9 @@ export default function KanbanColumnDialog({
           }
         }}
       >
-        <h2 className="text-lg font-semibold">Edit column</h2>
+        <h2 className="text-lg font-semibold">{translate('Edit column')}</h2>
         <label className="block">
-          Column name
+          {translate('Column name')}
           <input
             required
             value={title}
@@ -75,11 +78,11 @@ export default function KanbanColumnDialog({
           />
         </label>
         <label className="flex items-center justify-between">
-          Title color
+          {translate('Title color')}
           <input type="color" value={color} onChange={(event) => setColor(event.target.value)} />
         </label>
         <label className="block">
-          Width (%)
+          {translate('Width (%)')}
           <input
             type="number"
             required
@@ -94,10 +97,10 @@ export default function KanbanColumnDialog({
         </label>
         <div className="flex justify-end gap-2">
           <button type="button" className="px-3 py-2" onClick={onClose}>
-            Cancel
+            {translate('Cancel')}
           </button>
           <button disabled={!title.trim()} className="px-3 py-2 bg-violet-600 text-white rounded-sm">
-            Save column
+            {translate('Save column')}
           </button>
         </div>
       </form>

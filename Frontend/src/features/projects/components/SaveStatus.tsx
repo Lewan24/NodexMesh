@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import type { Project } from '@/entities/project/types';
 import type { WorkspaceState } from '../services/workspaceController';
@@ -21,39 +23,76 @@ export default function SaveStatus({
   projects,
   retry,
   reload,
-}: WorkspaceState & { retry: () => Promise<void>; reload: () => Promise<void> }) {
+  recoveryDrafts = [],
+  clearRecoveryDrafts,
+}: WorkspaceState & { retry: () => Promise<void>; reload: () => Promise<void>; clearRecoveryDrafts?: () => void }) {
+  useTranslation();
   const [confirmReload, setConfirmReload] = useState(false);
   const failed = status === 'error' || status === 'conflict';
   return (
     <div
-      className={status === 'saved' ? 'sr-only' : 'save-status flex flex-wrap items-center gap-3 text-xs'}
+      className={
+        status === 'saved' && !recoveryDrafts.length
+          ? 'sr-only'
+          : 'save-status flex flex-wrap items-center gap-3 text-xs'
+      }
       role={failed ? 'alert' : 'status'}
     >
       <span>
         {failed
           ? error
-          : ({ loading: 'Loading projects…', pending: 'Unsaved changes', saving: 'Saving…', saved: 'Saved' } as const)[
-              status
-            ]}
+          : (
+              {
+                loading: translate('Loading projects…'),
+                pending: translate('Unsaved changes'),
+                saving: translate('Saving…'),
+                saved: translate('Saved'),
+              } as const
+            )[status]}
       </span>
+      {!!recoveryDrafts.length && (
+        <span className="flex flex-wrap items-center gap-3" role="status">
+          {translate(
+            'The board was refreshed after a collaboration conflict. Your unsaved version is kept in a recovery copy.',
+          )}
+          <button className="underline" onClick={() => downloadDraft(recoveryDrafts.map((draft) => draft.project))}>
+            {translate('Download recovery copies')}
+          </button>
+          {clearRecoveryDrafts && (
+            <button
+              className="underline"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    translate('Delete the recovery copies? Download them first if you need your unsaved edits.'),
+                  )
+                )
+                  clearRecoveryDrafts();
+              }}
+            >
+              {translate('Delete recovery copies')}
+            </button>
+          )}
+        </span>
+      )}
       {failed && (
         <>
           <button className="underline" onClick={() => downloadDraft(projects)}>
-            Download local draft
+            {translate('Download local draft')}
           </button>
           {status === 'error' && (
             <button className="underline" onClick={() => void retry()}>
-              Retry
+              {translate('Retry')}
             </button>
           )}
           <button className="underline" onClick={() => setConfirmReload(true)}>
-            Reload saved data
+            {translate('Reload saved data')}
           </button>
         </>
       )}
       {confirmReload && (
         <span>
-          Discard local changes?
+          {translate('Discard local changes?')}
           <button
             className="underline mx-2"
             onClick={() => {
@@ -61,10 +100,10 @@ export default function SaveStatus({
               void reload();
             }}
           >
-            Discard and reload
+            {translate('Discard and reload')}
           </button>
           <button className="underline" onClick={() => setConfirmReload(false)}>
-            Cancel
+            {translate('Cancel')}
           </button>
         </span>
       )}

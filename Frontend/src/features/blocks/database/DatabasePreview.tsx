@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useSectionStyle } from '../typography/TypographyContext';
 import { useId } from 'react';
 import type { DatabaseTable, DatabaseRelation } from '@/entities/board/types';
@@ -10,6 +12,7 @@ export default function DatabasePreview({
   tables: DatabaseTable[];
   relations: DatabaseRelation[];
 }) {
+  useTranslation();
   const labels = useSectionStyle('labels');
   const body = useSectionStyle('body');
   const marker = useId().replace(/:/g, '');
@@ -21,7 +24,7 @@ export default function DatabasePreview({
   return (
     <svg
       role="img"
-      aria-label="Database schema preview"
+      aria-label={translate('Database schema preview')}
       width="100%"
       height="100%"
       viewBox={`${left} ${top} ${right - left} ${bottom - top}`}

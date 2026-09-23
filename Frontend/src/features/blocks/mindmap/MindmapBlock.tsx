@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MindmapItem, MindmapNode } from '@/entities/board/types';
@@ -17,6 +19,7 @@ export default function MindmapBlock({
   onUpdate: BlockUpdateHandler;
   onDelete: BlockDeleteHandler;
 }) {
+  useTranslation();
   const [editing, setEditing] = useState(false);
   const [selectedId, setSelectedId] = useState(item.nodes[0]?.id);
   const [zoom, setZoom] = useState(1);
@@ -176,7 +179,7 @@ export default function MindmapBlock({
             }}
             tabIndex={interactive ? 0 : -1}
             aria-pressed={interactive && selected?.id === node.id}
-            title={node.label || 'Untitled idea'}
+            title={node.label || translate('Untitled idea')}
             draggable={interactive && node.parentId !== null}
             onClick={() => {
               if (interactive) setSelectedId(node.id);
@@ -209,7 +212,7 @@ export default function MindmapBlock({
               setDropId(null);
             }}
           >
-            {node.label || 'Untitled idea'}
+            {node.label || translate('Untitled idea')}
           </button>
         </foreignObject>
       ))}
@@ -220,63 +223,71 @@ export default function MindmapBlock({
       item={item}
       title={
         <span style={getSectionStyle(item.typography, 'title')}>
-          {item.title} <span className="text-xs opacity-50">· {item.nodes.length} ideas</span>
+          {item.title}{' '}
+          <span className="text-xs opacity-50">
+            · {item.nodes.length} {' ' + translate('ideas')}
+          </span>
         </span>
       }
       onDelete={onDelete}
     >
       <div className="planning-toolbar" onMouseDown={(event) => event.stopPropagation()}>
-        <span className="text-xs text-theme-muted">Double-click to explore and edit</span>
+        <span className="text-xs text-theme-muted">{translate('Double-click to explore and edit')}</span>
         <button className="planning-button ml-auto" onClick={() => setEditing(true)}>
-          Edit mind map
+          {translate('Edit mind map')}
         </button>
       </div>
       <div className="mindmap-preview" onDoubleClick={() => setEditing(true)}>
         {map(false)}
       </div>
       {editing && (
-        <Modal boardHistory label={`Edit ${item.title}`} onClose={() => setEditing(false)} centered>
+        <Modal
+          boardHistory
+          label={translate('Edit {{value1}}', { value1: item.title })}
+          onClose={() => setEditing(false)}
+          centered
+        >
           <div className="mindmap-editor" data-board-history="true" onClick={(event) => event.stopPropagation()}>
             <div className="planning-toolbar">
               <input
                 className="planning-input flex-1"
-                aria-label="Mind map title"
+                aria-label={translate('Mind map title')}
                 value={item.title}
                 onChange={(event) => update({ title: event.target.value })}
               />
-              <span className="text-xs text-theme-muted">Changes saved automatically</span>
+              <span className="text-xs text-theme-muted">{translate('Changes saved automatically')}</span>
               <button className="planning-button" onClick={() => setEditing(false)}>
-                Done
+                {translate('Done')}
               </button>
             </div>
             <div className="planning-toolbar">
               <label>
-                Layout{' '}
+                {translate('Layout')}{' '}
                 <select
                   className="planning-input"
                   value={item.layout}
                   onChange={(event) => update({ layout: event.target.value as MindmapItem['layout'] })}
                 >
-                  <option value="horizontal">Left / right</option>
-                  <option value="vertical">Up / down</option>
+                  <option value="horizontal">{translate('Left / right')}</option>
+                  <option value="vertical">{translate('Up / down')}</option>
                 </select>
               </label>
               <label>
-                Lines{' '}
+                {translate('Lines')}{' '}
                 <select
                   className="planning-input"
                   value={item.lineStyle}
                   onChange={(event) => update({ lineStyle: event.target.value as MindmapItem['lineStyle'] })}
                 >
-                  <option value="curve">Curved</option>
-                  <option value="elbow">Elbow</option>
-                  <option value="straight">Straight</option>
+                  <option value="curve">{translate('Curved')}</option>
+                  <option value="elbow">{translate('Elbow')}</option>
+                  <option value="straight">{translate('Straight')}</option>
                 </select>
               </label>
               <label>
-                Width{' '}
+                {translate('Width')}{' '}
                 <input
-                  aria-label="Line width"
+                  aria-label={translate('Line width')}
                   type="range"
                   min="1"
                   max="10"
@@ -291,10 +302,10 @@ export default function MindmapBlock({
                   checked={item.dashed}
                   onChange={(event) => update({ dashed: event.target.checked })}
                 />{' '}
-                Dashed
+                {translate('Dashed')}
               </label>
               <label className="ml-auto">
-                Zoom{' '}
+                {translate('Zoom')}{' '}
                 <select
                   className="planning-input"
                   value={zoom}
@@ -310,7 +321,7 @@ export default function MindmapBlock({
                 </select>
               </label>
               <button className="planning-button" onClick={fit}>
-                Fit map
+                {translate('Fit map')}
               </button>
             </div>
             <div className="mindmap-workspace">
@@ -352,7 +363,7 @@ export default function MindmapBlock({
               {selected && (
                 <aside className="mindmap-inspector" data-wheel-scroll="true">
                   <label>
-                    Idea
+                    {translate('Idea')}
                     <textarea
                       ref={labelRef}
                       className="planning-input"
@@ -363,14 +374,14 @@ export default function MindmapBlock({
                   </label>
                   <div className="flex flex-wrap gap-1">
                     <button className="planning-button" onClick={() => add(false)}>
-                      + Child
+                      {translate('+ Child')}
                     </button>
                     <button className="planning-button" disabled={!selected.parentId} onClick={() => add(true)}>
-                      + Sibling
+                      {translate('+ Sibling')}
                     </button>
                   </div>
                   <label>
-                    Background{' '}
+                    {translate('Background')}{' '}
                     <input
                       type="color"
                       value={selected.background === 'transparent' ? '#ffffff' : selected.background}
@@ -383,10 +394,10 @@ export default function MindmapBlock({
                       checked={selected.background === 'transparent'}
                       onChange={(event) => updateNode({ background: event.target.checked ? 'transparent' : '#ffffff' })}
                     />{' '}
-                    Transparent
+                    {translate('Transparent')}
                   </label>
                   <label>
-                    Text color{' '}
+                    {translate('Text color')}{' '}
                     <input
                       type="color"
                       value={selected.textColor}
@@ -398,7 +409,7 @@ export default function MindmapBlock({
                       {item.nodes.find((node) => node.id === selected.parentId)?.parentId === null ? (
                         <>
                           <label>
-                            Branch color{' '}
+                            {translate('Branch color')}{' '}
                             <input
                               type="color"
                               value={selected.branchColor.startsWith('#') ? selected.branchColor : '#8b5cf6'}
@@ -406,24 +417,29 @@ export default function MindmapBlock({
                             />
                           </label>
                           <label>
-                            Branch side{' '}
+                            {translate('Branch side')}{' '}
                             <select
                               className="planning-input"
                               value={selected.side}
                               onChange={(event) => updateNode({ side: event.target.value as MindmapNode['side'] })}
                             >
-                              <option value="negative">{item.layout === 'horizontal' ? 'Left' : 'Up'}</option>
-                              <option value="positive">{item.layout === 'horizontal' ? 'Right' : 'Down'}</option>
+                              <option value="negative">
+                                {item.layout === 'horizontal' ? translate('Left') : translate('Up')}
+                              </option>
+                              <option value="positive">
+                                {item.layout === 'horizontal' ? translate('Right') : translate('Down')}
+                              </option>
                             </select>
                           </label>
                         </>
                       ) : (
                         <p className="text-xs text-theme-muted">
-                          <span style={{ color: branch?.color }}>●</span> Color and side follow the main branch.
+                          <span style={{ color: branch?.color }}>●</span>{' '}
+                          {' ' + translate('Color and side follow the main branch.')}
                         </p>
                       )}
                       <label>
-                        Move under{' '}
+                        {translate('Move under')}{' '}
                         <select
                           className="planning-input"
                           value={selected.parentId}
@@ -435,32 +451,33 @@ export default function MindmapBlock({
                             .filter((node) => !descendants.has(node.id))
                             .map((node) => (
                               <option key={node.id} value={node.id}>
-                                {node.label || 'Untitled idea'}
+                                {node.label || translate('Untitled idea')}
                               </option>
                             ))}
                         </select>
                       </label>
                       <div className="flex gap-1">
                         <button className="planning-button" disabled={siblingIndex <= 0} onClick={() => reorder(-1)}>
-                          Move earlier
+                          {translate('Move earlier')}
                         </button>
                         <button
                           className="planning-button"
                           disabled={siblingIndex >= siblings.length - 1}
                           onClick={() => reorder(1)}
                         >
-                          Move later
+                          {translate('Move later')}
                         </button>
                       </div>
                       <button className="planning-button text-rose-500" onClick={remove}>
-                        Delete subtree ({descendants.size})
+                        {translate('Delete subtree (')}
+                        {descendants.size})
                       </button>
                     </>
                   )}
                   <p className="text-xs text-theme-muted">
-                    Drag the background or use the middle mouse button to pan. Scroll to zoom. Use Fit map to see all
-                    ideas. Drag an idea onto another to move its entire subtree. Use Move earlier / later to reorder
-                    siblings. Undo is available with Ctrl+Z outside text fields.
+                    {translate(
+                      'Drag the background or use the middle mouse button to pan. Scroll to zoom. Use Fit map to see all ideas. Drag an idea onto another to move its entire subtree. Use Move earlier / later to reorder siblings. Undo is available with Ctrl+Z outside text fields.',
+                    )}
                   </p>
                 </aside>
               )}

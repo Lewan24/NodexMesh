@@ -1,4 +1,6 @@
-import MobilePanel from '@/shared/components/dialogs/MobilePanel';
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
+import MobilePanel, { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import { useState } from 'react';
 import { ChevronDown, LayoutGrid, ListTree, Play, MousePointer2 } from 'lucide-react';
 import type { ToolType } from '@/entities/board/toolTypes';
@@ -7,20 +9,38 @@ import { consumeToolDragClickSuppression, startToolDrag } from '@/features/canva
 import './sidebar.css';
 
 const groups = [
-  { id: 'planning', label: 'Planning', icon: ListTree, tools: ['timeline', 'mindmap', 'diagram', 'database'] },
+  {
+    id: 'planning',
+    get label() {
+      return translate('Planning');
+    },
+    icon: ListTree,
+    tools: ['timeline', 'mindmap', 'diagram', 'database'],
+  },
   {
     id: 'common',
-    label: 'Common',
+    get label() {
+      return translate('Common');
+    },
     icon: LayoutGrid,
     tools: ['drawing', 'note', 'dispenser', 'text', 'icon', 'document', 'code'],
   },
   {
     id: 'organize',
-    label: 'Organize',
+    get label() {
+      return translate('Organize');
+    },
     icon: ListTree,
     tools: ['checklist', 'kanban', 'column', 'section-title', 'frame', 'line', 'divider', 'board'],
   },
-  { id: 'media', label: 'Media', icon: Play, tools: ['image', 'link', 'embed'] },
+  {
+    id: 'media',
+    get label() {
+      return translate('Media');
+    },
+    icon: Play,
+    tools: ['image', 'link', 'embed'],
+  },
 ] satisfies { id: string; label: string; icon: typeof LayoutGrid; tools: ToolType[] }[];
 
 export default function Sidebar({
@@ -30,22 +50,24 @@ export default function Sidebar({
   selectedTool: ToolType;
   onSelectTool: (tool: ToolType) => void;
 }) {
+  useTranslation();
+  const mobile = useMobileLayout();
   const [openGroup, setOpenGroup] = useState<string | null>('common');
   return (
-    <MobilePanel title="Tools" slot="tools">
-      <aside className="tool-sidebar" aria-label="Board tools">
-        <div className="tool-sidebar-heading">CREATE & CONNECT</div>
+    <MobilePanel title={translate('Tools')} slot="tools">
+      <aside className="tool-sidebar" aria-label={translate('Board tools')}>
+        <div className="tool-sidebar-heading">{translate('CREATE & CONNECT')}</div>
         <button
           type="button"
           className="tool-select"
-          aria-label="Select"
+          aria-label={translate('Select')}
           aria-pressed={selectedTool === 'select'}
           onClick={() => onSelectTool('select')}
         >
           <MousePointer2 size={21} />
-          <span>Select & move</span>
+          <span>{translate('Select & move')}</span>
         </button>
-        <nav className="tool-groups" aria-label="Tool categories">
+        <nav className="tool-groups" aria-label={translate('Tool categories')}>
           {groups.map((group) => {
             const open = openGroup === group.id;
             const Icon = group.icon;
@@ -61,12 +83,18 @@ export default function Sidebar({
                 >
                   <Icon size={18} />
                   <span>{group.label}</span>
-                  {containsActive && <span className="tool-group-dot" aria-label="Active tool in this category" />}
+                  {containsActive && (
+                    <span className="tool-group-dot" aria-label={translate('Active tool in this category')} />
+                  )}
                   <ChevronDown size={16} className="tool-group-chevron" />
                 </button>
                 <div className="tool-group-collapse" inert={!open}>
                   <div className="tool-group-clip">
-                    <div className="tool-grid" id={`tools-${group.id}`} aria-label={`${group.label} tools`}>
+                    <div
+                      className="tool-grid"
+                      id={`tools-${group.id}`}
+                      aria-label={translate('{{value1}} tools', { value1: group.label })}
+                    >
                       {group.tools.map((id) => {
                         const tool = SIDEBAR_TOOLS.find((tool) => tool.id === id)!;
                         return (
@@ -77,9 +105,11 @@ export default function Sidebar({
                             aria-label={tool.label}
                             aria-pressed={selectedTool === id}
                             title={
-                              id === 'drawing'
-                                ? 'Pencil · Draw on canvas · Esc to cancel'
-                                : `${tool.label} · Click or drag to canvas`
+                              mobile
+                                ? undefined
+                                : id === 'drawing'
+                                  ? translate('Pencil · Draw on canvas · Esc to cancel')
+                                  : translate('{{value1}} · Click or drag to canvas', { value1: tool.label })
                             }
                             onMouseDown={(event) => {
                               if (id !== 'drawing') startToolDrag(id, event);
@@ -100,7 +130,7 @@ export default function Sidebar({
             );
           })}
         </nav>
-        <div className="tool-sidebar-hint">Click to add · Drag to place</div>
+        <div className="tool-sidebar-hint">{translate('Click to add · Drag to place')}</div>
       </aside>
     </MobilePanel>
   );

@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useState } from 'react';
 import type { DispenserItem } from '@/entities/board/types';
@@ -15,6 +17,7 @@ export default function DispenserBlock({
   onUpdate: BlockUpdateHandler;
   onDelete: () => void;
 }) {
+  useTranslation();
   const { background, solid, textColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
   const [editingLabel, setEditingLabel] = useState(false);
   return (
@@ -24,7 +27,7 @@ export default function DispenserBlock({
       title={
         editingLabel ? (
           <input
-            aria-label="Dispenser label"
+            aria-label={translate('Dispenser label')}
             className="w-full bg-transparent outline-none"
             value={item.title}
             autoFocus
@@ -41,7 +44,7 @@ export default function DispenserBlock({
         ) : (
           <span
             className="block truncate"
-            title="Double-click to rename"
+            title={translate('Double-click to rename')}
             onDoubleClick={() => setEditingLabel(true)}
             style={getSectionStyle(item.typography, 'title')}
           >
@@ -52,9 +55,9 @@ export default function DispenserBlock({
     >
       <div className="flex-1 min-h-0 px-6 pt-4 pb-6 flex flex-col gap-3">
         <label className="flex items-center justify-between text-xs" onMouseDown={(e) => e.stopPropagation()}>
-          Paper color{' '}
+          {translate('Paper color')}{' '}
           <input
-            aria-label="Paper color"
+            aria-label={translate('Paper color')}
             type="color"
             value={item.color}
             onChange={(e) =>
@@ -68,7 +71,7 @@ export default function DispenserBlock({
         </label>
         <button
           type="button"
-          aria-label="Drag a new note"
+          aria-label={translate('Drag a new note')}
           className="relative flex-1 min-h-12 item-rounded text-xs font-medium cursor-grab active:cursor-grabbing"
           style={{
             background,
@@ -87,7 +90,7 @@ export default function DispenserBlock({
             });
           }}
         >
-          Drag a fresh note ↗
+          {translate('Drag a fresh note ↗')}
         </button>
       </div>
     </ContentBlockShell>

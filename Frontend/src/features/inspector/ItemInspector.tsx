@@ -1,3 +1,5 @@
+import { displayLabel, translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import MobilePanel from '@/shared/components/dialogs/MobilePanel';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -33,6 +35,7 @@ export default function ItemInspector({
   canComment = !readOnly,
   currentUserId,
 }: ItemInspectorProps) {
+  useTranslation();
   const [newTag, setNewTag] = useState('');
 
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -110,7 +113,7 @@ export default function ItemInspector({
   const unresolvedCount = getUnresolvedCommentCount(comments);
 
   return (
-    <MobilePanel title="Tags & comments" slot="details">
+    <MobilePanel title={translate('Tags & comments')} slot="details">
       <aside
         data-item-inspector="true"
         className="absolute right-3 top-50 z-40 w-72 rounded-2xl shadow-2xl overflow-hidden"
@@ -134,11 +137,13 @@ export default function ItemInspector({
               className="text-[10px] font-bold uppercase tracking-widest"
               style={{ color: 'var(--color-text-faint)' }}
             >
-              {items.length === 1 ? 'Item details' : 'Selection details'}
+              {items.length === 1 ? translate('Item details') : translate('Selection details')}
             </div>
 
             <div className="text-sm font-semibold capitalize mt-0.5" style={{ color: 'var(--color-text-primary)' }}>
-              {items.length === 1 ? items[0]!.type : `${items.length} items`}
+              {items.length === 1
+                ? displayLabel(items[0]!.type)
+                : translate('{{value1}} items', { value1: items.length })}
             </div>
           </div>
 
@@ -161,7 +166,7 @@ export default function ItemInspector({
             className="text-xs font-bold uppercase tracking-wide mb-2"
             style={{ color: 'var(--color-text-secondary)' }}
           >
-            Position
+            {translate('Position')}
           </div>
 
           <button
@@ -176,11 +181,15 @@ export default function ItemInspector({
             }}
           >
             <span className="text-xs font-semibold">
-              {allLocked ? '🔒 Locked' : someLocked ? '◐ Mixed' : '🔓 Lock position'}
+              {allLocked ? translate('🔒 Locked') : someLocked ? translate('◐ Mixed') : translate('🔓 Lock position')}
             </span>
 
             <span className="text-[10px]" style={{ color: 'var(--color-text-faint)' }}>
-              {items.length > 1 ? `${lockedCount}/${items.length}` : allLocked ? 'Locked' : 'Unlocked'}
+              {items.length > 1
+                ? `${lockedCount}/${items.length}`
+                : allLocked
+                  ? translate('Locked')
+                  : translate('Unlocked')}
             </span>
           </button>
         </section>
@@ -193,7 +202,7 @@ export default function ItemInspector({
               className="text-xs font-bold uppercase tracking-wide"
               style={{ color: 'var(--color-text-secondary)' }}
             >
-              Tags
+              {translate('Tags')}
             </span>
 
             <span className="text-[10px]" style={{ color: 'var(--color-text-faint)' }}>
@@ -229,7 +238,7 @@ export default function ItemInspector({
                     hidden={readOnly}
                     onClick={() => handleRemoveTag(tag)}
                     className="opacity-50 hover:opacity-100"
-                    title={`Remove #${tag} from selected items`}
+                    title={translate('Remove #{{value1}} from selected items', { value1: tag })}
                   >
                     ×
                   </button>
@@ -238,7 +247,7 @@ export default function ItemInspector({
             </div>
           ) : (
             <p className="text-xs mb-3" style={{ color: 'var(--color-text-faint)' }}>
-              No tags.
+              {translate('No tags.')}
             </p>
           )}
 
@@ -268,7 +277,11 @@ export default function ItemInspector({
                     setNewTag('');
                   }
                 }}
-                placeholder={items.length === 1 ? 'Add tag...' : `Add to ${items.length} items...`}
+                placeholder={
+                  items.length === 1
+                    ? translate('Add tag...')
+                    : translate('Add to {{value1}} items...', { value1: items.length })
+                }
                 className="flex-1 min-w-0 bg-transparent outline-none px-1.5 py-2 text-xs"
                 style={{ color: 'var(--color-text-primary)' }}
               />
@@ -279,7 +292,7 @@ export default function ItemInspector({
                 className="px-3 py-2 text-xs font-semibold"
                 style={{ color: 'var(--color-accent)' }}
               >
-                Add
+                {translate('Add')}
               </button>
             </div>
           )}
@@ -294,7 +307,7 @@ export default function ItemInspector({
                 className="text-xs font-bold uppercase tracking-wide"
                 style={{ color: 'var(--color-text-secondary)' }}
               >
-                Comments
+                {translate('Comments')}
               </span>
 
               <span className="text-[10px]" style={{ color: 'var(--color-text-faint)' }}>
@@ -315,14 +328,14 @@ export default function ItemInspector({
                   <div className="text-xs font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                     {comments.length === 0
                       ? canComment
-                        ? 'Add comment'
-                        : 'View comments'
-                      : `${comments.length} comments`}
+                        ? translate('Add comment')
+                        : translate('View comments')
+                      : translate('{{value1}} comments', { value1: comments.length })}
                   </div>
 
                   {unresolvedCount > 0 && (
                     <div className="text-[9px] mt-0.5" style={{ color: 'var(--color-text-faint)' }}>
-                      {unresolvedCount} unresolved
+                      {unresolvedCount} {' ' + translate('unresolved')}
                     </div>
                   )}
                 </div>
@@ -337,7 +350,7 @@ export default function ItemInspector({
                     backgroundColor: 'var(--color-surface-alt)',
                   }}
                 >
-                  {commentStatus}
+                  {displayLabel(commentStatus)}
                 </span>
               )}
             </button>
@@ -355,7 +368,8 @@ export default function ItemInspector({
               color: 'var(--color-text-faint)',
             }}
           >
-            Bulk changes apply to all {items.length} selected items.
+            {translate('Bulk changes apply to all') + ' '}
+            {items.length} {' ' + translate('selected items.')}
           </div>
         )}
       </aside>

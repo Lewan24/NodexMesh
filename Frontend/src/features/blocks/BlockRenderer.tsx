@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import ItemCssScope from './custom-css/ItemCssScope';
 import { TypographyContext } from './typography/TypographyContext';
 import IconBlock from './icon/IconBlock';
@@ -27,6 +29,7 @@ const MindmapBlock = lazy(() => import('./mindmap/MindmapBlock'));
 const DiagramBlock = lazy(() => import('./diagram/DiagramBlock'));
 
 function LoadingBlock({ item }: { item: BoardItem }) {
+  useTranslation();
   return (
     <div
       data-block-loading="true"
@@ -40,7 +43,7 @@ function LoadingBlock({ item }: { item: BoardItem }) {
         color: 'var(--color-text-muted)',
       }}
     >
-      Loading…
+      {translate('Loading…')}
     </div>
   );
 }
@@ -102,6 +105,7 @@ function BlockContent({
   onOpenBoard,
   onRenameBoard,
 }: BlockRendererProps) {
+  useTranslation();
   switch (item.type) {
     case 'board':
       return <BoardBlock item={item} onUpdate={onUpdate} onOpenBoard={onOpenBoard} onRenameBoard={onRenameBoard} />;
@@ -218,6 +222,7 @@ function BlockContent({
 }
 
 export default function BlockRenderer(props: BlockRendererProps) {
+  useTranslation();
   return (
     <TypographyContext.Provider value={props.item.typography}>
       <ItemCssScope item={props.item}>

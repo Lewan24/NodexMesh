@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { ApiError, fail } from './errors';
 
 export interface HttpClient {
@@ -15,10 +16,20 @@ export function createHttpClient(
   return {
     async request(path, options = {}) {
       if (!path.startsWith('/') || path.startsWith('//') || path.includes('..') || path.includes('\\')) {
-        fail(422, 'invalid_path', 'Invalid API path.');
+        fail(422, 'invalid_path', translate('Invalid API path.'));
       }
       const send = async (token: string) => {
-        if (Date.now() < retryAfter) fail(429, 'rate_limited', 'Too many requests. Please wait before retrying.');
+        if (Date.now() < retryAfter)
+          throw new ApiError(
+            {
+              type: 'about:blank',
+              status: 429,
+              code: 'rate_limited',
+              title: translate('Too many requests. Please wait before retrying.'),
+              retryAfterMs: retryAfter - Date.now(),
+            },
+            true,
+          );
         return fetcher(`${baseUrl.replace(/\/$/, '')}${path}`, {
           method: options.method ?? 'GET',
           headers: {
@@ -58,7 +69,14 @@ export function createHttpClient(
         throw new ApiError({
           type: record.type ?? 'about:blank',
           status: response.status,
-          code: record.title ?? record.code ?? 'http_error',
+          code:
+            record.title ??
+            record.code ??
+            (Array.isArray(record.conflicts) && record.conflicts.length
+              ? (record.conflicts.find((conflict: { reason?: string }) => conflict?.reason === 'presence_locked')
+                  ?.reason ?? record.conflicts[0]?.reason)
+              : undefined) ??
+            'http_error',
           title:
             record.detail ??
             record.error ??
@@ -69,13 +87,14 @@ export function createHttpClient(
                   .join(' ') || undefined
               : undefined) ??
             (response.status === 409
-              ? 'The data changed in another session. Local changes are preserved.'
+              ? translate('The data changed in another session. Local changes are preserved.')
               : response.status === 401
-                ? 'Sign in again. Too many attempts? Try again later.'
+                ? translate('Sign in again. Too many attempts? Try again later.')
                 : response.status === 429
-                  ? 'Too many requests. Please wait before retrying.'
-                  : 'The API request failed.'),
+                  ? translate('Too many requests. Please wait before retrying.')
+                  : translate('The API request failed.')),
           errors: record.errors,
+          retryAfterMs: response.status === 429 ? Math.max(0, retryAfter - Date.now()) : undefined,
         });
       }
       return response.status === 204 ? undefined : response.json();

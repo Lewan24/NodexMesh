@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/dialogs/Modal';
 
 interface ConfirmDialogProps {
@@ -11,12 +13,13 @@ interface ConfirmDialogProps {
 
 export default function ConfirmDialog({
   title,
-  message = "This can't be undone.",
+  message = translate("This can't be undone."),
   confirmLabel = 'Delete',
-  cancelLabel = 'Cancel',
+  cancelLabel = translate('Cancel'),
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  useTranslation();
   return (
     <Modal onClose={onCancel}>
       <div

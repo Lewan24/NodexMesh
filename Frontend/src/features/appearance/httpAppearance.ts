@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import type { HttpClient } from '@/shared/api/httpClient';
 import { newPreferences, type AppearancePreferences } from './appearanceModel';
 import { fail } from '@/shared/api/errors';
@@ -7,7 +8,7 @@ export function createHttpAppearance(client: HttpClient) {
     async load(): Promise<AppearancePreferences> {
       const value = await client.request('/appearance');
       if (!value || typeof value !== 'object' || !('defaults' in value) || !('projects' in value))
-        fail(422, 'invalid_appearance', 'Invalid appearance response.');
+        fail(422, 'invalid_appearance', translate('Invalid appearance response.'));
       const preferences = value as AppearancePreferences;
       const projects = Object.fromEntries(
         Object.entries(preferences.projects).map(([id, appearance]) => [

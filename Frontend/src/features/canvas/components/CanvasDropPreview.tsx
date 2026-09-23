@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 interface CanvasDropPreviewProps {
   x: number;
   y: number;
@@ -6,7 +8,8 @@ interface CanvasDropPreviewProps {
   label?: string;
 }
 
-export default function CanvasDropPreview({ x, y, width, height, label = 'Drop' }: CanvasDropPreviewProps) {
+export default function CanvasDropPreview({ x, y, width, height, label = translate('Drop') }: CanvasDropPreviewProps) {
+  useTranslation();
   return (
     <div className="absolute pointer-events-none" style={{ left: x, top: y, width, height, zIndex: 100001 }}>
       {/* Actual landing area */}
@@ -152,6 +155,7 @@ interface PreviewDotProps {
 }
 
 function PreviewDot({ top, right, bottom, left }: PreviewDotProps) {
+  useTranslation();
   return (
     <div
       className="absolute rounded-full"

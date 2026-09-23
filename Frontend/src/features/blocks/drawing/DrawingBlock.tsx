@@ -1,11 +1,14 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import type { DrawingItem } from '@/entities/board/types';
 import { drawingOutline, drawingStrokes } from './drawingUtils';
 
 export default function DrawingBlock({ item }: { item: DrawingItem }) {
+  useTranslation();
   return (
     <svg
       role="img"
-      aria-label="Freehand drawing"
+      aria-label={translate('Freehand drawing')}
       width={item.width}
       height={item.height}
       viewBox={`0 0 ${item.viewWidth} ${item.viewHeight}`}

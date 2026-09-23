@@ -12,7 +12,7 @@ public sealed record ProjectRecordDto(
     [property: JsonConverter(typeof(RevisionJsonConverter))] long Revision,
     DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt,
     Guid? CreatedBy, Guid? UpdatedBy, DateTimeOffset? DeletedAt,
-    string Role);
+    string Role, int ItemCount = 0);
 
 public sealed record ProjectSnapshotDto(ProjectRecordDto Project, BoardSnapshotDto Board);
 

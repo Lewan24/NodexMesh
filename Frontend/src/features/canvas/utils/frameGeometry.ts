@@ -18,7 +18,7 @@ export function isItemInsideFrame(item: BoardItem, frame: FrameItem, sizes?: Siz
 }
 
 export function getFrameContents(frame: FrameItem, items: BoardItem[], _sizes?: SizeMap): BoardItem[] {
-  return items.filter((item) => item.type !== 'frame' && item.frameId === frame.id);
+  return items.filter((item) => item.frameId === frame.id);
 }
 
 function containsLockedItem(item: BoardItem): boolean {
@@ -27,10 +27,23 @@ function containsLockedItem(item: BoardItem): boolean {
 
 /** Derived from current contents; unlocking/removing a child immediately releases the frame. */
 export function isFrameMovementLocked(frame: FrameItem, items: BoardItem[], _sizes?: SizeMap): boolean {
+  const children = items.filter((item) => item.frameId === frame.id);
   return (
     !!frame.locked ||
-    items.some((item) => containsLockedItem(item) && item.type !== 'frame' && item.frameId === frame.id)
+    children.some((item) => containsLockedItem(item) || (item.type === 'frame' && isFrameMovementLocked(item, items)))
   );
+}
+
+export function wouldCreateFrameCycle(itemId: string, frameId: string, items: BoardItem[]): boolean {
+  let current: string | null | undefined = frameId;
+  const visited = new Set<string>();
+  while (current) {
+    if (current === itemId) return true;
+    if (visited.has(current)) return true;
+    visited.add(current);
+    current = items.find((item) => item.id === current)?.frameId;
+  }
+  return false;
 }
 
 /** Undefined ownership is migrated once. Explicitly detached cards stay detached. */
@@ -41,13 +54,12 @@ export function normalizeFrameMembership(items: BoardItem[]): BoardItem[] {
   const ids = new Set(frames.map((frame) => frame.id));
   return items.map((item) => {
     const frameId =
-      item.type === 'frame'
-        ? null
-        : item.frameId === undefined
-          ? (frames.find((frame) => isItemInsideFrame(item, frame))?.id ?? null)
-          : item.frameId && ids.has(item.frameId)
-            ? item.frameId
-            : null;
+      item.frameId === undefined
+        ? (frames.find((frame) => !wouldCreateFrameCycle(item.id, frame.id, items) && isItemInsideFrame(item, frame))
+            ?.id ?? null)
+        : item.frameId && ids.has(item.frameId) && !wouldCreateFrameCycle(item.id, item.frameId, items)
+          ? item.frameId
+          : null;
     return item.frameId === frameId ? item : { ...item, frameId };
   });
 }

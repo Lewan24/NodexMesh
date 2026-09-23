@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { useState } from 'react';
 
 import type { FormEvent } from 'react';
@@ -40,7 +41,7 @@ export function useAddUserForm() {
     }
 
     setError('');
-    setNotice(`${username.trim()} was added.`);
+    setNotice(translate('{{value1}} was added.', { value1: username.trim() }));
 
     reset();
   };

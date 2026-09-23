@@ -320,15 +320,15 @@ public sealed class BoardMutationService(
             ? []
             : await db.BoardItems.AsNoTracking()
                 .Where(i => i.BoardId == boardId && missing.Contains(i.Id))
-                .Select(i => new ItemGraphNode(i.Id, i.Type, i.ParentItemId))
+                .Select(i => new ItemGraphNode(i.Id, i.Type, i.ParentItemId, i.FrameId))
                 .ToListAsync(ct);
 
         var context = new Dictionary<Guid, ItemGraphNode>();
         foreach (var node in extra) context[node.Id] = node;
-        foreach (var (id, item) in existing) context[id] = new ItemGraphNode(id, item.Type, item.ParentItemId);
+        foreach (var (id, item) in existing) context[id] = new ItemGraphNode(id, item.Type, item.ParentItemId, item.FrameId);
         // Items in this batch override their stored versions — validate the *resulting* state.
         foreach (var u in mutation.Upserts)
-            context[u.Item.Id] = new ItemGraphNode(u.Item.Id, u.Item.Type, u.Item.ParentItemId);
+            context[u.Item.Id] = new ItemGraphNode(u.Item.Id, u.Item.Type, u.Item.ParentItemId, u.Item.FrameId);
         foreach (var d in mutation.Deletes) context.Remove(d.Id);
 
         var totalItems = await db.BoardItems.CountAsync(i => i.BoardId == boardId, ct);

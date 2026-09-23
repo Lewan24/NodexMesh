@@ -1,3 +1,5 @@
+import { translate, displayLabel } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import type { IconItem } from '@/entities/board/types';
 import Modal from '@/shared/components/dialogs/Modal';
@@ -17,6 +19,7 @@ export default function IconDialog({
   onClose: () => void;
   onSave: (patch: IconPatch) => void;
 }) {
+  useTranslation();
   const [mode, setMode] = useState(item.iconMode);
   const [sources, setSources] = useState({
     preset: 'star',
@@ -40,10 +43,11 @@ export default function IconDialog({
   const prepare = (): IconPatch | null => {
     try {
       const value = source.trim();
-      if (!value) throw new Error('Choose an icon or enter its content.');
-      if (mode === 'url' && !getIconImageSource(mode, value)) throw new Error('Enter a valid HTTP or HTTPS image URL.');
+      if (!value) throw new Error(translate('Choose an icon or enter its content.'));
+      if (mode === 'url' && !getIconImageSource(mode, value))
+        throw new Error(translate('Enter a valid HTTP or HTTPS image URL.'));
       if (mode === 'emoji' && Array.from(value).length > 32)
-        throw new Error('Enter one emoji or a short emoji sequence.');
+        throw new Error(translate('Enter one emoji or a short emoji sequence.'));
       const patch = {
         iconMode: mode,
         source: mode === 'svg' ? prepareIconSvg(value) : value,
@@ -53,19 +57,19 @@ export default function IconDialog({
       setError('');
       return patch;
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Invalid icon.');
+      setError(error instanceof Error ? error.message : translate('Invalid icon.'));
       return null;
     }
   };
 
   const choose = (value: string) => {
     setSources((current) => ({ ...current, [mode]: value }));
-    setLabel(value);
+    setLabel(mode === 'preset' ? displayLabel(value) : value);
     setError('');
   };
 
   return (
-    <Modal onClose={onClose} centered label="Choose icon">
+    <Modal onClose={onClose} centered label={translate('Choose icon')}>
       <form
         className="w-[min(560px,calc(100vw-32px))] p-6 space-y-4 max-h-[85vh] overflow-y-auto"
         style={{ background: 'var(--color-surface)', color: 'var(--color-text-primary)' }}
@@ -76,8 +80,8 @@ export default function IconDialog({
           if (patch) onSave(patch);
         }}
       >
-        <h2 className="text-lg font-semibold">Choose icon</h2>
-        <div className="flex flex-wrap gap-2" aria-label="Icon source">
+        <h2 className="text-lg font-semibold">{translate('Choose icon')}</h2>
+        <div className="flex flex-wrap gap-2" aria-label={translate('Icon source')}>
           {Object.entries(MODES).map(([key, title]) => (
             <button
               key={key}
@@ -89,15 +93,15 @@ export default function IconDialog({
                 setError('');
               }}
             >
-              {title}
+              {translate(title)}
             </button>
           ))}
         </div>
         {mode === 'preset' && (
           <input
             autoFocus
-            aria-label="Search icons"
-            placeholder="Search icons…"
+            aria-label={translate('Search icons')}
+            placeholder={translate('Search icons…')}
             className="w-full p-2 border rounded-lg bg-transparent"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -107,13 +111,17 @@ export default function IconDialog({
           <div className="grid grid-cols-[repeat(auto-fit,minmax(44px,1fr))] gap-2 max-h-56 overflow-y-auto">
             {mode === 'preset'
               ? Object.entries(ICON_PRESETS)
-                  .filter(([name]) => name.includes(query.trim().toLowerCase()))
+                  .filter(([name]) =>
+                    [name, displayLabel(name)].some((label) =>
+                      label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
+                    ),
+                  )
                   .map(([name, Icon]) => (
                     <button
                       key={name}
                       type="button"
-                      title={name}
-                      aria-label={name}
+                      title={displayLabel(name)}
+                      aria-label={displayLabel(name)}
                       aria-pressed={source === name}
                       className={`h-11 flex items-center justify-center rounded-lg cursor-pointer ${source === name ? 'bg-violet-500/20 ring-2 ring-violet-500' : 'hover:bg-violet-500/10'}`}
                       onClick={() => choose(name)}
@@ -137,7 +145,7 @@ export default function IconDialog({
         )}
         {mode === 'emoji' && (
           <label className="block">
-            Your emoji
+            {translate('Your emoji')}
             <input
               className="block w-full mt-1 p-2 border rounded-lg bg-transparent"
               value={source}
@@ -148,7 +156,7 @@ export default function IconDialog({
         )}
         {mode === 'svg' && (
           <label className="block">
-            Paste SVG
+            {translate('Paste SVG')}
             <textarea
               className="block w-full mt-1 p-2 border rounded-lg bg-transparent font-mono text-xs"
               rows={6}
@@ -161,7 +169,7 @@ export default function IconDialog({
         )}
         {mode === 'url' && (
           <label className="block">
-            Image URL
+            {translate('Image URL')}
             <input
               type="url"
               className="block w-full mt-1 p-2 border rounded-lg bg-transparent"
@@ -171,12 +179,12 @@ export default function IconDialog({
               onChange={(event) => setSources((current) => ({ ...current, url: event.target.value }))}
             />
             <span className="text-xs opacity-70">
-              Use a direct image link. Transparent SVG, PNG or WebP works best.
+              {translate('Use a direct image link. Transparent SVG, PNG or WebP works best.')}
             </span>
           </label>
         )}
         <label className="block">
-          Label
+          {translate('Label')}
           <input
             className="block w-full mt-1 p-2 border rounded-lg bg-transparent"
             maxLength={200}
@@ -186,7 +194,7 @@ export default function IconDialog({
         </label>
         {mode === 'preset' && (
           <label className="flex items-center justify-between">
-            Icon color
+            {translate('Icon color')}
             <input type="color" value={color} onChange={(event) => setColor(event.target.value)} />
           </label>
         )}
@@ -209,10 +217,10 @@ export default function IconDialog({
                 if (patch) setPreview(patch);
               }}
             >
-              Preview
+              {translate('Preview')}
             </button>
           )}
-          <span className="text-xs opacity-70">Transparent canvas background</span>
+          <span className="text-xs opacity-70">{translate('Transparent canvas background')}</span>
         </div>
         {error && (
           <p role="alert" className="text-sm text-red-500">
@@ -221,10 +229,10 @@ export default function IconDialog({
         )}
         <div className="flex justify-end gap-2">
           <button type="button" className="px-4 py-2 cursor-pointer" onClick={onClose}>
-            Cancel
+            {translate('Cancel')}
           </button>
           <button type="submit" className="px-4 py-2 rounded-lg bg-violet-600 text-white cursor-pointer">
-            Save icon
+            {translate('Save icon')}
           </button>
         </div>
       </form>

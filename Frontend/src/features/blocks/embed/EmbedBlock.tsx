@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useState } from 'react';
 import type { EmbedItem } from '@/entities/board/types';
@@ -17,6 +19,7 @@ export default function EmbedBlock({
   onUpdate: BlockUpdateHandler;
   onDelete: () => void;
 }) {
+  useTranslation();
   const { background, textColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
   const [editing, setEditing] = useState(false);
   const [interactive, setInteractive] = useState(false);
@@ -34,7 +37,7 @@ export default function EmbedBlock({
       >
         {item.topColor && <div className="h-[5px] shrink-0" style={{ background: item.topColor }} />}
         {item.showLabel && (
-          <header className="px-4 py-2 font-medium cursor-grab">{item.title || 'YouTube video'}</header>
+          <header className="px-4 py-2 font-medium cursor-grab">{item.title || translate('YouTube video')}</header>
         )}
         <div
           className="absolute bottom-full right-0 z-20 pb-2 flex gap-1 opacity-0 pointer-events-none group-hover/video:opacity-100 group-hover/video:pointer-events-auto group-focus-within/video:opacity-100 group-focus-within/video:pointer-events-auto transition-opacity duration-150"
@@ -47,11 +50,11 @@ export default function EmbedBlock({
               setEditing(true);
             }}
           >
-            Settings
+            {translate('Settings')}
           </button>
           <button
             className="rounded bg-black/75 text-white text-xs px-2 py-1"
-            aria-label="Delete block"
+            aria-label={translate('Delete block')}
             onClick={onDelete}
           >
             ×
@@ -67,13 +70,13 @@ export default function EmbedBlock({
             className={`text-xs font-medium px-2 py-1 rounded-sm shadow-md transition-colors ${interactive ? 'bg-violet-600 text-white' : 'bg-black/75 text-white hover:bg-black/90'}`}
             title={
               interactive
-                ? 'Return to click-to-play and drag-to-move mode'
-                : 'Use all YouTube controls, including subtitles and video settings'
+                ? translate('Return to click-to-play and drag-to-move mode')
+                : translate('Use all YouTube controls, including subtitles and video settings')
             }
             onMouseDown={(event) => event.stopPropagation()}
             onClick={() => setInteractive((value) => !value)}
           >
-            {interactive ? 'Finish video interaction' : 'Interact with video'}
+            {interactive ? translate('Finish video interaction') : translate('Interact with video')}
           </button>
         </div>
       </section>
@@ -85,7 +88,7 @@ export default function EmbedBlock({
       title={
         <div className="flex items-center gap-2">
           <span className="flex-1 truncate" style={getSectionStyle(item.typography, 'title')}>
-            {item.showLabel ? item.title || 'Embed' : 'Embed'}
+            {item.showLabel ? item.title || translate('Embed') : translate('Embed')}
           </span>
           <button
             className="text-xs px-2"
@@ -95,7 +98,7 @@ export default function EmbedBlock({
               setEditing(!editing);
             }}
           >
-            Settings
+            {translate('Settings')}
           </button>
           {src && (
             <button
@@ -103,7 +106,7 @@ export default function EmbedBlock({
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => setInteractive(!interactive)}
             >
-              {interactive ? 'Move' : 'Interact'}
+              {interactive ? translate('Move') : translate('Interact')}
             </button>
           )}
         </div>
@@ -119,7 +122,7 @@ export default function EmbedBlock({
           onSubmit={(e) => {
             e.preventDefault();
             if (!getEmbedUrl(draft)) {
-              setError('Enter a valid website or video URL (https://…).');
+              setError(translate('Enter a valid website or video URL (https://…).'));
               return;
             }
             update({ url: draft });
@@ -128,9 +131,9 @@ export default function EmbedBlock({
           }}
         >
           <label className="block">
-            Website or video URL
+            {translate('Website or video URL')}
             <input
-              aria-label="Embed URL"
+              aria-label={translate('Embed URL')}
               className="block w-full p-2 mt-1 rounded border bg-transparent"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -139,13 +142,13 @@ export default function EmbedBlock({
           </label>
           <label className="flex gap-2">
             <input type="checkbox" checked={item.showLabel} onChange={(e) => update({ showLabel: e.target.checked })} />{' '}
-            Show label
+            {translate('Show label')}
           </label>
           {item.showLabel && (
             <input
-              aria-label="Embed label"
+              aria-label={translate('Embed label')}
               className="w-full p-2 border rounded bg-transparent"
-              placeholder="Label"
+              placeholder={translate('Label')}
               value={item.title}
               onChange={(e) => update({ title: e.target.value })}
             />
@@ -156,10 +159,10 @@ export default function EmbedBlock({
             </p>
           )}
           <button type="submit" className="rounded px-3 py-2 bg-violet-600 text-white">
-            Apply
+            {translate('Apply')}
           </button>
           <p className="text-xs opacity-60">
-            Some websites do not allow embedding. Use Open in new tab if the preview is unavailable.
+            {translate('Some websites do not allow embedding. Use Open in new tab if the preview is unavailable.')}
           </p>
         </form>
       ) : (
@@ -168,7 +171,7 @@ export default function EmbedBlock({
             {src && (
               <iframe
                 key={src}
-                title={item.title || 'Embedded content'}
+                title={item.title || translate('Embedded content')}
                 src={src}
                 className="w-full h-full border-0"
                 style={{ pointerEvents: interactive ? 'auto' : 'none' }}
@@ -184,7 +187,7 @@ export default function EmbedBlock({
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => setInteractive(true)}
               >
-                Interact
+                {translate('Interact')}
               </button>
             )}
           </div>
@@ -196,7 +199,7 @@ export default function EmbedBlock({
               className="text-xs px-3 py-1 opacity-60"
               onMouseDown={(e) => e.stopPropagation()}
             >
-              Open in new tab ↗
+              {translate('Open in new tab ↗')}
             </a>
           )}
         </div>

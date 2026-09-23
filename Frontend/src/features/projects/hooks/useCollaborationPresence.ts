@@ -56,17 +56,45 @@ export function useCollaborationPresence(
         return copy;
       });
     };
+    next.on('BoardChanged', (changedProjectId: string, changedBoardId: string) => {
+      if (!disposed && changedProjectId === projectId && changedBoardId === boardId)
+        window.dispatchEvent(new CustomEvent('nodexmesh:board-changed', { detail: { projectId, boardId } }));
+    });
     next.on('PresenceChanged', onPresence);
     next.on('PresenceCleared', onCleared);
-    next.onreconnected(async () => {
-      if (!disposed) await next.invoke('JoinProject', projectId);
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const join = async () => {
+      if (disposed) return;
+      await next.invoke('JoinProject', projectId);
+      window.dispatchEvent(new CustomEvent('nodexmesh:board-changed', { detail: { projectId, boardId } }));
+    };
+    const start = async () => {
+      try {
+        await next.start();
+        if (disposed) {
+          await next.stop();
+          return;
+        }
+        await join();
+      } catch {
+        if (!disposed) {
+          await next.stop();
+          clearTimeout(retryTimer);
+          retryTimer = setTimeout(() => void start(), 10000);
+        }
+      }
+    };
+    next.onreconnected(() => join().catch(() => undefined));
+    next.onclose(() => {
+      if (!disposed) {
+        clearTimeout(retryTimer);
+        retryTimer = setTimeout(() => void start(), 10000);
+      }
     });
-    void next
-      .start()
-      .then(() => next.invoke('JoinProject', projectId))
-      .catch(() => undefined);
+    void start();
     return () => {
       disposed = true;
+      clearTimeout(retryTimer);
       if (next.state === HubConnectionState.Connected)
         void next.invoke('ClearPresence', projectId).catch(() => undefined);
       void next.stop();
@@ -76,10 +104,10 @@ export function useCollaborationPresence(
   }, [identity, projectId, boardId, userId, getAccessToken]);
 
   useEffect(() => {
-    const active = connection.current;
-    if (!active || active.state !== HubConnectionState.Connected || !boardId) return;
+    if (!boardId) return;
     const publish = () => {
-      if (active.state !== HubConnectionState.Connected) return;
+      const active = connection.current;
+      if (!active || active.state !== HubConnectionState.Connected) return;
       const activeElement = document.activeElement;
       const activeItem = activeElement?.closest<HTMLElement>('[data-board-item-id]')?.dataset.boardItemId;
       const editing = Boolean(
@@ -98,7 +126,22 @@ export function useCollaborationPresence(
     };
     publish();
     const timer = window.setInterval(publish, 5000);
-    return () => window.clearInterval(timer);
+    const expire = window.setInterval(
+      () =>
+        setRemote((current) => {
+          const entries = Object.entries(current).filter(([, value]) => Date.parse(value.expiresAt) > Date.now());
+          return entries.length === Object.keys(current).length ? current : Object.fromEntries(entries);
+        }),
+      1000,
+    );
+    document.addEventListener('focusin', publish);
+    document.addEventListener('focusout', publish);
+    return () => {
+      window.clearInterval(timer);
+      window.clearInterval(expire);
+      document.removeEventListener('focusin', publish);
+      document.removeEventListener('focusout', publish);
+    };
   }, [projectId, boardId, selectedIds]);
 
   return useMemo(() => {

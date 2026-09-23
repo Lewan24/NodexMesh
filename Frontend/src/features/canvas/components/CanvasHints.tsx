@@ -1,3 +1,5 @@
+import { translate, displayLabel } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import type { ToolType } from '@/entities/board/toolTypes';
 
 interface CanvasHintsProps {
@@ -6,6 +8,7 @@ interface CanvasHintsProps {
 }
 
 export default function CanvasHints({ selectedTool, hasSelection }: CanvasHintsProps) {
+  useTranslation();
   return (
     <>
       {selectedTool !== 'select' && (
@@ -20,11 +23,11 @@ export default function CanvasHints({ selectedTool, hasSelection }: CanvasHintsP
             }}
           >
             {selectedTool === 'frame'
-              ? 'Drag to draw a frame — items inside will move with it'
-              : `Click to place ${selectedTool}`}
+              ? translate('Drag to draw a frame — items inside will move with it')
+              : translate('Click to place {{value1}}', { value1: displayLabel(selectedTool) })}
 
             <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              ESC to cancel
+              {translate('ESC to cancel')}
             </span>
           </div>
         </div>
@@ -40,13 +43,13 @@ export default function CanvasHints({ selectedTool, hasSelection }: CanvasHintsP
               backdropFilter: 'blur(4px)',
             }}
           >
-            Middle-click drag to pan · Scroll to zoom
+            {translate('Middle-click drag to pan · Scroll to zoom')}
           </div>
         </div>
       )}
       {selectedTool === 'select' && !hasSelection && (
         <div className="canvas-touch-hint pointer-events-none">
-          Swipe to pan · Pinch to zoom · Tap to select · Hold an unlocked item to move
+          {translate('Swipe to pan · Pinch to zoom · Tap to select · Hold an unlocked item to move')}
         </div>
       )}
     </>

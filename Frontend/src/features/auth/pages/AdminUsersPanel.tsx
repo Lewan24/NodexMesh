@@ -1,9 +1,13 @@
+import { locale, displayLabel, translate } from '@/shared/i18n';
+import LanguageSelect from '@/shared/i18n/LanguageSelect';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import type { AdminAppearanceResetScope, AdminProject, AdminUser } from '@/features/auth/types';
 
 export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
+  useTranslation();
   const auth = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -11,8 +15,8 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
   const [userSearch, setUserSearch] = useState('');
   const [projectSearch, setProjectSearch] = useState('');
   const [projectUserSearch, setProjectUserSearch] = useState('');
-  const [projectStatus, setProjectStatus] = useState('all');
-  const [userStatus, setUserStatus] = useState('all');
+  const [projectStatus, setProjectStatus] = useState('active');
+  const [userStatus, setUserStatus] = useState('active');
   const matches = (query: string, ...values: string[]) =>
     values.some((value) => value.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const filteredUsers = users.filter(
@@ -50,7 +54,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
       setProjects(nextProjects);
       setRegistration(enabled);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to load administration data.');
+      setError(cause instanceof Error ? cause.message : translate('Unable to load administration data.'));
     }
   };
   useEffect(() => {
@@ -66,7 +70,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
       setMessage(success);
       return true;
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'The operation failed.');
+      setError(cause instanceof Error ? cause.message : translate('The operation failed.'));
       return false;
     }
   };
@@ -75,11 +79,11 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
     await run(async () => {
       await auth.createAdminUser(newUser);
       setNewUser({ email: '', displayName: '', password: '', isAdmin: false });
-    }, 'User created.');
+    }, translate('User created.'));
   };
   const resetPassword = (user: AdminUser) => {
-    const password = window.prompt(`New password for ${user.email} (12+ characters):`);
-    if (password) void run(() => auth.resetUserPassword(user.id, password), 'Password reset.');
+    const password = window.prompt(translate('New password for {{value1}} (12+ characters):', { value1: user.email }));
+    if (password) void run(() => auth.resetUserPassword(user.id, password), translate('Password reset.'));
   };
 
   return (
@@ -93,29 +97,32 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
             <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--color-accent)' }}>
               NodexMesh
             </p>
-            <h1 className="text-2xl font-bold">Administration</h1>
+            <h1 className="text-2xl font-bold">{translate('Administration')}</h1>
             <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              Signed in as {auth.currentUser?.username}
+              {translate('Signed in as') + ' '}
+              {auth.currentUser?.username}
             </p>
           </div>
           <div className="flex gap-2">
             <button className="btn-ghost rounded-xl px-3 py-2 text-sm" onClick={toggleTheme}>
-              Use {theme === 'light' ? 'dark' : 'light'} theme
+              {translate('Use') + ' '}
+              {theme === 'light' ? 'dark' : 'light'} {' ' + translate('theme')}
             </button>
             {onClose && (
               <button className="btn-ghost rounded-xl px-3 py-2 text-sm" onClick={onClose}>
-                Workspace
+                {translate('Workspace')}
               </button>
             )}
             <button className="btn-ghost rounded-xl px-3 py-2 text-sm" onClick={() => void auth.logout()}>
-              Sign out
+              {translate('Sign out')}
             </button>
           </div>
+          <LanguageSelect />
         </header>
         <div className="mb-4 flex flex-wrap gap-2">
           {(['users', 'projects'] as const).map((value) => (
             <button
-              key={value}
+              key={displayLabel(value)}
               onClick={() => setTab(value)}
               className="rounded-xl px-4 py-2 text-sm font-semibold capitalize"
               style={{
@@ -123,7 +130,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                 color: tab === value ? 'var(--color-accent)' : 'var(--color-text-secondary)',
               }}
             >
-              {value}
+              {displayLabel(value)}
             </button>
           ))}
           <label
@@ -136,11 +143,11 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
               onChange={(event) =>
                 void run(
                   async () => setRegistration(await auth.setRegistrationEnabled(event.target.checked)),
-                  'Registration setting updated.',
+                  translate('Registration setting updated.'),
                 )
               }
             />
-            Allow registration
+            {translate('Allow registration')}
           </label>
         </div>
         {(error || message) && (
@@ -159,68 +166,71 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
             <>
               <input
                 type="search"
-                aria-label="Search users"
-                placeholder="Search users by name, email or ID"
+                aria-label={translate('Search users')}
+                placeholder={translate('Search users by name, email or ID')}
                 className="input-theme min-w-64 flex-1 px-3 py-2 text-sm"
                 value={userSearch}
                 onChange={(event) => setUserSearch(event.target.value)}
               />
               <select
-                aria-label="User status"
+                aria-label={translate('User status')}
                 className="input-theme px-3 py-2 text-sm"
                 value={userStatus}
                 onChange={(event) => setUserStatus(event.target.value)}
               >
-                <option value="all">All users</option>
-                <option value="active">Active users</option>
-                <option value="blocked">Blocked users</option>
+                <option value="all">{translate('All users')}</option>
+                <option value="active">{translate('Active users')}</option>
+                <option value="blocked">{translate('Blocked users')}</option>
               </select>
             </>
           ) : (
             <>
               <input
                 type="search"
-                aria-label="Search projects"
-                placeholder="Search projects by name or ID"
+                aria-label={translate('Search projects')}
+                placeholder={translate('Search projects by name or ID')}
                 className="input-theme min-w-56 flex-1 px-3 py-2 text-sm"
                 value={projectSearch}
                 onChange={(event) => setProjectSearch(event.target.value)}
               />
               <input
                 type="search"
-                aria-label="Search project owners and members"
-                placeholder="Owner or member name, email or ID"
+                aria-label={translate('Search project owners and members')}
+                placeholder={translate('Owner or member name, email or ID')}
                 className="input-theme min-w-56 flex-1 px-3 py-2 text-sm"
                 value={projectUserSearch}
                 onChange={(event) => setProjectUserSearch(event.target.value)}
               />
               <select
-                aria-label="Project status"
+                aria-label={translate('Project status')}
                 className="input-theme px-3 py-2 text-sm"
                 value={projectStatus}
                 onChange={(event) => setProjectStatus(event.target.value)}
               >
-                <option value="all">All projects</option>
-                <option value="active">Active projects</option>
-                <option value="trashed">Trashed projects</option>
-                <option value="userdeleted">User-deleted projects</option>
+                <option value="all">{translate('All projects')}</option>
+                <option value="active">{translate('Active projects')}</option>
+                <option value="trashed">{translate('Trashed projects')}</option>
+                <option value="userdeleted">{translate('User-deleted projects')}</option>
               </select>
             </>
           )}
         </div>
         <p className="mb-3 text-sm" role="status">
           {tab === 'users'
-            ? `${filteredUsers.length} of ${users.length} users`
-            : `${filteredProjects.length} of ${projects.length} projects`}
+            ? translate('{{value1}} of {{value2}} users', { value1: filteredUsers.length, value2: users.length })
+            : translate('{{value1}} of {{value2}} projects', {
+                value1: filteredProjects.length,
+                value2: projects.length,
+              })}
         </p>
         {tab === 'users' ? (
           <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="min-w-0 rounded-2xl p-4" style={{ backgroundColor: 'var(--color-surface)' }}>
-              <h2 className="mb-3 font-semibold">Users</h2>
+              <h2 className="mb-3 font-semibold">{translate('Users')}</h2>
               <div
                 className="max-h-[min(58dvh,42rem)] space-y-2 overflow-y-auto overscroll-contain pr-1"
                 role="region"
-                aria-label="Users list"
+                aria-label={translate('Users list')}
                 tabIndex={0}
               >
                 {filteredUsers.map((user) => (
@@ -228,22 +238,27 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                     key={user.id}
                     user={user}
                     currentUserId={auth.currentUser?.id}
-                    onSave={(input) => run(() => auth.updateAdminUser(user.id, input), 'User updated.')}
+                    onSave={(input) => run(() => auth.updateAdminUser(user.id, input), translate('User updated.'))}
                     onResetPassword={() => resetPassword(user)}
                     onResetAppearance={(scope) => {
                       const label =
                         scope === 'Defaults'
-                          ? 'global appearance settings'
+                          ? translate('global appearance settings')
                           : scope === 'ProjectOverrides'
-                            ? 'project appearance overrides'
-                            : 'all appearance settings';
-                      if (!window.confirm(`Reset ${label} for ${user.email}?`)) return;
-                      void run(() => auth.resetUserAppearance(user.id, scope), 'User appearance reset.');
+                            ? translate('project appearance overrides')
+                            : translate('all appearance settings');
+                      if (
+                        !window.confirm(
+                          translate('Reset {{value1}} for {{value2}}?', { value1: label, value2: user.email }),
+                        )
+                      )
+                        return;
+                      void run(() => auth.resetUserAppearance(user.id, scope), translate('User appearance reset.'));
                     }}
                     onToggleBlocked={() =>
                       run(
                         () => auth.setUserBlocked(user.id, !user.isBlocked),
-                        user.isBlocked ? 'User unblocked.' : 'User blocked.',
+                        user.isBlocked ? translate('User unblocked.') : translate('User blocked.'),
                       )
                     }
                   />
@@ -255,7 +270,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
               className="space-y-3 rounded-2xl p-4"
               style={{ backgroundColor: 'var(--color-surface)' }}
             >
-              <h2 className="font-semibold">Create user</h2>
+              <h2 className="font-semibold">{translate('Create user')}</h2>
               {(['email', 'displayName', 'password'] as const).map((field) => (
                 <input
                   key={field}
@@ -264,7 +279,9 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                   onChange={(event) => setNewUser({ ...newUser, [field]: event.target.value })}
                   type={field === 'password' ? 'password' : field === 'email' ? 'email' : 'text'}
                   placeholder={
-                    field === 'displayName' ? 'Display name' : field.charAt(0).toUpperCase() + field.slice(1)
+                    field === 'displayName'
+                      ? translate('Display name')
+                      : translate(field === 'email' ? 'Email' : 'Password')
                   }
                   className="input-theme w-full px-3 py-2 text-sm"
                 />
@@ -275,16 +292,18 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                   checked={newUser.isAdmin}
                   onChange={(event) => setNewUser({ ...newUser, isAdmin: event.target.checked })}
                 />
-                Administrator
+                {translate('Administrator')}
               </label>
-              <button className="btn-accent w-full rounded-xl px-3 py-2 text-sm font-semibold">Create user</button>
+              <button className="btn-accent w-full rounded-xl px-3 py-2 text-sm font-semibold">
+                {translate('Create user')}
+              </button>
             </form>
           </section>
         ) : (
           <section
             className="max-h-[calc(100dvh-13rem)] space-y-4 overflow-y-auto overscroll-contain pr-1 pb-2 sm:max-h-[calc(100dvh-14rem)]"
             role="region"
-            aria-label="Projects list"
+            aria-label={translate('Projects list')}
             tabIndex={0}
           >
             {filteredProjects.map((project) => (
@@ -292,12 +311,16 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                 key={project.id}
                 project={project}
                 users={users}
-                onRestore={() => run(() => auth.restoreAdminProject(project.id), 'Project restored.')}
-                onPurge={() => run(() => auth.purgeAdminProject(project.id), 'Project permanently deleted.')}
-                onAdd={(email, role) => void run(() => auth.addProjectMember(project.id, email, role), 'Member added.')}
-                onRemove={(userId) => void run(() => auth.removeProjectMember(project.id, userId), 'Member removed.')}
+                onRestore={() => run(() => auth.restoreAdminProject(project.id), translate('Project restored.'))}
+                onPurge={() => run(() => auth.purgeAdminProject(project.id), translate('Project permanently deleted.'))}
+                onAdd={(email, role) =>
+                  void run(() => auth.addProjectMember(project.id, email, role), translate('Member added.'))
+                }
+                onRemove={(userId) =>
+                  void run(() => auth.removeProjectMember(project.id, userId), translate('Member removed.'))
+                }
                 onTransferOwner={(email) =>
-                  void run(() => auth.transferProjectOwner(project.id, email), 'Project owner changed.')
+                  void run(() => auth.transferProjectOwner(project.id, email), translate('Project owner changed.'))
                 }
               />
             ))}
@@ -323,6 +346,7 @@ function AdminUserRow({
   onResetAppearance: (scope: AdminAppearanceResetScope) => void;
   onToggleBlocked: () => Promise<boolean>;
 }) {
+  useTranslation();
   const [editing, setEditing] = useState(false);
   const [resetScope, setResetScope] = useState<AdminAppearanceResetScope>('Defaults');
   const [draft, setDraft] = useState({ email: user.email, displayName: user.displayName, isAdmin: user.isAdmin });
@@ -342,7 +366,7 @@ function AdminUserRow({
         <input
           required
           maxLength={100}
-          aria-label="Display name"
+          aria-label={translate('Display name')}
           className="input-theme px-3 py-2 text-sm"
           value={draft.displayName}
           onChange={(event) => setDraft({ ...draft, displayName: event.target.value })}
@@ -350,21 +374,21 @@ function AdminUserRow({
         <input
           required
           type="email"
-          aria-label="Email address"
+          aria-label={translate('Email address')}
           disabled={user.id === currentUserId}
           className="input-theme px-3 py-2 text-sm"
           value={draft.email}
           onChange={(event) => setDraft({ ...draft, email: event.target.value })}
         />
         <select
-          aria-label="Application role"
+          aria-label={translate('Application role')}
           disabled={user.id === currentUserId}
           className="input-theme px-3 py-2 text-sm"
           value={draft.isAdmin ? 'admin' : 'user'}
           onChange={(event) => setDraft({ ...draft, isAdmin: event.target.value === 'admin' })}
         >
-          <option value="user">User</option>
-          <option value="admin">Administrator</option>
+          <option value="user">{translate('User')}</option>
+          <option value="admin">{translate('Administrator')}</option>
         </select>
         <div className="flex gap-2 sm:col-span-3 sm:justify-end">
           <button
@@ -375,9 +399,11 @@ function AdminUserRow({
               setEditing(false);
             }}
           >
-            Cancel
+            {translate('Cancel')}
           </button>
-          <button className="btn-accent rounded-lg px-3 py-1.5 text-xs font-semibold">Save changes</button>
+          <button className="btn-accent rounded-lg px-3 py-1.5 text-xs font-semibold">
+            {translate('Save changes')}
+          </button>
         </div>
       </form>
     );
@@ -392,28 +418,28 @@ function AdminUserRow({
         <p className="font-medium">{user.displayName}</p>
         <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
           {user.email} · {user.isAdmin ? 'admin' : 'user'}
-          {user.isBlocked ? ' · blocked' : ''}
+          {user.isBlocked ? ' ' + translate('· blocked') : ''}
         </p>
       </div>
       <button className="btn-ghost rounded-lg px-2 py-1 text-xs" onClick={() => setEditing(true)}>
-        Edit
+        {translate('Edit')}
       </button>
       <button className="btn-ghost rounded-lg px-2 py-1 text-xs" onClick={onResetPassword}>
-        Reset password
+        {translate('Reset password')}
       </button>
       <div className="flex max-w-full flex-wrap items-center gap-1">
         <select
-          aria-label={`Appearance reset scope for ${user.email}`}
+          aria-label={translate('Appearance reset scope for {{value1}}', { value1: user.email })}
           className="input-theme px-2 py-1 text-xs"
           value={resetScope}
           onChange={(event) => setResetScope(event.target.value as AdminAppearanceResetScope)}
         >
-          <option value="Defaults">Global defaults</option>
-          <option value="ProjectOverrides">Project overrides</option>
-          <option value="All">All appearance</option>
+          <option value="Defaults">{translate('Global defaults')}</option>
+          <option value="ProjectOverrides">{translate('Project overrides')}</option>
+          <option value="All">{translate('All appearance')}</option>
         </select>
         <button className="btn-ghost rounded-lg px-2 py-1 text-xs" onClick={() => onResetAppearance(resetScope)}>
-          Reset
+          {translate('Reset')}
         </button>
       </div>
       {user.id !== currentUserId && (
@@ -422,7 +448,7 @@ function AdminUserRow({
           style={{ color: user.isBlocked ? 'var(--color-success)' : 'var(--color-danger-strong)' }}
           onClick={() => void onToggleBlocked()}
         >
-          {user.isBlocked ? 'Unblock' : 'Block'}
+          {user.isBlocked ? translate('Unblock') : translate('Block')}
         </button>
       )}
     </div>
@@ -446,6 +472,7 @@ function ProjectCard({
   onRestore: () => Promise<boolean>;
   onPurge: () => Promise<boolean>;
 }) {
+  useTranslation();
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'Editor' | 'Commenter' | 'Viewer'>('Viewer');
   const [nextOwnerEmail, setNextOwnerEmail] = useState('');
@@ -459,16 +486,18 @@ function ProjectCard({
         <div className="opacity-60" aria-disabled="true">
           <h2 className="font-semibold">{project.name}</h2>
           <p className="text-sm">
-            Owner: {project.ownerEmail} · {project.userDeletedAt ? 'User-deleted' : 'Trashed'}
+            {translate('Owner:') + ' '}
+            {project.ownerEmail} · {project.userDeletedAt ? translate('User-deleted') : translate('Trashed')}
           </p>
           <p className="mt-2 text-xs">
-            {project.members.map((member) => `${member.email} (${member.role})`).join(' · ') || 'No members'}
+            {project.members.map((member) => `${member.email} (${displayLabel(member.role)})`).join(' · ') ||
+              translate('No members')}
           </p>
-          <p className="mt-2 text-xs">Restore this project to change ownership or membership.</p>
+          <p className="mt-2 text-xs">{translate('Restore this project to change ownership or membership.')}</p>
           {project.userDeletedAt && (
             <p className="mt-2 text-xs">
-              Scheduled for permanent deletion:{' '}
-              {new Date(new Date(project.userDeletedAt).getTime() + 30 * 86400000).toLocaleDateString()}
+              {translate('Scheduled for permanent deletion:')}{' '}
+              {new Date(new Date(project.userDeletedAt).getTime() + 30 * 86400000).toLocaleDateString(locale())}
             </p>
           )}
         </div>
@@ -485,13 +514,19 @@ function ProjectCard({
               }
             }}
           >
-            Restore project
+            {translate('Restore project')}
           </button>
           <button
             className="btn-ghost rounded-lg px-3 py-2 text-sm"
             disabled={busy}
             onClick={async () => {
-              if (!window.confirm(`Permanently delete “${project.name}” and all its boards? This cannot be undone.`))
+              if (
+                !window.confirm(
+                  translate('Permanently delete “{{value1}}” and all its boards? This cannot be undone.', {
+                    value1: project.name,
+                  }),
+                )
+              )
                 return;
               setBusy(true);
               try {
@@ -501,7 +536,7 @@ function ProjectCard({
               }
             }}
           >
-            Delete permanently
+            {translate('Delete permanently')}
           </button>
         </div>
       </article>
@@ -515,8 +550,9 @@ function ProjectCard({
         <div>
           <h2 className="font-semibold">{project.name}</h2>
           <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            Owner: {project.ownerEmail}
-            {project.deletedAt ? ' · trashed' : ''}
+            {translate('Owner:') + ' '}
+            {project.ownerEmail}
+            {project.deletedAt ? ' ' + translate('· trashed') : ''}
           </p>
         </div>
         <form
@@ -540,11 +576,11 @@ function ProjectCard({
             onChange={(event) => setRole(event.target.value as typeof role)}
             className="input-theme px-2 py-1 text-xs"
           >
-            <option>Viewer</option>
-            <option>Commenter</option>
-            <option>Editor</option>
+            <option value="Viewer">{translate('Viewer')}</option>
+            <option value="Commenter">{translate('Commenter')}</option>
+            <option value="Editor">{translate('Editor')}</option>
           </select>
-          <button className="btn-accent rounded-lg px-2 py-1 text-xs">Add</button>
+          <button className="btn-accent rounded-lg px-2 py-1 text-xs">{translate('Add')}</button>
         </form>
       </div>
       <form
@@ -552,13 +588,19 @@ function ProjectCard({
         style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
         onSubmit={(event) => {
           event.preventDefault();
-          if (!nextOwnerEmail || !window.confirm(`Transfer “${project.name}” to ${nextOwnerEmail}?`)) return;
+          if (
+            !nextOwnerEmail ||
+            !window.confirm(
+              translate('Transfer “{{value1}}” to {{value2}}?', { value1: project.name, value2: nextOwnerEmail }),
+            )
+          )
+            return;
           onTransferOwner(nextOwnerEmail);
           setNextOwnerEmail('');
         }}
       >
         <label className="text-xs font-semibold" htmlFor={`owner-${project.id}`}>
-          Change owner
+          {translate('Change owner')}
         </label>
         <select
           id={`owner-${project.id}`}
@@ -567,7 +609,7 @@ function ProjectCard({
           value={nextOwnerEmail}
           onChange={(event) => setNextOwnerEmail(event.target.value)}
         >
-          <option value="">Select a user</option>
+          <option value="">{translate('Select a user')}</option>
           {users
             .filter((user) => !user.isBlocked && user.id !== project.ownerId)
             .map((user) => (
@@ -576,9 +618,11 @@ function ProjectCard({
               </option>
             ))}
         </select>
-        <button className="btn-accent rounded-lg px-3 py-1 text-xs font-semibold">Transfer ownership</button>
+        <button className="btn-accent rounded-lg px-3 py-1 text-xs font-semibold">
+          {translate('Transfer ownership')}
+        </button>
         <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-          The current owner remains an Editor.
+          {translate('The current owner remains an Editor.')}
         </span>
       </form>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -588,8 +632,11 @@ function ProjectCard({
             className="inline-flex items-center gap-2 rounded-lg border px-2 py-1 text-xs"
             style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
           >
-            {member.email} · {member.role}
-            <button onClick={() => onRemove(member.userId)} aria-label={`Remove ${member.email}`}>
+            {member.email} · {displayLabel(member.role)}
+            <button
+              onClick={() => onRemove(member.userId)}
+              aria-label={translate('Remove {{value1}}', { value1: member.email })}
+            >
               ×
             </button>
           </span>

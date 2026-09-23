@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import type { HttpClient } from '@/shared/api/httpClient';
 import { fail } from '@/shared/api/errors';
 import type { WorkspaceServices } from './contracts';
@@ -29,9 +30,10 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
       };
     }
     const boards = await client.request(`/projects/${segment(project.id)}/boards`, { signal });
-    if (!Array.isArray(boards) || !boards[0]?.id) fail(422, 'invalid_response', 'Project has no default board.');
+    if (!Array.isArray(boards) || !boards[0]?.id)
+      fail(422, 'invalid_response', translate('Project has no default board.'));
     const board = parseBoardSnapshot(await client.request(`/boards/${segment(boards[0].id)}`, { signal }));
-    if (board.board.projectId !== project.id) fail(422, 'invalid_scope', 'Invalid board project.');
+    if (board.board.projectId !== project.id) fail(422, 'invalid_scope', translate('Invalid board project.'));
     projects.set(project.id, project);
     return { project, board };
   };
@@ -43,14 +45,15 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
         client.request(`/projects/${segment(id)}/boards`, { signal }),
       ]);
       const project = parseProjectRecord(projectValue);
-      if (!Array.isArray(value)) fail(422, 'invalid_response', 'Invalid board collection.');
+      if (!Array.isArray(value)) fail(422, 'invalid_response', translate('Invalid board collection.'));
       const current = value.find((entry) => entry.id === previous.board.board.id);
-      if (!current || typeof current.revision !== 'string') fail(404, 'not_found', 'Board is no longer available.');
+      if (!current || typeof current.revision !== 'string')
+        fail(404, 'not_found', translate('Board is no longer available.'));
       const changed = current.revision !== previous.board.board.revision;
       const board = changed
         ? parseBoardSnapshot(await client.request(`/boards/${segment(current.id)}`, { signal }))
         : previous.board;
-      if (board.board.projectId !== id) fail(422, 'invalid_scope', 'Invalid board project.');
+      if (board.board.projectId !== id) fail(422, 'invalid_scope', translate('Invalid board project.'));
       projects.set(id, project);
       return changed || project.revision !== previous.project.revision || project.role !== previous.project.role
         ? { project, board }
@@ -59,7 +62,7 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
     projects: {
       async list(signal) {
         const value = await client.request('/projects', { signal });
-        if (!Array.isArray(value)) fail(422, 'invalid_response', 'Invalid project collection.');
+        if (!Array.isArray(value)) fail(422, 'invalid_response', translate('Invalid project collection.'));
         return Promise.all(value.map((entry) => snapshot(parseProjectRecord(entry), signal)));
       },
       async create(input) {
@@ -121,7 +124,7 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
       },
       async list(projectId, signal) {
         const value = await client.request(`/projects/${segment(projectId)}/boards`, { signal });
-        if (!Array.isArray(value)) fail(422, 'invalid_response', 'Invalid board collection.');
+        if (!Array.isArray(value)) fail(422, 'invalid_response', translate('Invalid board collection.'));
         return value.map(parseBoardRecord);
       },
       async create(projectId, name) {
@@ -130,15 +133,15 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
           body: { name },
         });
         const board = parseBoardRecord(value);
-        if (board.projectId !== projectId) fail(422, 'invalid_scope', 'Invalid board project.');
+        if (board.projectId !== projectId) fail(422, 'invalid_scope', translate('Invalid board project.'));
         if (!value || typeof value !== 'object' || typeof (value as { id?: unknown }).id !== 'string')
-          fail(422, 'invalid_response', 'Invalid board response.');
+          fail(422, 'invalid_response', translate('Invalid board response.'));
         return parseBoardSnapshot({ board, items: [], links: [], comments: [], tags: [], itemTags: [] });
       },
       async rename(projectId, boardId, name) {
         const value = await client.request(`/boards/${segment(boardId)}`, { method: 'PATCH', body: { name } });
         const board = parseBoardRecord(value);
-        if (board.projectId !== projectId) fail(422, 'invalid_scope', 'Invalid board project.');
+        if (board.projectId !== projectId) fail(422, 'invalid_scope', translate('Invalid board project.'));
         return board;
       },
       async delete(projectId, boardId) {
@@ -150,9 +153,9 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
       },
       async mutate(projectId, boardId, mutation) {
         const role = projects.get(projectId)?.role;
-        if (role === 'Viewer' || role === 'Commenter') fail(403, 'forbidden', 'This project is read-only.');
+        if (role === 'Viewer' || role === 'Commenter') fail(403, 'forbidden', translate('This project is read-only.'));
         if (mutation.upserts.length + mutation.deletes.length > 2000)
-          fail(422, 'batch_limit', 'Save fewer than 2,001 item changes at a time.');
+          fail(422, 'batch_limit', translate('Save fewer than 2,001 item changes at a time.'));
         let body = mutationBodies.get(mutation);
         if (!body) {
           // Untagged edits do not need a full snapshot before the write.
@@ -162,13 +165,13 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
           const tags = new Map(existingTags.map((tag) => [tag.normalizedName, tag]));
           const upserts = [];
           for (const entry of mutation.upserts) {
-            if (entry.tags.length > 100) fail(422, 'invalid_tag', 'An item may have at most 100 tags.');
+            if (entry.tags.length > 100) fail(422, 'invalid_tag', translate('An item may have at most 100 tags.'));
             const tagIds = new Set<string>();
             for (const name of entry.tags) {
               const displayName = name.trim();
               const normalizedName = displayName.normalize('NFKC').toLowerCase();
               if (!normalizedName.trim() || displayName.length > 64 || normalizedName.length > 64)
-                fail(422, 'invalid_tag', 'Tag names must contain 1 to 64 characters.');
+                fail(422, 'invalid_tag', translate('Tag names must contain 1 to 64 characters.'));
               let tag = tags.get(normalizedName);
               if (!tag) {
                 const value = await client.request(`/projects/${segment(projectId)}/tags`, {
@@ -187,7 +190,7 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
                   !('normalizedName' in value) ||
                   typeof value.normalizedName !== 'string'
                 )
-                  fail(422, 'invalid_response', 'Invalid tag response.');
+                  fail(422, 'invalid_response', translate('Invalid tag response.'));
                 tag = { id: value.id, projectId, name: value.name, normalizedName: value.normalizedName };
                 tags.set(normalizedName, tag);
               }
@@ -210,14 +213,18 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
           !('conflicts' in result) ||
           !Array.isArray(result.conflicts)
         )
-          fail(422, 'invalid_response', 'Invalid mutation response.');
+          fail(422, 'invalid_response', translate('Invalid mutation response.'));
         if (result.conflicts.length)
-          fail(409, 'revision_mismatch', 'The board changed in another session. Local changes are preserved.');
+          fail(
+            409,
+            'revision_mismatch',
+            translate('The board changed in another session. Local changes are preserved.'),
+          );
         return parseBoardSnapshot(await client.request(`/boards/${segment(boardId)}`));
       },
       async listTrash(projectId) {
         const value = await client.request(`/projects/${segment(projectId)}/item-trash`);
-        if (!Array.isArray(value)) fail(422, 'invalid_response', 'Invalid item trash response.');
+        if (!Array.isArray(value)) fail(422, 'invalid_response', translate('Invalid item trash response.'));
         return value.map(parseTrashedItem);
       },
       async restoreTrashItem(projectId, itemId, targetBoardId, position) {

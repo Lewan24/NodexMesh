@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { paletteKeys, paletteBackground } from '@/features/appearance/appearanceModel';
@@ -33,6 +35,7 @@ interface ColumnBlockProps {
 }
 
 function DropIndicator({ layout }: { layout: 'vertical' | 'horizontal' | 'grid' }) {
+  useTranslation();
   if (layout === 'grid') {
     return (
       <div
@@ -79,6 +82,7 @@ export default function ColumnBlock({
   searchActive = false,
   searchMatchIds,
 }: ColumnBlockProps) {
+  useTranslation();
   const { appearance, theme } = useTheme();
   const palette = appearance[theme];
   const [editingTitle, setEditingTitle] = useState(false);
@@ -329,7 +333,7 @@ export default function ColumnBlock({
                 onClick={() => setShowBackgroundMenu((previous) => !previous)}
                 className="w-4 h-4 rounded-full border-2 transition-transform hover:scale-125 cursor-pointer"
                 style={{ background, borderColor: columnLight ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)' }}
-                title="Column background color"
+                title={translate('Column background color')}
               />
 
               {showBackgroundMenu && (
@@ -339,7 +343,7 @@ export default function ColumnBlock({
                   onMouseDown={(event) => event.stopPropagation()}
                 >
                   <p className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                    Layout background
+                    {translate('Layout background')}
                   </p>
 
                   <div className="flex flex-wrap gap-2">
@@ -400,7 +404,7 @@ export default function ColumnBlock({
                 color: headerMutedColor,
                 backgroundColor: columnLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.08)',
               }}
-              title={`${items.length} items`}
+              title={translate('{{value1}} items', { value1: items.length })}
             >
               {items.length}
             </span>
@@ -423,7 +427,7 @@ export default function ColumnBlock({
                 event.currentTarget.style.color = headerMutedColor;
                 event.currentTarget.style.backgroundColor = 'transparent';
               }}
-              title="Delete layout"
+              title={translate('Delete layout')}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M18 6 6 18M6 6l12 12" />
@@ -549,9 +553,9 @@ export default function ColumnBlock({
                       event.stopPropagation();
                       resetNestedItemWidth(nestedItem.id);
                     }}
-                    title={`Resize item (${Math.round(
-                      nestedItem.width ?? ITEM_WIDTH[nestedItem.type],
-                    )}px) · Double-click to reset`}
+                    title={translate('Resize item ({{value1}}px) · Double-click to reset', {
+                      value1: Math.round(nestedItem.width ?? ITEM_WIDTH[nestedItem.type]),
+                    })}
                   >
                     <div
                       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-8 rounded-full opacity-0 group-hover/nested:opacity-50 group-hover/resize:opacity-100 transition-all"
@@ -575,7 +579,7 @@ export default function ColumnBlock({
                 borderColor: columnLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
               }}
             >
-              Drop items here or click + to add
+              {translate('Drop items here or click + to add')}
             </div>
           )}
         </div>
@@ -605,7 +609,7 @@ export default function ColumnBlock({
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 5v14M5 12h14" />
             </svg>
-            Add item
+            {translate('Add item')}
           </button>
 
           {showAddMenu && (

@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 
 import type { KanbanCard } from '@/entities/board/types';
@@ -36,6 +38,7 @@ export default function KanbanCardItem({
   onEdit,
   onDragHandleMouseDown,
 }: KanbanCardItemProps) {
+  useTranslation();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(card.text);
 
@@ -72,7 +75,7 @@ export default function KanbanCardItem({
         event.currentTarget.style.borderColor = cardBorder;
       }}
     >
-      <DragHandle compact color={mutedColor} title="Drag card" onMouseDown={onDragHandleMouseDown} />
+      <DragHandle compact color={mutedColor} title={translate('Drag card')} onMouseDown={onDragHandleMouseDown} />
 
       {/* Done toggle */}
 
@@ -136,7 +139,7 @@ export default function KanbanCardItem({
         onMouseLeave={(event) => {
           event.currentTarget.style.color = mutedColor;
         }}
-        title="Delete card"
+        title={translate('Delete card')}
       >
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M18 6 6 18M6 6l12 12" />

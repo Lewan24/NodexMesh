@@ -12,6 +12,7 @@ const server = await createServer({
   resolve: { alias: { '@': fileURLToPath(new URL('../src', import.meta.url)) } },
   server: { middlewareMode: true, watch: null, hmr: false },
 });
+await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 const { normalizeItemNumbers } = await server.ssrLoadModule('/src/entities/board/normalizeNumbers.ts');
 const { createEmptySibling } = await server.ssrLoadModule('/src/features/canvas/utils/quickCreate.ts');
@@ -807,7 +808,7 @@ test('overlapping frames preserve ownership through movement, transfer, deletion
   const migrated = normalizeFrameMembership([a, b, note]);
   const owned = migrated[2];
   assert.equal(owned.frameId, b.id);
-  assert.deepEqual(getFrameContents(a, migrated), []);
+  assert.deepEqual(getFrameContents(a, migrated), [migrated[1]]);
   assert.deepEqual(getFrameContents(b, migrated), [owned]);
   assert.equal(normalizeFrameMembership([{ ...a, width: 400 }, b, owned])[2].frameId, b.id);
   const transferred = { ...owned, frameId: a.id };

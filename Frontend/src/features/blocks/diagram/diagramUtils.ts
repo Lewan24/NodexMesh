@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { createId } from '@/shared/lib/createId';
 import type { DiagramEdge, DiagramNode } from '@/entities/board/types';
 
@@ -40,37 +41,37 @@ export function diagramTemplate(): { nodes: DiagramNode[]; edges: DiagramEdge[] 
       id: ids[0]!,
       type: 'shape',
       position: { x: 220, y: 0 },
-      data: { label: 'Request received', shape: 'terminal', color: '#0f766e' },
+      data: { label: translate('Request received'), shape: 'terminal', color: '#0f766e' },
     },
     {
       id: ids[1]!,
       type: 'shape',
       position: { x: 220, y: 150 },
-      data: { label: 'Valid request?', shape: 'decision', color: '#b45309' },
+      data: { label: translate('Valid request?'), shape: 'decision', color: '#b45309' },
     },
     {
       id: ids[2]!,
       type: 'shape',
       position: { x: 0, y: 340 },
-      data: { label: 'Process request', shape: 'process', color: '#7c3aed' },
+      data: { label: translate('Process request'), shape: 'process', color: '#7c3aed' },
     },
     {
       id: ids[3]!,
       type: 'shape',
       position: { x: 440, y: 340 },
-      data: { label: 'Return error', shape: 'terminal', color: '#be123c' },
+      data: { label: translate('Return error'), shape: 'terminal', color: '#be123c' },
     },
     {
       id: ids[4]!,
       type: 'shape',
       position: { x: 0, y: 490 },
-      data: { label: 'Save result', shape: 'database', color: '#0369a1' },
+      data: { label: translate('Save result'), shape: 'database', color: '#0369a1' },
     },
   ];
   const edges = [
     [0, 1, ''],
-    [1, 2, 'Yes'],
-    [1, 3, 'No'],
+    [1, 2, translate('Yes')],
+    [1, 3, translate('No')],
     [2, 4, ''],
   ].map(([source, target, label]) => ({
     id: createId(),

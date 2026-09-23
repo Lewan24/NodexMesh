@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import type { BoardSnapshot, ItemRecord, TrashedItemRecord } from '@/entities/board/records';
 import type { BoardRecord } from '@/entities/board/records';
 import type { ProjectRecord, ProjectSnapshot } from '@/entities/project/types';
@@ -7,19 +8,19 @@ import { validateBoard } from '@/entities/board/boardValidation';
 
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value))
-    fail(422, 'invalid_response', 'Invalid API response.');
+    fail(422, 'invalid_response', translate('Invalid API response.'));
   return value as Record<string, unknown>;
 }
 function string(value: unknown): asserts value is string {
-  if (typeof value !== 'string') fail(422, 'invalid_response', 'Invalid API response field.');
+  if (typeof value !== 'string') fail(422, 'invalid_response', translate('Invalid API response field.'));
 }
 function audit(value: Record<string, unknown>) {
   string(value.id);
   if (typeof value.revision !== 'string' || !/^[1-9]\d{0,18}$/.test(value.revision))
-    fail(422, 'invalid_revision', 'Invalid revision.');
+    fail(422, 'invalid_revision', translate('Invalid revision.'));
   for (const key of ['createdAt', 'updatedAt']) {
     string(value[key]);
-    if (!Number.isFinite(Date.parse(value[key]))) fail(422, 'invalid_date', 'Invalid timestamp.');
+    if (!Number.isFinite(Date.parse(value[key]))) fail(422, 'invalid_date', translate('Invalid timestamp.'));
   }
   for (const key of ['createdBy', 'updatedBy', 'deletedAt']) if (value[key] !== null) string(value[key]);
 }
@@ -29,6 +30,8 @@ export function parseProjectRecord(value: unknown): ProjectRecord {
   audit(project);
   if (project.color === null) project.color = '#7C3AED';
   for (const key of ['name', 'color', 'ownerId']) string(project[key]);
+  if (project.itemCount !== undefined && (!Number.isInteger(project.itemCount) || (project.itemCount as number) < 0))
+    fail(422, 'invalid_response', translate('Invalid project item count.'));
   return project as unknown as ProjectRecord;
 }
 
@@ -39,31 +42,32 @@ export function parseBoardSnapshot(value: unknown): BoardSnapshot {
   string(board.projectId);
   string(board.name);
   for (const key of ['items', 'links', 'comments', 'tags', 'itemTags']) {
-    if (!Array.isArray(snapshot[key])) fail(422, 'invalid_response', 'Invalid board collection.');
+    if (!Array.isArray(snapshot[key])) fail(422, 'invalid_response', translate('Invalid board collection.'));
   }
   const result = snapshot as unknown as BoardSnapshot;
   const ids = new Set<string>();
   for (const item of result.items) {
     audit(record(item));
     validateItem(item);
-    if (item.boardId !== board.id || ids.has(item.id)) fail(422, 'invalid_scope', 'Invalid item scope or ID.');
+    if (item.boardId !== board.id || ids.has(item.id))
+      fail(422, 'invalid_scope', translate('Invalid item scope or ID.'));
     ids.add(item.id);
   }
   for (const comment of result.comments) {
     audit(record(comment));
     string(comment.text);
     if (!ids.has(comment.itemId) || !['open', 'todo', 'in-progress', 'resolved'].includes(comment.status))
-      fail(422, 'invalid_comment', 'Invalid comment.');
+      fail(422, 'invalid_comment', translate('Invalid comment.'));
   }
   for (const tag of result.tags) {
     string(tag.id);
     string(tag.name);
     string(tag.normalizedName);
-    if (tag.projectId !== board.projectId) fail(422, 'invalid_scope', 'Invalid tag scope.');
+    if (tag.projectId !== board.projectId) fail(422, 'invalid_scope', translate('Invalid tag scope.'));
   }
   for (const tag of result.itemTags) {
     if (!ids.has(tag.itemId) || !result.tags.some((t) => t.id === tag.tagId))
-      fail(422, 'invalid_tag', 'Invalid tag reference.');
+      fail(422, 'invalid_tag', translate('Invalid tag reference.'));
   }
   validateBoard(result);
   return result;
@@ -76,7 +80,7 @@ export function parseTrashedItem(value: unknown): TrashedItemRecord {
   string(item.boardId);
   validateItem(item as unknown as ItemRecord);
   string(entry.boardName);
-  if (!item.deletedAt) fail(422, 'invalid_response', 'Trash contains an active item.');
+  if (!item.deletedAt) fail(422, 'invalid_response', translate('Trash contains an active item.'));
   return { item: item as unknown as ItemRecord, boardName: entry.boardName };
 }
 
@@ -84,19 +88,19 @@ export function parseBoardRecord(value: unknown): BoardRecord {
   const board = record(value);
   audit(board);
   for (const key of ['projectId', 'name']) string(board[key]);
-  if (!Number.isInteger(board.sortOrder)) fail(422, 'invalid_response', 'Invalid board ordering.');
+  if (!Number.isInteger(board.sortOrder)) fail(422, 'invalid_response', translate('Invalid board ordering.'));
   return board as unknown as BoardRecord;
 }
 
 export function parseProjectSnapshots(value: unknown): ProjectSnapshot[] {
-  if (!Array.isArray(value)) fail(422, 'invalid_response', 'Invalid project collection.');
+  if (!Array.isArray(value)) fail(422, 'invalid_response', translate('Invalid project collection.'));
   const ids = new Set<string>();
   return value.map((entry: unknown) => {
     const snapshot = record(entry);
     const project = parseProjectRecord(snapshot.project);
     const board = parseBoardSnapshot(snapshot.board);
     if (board.board.projectId !== project.id || ids.has(project.id))
-      fail(422, 'invalid_scope', 'Invalid project scope or ID.');
+      fail(422, 'invalid_scope', translate('Invalid project scope or ID.'));
     ids.add(project.id);
     return { project, board };
   });

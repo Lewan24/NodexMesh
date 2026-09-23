@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import type { Project, ProjectSnapshot } from '@/entities/project/types';
 import { canonicalJson } from '@/shared/api/canonicalJson';
 import { fail } from '@/shared/api/errors';
@@ -47,7 +48,9 @@ function conflict(): never {
   return fail(
     409,
     'collaboration_conflict',
-    'You and a collaborator changed the same content. Your local draft is preserved. Download it or reload the shared version.',
+    translate(
+      'You and a collaborator changed the same content. Your local draft is preserved. Download it or reload the shared version.',
+    ),
   );
 }
 

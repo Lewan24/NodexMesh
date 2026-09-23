@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 interface ColorSwatchProps {
   color: string;
   active?: boolean;
@@ -6,6 +7,7 @@ interface ColorSwatchProps {
 }
 
 export default function ColorSwatch({ color, active = false, size = 12, onClick }: ColorSwatchProps) {
+  useTranslation();
   return (
     <button
       onClick={onClick}
@@ -14,7 +16,7 @@ export default function ColorSwatch({ color, active = false, size = 12, onClick 
       style={{
         width: active ? size + 3 : size,
         height: active ? size + 3 : size,
-        backgroundColor: color,
+        background: color,
         borderColor: active ? '#7C3AED' : 'rgba(0,0,0,0.15)',
         boxShadow: active ? '0 0 0 2px rgba(124, 58, 237,0.4)' : 'none',
       }}

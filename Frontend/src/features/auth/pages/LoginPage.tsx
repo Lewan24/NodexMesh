@@ -1,7 +1,11 @@
+import LanguageSelect from '@/shared/i18n/LanguageSelect';
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { isMockDataSource } from '@/app/services';
 import { useLoginForm } from '@/features/auth/hooks/useLoginForm';
 
 export default function LoginPage() {
+  useTranslation();
   const {
     registering,
     registrationAvailable,
@@ -56,6 +60,7 @@ export default function LoginPage() {
           animation: 'slide-up 0.25s ease forwards',
         }}
       >
+        <LanguageSelect />
         {/* Logo */}
 
         <div className="flex flex-col items-center gap-2 mb-7">
@@ -79,14 +84,14 @@ export default function LoginPage() {
           </span>
 
           <p className="text-sm text-center mt-1" style={{ color: 'var(--color-text-muted)' }}>
-            Sign in to open your boards
+            {translate('Sign in to open your boards')}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-              {isMockDataSource ? 'Username' : 'Email'}
+              {isMockDataSource ? translate('Username') : translate('Email')}
             </span>
 
             <input
@@ -94,7 +99,7 @@ export default function LoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               type={isMockDataSource ? 'text' : 'email'}
-              placeholder={isMockDataSource ? 'e.g. demo' : 'you@example.com'}
+              placeholder={isMockDataSource ? translate('e.g. demo') : 'you@example.com'}
               className="input-theme text-sm px-3.5 py-2.5"
               autoComplete="username"
             />
@@ -102,7 +107,7 @@ export default function LoginPage() {
 
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-              Password
+              {translate('Password')}
             </span>
 
             <input
@@ -117,7 +122,7 @@ export default function LoginPage() {
 
           {registering && (
             <label className="flex flex-col gap-1.5 text-xs">
-              Confirm password (12+ characters, uppercase, lowercase, number and symbol)
+              {translate('Confirm password (12+ characters, uppercase, lowercase, number and symbol)')}
               <input
                 type="password"
                 value={confirmPassword}
@@ -142,7 +147,7 @@ export default function LoginPage() {
             disabled={submitting}
             className="btn-accent text-sm font-semibold rounded-xl py-2.5 mt-1.5 disabled:opacity-60"
           >
-            {submitting ? 'Please wait…' : registering ? 'Create account' : 'Sign in'}
+            {submitting ? translate('Please wait…') : registering ? translate('Create account') : translate('Sign in')}
           </button>
         </form>
         {!isMockDataSource && registrationAvailable && (
@@ -152,12 +157,14 @@ export default function LoginPage() {
             className="text-sm mt-4"
             onClick={() => setRegistering(!registering)}
           >
-            {registering ? 'Back to sign in' : 'Create an account'}
+            {registering ? translate('Back to sign in') : translate('Create an account')}
           </button>
         )}
 
         <p className="text-xs text-center mt-6" style={{ color: 'var(--color-text-muted)' }}>
-          {isMockDataSource ? 'Sign in with a demo account.' : 'Sign in with your registered email address.'}
+          {isMockDataSource
+            ? translate('Sign in with a demo account.')
+            : translate('Sign in with your registered email address.')}
         </p>
 
         {/* Handy for first-time reviewers of this build */}
@@ -167,7 +174,9 @@ export default function LoginPage() {
             className="mt-4 text-[11px] rounded-xl px-3 py-2 leading-relaxed"
             style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-muted)' }}
           >
-            Demo logins — <strong>demo / demo123</strong> (user) or <strong>admin / admin123</strong> (admin)
+            {translate('Demo logins —') + ' '}
+            <strong>demo / demo123</strong> {' ' + translate('(user) or') + ' '}
+            <strong>admin / admin123</strong> {' ' + translate('(admin)')}
           </div>
         )}
       </div>

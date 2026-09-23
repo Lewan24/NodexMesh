@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { SectionTitleItem } from '@/entities/board/types';
 import type { BlockUpdateHandler } from '../types';
 import { useTheme } from '@/app/providers/ThemeProvider';
@@ -12,6 +13,7 @@ export default function SectionTitleBlock({
   zoom: number;
   onUpdate: BlockUpdateHandler;
 }) {
+  useTranslation();
   const { appearance, theme } = useTheme();
   const color = item.colorRole ? appearance[theme][item.colorRole] : (item.color ?? '#7C3AED');
   return (

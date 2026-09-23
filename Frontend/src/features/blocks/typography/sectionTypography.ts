@@ -1,9 +1,14 @@
+import { translate } from '@/shared/i18n';
 import type { CSSProperties } from 'react';
 import type { BoardItem, TextSection, TextSectionStyle, TypographySettings } from '@/entities/board/types';
 
 export const SECTION_LABELS: Record<TextSection, string> = {
-  title: 'Title',
-  description: 'Description',
+  get title() {
+    return translate('Title');
+  },
+  get description() {
+    return translate('Description');
+  },
   body: 'Body',
   links: 'Links',
   caption: 'Caption',

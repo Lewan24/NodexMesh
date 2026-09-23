@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { BoardItem, FrameItem } from '@/entities/board/types';
 import { colorWithOpacity } from '@/features/canvas/utils/colorUtils';
 
@@ -11,6 +12,7 @@ interface FrameBlockProps {
 }
 
 export default function FrameBlock({ item }: FrameBlockProps) {
+  useTranslation();
   return (
     <div className="group/frame" style={{ width: item.width, height: item.height, pointerEvents: 'none' }}>
       {/* Frame background / border */}

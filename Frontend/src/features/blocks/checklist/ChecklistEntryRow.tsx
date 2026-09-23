@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useSectionStyle } from '../typography/TypographyContext';
 import { useEffect, useRef, useState } from 'react';
 
@@ -25,6 +27,7 @@ export default function ChecklistEntryRow({
   onEdit,
   onDragHandleMouseDown,
 }: ChecklistEntryRowProps) {
+  useTranslation();
   const sectionStyle = useSectionStyle('body');
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(entry.text);
@@ -69,7 +72,7 @@ export default function ChecklistEntryRow({
       <DragHandle
         compact
         color={`${textColor}90`}
-        title="Drag to reorder or move to Checklist / Kanban"
+        title={translate('Drag to reorder or move to Checklist / Kanban')}
         onMouseDown={onDragHandleMouseDown}
       />
 
@@ -79,7 +82,7 @@ export default function ChecklistEntryRow({
         onClick={onToggle}
         role="checkbox"
         aria-checked={entry.done}
-        aria-label={`Complete ${entry.text || 'checklist item'}`}
+        aria-label={translate('Complete {{value1}}', { value1: entry.text || translate('Checklist item') })}
         className="flex-shrink-0 w-4 h-4 mt-0.5 rounded flex items-center justify-center transition-all duration-200 border"
         style={{
           borderColor: entry.done ? accentColor : `${textColor}40`,
@@ -130,7 +133,7 @@ export default function ChecklistEntryRow({
           style={{ color: textColor, ...sectionStyle, textDecoration: entry.done ? 'line-through' : 'none' }}
           onDoubleClick={() => setEditing(true)}
         >
-          {entry.text || <span style={{ opacity: 0.4 }}>Untitled</span>}
+          {entry.text || <span style={{ opacity: 0.4 }}>{translate('Untitled')}</span>}
         </span>
       )}
 

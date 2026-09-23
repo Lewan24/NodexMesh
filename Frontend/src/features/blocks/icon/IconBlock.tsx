@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { Pencil } from 'lucide-react';
 import type { IconItem } from '@/entities/board/types';
@@ -14,6 +16,7 @@ export default function IconBlock({
   isSelected: boolean;
   onUpdate: BlockUpdateHandler;
 }) {
+  useTranslation();
   const [editing, setEditing] = useState(false);
   const width = Math.max(24, item.width ?? 96);
   const height = Math.max(24, item.height ?? 96);
@@ -29,8 +32,8 @@ export default function IconBlock({
       {isSelected && !item.locked && (
         <button
           type="button"
-          aria-label="Edit icon"
-          title="Edit icon · Double-click"
+          aria-label={translate('Edit icon')}
+          title={translate('Edit icon · Double-click')}
           className="icon-edit-button absolute top-0 -right-10 w-8 h-8 flex items-center justify-center rounded-lg shadow cursor-pointer"
           data-canvas-ui="true"
           style={{ background: 'var(--color-surface)', color: 'var(--color-text-primary)' }}

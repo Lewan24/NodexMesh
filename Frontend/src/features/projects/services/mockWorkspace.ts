@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { createId } from '@/shared/lib/createId';
 import { validateBoard } from '@/entities/board/boardValidation';
 import { parseProjectSnapshots } from './responseValidation';
@@ -55,7 +56,7 @@ function applyItem(board: BoardSnapshot, entry: ItemMutation, userId: string): v
     'data',
   ];
   if (Object.keys(entry.item).some((key) => !allowed.includes(key)))
-    fail(422, 'read_only_field', 'Server-owned item fields cannot be submitted.');
+    fail(422, 'read_only_field', translate('Server-owned item fields cannot be submitted.'));
   validateItem(entry.item);
   const old = board.items.find((item) => item.id === entry.item.id);
   const item = { ...entry.item, ...(old ? touch(old, userId) : audit(userId)), ...entry.item, deletedAt: null };
@@ -69,9 +70,10 @@ function applyItem(board: BoardSnapshot, entry: ItemMutation, userId: string): v
   );
   for (const comment of entry.comments) {
     const previous = board.comments.find((c) => c.id === comment.id);
-    if (previous && previous.itemId !== item.id) fail(422, 'invalid_comment', 'Comment belongs to another item.');
+    if (previous && previous.itemId !== item.id)
+      fail(422, 'invalid_comment', translate('Comment belongs to another item.'));
     if (comment.text.length > 10_000 || !['open', 'todo', 'in-progress', 'resolved'].includes(comment.status)) {
-      fail(422, 'invalid_comment', 'Invalid comment.');
+      fail(422, 'invalid_comment', translate('Invalid comment.'));
     }
     const metadata = previous
       ? previous.text === comment.text && previous.status === comment.status && !previous.deletedAt
@@ -90,11 +92,11 @@ function applyItem(board: BoardSnapshot, entry: ItemMutation, userId: string): v
       });
   }
   board.itemTags = board.itemTags.filter((t) => t.itemId !== item.id);
-  if (entry.tags.length > 100) fail(422, 'invalid_tags', 'Too many tags.');
+  if (entry.tags.length > 100) fail(422, 'invalid_tags', translate('Too many tags.'));
   for (const name of entry.tags) {
     const normalizedName = name.trim().normalize('NFKC').toLowerCase();
     if (!normalizedName || name.trim().length > 64 || normalizedName.length > 64)
-      fail(422, 'invalid_tag', 'Invalid tag.');
+      fail(422, 'invalid_tag', translate('Invalid tag.'));
     let tag = board.tags.find((t) => t.normalizedName === normalizedName);
     if (!tag) {
       tag = { id: createId(), projectId: board.board.projectId, name: name.trim(), normalizedName };
@@ -113,7 +115,7 @@ export function createMockWorkspace(
 ): WorkspaceServices {
   const key = mockWorkspaceKey(userId);
   const authorize = () => {
-    if (currentUserId() !== userId) fail(401, 'session_expired', 'Please sign in again.');
+    if (currentUserId() !== userId) fail(401, 'session_expired', translate('Please sign in again.'));
   };
   function read(): Database {
     authorize();
@@ -160,21 +162,21 @@ export function createMockWorkspace(
       return fail(
         422,
         'invalid_storage',
-        'Stored mock data is invalid or uses a newer schema. It was not overwritten.',
+        translate('Stored mock data is invalid or uses a newer schema. It was not overwritten.'),
       );
     }
   }
   function find(db: Database, id: string): ProjectSnapshot {
     return (
       db.projects.find((p) => p.project.id === id && p.project.ownerId === userId && !p.project.userDeletedAt) ??
-      fail(404, 'not_found', 'Project not found.')
+      fail(404, 'not_found', translate('Project not found.'))
     );
   }
   function findBoard(db: Database, projectId: string, boardId: string): BoardSnapshot {
     find(db, projectId);
     return (
       db.boards[projectId]?.find((board) => board.board.id === boardId && !board.board.deletedAt) ??
-      fail(404, 'not_found', 'Board not found.')
+      fail(404, 'not_found', translate('Board not found.'))
     );
   }
   async function locked<T>(operation: () => T): Promise<T> {
@@ -202,7 +204,9 @@ export function createMockWorkspace(
         fail(
           507,
           'storage_full',
-          'Browser storage is full. Your changes are still open. Download a local draft before closing this page.',
+          translate(
+            'Browser storage is full. Your changes are still open. Download a local draft before closing this page.',
+          ),
         );
       }
     }
@@ -214,7 +218,7 @@ export function createMockWorkspace(
       const previous = db.receipts[id];
       if (previous) {
         if (previous.request !== serialized)
-          fail(409, 'mutation_reused', 'Mutation ID was reused with different content.');
+          fail(409, 'mutation_reused', translate('Mutation ID was reused with different content.'));
         return structuredClone(previous.result) as T;
       }
       const result = operation(db);
@@ -236,37 +240,57 @@ export function createMockWorkspace(
             for (const source of seedProjectsFor(userId)) {
               const demo = renewProjectIds(source);
               const metadata = audit(userId);
-              const board: BoardSnapshot = {
-                board: { id: createId(), projectId: demo.id, name: 'Board', sortOrder: 0, ...metadata },
-                items: [],
-                links: [],
-                comments: [],
-                tags: [],
-                itemTags: [],
-              };
-              for (const entry of flattenItems(demo.items, board.board.id)) applyItem(board, entry, userId);
-              validateBoard(board);
+              const sourceBoards = demo.boards?.length
+                ? demo.boards
+                : [{ id: createId(), name: translate('Board'), items: demo.items }];
+              const boards = sourceBoards.map((sourceBoard, sortOrder): BoardSnapshot => {
+                const board: BoardSnapshot = {
+                  board: { id: sourceBoard.id, projectId: demo.id, name: sourceBoard.name, sortOrder, ...metadata },
+                  items: [],
+                  links: [],
+                  comments: [],
+                  tags: [],
+                  itemTags: [],
+                };
+                for (const entry of flattenItems(sourceBoard.items, board.board.id)) applyItem(board, entry, userId);
+                validateBoard(board);
+                return board;
+              });
               db.projects.push({
                 project: { id: demo.id, ownerId: userId, name: demo.name, color: demo.color, ...metadata },
-                board,
+                board: boards[0]!,
               });
-              db.boards[demo.id] = [board];
+              db.boards[demo.id] = boards;
             }
             persist(db);
           }
-          return structuredClone(db.projects.filter((entry) => !entry.project.userDeletedAt));
+          return structuredClone(
+            db.projects
+              .filter((entry) => !entry.project.userDeletedAt)
+              .map((entry) => ({
+                ...entry,
+                project: {
+                  ...entry.project,
+                  itemCount: (db.boards[entry.project.id] ?? [entry.board]).reduce(
+                    (count, board) => count + board.items.filter((item) => !item.deletedAt).length,
+                    0,
+                  ),
+                },
+              })),
+          );
         });
       },
       create(input) {
         return transaction(input.clientMutationId, { action: 'create', input }, (db) => {
-          if (db.projects.some((p) => p.project.id === input.id)) fail(409, 'duplicate_id', 'Project already exists.');
+          if (db.projects.some((p) => p.project.id === input.id))
+            fail(409, 'duplicate_id', translate('Project already exists.'));
           if (!input.name.trim() || input.name.length > 200)
-            fail(422, 'invalid_name', 'Project name must contain 1–200 characters.');
+            fail(422, 'invalid_name', translate('Project name must contain 1–200 characters.'));
           const metadata = audit(userId);
           const snapshot: ProjectSnapshot = {
             project: { id: input.id, ownerId: userId, name: input.name.trim(), color: input.color, ...metadata },
             board: {
-              board: { id: createId(), projectId: input.id, name: 'Board', sortOrder: 0, ...metadata },
+              board: { id: createId(), projectId: input.id, name: translate('Board'), sortOrder: 0, ...metadata },
               items: [],
               links: [],
               comments: [],
@@ -283,9 +307,9 @@ export function createMockWorkspace(
         return transaction(input.clientMutationId, { action: 'update', id, input }, (db) => {
           const snapshot = find(db, id);
           if (snapshot.project.revision !== input.expectedRevision)
-            fail(409, 'revision_conflict', 'Project changed in another session.');
+            fail(409, 'revision_conflict', translate('Project changed in another session.'));
           if (!input.name.trim() || input.name.length > 200)
-            fail(422, 'invalid_name', 'Project name must contain 1–200 characters.');
+            fail(422, 'invalid_name', translate('Project name must contain 1–200 characters.'));
           snapshot.project = {
             ...touch(snapshot.project, userId),
             name: input.name.trim(),
@@ -299,7 +323,7 @@ export function createMockWorkspace(
         return transaction(clientMutationId, { action: 'purge', id, expectedRevision }, (db) => {
           const snapshot = find(db, id);
           if (!snapshot.project.deletedAt || snapshot.project.revision !== expectedRevision)
-            fail(409, 'revision_conflict', 'Only an unchanged trashed project can be removed.');
+            fail(409, 'revision_conflict', translate('Only an unchanged trashed project can be removed.'));
           snapshot.project = { ...touch(snapshot.project, userId), userDeletedAt: new Date().toISOString() };
         });
       },
@@ -308,18 +332,19 @@ export function createMockWorkspace(
       saveComments(projectId, boardId, itemId, changes) {
         return transaction(createId(), { action: 'comments', projectId, boardId, itemId, changes }, (db) => {
           const project = find(db, projectId).project;
-          if (project.deletedAt || project.role === 'Viewer') fail(403, 'forbidden', 'Commenting is unavailable.');
+          if (project.deletedAt || project.role === 'Viewer')
+            fail(403, 'forbidden', translate('Commenting is unavailable.'));
           const board = findBoard(db, projectId, boardId);
           const item = board.items.find((entry) => entry.id === itemId && !entry.deletedAt);
-          if (!item) fail(404, 'not_found', 'Item not found.');
+          if (!item) fail(404, 'not_found', translate('Item not found.'));
           if (board.board.revision !== changes.expectedBoardRevision)
-            fail(409, 'revision_mismatch', 'Comments changed. Refresh and try again.');
+            fail(409, 'revision_mismatch', translate('Comments changed. Refresh and try again.'));
           for (const id of [...changes.upserts.map((comment) => comment.id), ...changes.deletes]) {
             const previous = board.comments.find((comment) => comment.id === id);
             if (previous && (previous.itemId !== itemId || previous.deletedAt))
-              fail(404, 'not_found', 'Comment not found.');
+              fail(404, 'not_found', translate('Comment not found.'));
             if (previous && project.role === 'Commenter' && previous.createdBy !== userId)
-              fail(403, 'forbidden', 'You can only change your own comments.');
+              fail(403, 'forbidden', translate('You can only change your own comments.'));
           }
           for (const value of changes.upserts) {
             if (
@@ -327,7 +352,7 @@ export function createMockWorkspace(
               value.text.length > 10000 ||
               !['open', 'todo', 'in-progress', 'resolved'].includes(value.status)
             )
-              fail(422, 'invalid_comment', 'Invalid comment.');
+              fail(422, 'invalid_comment', translate('Invalid comment.'));
             const previous = board.comments.find((comment) => comment.id === value.id);
             board.comments = board.comments.filter((comment) => comment.id !== value.id);
             board.comments.push({
@@ -357,7 +382,7 @@ export function createMockWorkspace(
           find(db, projectId);
           const normalizedName = name.trim();
           if (!normalizedName || normalizedName.length > 200)
-            fail(422, 'invalid_name', 'Board name must contain 1–200 characters.');
+            fail(422, 'invalid_name', translate('Board name must contain 1–200 characters.'));
           const metadata = audit(userId);
           const boards = db.boards[projectId] ?? [];
           const board: BoardSnapshot = {
@@ -377,7 +402,7 @@ export function createMockWorkspace(
           const board = findBoard(db, projectId, boardId);
           const normalizedName = name.trim();
           if (!normalizedName || normalizedName.length > 200)
-            fail(422, 'invalid_name', 'Board name must contain 1–200 characters.');
+            fail(422, 'invalid_name', translate('Board name must contain 1–200 characters.'));
           board.board = { ...touch(board.board, userId), name: normalizedName };
           return board.board;
         });
@@ -386,7 +411,8 @@ export function createMockWorkspace(
         return transaction(createId(), { action: 'delete-board', projectId, boardId }, (db) => {
           const boards = db.boards[projectId] ?? [];
           const board = findBoard(db, projectId, boardId);
-          if (board.board.id === boards[0]?.board.id) fail(409, 'default_board', 'The main board cannot be deleted.');
+          if (board.board.id === boards[0]?.board.id)
+            fail(409, 'default_board', translate('The main board cannot be deleted.'));
           db.boards[projectId] = boards.filter((entry) => entry.board.id !== boardId);
         });
       },
@@ -398,19 +424,20 @@ export function createMockWorkspace(
         return transaction(mutation.clientMutationId, { action: 'mutate', projectId, boardId, mutation }, (db) => {
           const snapshot = find(db, projectId);
           const board = findBoard(db, projectId, boardId);
-          if (snapshot.project.deletedAt) fail(409, 'project_trashed', 'Restore the project before editing it.');
+          if (snapshot.project.deletedAt)
+            fail(409, 'project_trashed', translate('Restore the project before editing it.'));
           if (board.board.revision !== mutation.expectedBoardRevision)
-            fail(409, 'revision_conflict', 'Board changed in another session. Local changes are preserved.');
+            fail(409, 'revision_conflict', translate('Board changed in another session. Local changes are preserved.'));
           const touched = new Set<string>();
           for (const entry of [
             ...mutation.upserts.map((u) => ({ id: u.item.id, expectedRevision: u.expectedRevision })),
             ...mutation.deletes,
           ]) {
-            if (touched.has(entry.id)) fail(422, 'duplicate_operation', 'Duplicate operation.');
+            if (touched.has(entry.id)) fail(422, 'duplicate_operation', translate('Duplicate operation.'));
             touched.add(entry.id);
             const existing = board.items.find((i) => i.id === entry.id && !i.deletedAt);
             if ((existing?.revision ?? null) !== entry.expectedRevision)
-              fail(409, 'revision_conflict', 'Item changed in another session.');
+              fail(409, 'revision_conflict', translate('Item changed in another session.'));
           }
           for (const entry of mutation.upserts) applyItem(board, entry, userId);
           const removed = new Set(mutation.deletes.map((entry) => entry.id));
@@ -452,7 +479,7 @@ export function createMockWorkspace(
             find(db, projectId);
             const boards = db.boards[projectId] ?? [];
             const source = boards.find((board) => board.items.some((item) => item.id === itemId && item.deletedAt));
-            if (!source) fail(404, 'not_found', 'Trashed item not found.');
+            if (!source) fail(404, 'not_found', translate('Trashed item not found.'));
             const target = findBoard(db, projectId, targetBoardId);
             const restoredIds = new Set([itemId]);
             let changed = true;
@@ -519,7 +546,7 @@ export function createMockWorkspace(
           const board = (db.boards[projectId] ?? []).find((entry) =>
             entry.items.some((item) => item.id === itemId && item.deletedAt),
           );
-          if (!board) fail(404, 'not_found', 'Trashed item not found.');
+          if (!board) fail(404, 'not_found', translate('Trashed item not found.'));
           const linkedId = linkedBoardId(board.items.find((item) => item.id === itemId)!);
           const removed = new Set([itemId]);
           let changed = true;

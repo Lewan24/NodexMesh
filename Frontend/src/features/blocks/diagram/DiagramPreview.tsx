@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useId } from 'react';
 import type { DiagramEdge, DiagramNode } from '@/entities/board/types';
 import { readableText } from '../typography/textContrast';
@@ -81,6 +83,7 @@ export function getDiagramPreviewEdgeGeometry(edge: DiagramEdge, source: Diagram
 
 /** Fixed SVG geometry keeps connections attached while the outer canvas is zoomed. */
 export default function DiagramPreview({ nodes, edges }: { nodes: DiagramNode[]; edges: DiagramEdge[] }) {
+  useTranslation();
   const labelStyle = useSectionStyle('labels');
   const marker = useId().replace(/:/g, '');
   if (!nodes.length) return null;
@@ -93,7 +96,7 @@ export default function DiagramPreview({ nodes, edges }: { nodes: DiagramNode[];
   return (
     <svg
       role="img"
-      aria-label="Diagram preview"
+      aria-label={translate('Diagram preview')}
       width="100%"
       height="100%"
       viewBox={`${left} ${top} ${right - left} ${bottom - top}`}
@@ -154,7 +157,7 @@ export default function DiagramPreview({ nodes, edges }: { nodes: DiagramNode[];
                 ...labelStyle,
               }}
             >
-              {node.data.label || 'Untitled'}
+              {node.data.label || translate('Untitled')}
             </div>
           </foreignObject>
         );

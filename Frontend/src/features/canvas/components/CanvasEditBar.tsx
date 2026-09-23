@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import MobilePanel from '@/shared/components/dialogs/MobilePanel';
 import type { ReactNode } from 'react';
 import type { BoardItem } from '@/entities/board/types';
@@ -53,6 +55,7 @@ export default function CanvasEditBar({
   pushHistory,
   requestDelete,
 }: CanvasEditBarProps) {
+  useTranslation();
   const hasSelection = selectedItems.length > 0 || selectedColumnItem !== null;
 
   if (!hasSelection) {
@@ -60,7 +63,7 @@ export default function CanvasEditBar({
   }
 
   return (
-    <MobilePanel title="Item style" slot="edit">
+    <MobilePanel title={translate('Item style')} slot="edit">
       <Suspense fallback={null}>
         <EditBar
           selectedItems={selectedItems}

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { AlignmentGuide } from '@/features/canvas/utils/alignmentGuides';
 
 interface CanvasAlignmentGuidesProps {
@@ -5,6 +6,7 @@ interface CanvasAlignmentGuidesProps {
 }
 
 export default function CanvasAlignmentGuides({ guides }: CanvasAlignmentGuidesProps) {
+  useTranslation();
   if (guides.length === 0) {
     return null;
   }

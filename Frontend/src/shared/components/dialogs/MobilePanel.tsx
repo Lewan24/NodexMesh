@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -26,15 +28,21 @@ export default function MobilePanel({
   title: string;
   slot: 'edit' | 'details' | 'tools';
 }) {
+  useTranslation();
   const mobile = useMobileLayout();
   const [open, setOpen] = useState(false);
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
   const headingId = useId();
 
   useEffect(() => {
-    const dialog = dialogRef.current;
-    if (mobile && open && dialog && !dialog.open) dialog.showModal();
-    return () => dialog?.close();
+    if (!mobile || !open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    panelRef.current?.focus({ preventScroll: true });
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
   }, [mobile, open]);
 
   useEffect(() => {
@@ -58,41 +66,44 @@ export default function MobilePanel({
       </button>
       {open &&
         createPortal(
-          <dialog
-            ref={dialogRef}
-            className="mobile-panel"
-            role="dialog"
-            aria-labelledby={headingId}
-            onMouseDown={(event) => event.stopPropagation()}
-            onKeyDown={(event) => event.stopPropagation()}
-            onCancel={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setOpen(false);
-            }}
-            onClick={(event) => {
-              if (event.target === event.currentTarget) {
-                const rect = event.currentTarget.getBoundingClientRect();
-                if (event.clientY < rect.top || event.clientX < rect.left || event.clientX > rect.right) {
-                  setOpen(false);
-                }
-              }
-              if (slot === 'tools' && (event.target as Element).closest('.tool-tile, .tool-select')) setOpen(false);
+          <div
+            className="mobile-panel-backdrop"
+            data-canvas-ui="true"
+            onPointerDown={(event) => {
+              if (event.target === event.currentTarget) setOpen(false);
             }}
           >
-            <div className="mobile-panel-heading">
-              <strong id={headingId}>{title}</strong>
-              <button
-                className="mobile-panel-done"
-                type="button"
-                aria-label={`Close ${title}`}
-                onClick={() => setOpen(false)}
-              >
-                Done
-              </button>
-            </div>
-            <div className="mobile-panel-body">{children}</div>
-          </dialog>,
+            <section
+              ref={panelRef}
+              className={`mobile-panel mobile-panel-${slot}`}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={headingId}
+              tabIndex={-1}
+              onPointerDown={(event) => event.stopPropagation()}
+              onMouseDown={(event) => event.stopPropagation()}
+              onKeyDown={(event) => {
+                event.stopPropagation();
+                if (event.key === 'Escape') setOpen(false);
+              }}
+              onClick={(event) => {
+                if (slot === 'tools' && (event.target as Element).closest('.tool-tile, .tool-select')) setOpen(false);
+              }}
+            >
+              <div className="mobile-panel-heading">
+                <strong id={headingId}>{title}</strong>
+                <button
+                  className="mobile-panel-done"
+                  type="button"
+                  aria-label={translate('Close {{value1}}', { value1: title })}
+                  onClick={() => setOpen(false)}
+                >
+                  {translate('Done')}
+                </button>
+              </div>
+              <div className="mobile-panel-body">{children}</div>
+            </section>
+          </div>,
           document.body,
         )}
     </>

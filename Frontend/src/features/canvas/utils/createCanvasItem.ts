@@ -1,3 +1,4 @@
+import { translate } from '@/shared/i18n';
 import { createId } from '@/shared/lib/createId';
 import { mindmapTemplate } from '@/features/blocks/mindmap/mindmapUtils';
 
@@ -31,7 +32,7 @@ export function createCanvasItem(
       return {
         ...base,
         type,
-        title: 'Project timeline',
+        title: translate('Project timeline'),
         mode: 'simple',
         tasks: [],
         width: ITEM_WIDTH.timeline,
@@ -42,8 +43,8 @@ export function createCanvasItem(
         ...base,
         type: 'board',
         boardId: null,
-        title: 'New board',
-        description: 'Double-click to open this board',
+        title: translate('New board'),
+        description: translate('Double-click to open this board'),
         icon: 'layout-dashboard',
         color: '#ffffff',
         width: ITEM_WIDTH.board,
@@ -53,7 +54,7 @@ export function createCanvasItem(
       return {
         ...base,
         type,
-        title: 'Database schema',
+        title: translate('Database schema'),
         tables: [],
         relations: [],
         width: ITEM_WIDTH.database,
@@ -63,7 +64,7 @@ export function createCanvasItem(
       return {
         ...base,
         type,
-        title: 'Mind map',
+        title: translate('Mind map'),
         nodes: mindmapTemplate(),
         layout: 'horizontal',
         lineStyle: 'curve',
@@ -73,12 +74,20 @@ export function createCanvasItem(
         height: 560,
       };
     case 'diagram':
-      return { ...base, type, title: 'System diagram', nodes: [], edges: [], width: ITEM_WIDTH.diagram, height: 560 };
+      return {
+        ...base,
+        type,
+        title: translate('System diagram'),
+        nodes: [],
+        edges: [],
+        width: ITEM_WIDTH.diagram,
+        height: 560,
+      };
     case 'document':
       return {
         ...base,
         type,
-        title: 'Untitled document',
+        title: translate('Untitled document'),
         content: '',
         width: ITEM_WIDTH.document,
         height: 600,
@@ -89,7 +98,14 @@ export function createCanvasItem(
     case 'code':
       return { ...base, type, content: '', language: 'javascript', width: ITEM_WIDTH.code, height: 280 };
     case 'dispenser':
-      return { ...base, type, title: 'Quick thoughts', color: '#ffffff', width: ITEM_WIDTH.dispenser, height: 200 };
+      return {
+        ...base,
+        type,
+        title: translate('Quick thoughts'),
+        color: '#ffffff',
+        width: ITEM_WIDTH.dispenser,
+        height: 200,
+      };
     case 'note':
       return {
         ...base,
@@ -108,12 +124,12 @@ export function createCanvasItem(
       return {
         ...base,
         type: 'kanban',
-        title: 'New Board',
+        title: translate('New Board'),
         width: ITEM_WIDTH.kanban,
         columns: [
-          { id: createId(), title: 'To Do', color: '#5a8a94', cards: [] },
-          { id: createId(), title: 'In Progress', color: '#FFBD65', cards: [] },
-          { id: createId(), title: 'Done', color: '#7C3AED', cards: [] },
+          { id: createId(), title: translate('To Do'), color: '#5a8a94', cards: [] },
+          { id: createId(), title: translate('In Progress'), color: '#FFBD65', cards: [] },
+          { id: createId(), title: translate('Done'), color: '#7C3AED', cards: [] },
         ],
       } as KanbanItem;
 
@@ -123,7 +139,7 @@ export function createCanvasItem(
         type,
         iconMode: 'preset',
         source: 'star',
-        label: 'Star',
+        label: translate('Star'),
         color: '#7C3AED',
         width: ITEM_WIDTH.icon,
         height: ITEM_WIDTH.icon,
@@ -133,10 +149,23 @@ export function createCanvasItem(
       return { ...base, type: 'image', url: '', caption: '', width: ITEM_WIDTH.image, imgHeight: 192 } as ImageItem;
 
     case 'link':
-      return { ...base, type: 'link', url: '', title: 'New Link', description: '', width: ITEM_WIDTH.link } as LinkItem;
+      return {
+        ...base,
+        type: 'link',
+        url: '',
+        title: translate('New Link'),
+        description: '',
+        width: ITEM_WIDTH.link,
+      } as LinkItem;
 
     case 'section-title':
-      return { ...base, type, content: 'Section title', width: ITEM_WIDTH['section-title'], color: '#7C3AED' };
+      return {
+        ...base,
+        type,
+        content: translate('Section title'),
+        width: ITEM_WIDTH['section-title'],
+        color: '#7C3AED',
+      };
     case 'text':
       return {
         ...base,
@@ -152,7 +181,7 @@ export function createCanvasItem(
         ...base,
         type: 'frame',
         zIndex: 0,
-        title: 'Group',
+        title: translate('Group'),
         width: typeof extra?.width === 'number' ? extra.width : ITEM_WIDTH.frame,
         height: typeof extra?.height === 'number' ? extra.height : 256,
         color: '#7C3AED',
@@ -162,7 +191,7 @@ export function createCanvasItem(
       return {
         ...base,
         type: 'checklist',
-        title: 'Checklist',
+        title: translate('Checklist'),
         color: '#ffffff',
         width: ITEM_WIDTH.checklist,
         entries: [],
@@ -192,7 +221,7 @@ export function createCanvasItem(
       return {
         ...base,
         type: 'column',
-        title: 'Column',
+        title: translate('Column'),
         color: '#ffffff',
         width: ITEM_WIDTH.column,
         layout: 'vertical',

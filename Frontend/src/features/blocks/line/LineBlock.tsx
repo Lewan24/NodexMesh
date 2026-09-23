@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '../typography/sectionTypography';
 import { getFontFamilyCss } from '../typography/typographyUtils';
 import { useState } from 'react';
@@ -28,6 +29,7 @@ interface ArrowHeadProps {
 }
 
 function ArrowHead({ x, y, angle, color, strokeWidth }: ArrowHeadProps) {
+  useTranslation();
   const { firstX, firstY, tipX, tipY, secondX, secondY } = getArrowHeadPoints(x, y, angle, strokeWidth);
 
   return (
@@ -44,6 +46,7 @@ function ArrowHead({ x, y, angle, color, strokeWidth }: ArrowHeadProps) {
 }
 
 export default function LineBlock({ item, isSelected, onDelete, onLineEndpointDrag }: LineBlockProps) {
+  useTranslation();
   const [hovered, setHovered] = useState(false);
 
   const { angle, svgWidth, svgHeight, originX, originY, endX, endY, svgLeft, svgTop } = getLineRenderGeometry(

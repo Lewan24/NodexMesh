@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useEffect, useRef } from 'react';
 
 import type { ReactNode } from 'react';
@@ -11,6 +12,7 @@ interface ItemWatcherProps {
 }
 
 export default function ItemWatcher({ itemId, onResize, children }: ItemWatcherProps) {
+  useTranslation();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

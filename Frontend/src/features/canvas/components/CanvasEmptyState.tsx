@@ -1,8 +1,11 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 interface CanvasEmptyStateProps {
   visible: boolean;
 }
 
 export default function CanvasEmptyState({ visible }: CanvasEmptyStateProps) {
+  useTranslation();
   if (!visible) {
     return null;
   }
@@ -27,11 +30,11 @@ export default function CanvasEmptyState({ visible }: CanvasEmptyStateProps) {
         </div>
 
         <p className="text-sm mb-1" style={{ color: 'var(--color-text-secondary)' }}>
-          Empty board
+          {translate('Empty board')}
         </p>
 
         <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-          Select a tool from the sidebar to get started
+          {translate('Select a tool from the sidebar to get started')}
         </p>
       </div>
     </div>

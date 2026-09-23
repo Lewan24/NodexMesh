@@ -1,3 +1,5 @@
+import { translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import CustomCssDialog from '@/features/blocks/custom-css/CustomCssDialog';
 import { useCanvasTouch } from '../hooks/useCanvasTouch';
 import PasteStyleDialog from './PasteStyleDialog';
@@ -5,7 +7,7 @@ import { copyItemStyle, pasteItemStyle } from '../utils/itemStyle';
 import type { ItemStyle } from '../utils/itemStyle';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import type { BoardItem } from '@/entities/board/types';
+import type { BoardItem, FrameItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
 import type { ToolType } from '@/entities/board/toolTypes';
 import type { RemotePresence } from '@/features/projects/hooks/useCollaborationPresence';
@@ -55,7 +57,7 @@ import CanvasLostPrompt from './CanvasLostPrompt';
 import CanvasAlignmentGuides from './CanvasAlignmentGuides';
 import { getColumnSearchResult, getSearchTargets, matchesItemSearch } from '@/features/search/utils/itemSearch';
 
-import { isItemInsideFrame, isFrameMovementLocked } from '@/features/canvas/utils/frameGeometry';
+import { isItemInsideFrame, isFrameMovementLocked, wouldCreateFrameCycle } from '@/features/canvas/utils/frameGeometry';
 
 import ItemInspector from '@/features/inspector/ItemInspector';
 import { useCanvasClipboard } from '../hooks/useCanvasClipboard';
@@ -84,6 +86,7 @@ interface CanvasProps {
   onGroupSelected: () => void;
   onAddItem: (item: BoardItem) => void;
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
+  onUpdateItems: (updates: ReadonlyMap<string, (item: BoardItem) => BoardItem>) => void;
   onDeleteItem: (id: string) => void;
   onDeleteItems: (ids: string[]) => void;
   onBringForward: (id: string) => void;
@@ -97,6 +100,7 @@ interface CanvasProps {
   onRenameBoard?: (boardId: string, name: string) => void;
   onOpenTrash: () => void;
   onRestoreTrashItem: (itemId: string, position: { x: number; y: number }) => void;
+  onEditBarVisibilityChange?: (visible: boolean) => void;
 }
 
 export default function Canvas({
@@ -114,6 +118,7 @@ export default function Canvas({
   onGroupSelected,
   onAddItem: addItemRaw,
   onUpdateItem,
+  onUpdateItems,
   onDeleteItem,
   onDeleteItems,
   onBringForward,
@@ -128,7 +133,9 @@ export default function Canvas({
   onRenameBoard,
   onOpenTrash,
   onRestoreTrashItem,
+  onEditBarVisibilityChange,
 }: CanvasProps) {
+  useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
   const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
@@ -149,7 +156,15 @@ export default function Canvas({
   } | null>(null);
 
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
-  const collaboratorLockedIds = useMemo(() => new Set(Object.keys(remotePresence ?? {})), [remotePresence]);
+  const collaboratorLockedIds = useMemo(
+    () =>
+      new Set(
+        Object.entries(remotePresence ?? {})
+          .filter(([, entries]) => entries.some((entry) => entry.mode === 'editing'))
+          .map(([id]) => id),
+      ),
+    [remotePresence],
+  );
 
   const panRef = useRef(pan);
   panRef.current = pan;
@@ -258,13 +273,17 @@ export default function Canvas({
         addItemRaw(item);
         return;
       }
+      const parentFrameId = projectRef.current.items
+        .filter((candidate): candidate is FrameItem => candidate.type === 'frame')
+        .filter((candidate) => isItemInsideFrame(item, candidate, measuredSizes))
+        .sort((a, b) => a.width * a.height - b.width * b.height)[0]?.id;
       onRestoreItems([
         ...projectRef.current.items.map((child) =>
-          child.type !== 'frame' && !child.frameId && !child.locked && isItemInsideFrame(child, item, measuredSizes)
+          !child.frameId && !child.locked && isItemInsideFrame(child, item, measuredSizes)
             ? { ...child, frameId: item.id }
             : child,
         ),
-        { ...item, frameId: null, zIndex: 0 },
+        { ...item, frameId: parentFrameId ?? null, zIndex: 0 },
       ]);
     },
     [addItemRaw, onRestoreItems, measuredSizes],
@@ -538,6 +557,13 @@ export default function Canvas({
     deleteSelectedColumnItem,
   } = useColumnSelection({ onSelectItems, onUpdateItem });
 
+  useLayoutEffect(() => {
+    const visible = selectedIds.length > 0 || selectedColumnItem !== null;
+    onEditBarVisibilityChange?.(visible);
+  }, [onEditBarVisibilityChange, selectedColumnItem, selectedIds.length]);
+
+  useEffect(() => () => onEditBarVisibilityChange?.(false), [onEditBarVisibilityChange]);
+
   const handleSelectColumnItem = useCallback(
     (columnId: string, item: BoardItem | null) => {
       selectColumnItem(columnId, item);
@@ -583,7 +609,7 @@ export default function Canvas({
     deleteNested: selectedColumnItem ? () => requestDelete(deleteSelectedColumnItem) : undefined,
   });
 
-  const { dragOverColumnId, draggingIds, settlingIds, dropPreview, dragTilt, alignmentGuides, handleItemMouseDown } =
+  const { dragOverColumnId, draggingIds, dragOverrides, dropPreview, dragTilt, alignmentGuides, handleItemMouseDown } =
     useItemDrag({
       projectRef,
       selectedIdsRef,
@@ -595,7 +621,7 @@ export default function Canvas({
       pushHistory,
       onSelectItems,
       onSelectTool,
-      onUpdateItem,
+      onUpdateItems,
       onDropOnColumn,
       clearColumnSelection,
     });
@@ -869,20 +895,37 @@ export default function Canvas({
     return { matchingIds, nestedColumnMatches, contextFrameIds };
   }, [project.items, normalizedSearch, searchActive]);
 
-  const frames = useMemo(() => project.items.filter((item) => item.type === 'frame'), [project.items]);
+  const effectiveItems = useMemo(
+    () =>
+      dragOverrides.size === 0
+        ? project.items
+        : project.items.map((item) => {
+            const geometry = dragOverrides.get(item.id);
+            return geometry ? { ...item, ...geometry } : item;
+          }),
+    [project.items, dragOverrides],
+  );
+  const frames = useMemo(() => effectiveItems.filter((item) => item.type === 'frame'), [effectiveItems]);
   const regularItems = useMemo(
     () => project.items.filter((item) => item.type !== 'frame').sort((a, b) => a.zIndex - b.zIndex),
     [project.items],
   );
+  const effectiveItemsById = useMemo(() => new Map(effectiveItems.map((item) => [item.id, item])), [effectiveItems]);
   const renderedItems = useMemo(
     () =>
       new Map(
         regularItems.map((item) => [
           item.id,
-          item.type === 'line' ? resolveLineItem(item, project.items, measuredSizes) : item,
+          item.type === 'line'
+            ? resolveLineItem(
+                (effectiveItemsById.get(item.id) as typeof item | undefined) ?? item,
+                effectiveItems,
+                measuredSizes,
+              )
+            : (effectiveItemsById.get(item.id) ?? item),
         ]),
       ),
-    [regularItems, project.items, measuredSizes],
+    [regularItems, effectiveItems, effectiveItemsById, measuredSizes],
   );
   const lockedFrameIds = useMemo(
     () =>
@@ -1028,13 +1071,13 @@ export default function Canvas({
           onContextMenu={(event) => event.stopPropagation()}
         >
           <span role="status">
-            {searchTargets.length ? `${searchIndex + 1} / ${searchTargets.length}` : 'No results'}
+            {searchTargets.length ? `${searchIndex + 1} / ${searchTargets.length}` : translate('No results')}
           </span>
           <button disabled={!searchTargets.length} onClick={() => goToSearchResult(-1)} className="disabled:opacity-40">
-            Previous
+            {translate('Previous')}
           </button>
           <button disabled={!searchTargets.length} onClick={() => goToSearchResult(1)} className="disabled:opacity-40">
-            Go to next
+            {translate('Go to next')}
           </button>
         </div>
       )}
@@ -1148,7 +1191,6 @@ export default function Canvas({
             item={frame}
             movementLocked={lockedFrameIds.has(frame.id)}
             onItemResize={handleItemResize}
-            isSettling={settlingIds.includes(frame.id)}
             zoom={zoom}
             isSelected={safeSelectedIds.includes(frame.id)}
             isDragging={draggingIds.includes(frame.id)}
@@ -1185,7 +1227,6 @@ export default function Canvas({
               selectedColumnItemId={
                 item.type === 'column' && selectedColumnItem?.columnId === item.id ? selectedColumnItem.item.id : null
               }
-              isSettling={settlingIds.includes(item.id)}
               isDragging={draggingIds.includes(item.id)}
               dragTilt={draggingIds.includes(item.id) ? dragTilt : 0}
               onQuickConnectStart={handleQuickConnectStart}
@@ -1226,7 +1267,7 @@ export default function Canvas({
             y={dropPreview.y}
             width={dropPreview.width}
             height={dropPreview.height}
-            label={alignmentGuides.length > 0 ? 'Aligned' : 'Grid snap'}
+            label={alignmentGuides.length > 0 ? translate('Aligned') : translate('Grid snap')}
           />
         )}
 
@@ -1236,7 +1277,7 @@ export default function Canvas({
             y={toolDropPreview.y}
             width={toolDropPreview.width}
             height={toolDropPreview.height}
-            label="Place here"
+            label={translate('Place here')}
           />
         )}
 
@@ -1254,7 +1295,7 @@ export default function Canvas({
       </div>
 
       {selectedTool === 'drawing' && (
-        <div className="absolute inset-0 z-40 cursor-crosshair" aria-label="Drawing surface" />
+        <div className="absolute inset-0 z-40 cursor-crosshair" aria-label={translate('Drawing surface')} />
       )}
       {toolDragGhost && (
         <ToolDragGhost
@@ -1300,9 +1341,9 @@ export default function Canvas({
         frameControls={
           selectedItems.length > 0 && selectedItems.every((item) => item.type !== 'frame') ? (
             <label className="flex items-center gap-2 text-sm whitespace-nowrap">
-              Frame
+              {translate('Frame')}
               <select
-                aria-label="Assign to frame"
+                aria-label={translate('Assign to frame')}
                 className="h-8 max-w-40 rounded-sm px-2"
                 style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}
                 disabled={selectedItems.some((item) => item.locked)}
@@ -1322,14 +1363,21 @@ export default function Canvas({
                 }}
               >
                 <option value="__mixed" disabled>
-                  Mixed frames
+                  {translate('Mixed frames')}
                 </option>
-                <option value="">No frame</option>
+                <option value="">{translate('No frame')}</option>
                 {project.items
-                  .filter((item) => item.type === 'frame')
+                  .filter(
+                    (item): item is FrameItem =>
+                      item.type === 'frame' &&
+                      selectedItems.every(
+                        (selected) =>
+                          selected.id !== item.id && !wouldCreateFrameCycle(selected.id, item.id, project.items),
+                      ),
+                  )
                   .map((frame) => (
                     <option key={frame.id} value={frame.id}>
-                      {frame.title || 'Frame'} · {frame.id.slice(0, 4)}
+                      {frame.title || translate('Frame')} · {frame.id.slice(0, 4)}
                     </option>
                   ))}
               </select>
@@ -1338,21 +1386,21 @@ export default function Canvas({
             <button
               className="h-8 px-2 text-sm hover:bg-violet-500/20"
               disabled={selectedItems[0]!.locked}
-              title="Assign enclosed unlocked items to this frame, including items owned by another frame"
+              title={translate('Assign enclosed unlocked items to this frame, including items owned by another frame')}
               onClick={() => {
                 const frame = selectedItems[0]!;
                 if (frame.type !== 'frame') return;
                 pushHistory();
                 onRestoreItems(
                   project.items.map((item) =>
-                    item.type !== 'frame' && !item.locked && isItemInsideFrame(item, frame, measuredSizes)
+                    item.id !== frame.id && !item.locked && isItemInsideFrame(item, frame, measuredSizes)
                       ? { ...item, frameId: frame.id }
                       : item,
                   ),
                 );
               }}
             >
-              Take over enclosed items
+              {translate('Take over enclosed items')}
             </button>
           ) : undefined
         }
@@ -1379,8 +1427,12 @@ export default function Canvas({
 
       {pendingDelete && (
         <ConfirmDialog
-          title={pendingDelete.count > 1 ? `Delete ${pendingDelete.count} items?` : 'Delete this item?'}
-          message="The item will move to this project's trash and can be restored later."
+          title={
+            pendingDelete.count > 1
+              ? translate('Delete {{value1}} items?', { value1: pendingDelete.count })
+              : translate('Delete this item?')
+          }
+          message={translate("The item will move to this project's trash and can be restored later.")}
           onConfirm={confirmDelete}
           onCancel={cancelDelete}
         />

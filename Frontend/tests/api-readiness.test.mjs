@@ -10,6 +10,7 @@ const server = await createServer({
   resolve: { alias: { '@': fileURLToPath(new URL('../src', import.meta.url)) } },
   server: { middlewareMode: true, watch: null, hmr: false },
 });
+await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
 const { createMockWorkspace, mockWorkspaceKey } = await server.ssrLoadModule(
   '/src/features/projects/services/mockWorkspace.ts',
 );
@@ -503,7 +504,7 @@ test('column transfer retains identity and tags normalize without endless writes
   assert.equal(savedNote.revision, '2');
 });
 
-test('controller exposes conflicts and preserves local draft instead of overwriting another session', async () => {
+test('controller refreshes conflicts and preserves a recovery copy instead of overwriting another session', async () => {
   const { api } = await setup();
   const controller = new WorkspaceController(api);
   await controller.load();
@@ -517,8 +518,9 @@ test('controller exposes conflicts and preserves local draft instead of overwrit
     projects.map((p) => ({ ...p, items: p.items.map((i) => ({ ...i, content: 'Local' })) })),
   );
   await controller.flush();
-  assert.equal(controller.getSnapshot().status, 'conflict');
-  assert.equal(controller.getSnapshot().projects[0].items[0].content, 'Local');
+  assert.equal(controller.getSnapshot().status, 'saved');
+  assert.equal(controller.getSnapshot().projects[0].items[0].content, 'Remote');
+  assert.equal(controller.getSnapshot().recoveryDrafts[0].project.items[0].content, 'Local');
   assert.equal((await api.projects.list())[0].board.items[0].data.content, 'Remote');
 });
 

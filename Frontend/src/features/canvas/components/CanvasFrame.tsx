@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import SectionLabel, { sectionTitleScale } from '@/features/blocks/shared/SectionLabel';
 
 import type { BoardItem, FrameItem } from '@/entities/board/types';
@@ -5,7 +6,7 @@ import type { BoardItem, FrameItem } from '@/entities/board/types';
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 import type { ResizeDirection } from '@/features/canvas/types';
-import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
+import type { ConnectionSide } from './ConnectionHandles';
 import ItemLockBadge from './ItemLockBadge';
 import ItemCommentBadge from '@/features/comments/ItemCommentBadge';
 
@@ -50,7 +51,6 @@ export default function CanvasFrame({
   isSettling = false,
   isDragging = false,
   dragTilt = 0,
-  isAttachTarget = false,
   zoom,
 
   searchActive = false,
@@ -65,9 +65,9 @@ export default function CanvasFrame({
   onRequestDelete,
   onItemResize,
   onFitFrame,
-  onQuickConnectStart,
   movementLocked = false,
 }: CanvasFrameProps) {
+  useTranslation();
   const labelScale = sectionTitleScale(zoom);
 
   return (
@@ -144,20 +144,10 @@ export default function CanvasFrame({
         />
       )}
 
-      {/* Line attach target */}
-      {isAttachTarget && (
-        <div
-          className="absolute pointer-events-none rounded-2xl"
-          style={{ inset: -6, boxShadow: '0 0 0 3px var(--color-accent), 0 0 18px rgba(124,58,237,0.35)' }}
-        />
-      )}
-
       {/* Resize */}
       {isSelected && !item.locked && !movementLocked && (
         <ResizeHandles visible onResizeStart={(event, direction) => onItemResize(item.id, event, direction)} />
       )}
-
-      <ConnectionHandles visible={isSelected} onStart={(event, side) => onQuickConnectStart(item.id, event, side)} />
 
       <BlockRenderer
         item={item}

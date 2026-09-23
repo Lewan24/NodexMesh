@@ -1,4 +1,6 @@
+import { useTranslation } from 'react-i18next';
 export default function AppLogo() {
+  useTranslation();
   return (
     <div
       className="app-logo h-full flex items-center gap-2.5 px-4"

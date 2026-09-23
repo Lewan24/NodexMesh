@@ -1,3 +1,5 @@
+import { translate, displayLabel } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 export type ConnectionSide = 'top' | 'right' | 'bottom' | 'left';
 
 interface ConnectionHandlesProps {
@@ -7,6 +9,7 @@ interface ConnectionHandlesProps {
 }
 
 export default function ConnectionHandles({ visible, onStart }: ConnectionHandlesProps) {
+  useTranslation();
   if (!visible) return null;
 
   return (
@@ -43,6 +46,7 @@ interface ConnectionHandleProps {
 }
 
 function ConnectionHandle({ side, style, onStart }: ConnectionHandleProps) {
+  useTranslation();
   const rotation = { top: -90, right: 0, bottom: 90, left: 180 }[side];
 
   return (
@@ -64,8 +68,8 @@ function ConnectionHandle({ side, style, onStart }: ConnectionHandleProps) {
         cursor: 'crosshair',
       }}
       onMouseDown={(event) => onStart(event, side)}
-      aria-label={`Connect ${side}`}
-      title="Drag to connect · Click to create a connected empty block (content blocks)"
+      aria-label={translate('Connect {{value1}}', { value1: displayLabel(side) })}
+      title={translate('Drag to connect · Click to create a connected empty block (content blocks)')}
     >
       <svg
         width="11"

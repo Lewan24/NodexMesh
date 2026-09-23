@@ -73,10 +73,22 @@
   }
 }
 
-.mobile-panel {
+.mobile-panel-backdrop {
   position: fixed;
-  inset: auto 0 0;
-  margin: 0 auto;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgb(8 16 20 / 55%);
+  backdrop-filter: blur(3px);
+}
+
+.mobile-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
   width: min(100%, 680px);
   max-width: 100%;
   max-height: min(82dvh, calc(100dvh - 16px - env(safe-area-inset-top)));
@@ -88,11 +100,6 @@
   overflow: hidden;
   overscroll-behavior: contain;
   touch-action: pan-y;
-}
-
-.mobile-panel::backdrop {
-  background: rgb(8 16 20 / 55%);
-  backdrop-filter: blur(3px);
 }
 
 .mobile-panel-heading {
@@ -107,6 +114,11 @@
   padding: 14px 16px 10px;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
+}
+
+.mobile-panel-edit,
+.mobile-panel-edit .mobile-panel-heading {
+  background: var(--edit-bar-bg, var(--color-surface));
 }
 
 .mobile-panel-heading::before {
@@ -130,9 +142,15 @@
 }
 
 .mobile-panel-body {
+  flex: 1 1 auto;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 0;
   max-height: calc(82dvh - 58px);
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
 
@@ -170,6 +188,11 @@
   right: 10px;
 }
 
+.app-bar-collapse-toggle,
+.app-bar-reveal {
+  display: none;
+}
+
 .touch-selection-toggle {
   display: none;
 }
@@ -200,6 +223,34 @@
 }
 
 @media (max-width: 900px), (pointer: coarse) and (max-width: 1200px) {
+  .app-bar-collapse-toggle,
+  .app-bar-reveal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border: 1px solid var(--color-chrome-border-soft);
+    border-radius: 999px;
+    color: var(--color-chrome-text);
+    background: var(--color-chrome-bg-alt);
+    box-shadow: 0 4px 14px rgb(0 0 0 / 20%);
+  }
+
+  button,
+  [title],
+  [aria-label] {
+    -webkit-touch-callout: none;
+  }
+
+  .app-bar-reveal {
+    position: fixed;
+    z-index: 60;
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+  }
+
   [data-app-bar] {
     height: auto;
     min-height: 96px;
@@ -271,6 +322,47 @@
     overflow: visible;
   }
 
+  .mobile-panel.mobile-panel-edit {
+    position: relative;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch;
+    height: auto;
+    width: 100vw;
+    max-width: 100vw !important;
+    max-height: min(72dvh, calc(100dvh - 24px - env(safe-area-inset-top)));
+    margin: 0;
+    border-right: 0;
+    border-left: 0;
+  }
+
+  .mobile-panel-edit > .mobile-panel-heading,
+  .mobile-panel-edit > .mobile-panel-body {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobile-panel-edit > .mobile-panel-heading {
+    flex: 0 0 auto;
+  }
+
+  .mobile-panel-edit > .mobile-panel-body {
+    display: block;
+    flex: 0 1 auto;
+    max-height: min(62dvh, calc(100dvh - 90px - env(safe-area-inset-top)));
+  }
+
+  .mobile-panel [data-edit-bar] {
+    position: relative !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    transform: none !important;
+    translate: none !important;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
   .mobile-panel [data-edit-bar] .edit-bar-row {
     flex-wrap: wrap;
     overflow: visible;
@@ -285,7 +377,87 @@
     position: sticky;
     top: 0;
     z-index: 1;
-    background: var(--color-surface);
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow-x: auto;
+    background: var(--edit-bar-bg, var(--color-surface));
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-actions-single {
+    display: flex !important;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow: visible;
+    padding: 8px 10px;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-tabs {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-actions-single .edit-bar-tabs {
+    flex: 1 1 auto;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-actions-single .edit-bar-spacer {
+    display: none;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-actions-single > button:last-child {
+    flex: 0 0 44px;
+    margin-left: 4px;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-type {
+    display: none;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-tab {
+    flex: 1 1 0;
+    min-width: auto;
+    min-height: 40px;
+    justify-content: center;
+    padding-inline: 6px;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-tab-content {
+    width: 100%;
+    overflow: visible;
+    padding: 10px;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-appearance-panel,
+  .mobile-panel [data-edit-bar] .edit-bar-layout-panel {
+    flex-wrap: wrap;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-color-panel {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-color-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-color-card > div {
+    flex-wrap: wrap;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-text-panel .edit-bar-section-controls {
+    border-top: 0;
+  }
+
+  .mobile-panel [data-edit-bar] .edit-bar-text-panel .edit-bar-control-card,
+  .mobile-panel [data-edit-bar] .edit-bar-layout-panel > .edit-bar-control-card {
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
   }
 
   .mobile-panel [data-edit-bar] .edit-bar-close {
@@ -455,29 +627,9 @@
     display: none;
   }
 
-  .canvas-touch-hint {
-    display: block;
-    position: absolute;
-    bottom: 112px;
-    left: 16px;
-    right: 16px;
-    text-align: center;
-    color: var(--color-text-secondary);
-    font-size: 12px;
-  }
-
+  .canvas-touch-hint,
   .canvas-hint {
-    top: auto;
-    bottom: 112px;
-    width: calc(100% - 32px);
-    max-width: 420px;
-  }
-
-  .canvas-hint > div {
-    flex-wrap: wrap;
-    justify-content: center;
-    text-align: center;
-    font-size: 12px;
+    display: none;
   }
 
   .canvas-context-menu {

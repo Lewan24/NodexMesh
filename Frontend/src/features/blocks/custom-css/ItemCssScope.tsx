@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { useId, useMemo, type ReactNode } from 'react';
 import type { BaseItem } from '@/entities/board/types';
 import { customCssRule } from './customCss';
 
 export default function ItemCssScope({ item, children }: { item: BaseItem; children: ReactNode }) {
+  useTranslation();
   const scope = useId().replace(/[^\w-]/g, '_');
   const rule = useMemo(() => customCssRule(item.customCss, scope), [item.customCss, scope]);
   return (

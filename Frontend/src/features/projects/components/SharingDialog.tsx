@@ -1,3 +1,5 @@
+import { locale, displayLabel, translate } from '@/shared/i18n';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import type { Project } from '@/entities/project/types';
 import type { MemberRole, ProjectMember, ShareLink } from '@/entities/project/shareTypes';
@@ -7,7 +9,7 @@ import Modal from '@/shared/components/dialogs/Modal';
 import './sharing.css';
 
 const roles: MemberRole[] = ['Editor', 'Viewer', 'Commenter'];
-const roleLabel = (role: MemberRole) => (role === 'Commenter' ? 'Commenter (read-only)' : role);
+const roleLabel = (role: MemberRole) => displayLabel(role);
 
 export default function SharingDialog({
   project,
@@ -20,6 +22,7 @@ export default function SharingDialog({
   onClose: () => void;
   onLeave: () => void;
 }) {
+  useTranslation();
   const owner = project.ownerId === userId;
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [links, setLinks] = useState<ShareLink[]>([]);
@@ -71,16 +74,22 @@ export default function SharingDialog({
         if (!busy) onClose();
       }}
       centered
-      label={`Share ${project.name}`}
+      label={translate('Share {{value1}}', { value1: project.name })}
     >
       <section className="sharing-dialog">
         <header className="flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold">Share {project.name}</h2>
-          <button onClick={onClose} disabled={busy} aria-label="Close sharing">
-            Close
+          <h2 className="text-xl font-semibold">
+            {translate('Share') + ' '}
+            {project.name}
+          </h2>
+          <button onClick={onClose} disabled={busy} aria-label={translate('Close sharing')}>
+            {translate('Close')}
           </button>
         </header>
-        <p>Your access: {project.role ?? (owner ? 'Owner' : 'Viewer')}</p>
+        <p>
+          {translate('Your access:') + ' '}
+          {displayLabel(project.role ?? (owner ? 'Owner' : 'Viewer'))}
+        </p>
         {error && (
           <div role="alert">
             <p>{error}</p>
@@ -92,14 +101,18 @@ export default function SharingDialog({
                 setAttempt(attempt + 1);
               }}
             >
-              Reload sharing
+              {translate('Reload sharing')}
             </button>
           </div>
         )}
         {message && <p role="status">{message}</p>}
-        {busy && <p role="status">Updating sharing...</p>}
-        <h3 className="font-semibold">Collaborators</h3>
-        <p>Share with an existing user's email. Editors can change the board. Viewers and Commenters can read it.</p>
+        {busy && <p role="status">{translate('Updating sharing...')}</p>}
+        <h3 className="font-semibold">{translate('Collaborators')}</h3>
+        <p>
+          {translate(
+            "Share with an existing user's email. Editors can change the board. Viewers and Commenters can read it.",
+          )}
+        </p>
         {owner && (
           <form
             className="sharing-row"
@@ -109,20 +122,20 @@ export default function SharingDialog({
                 const member = await sharingApi!.invite(project.id, email.trim(), role);
                 setMembers((previous) => [...previous.filter((entry) => entry.userId !== member.userId), member]);
                 setEmail('');
-                setMessage('Project shared. It will appear in their project list.');
+                setMessage(translate('Project shared. It will appear in their project list.'));
               });
             }}
           >
             <input
-              aria-label="Collaborator email"
+              aria-label={translate('Collaborator email')}
               type="email"
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="Email address"
+              placeholder={translate('Email address')}
             />
             <select
-              aria-label="Collaborator role"
+              aria-label={translate('Collaborator role')}
               value={role}
               onChange={(event) => setRole(event.target.value as MemberRole)}
             >
@@ -132,10 +145,10 @@ export default function SharingDialog({
                 </option>
               ))}
             </select>
-            <button disabled={busy || !email.trim()}>Share project</button>
+            <button disabled={busy || !email.trim()}>{translate('Share project')}</button>
           </form>
         )}
-        {!busy && !members.length && <p>No collaborators yet.</p>}
+        {!busy && !members.length && <p>{translate('No collaborators yet.')}</p>}
         {members.map((member) => (
           <div key={member.userId} className="sharing-row">
             <span className="flex-1 min-w-0 break-words">
@@ -145,7 +158,7 @@ export default function SharingDialog({
             {owner ? (
               <>
                 <select
-                  aria-label={`Role for ${member.email}`}
+                  aria-label={translate('Role for {{value1}}', { value1: member.email })}
                   disabled={busy}
                   value={member.role}
                   onChange={(event) => {
@@ -173,7 +186,7 @@ export default function SharingDialog({
                     })
                   }
                 >
-                  Remove
+                  {translate('Remove')}
                 </button>
               </>
             ) : (
@@ -191,13 +204,15 @@ export default function SharingDialog({
               })
             }
           >
-            Leave project
+            {translate('Leave project')}
           </button>
         )}
         {owner && (
           <>
-            <h3 className="font-semibold">Public read-only links</h3>
-            <p>Anyone with the link can view this project without an account. Comments are not published.</p>
+            <h3 className="font-semibold">{translate('Public read-only links')}</h3>
+            <p>
+              {translate('Anyone with the link can view this project without an account. Comments are not published.')}
+            </p>
             <form
               className="sharing-row"
               onSubmit={(event) => {
@@ -222,28 +237,28 @@ export default function SharingDialog({
               }}
             >
               <input
-                aria-label="Link label"
+                aria-label={translate('Link label')}
                 maxLength={100}
-                placeholder="Label (optional)"
+                placeholder={translate('Label (optional)')}
                 value={label}
                 onChange={(event) => setLabel(event.target.value)}
               />
               <label>
-                Expires (optional)
+                {translate('Expires (optional)')}
                 <input
-                  aria-label="Link expiry"
+                  aria-label={translate('Link expiry')}
                   type="datetime-local"
                   value={expiry}
                   onChange={(event) => setExpiry(event.target.value)}
                 />
               </label>
-              <button disabled={busy}>Create link</button>
+              <button disabled={busy}>{translate('Create link')}</button>
             </form>
             {created && (
               <div className="sharing-created">
-                <p>Copy this link now. It cannot be retrieved after closing this dialog.</p>
+                <p>{translate('Copy this link now. It cannot be retrieved after closing this dialog.')}</p>
                 <input
-                  aria-label="New public link"
+                  aria-label={translate('New public link')}
                   readOnly
                   value={created.url}
                   onFocus={(event) => event.target.select()}
@@ -252,28 +267,32 @@ export default function SharingDialog({
                   onClick={() =>
                     void run(async () => {
                       await navigator.clipboard.writeText(created.url);
-                      setMessage('Link copied.');
+                      setMessage(translate('Link copied.'));
                     })
                   }
                 >
-                  Copy link
+                  {translate('Copy link')}
                 </button>
                 <a href={created.url} target="_blank" rel="noreferrer">
-                  Open link
+                  {translate('Open link')}
                 </a>
               </div>
             )}
-            {!busy && !links.length && <p>No public links.</p>}
+            {!busy && !links.length && <p>{translate('No public links.')}</p>}
             {links.map((link) => (
               <div className="sharing-row" key={link.id}>
                 <span className="flex-1">
-                  {link.label || 'Public link'}
+                  {link.label || translate('Public link')}
                   <small className="block">
-                    {link.expiresAt ? `Expires ${new Date(link.expiresAt).toLocaleString()}` : 'No expiry'}
-                    {link.expiresAt && Date.parse(link.expiresAt) <= Date.now() ? ' / Expired' : ''}
+                    {link.expiresAt
+                      ? translate('Expires {{value1}}', { value1: new Date(link.expiresAt).toLocaleString(locale()) })
+                      : translate('No expiry')}
+                    {link.expiresAt && Date.parse(link.expiresAt) <= Date.now() ? ' ' + translate('/ Expired') : ''}
                     {link.lastAccessedAt
-                      ? ` / Last used ${new Date(link.lastAccessedAt).toLocaleString()}`
-                      : ' / Not used yet'}
+                      ? translate(' / Last used {{value1}}', {
+                          value1: new Date(link.lastAccessedAt).toLocaleString(locale()),
+                        })
+                      : ' ' + translate('/ Not used yet')}
                   </small>
                 </span>
                 <button
@@ -286,7 +305,7 @@ export default function SharingDialog({
                     })
                   }
                 >
-                  Revoke
+                  {translate('Revoke')}
                 </button>
               </div>
             ))}

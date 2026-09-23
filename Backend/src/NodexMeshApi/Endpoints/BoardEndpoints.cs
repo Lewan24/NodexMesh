@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using NodexMeshApi.Common;
 using NodexMeshApi.Data;
@@ -127,12 +128,29 @@ public static class BoardEndpoints
     /// </summary>
     private static async Task<IResult> ApplyMutationAsync(
         Guid boardId, BoardMutationDto mutation, ClaimsPrincipal principal,
-        IProjectAccessService access, IBoardMutationService boards, CancellationToken ct)
+        IProjectAccessService access, IBoardMutationService boards,
+        IHubContext<CollaborationHub, ICollaborationClient> hub, ILoggerFactory loggerFactory, CancellationToken ct)
     {
         var userId = CurrentUserId(principal);
-        await access.RequireForBoardAsync(boardId, userId, ProjectRole.Editor, ct);
+        var projectId = await access.RequireForBoardAsync(boardId, userId, ProjectRole.Editor, ct);
 
         var (status, result) = await boards.ApplyAsync(boardId, userId, mutation, ct);
+        if (status == 200)
+        {
+            // A notification is only a hint to re-read authorized data, sent after the transaction commits.
+            // Delivery failure must never turn a committed write into a failed API response.
+            try
+            {
+                await hub.Clients.Group(CollaborationHub.Group(projectId))
+                    .BoardChanged(projectId, boardId, result.BoardRevision.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                    .WaitAsync(TimeSpan.FromSeconds(2));
+            }
+            catch (Exception error)
+            {
+                loggerFactory.CreateLogger("BoardNotifications").LogWarning(error,
+                    "Could not notify collaborators of board {BoardId} revision {Revision}", boardId, result.BoardRevision);
+            }
+        }
         return status == 200 ? TypedResults.Ok(result) : TypedResults.Json(result, statusCode: status);
     }
 
