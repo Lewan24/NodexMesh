@@ -1,6 +1,6 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
-import MobilePanel from '@/shared/components/dialogs/MobilePanel';
+import MobilePanel, { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import { useState } from 'react';
 import { ChevronDown, LayoutGrid, ListTree, Play, MousePointer2 } from 'lucide-react';
 import type { ToolType } from '@/entities/board/toolTypes';
@@ -51,6 +51,7 @@ export default function Sidebar({
   onSelectTool: (tool: ToolType) => void;
 }) {
   useTranslation();
+  const mobile = useMobileLayout();
   const [openGroup, setOpenGroup] = useState<string | null>('common');
   return (
     <MobilePanel title={translate('Tools')} slot="tools">
@@ -104,9 +105,11 @@ export default function Sidebar({
                             aria-label={tool.label}
                             aria-pressed={selectedTool === id}
                             title={
-                              id === 'drawing'
-                                ? translate('Pencil · Draw on canvas · Esc to cancel')
-                                : translate('{{value1}} · Click or drag to canvas', { value1: tool.label })
+                              mobile
+                                ? undefined
+                                : id === 'drawing'
+                                  ? translate('Pencil · Draw on canvas · Esc to cancel')
+                                  : translate('{{value1}} · Click or drag to canvas', { value1: tool.label })
                             }
                             onMouseDown={(event) => {
                               if (id !== 'drawing') startToolDrag(id, event);

@@ -5,9 +5,11 @@ import BoardPage from '@/features/board/pages/BoardPage';
 import AdminUsersPanel from '@/features/auth/pages/AdminUsersPanel';
 import ProfilePage from '@/features/auth/pages/ProfilePage';
 import { useEffect, useState } from 'react';
+import { useSuppressMobileTooltips } from '@/shared/hooks/useSuppressMobileTooltips';
 
 export default function App() {
   useTranslation();
+  useSuppressMobileTooltips();
   const { currentUser } = useAuth();
   const [view, setView] = useState<'workspace' | 'admin' | 'profile'>('workspace');
 

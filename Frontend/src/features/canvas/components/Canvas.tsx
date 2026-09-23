@@ -100,6 +100,7 @@ interface CanvasProps {
   onRenameBoard?: (boardId: string, name: string) => void;
   onOpenTrash: () => void;
   onRestoreTrashItem: (itemId: string, position: { x: number; y: number }) => void;
+  onEditBarVisibilityChange?: (visible: boolean) => void;
 }
 
 export default function Canvas({
@@ -132,6 +133,7 @@ export default function Canvas({
   onRenameBoard,
   onOpenTrash,
   onRestoreTrashItem,
+  onEditBarVisibilityChange,
 }: CanvasProps) {
   useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -554,6 +556,13 @@ export default function Canvas({
     handleUpdateColumnItem,
     deleteSelectedColumnItem,
   } = useColumnSelection({ onSelectItems, onUpdateItem });
+
+  useLayoutEffect(() => {
+    const visible = selectedIds.length > 0 || selectedColumnItem !== null;
+    onEditBarVisibilityChange?.(visible);
+  }, [onEditBarVisibilityChange, selectedColumnItem, selectedIds.length]);
+
+  useEffect(() => () => onEditBarVisibilityChange?.(false), [onEditBarVisibilityChange]);
 
   const handleSelectColumnItem = useCallback(
     (columnId: string, item: BoardItem | null) => {

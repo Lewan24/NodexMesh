@@ -85,7 +85,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
 
   const [boardTrail, setBoardTrail] = useState<Array<{ id: string; name: string }>>([]);
   const [boards, setBoards] = useState<BoardRecord[]>([]);
-  const [boardNavigationVisible, setBoardNavigationVisible] = useState(true);
+  const [boardNavigationVisible, setBoardNavigationVisible] = useState(false);
+  const [editBarVisible, setEditBarVisible] = useState(false);
   const trashRequest = useRef(0);
   const [trashOpen, setTrashOpen] = useState(false);
   const [trashLoading, setTrashLoading] = useState(false);
@@ -596,7 +597,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         className="relative isolate z-0 flex flex-1 min-h-0 min-w-0 w-full overflow-hidden"
         style={{ backgroundColor: 'var(--color-app-bg)' }}
       >
-        {(boardTrail.length > 0 || boards.length > 1) && boardNavigationVisible && (
+        {(boardTrail.length > 0 || boards.length > 1) && boardNavigationVisible && !editBarVisible && (
           <div
             className="absolute left-1/2 top-9 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-lg"
             style={{
@@ -663,7 +664,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             </button>
           </div>
         )}
-        {(boardTrail.length > 0 || boards.length > 1) && !boardNavigationVisible && (
+        {(boardTrail.length > 0 || boards.length > 1) && !boardNavigationVisible && !editBarVisible && (
           <button
             type="button"
             className="absolute left-1/2 top-2 z-30 flex size-7 -translate-x-1/2 items-center justify-center rounded-full border shadow-md transition-transform hover:scale-105"
@@ -731,6 +732,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
               const entry = trashedItems.find((item) => item.item.id === itemId);
               if (entry) void handleRestoreTrashItem(entry, position);
             }}
+            onEditBarVisibilityChange={setEditBarVisible}
           />
         )}
         {trashOpen && !readOnly && (

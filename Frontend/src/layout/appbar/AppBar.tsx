@@ -1,11 +1,13 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 
 import type { Project } from '@/entities/project/types';
 
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useTheme } from '@/app/providers/ThemeProvider';
+import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 
 import AppLogo from './components/AppLogo';
 import AccountMenu from './components/AccountMenu';
@@ -66,8 +68,10 @@ export default function AppBar({
   useTranslation();
   const { currentUser, isAdmin, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const mobile = useMobileLayout();
 
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  const [mobileCollapsed, setMobileCollapsed] = useState(false);
 
   const toggleMenu = (menu: Exclude<OpenMenu, null>) => {
     setOpenMenu((current) => (current === menu ? null : menu));
@@ -83,6 +87,20 @@ export default function AppBar({
     onOpenProfile();
   };
 
+  if (mobile && mobileCollapsed) {
+    return (
+      <button
+        type="button"
+        className="app-bar-reveal"
+        data-canvas-ui="true"
+        aria-label={translate('Show app navigation')}
+        onClick={() => setMobileCollapsed(false)}
+      >
+        <ChevronDown size={17} aria-hidden="true" />
+      </button>
+    );
+  }
+
   return (
     <>
       <header
@@ -91,6 +109,17 @@ export default function AppBar({
         style={{ backgroundColor: 'var(--color-chrome-bg)', borderBottom: '1px solid var(--color-chrome-border)' }}
       >
         <AppLogo />
+        <button
+          type="button"
+          className="app-bar-collapse-toggle"
+          aria-label={translate('Hide app navigation')}
+          onClick={() => {
+            setOpenMenu(null);
+            setMobileCollapsed(true);
+          }}
+        >
+          <ChevronUp size={16} aria-hidden="true" />
+        </button>
         <button
           onClick={onAppearance}
           className="px-3 py-2 text-sm text-white/90 hover:text-white"
