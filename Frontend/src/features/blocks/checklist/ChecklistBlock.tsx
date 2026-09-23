@@ -122,7 +122,7 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
         className="item-rounded shadow-xl overflow-auto"
         style={{ background, height: item.height ? '100%' : undefined }}
       >
-        {item.topColor && <div style={{ height: 5, backgroundColor: item.topColor }} />}
+        {item.topColor && <div style={{ height: 5, background: item.topColor }} />}
 
         <div className="flex items-center justify-between px-3 pt-3 pb-2 cursor-grab active:cursor-grabbing">
           <div className="flex-1 min-w-0">

@@ -91,19 +91,21 @@ export default function EditBar({
   return (
     <div
       data-edit-bar="true"
-      className="edit-bar absolute left-1/2 -translate-x-1/2 z-50 flex flex-col rounded-2xl shadow-lg select-none overflow-hidden"
+      className="edit-bar absolute left-1/2 z-50 flex -translate-x-1/2 select-none flex-col overflow-hidden rounded-[22px] border shadow-2xl"
       style={{
         top: 'var(--canvas-editbar-top, 12px)',
-        backgroundColor: 'var(--color-surface-translucent)',
-        border: '1px solid var(--color-border)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.14)',
-        backdropFilter: 'blur(10px)',
+        background: 'color-mix(in srgb, var(--color-surface-translucent) 96%, transparent)',
+        borderColor: 'color-mix(in srgb, var(--color-border) 72%, transparent)',
+        boxShadow: '0 18px 60px rgba(24, 12, 40, 0.2), 0 3px 12px rgba(24, 12, 40, 0.1)',
+        backdropFilter: 'blur(18px) saturate(1.25)',
         maxWidth: 'calc(100% - 24px)',
       }}
       onMouseDown={(e) => e.stopPropagation()}
     >
+      <div className="h-[3px] w-full shrink-0 bg-gradient-to-r from-violet-600 via-fuchsia-400 to-amber-300" />
+
       {/* Main actions */}
-      <div className="edit-bar-row edit-bar-actions flex items-center gap-1 px-2 py-1.5 overflow-x-auto">
+      <div className="edit-bar-row edit-bar-actions flex items-center gap-1 overflow-x-auto px-2.5 py-2">
         <button
           onClick={onClose}
           className="edit-bar-close w-7 h-7 flex items-center justify-center rounded-lg transition-colors flex-shrink-0 cursor-pointer"
@@ -124,8 +126,11 @@ export default function EditBar({
         </button>
 
         <span
-          className="text-[11px] font-bold uppercase tracking-widest px-1 flex-shrink-0"
-          style={{ color: 'var(--color-text-faint)' }}
+          className="flex-shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em]"
+          style={{
+            color: 'var(--color-text-secondary)',
+            background: 'color-mix(in srgb, var(--color-border) 25%, transparent)',
+          }}
         >
           {typeLabel}
         </span>
@@ -235,8 +240,11 @@ export default function EditBar({
       {/* Style controls */}
       {hasStyleControls && (
         <div
-          className="edit-bar-row edit-bar-style-controls flex items-center gap-1 px-2 py-1.5 overflow-x-auto"
-          style={{ borderTop: '1px solid var(--color-border-soft)' }}
+          className="edit-bar-row edit-bar-style-controls flex items-start gap-2 overflow-x-auto px-2.5 py-2.5"
+          style={{
+            borderTop: '1px solid var(--color-border-soft)',
+            background: 'color-mix(in srgb, var(--color-surface-alt) 38%, transparent)',
+          }}
         >
           {single.type !== 'drawing' && single.type !== 'line' && single.type !== 'frame' && (
             <ColorPanel item={single} onUpdate={handleUpdate} />

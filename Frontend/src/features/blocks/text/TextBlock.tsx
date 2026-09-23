@@ -100,9 +100,7 @@ export default function TextBlock({ item, onUpdate, fillWidth = false }: TextBlo
       >
         {/* Top accent */}
 
-        {isCard && item.topColor && (
-          <div style={{ height: 5, backgroundColor: item.topColor, margin: '-14px -18px 8px' }} />
-        )}
+        {isCard && item.topColor && <div style={{ height: 5, background: item.topColor, margin: '-14px -18px 8px' }} />}
 
         <div
           className="flex flex-col"

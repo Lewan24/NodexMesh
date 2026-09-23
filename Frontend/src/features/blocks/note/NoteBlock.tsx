@@ -101,7 +101,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
       >
         {/* Top accent */}
 
-        {item.topColor && <div style={{ height: 5, backgroundColor: item.topColor }} />}
+        {item.topColor && <div style={{ height: 5, background: item.topColor }} />}
 
         {/* Header */}
 

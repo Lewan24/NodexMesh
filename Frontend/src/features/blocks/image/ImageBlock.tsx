@@ -71,7 +71,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
       >
         {/* Top accent */}
 
-        {!isSticker && item.topColor && <div style={{ height: 5, backgroundColor: item.topColor }} />}
+        {!isSticker && item.topColor && <div style={{ height: 5, background: item.topColor }} />}
 
         {/* Image area */}
 

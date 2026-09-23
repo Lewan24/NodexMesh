@@ -266,7 +266,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
         className="item-rounded shadow-xl overflow-scroll"
         style={{ width: '100%', height: item.height ? '100%' : undefined, background, borderColor }}
       >
-        {item.topColor && <div style={{ height: 5, backgroundColor: item.topColor, borderRadius: '16px 16px 0 0' }} />}
+        {item.topColor && <div style={{ height: 5, background: item.topColor, borderRadius: '16px 16px 0 0' }} />}
 
         {/* Header */}
 

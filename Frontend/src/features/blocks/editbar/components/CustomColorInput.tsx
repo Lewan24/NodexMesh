@@ -47,7 +47,11 @@ export default function CustomColorInput({
   };
 
   return (
-    <div className="flex items-center gap-1" title={title}>
+    <div
+      className="flex h-8 items-center gap-1 rounded-xl border p-1 shadow-sm"
+      style={{ borderColor: 'var(--color-border-soft)', background: 'var(--color-surface)' }}
+      title={title}
+    >
       <input
         type="color"
         value={fallback}
@@ -56,7 +60,7 @@ export default function CustomColorInput({
           setText(color);
           onChange(color);
         }}
-        className="w-6 h-6 p-0 border-0 rounded-md cursor-pointer bg-transparent"
+        className="h-5 w-5 cursor-pointer rounded-md border-0 bg-transparent p-0"
       />
 
       <input
@@ -76,8 +80,8 @@ export default function CustomColorInput({
           }
         }}
         spellCheck={false}
-        className="w-[72px] h-6 px-1.5 rounded-md text-[10px] font-mono outline-none"
-        style={{ color: '#172033', backgroundColor: '#ffffff', border: '1px solid var(--color-border)' }}
+        className="h-5 w-[62px] bg-transparent px-1 text-[10px] font-semibold uppercase outline-none"
+        style={{ color: 'var(--color-text-secondary)' }}
       />
     </div>
   );

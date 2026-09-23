@@ -73,7 +73,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
         {/* Top accent */}
 
         {item.topColor ? (
-          <div style={{ height: 5, backgroundColor: item.topColor }} />
+          <div style={{ height: 5, background: item.topColor }} />
         ) : (
           <div className="h-0.5" style={{ background: DEFAULT_LINK_STRIP }} />
         )}
