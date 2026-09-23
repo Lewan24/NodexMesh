@@ -14,9 +14,11 @@ import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
 import ItemLockBadge from './ItemLockBadge';
 import ItemCommentBadge from '@/features/comments/ItemCommentBadge';
 import type { RemotePresence } from '@/features/projects/hooks/useCollaborationPresence';
+import type { ProjectParticipant } from '@/entities/project/shareTypes';
 
 interface CanvasItemProps {
   item: BoardItem;
+  projectParticipants?: ProjectParticipant[];
   renderedItem: BoardItem;
   zoom: number;
   measuredSize?: { width: number; height: number };
@@ -77,6 +79,7 @@ export default function CanvasItem({
   remotePresence,
   collaboratorLocked = false,
   item,
+  projectParticipants = [],
   renderedItem,
   isSelected,
   isAttachTarget,
@@ -148,6 +151,7 @@ export default function CanvasItem({
         <BlockRenderer
           zoom={contentZoom}
           item={renderedItem}
+          projectParticipants={projectParticipants}
           onTaskDroppedOutside={onChecklistDropOutside}
           isSelected={isSelected}
           isDragOver={isDragOver}
@@ -194,6 +198,7 @@ export default function CanvasItem({
       item.id,
       item.type,
       renderedItem,
+      projectParticipants,
       isSelected,
       isDragOver,
       selectedColumnItemId,

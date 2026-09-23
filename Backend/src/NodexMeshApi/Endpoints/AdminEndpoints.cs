@@ -56,13 +56,7 @@ public static class AdminEndpoints
         var result = await users.CreateAsync(user, request.Password);
         if (!result.Succeeded)
             return TypedResults.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
-        db.AppearanceProfiles.Add(new AppearanceProfile
-        {
-            UserId = user.Id,
-            LightTheme = DefaultThemes.Light,
-            DarkTheme = DefaultThemes.Dark,
-            UpdatedAt = DateTimeOffset.UtcNow
-        });
+        db.AppearanceProfiles.Add(DefaultThemes.CreateProfile(user.Id, DateTimeOffset.UtcNow));
         await db.SaveChangesAsync(ct);
         return TypedResults.Ok(ToUser(user));
     }

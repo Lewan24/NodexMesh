@@ -44,13 +44,7 @@ public static class AdminBootstrap
 
         if (!await db.AppearanceProfiles.AnyAsync(profile => profile.UserId == admin.Id))
         {
-            db.AppearanceProfiles.Add(new AppearanceProfile
-            {
-                UserId = admin.Id,
-                LightTheme = DefaultThemes.Light,
-                DarkTheme = DefaultThemes.Dark,
-                UpdatedAt = DateTimeOffset.UtcNow
-            });
+            db.AppearanceProfiles.Add(DefaultThemes.CreateProfile(admin.Id, DateTimeOffset.UtcNow));
             await db.SaveChangesAsync();
         }
 

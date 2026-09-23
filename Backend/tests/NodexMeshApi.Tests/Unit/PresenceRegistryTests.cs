@@ -41,6 +41,20 @@ public class PresenceRegistryTests
     }
 
     [Fact]
+    public void Set_PreservesEphemeralCursorCoordinates()
+    {
+        var registry = new PresenceRegistry();
+        var projectId = Guid.NewGuid();
+        var update = new PresenceUpdate(projectId, Guid.NewGuid(), [], "selected", 123.5, -42.25);
+
+        registry.Set("conn-1", update, Guid.NewGuid(), "Alice");
+
+        var presence = registry.ForProject(projectId).Single().Presence;
+        presence.CursorX.Should().Be(123.5);
+        presence.CursorY.Should().Be(-42.25);
+    }
+
+    [Fact]
     public void Remove_ReturnsThePreviousValueAndClearsIt()
     {
         var registry = new PresenceRegistry();

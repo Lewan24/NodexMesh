@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { createId } from '@/shared/lib/createId';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { CalendarDays, CheckCircle2, Trash2, UserRound, X } from 'lucide-react';
 import type { TimelineTask } from '@/entities/board/types';
+import type { ProjectParticipant } from '@/entities/project/shareTypes';
 
 export default function TimelineTaskDialog({
   task,
@@ -11,12 +13,14 @@ export default function TimelineTaskDialog({
   onSave,
   onDelete,
   onClose,
+  participants,
 }: {
   task: TimelineTask;
   isNew: boolean;
   onSave: (task: TimelineTask) => void;
   onDelete: () => void;
   onClose: () => void;
+  participants: ProjectParticipant[];
 }) {
   useTranslation();
   const [draft, setDraft] = useState(task);
@@ -41,7 +45,7 @@ export default function TimelineTaskDialog({
         role="dialog"
         aria-modal="true"
         aria-label={isNew ? translate('Add timeline task') : translate('Edit timeline task')}
-        className="w-full max-w-lg max-h-[90dvh] overflow-auto shadow-2xl p-6 space-y-4"
+        className="timeline-task-dialog w-full max-w-xl max-h-[90dvh] overflow-auto shadow-2xl"
         data-wheel-scroll="true"
         style={{ background: 'var(--color-surface)', color: 'var(--color-text-primary)', borderRadius: 2 }}
         onSubmit={(event) => {
@@ -70,104 +74,143 @@ export default function TimelineTaskDialog({
           }
         }}
       >
-        <h2 className="text-lg font-semibold">{isNew ? translate('New task') : translate('Edit task')}</h2>
-        <label className="block text-sm">
-          {translate('Task name')}
-          <input
-            required
-            className="planning-input block w-full mt-1"
-            value={draft.title}
-            onChange={(event) => patch({ title: event.target.value })}
-          />
-        </label>
-        <div className="flex flex-wrap gap-3 text-sm">
-          <label className="flex-1">
-            {translate('Start')}
+        <header className="timeline-dialog-header">
+          <div>
+            <span className="timeline-dialog-eyebrow">{translate('Timeline task')}</span>
+            <h2 className="text-xl font-semibold">{isNew ? translate('New task') : translate('Edit task')}</h2>
+          </div>
+          <button type="button" className="timeline-icon-button" onClick={onClose} aria-label={translate('Close')}>
+            <X size={18} />
+          </button>
+        </header>
+        <div className="timeline-dialog-body">
+          <label className="timeline-field">
+            <span>{translate('Task name')}</span>
             <input
               required
-              type="date"
-              className="planning-input block w-full mt-1"
-              value={draft.start}
-              onChange={(event) =>
-                patch({
-                  start: event.target.value,
-                  end: draft.end < event.target.value ? event.target.value : draft.end,
-                })
-              }
+              className="planning-input block w-full"
+              placeholder={translate('What needs to be done?')}
+              value={draft.title}
+              onChange={(event) => patch({ title: event.target.value })}
             />
           </label>
-          <label className="flex-1">
-            {translate('End')}
-            <input
-              required
-              type="date"
-              min={draft.start}
-              className="planning-input block w-full mt-1"
-              value={draft.end}
-              onChange={(event) => patch({ end: event.target.value })}
-            />
-          </label>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center gap-2">
+          <div className="timeline-dialog-grid">
+            <label className="timeline-field">
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays size={14} />
+                {translate('Start')}
+              </span>
+              <input
+                required
+                type="date"
+                className="planning-input block w-full"
+                value={draft.start}
+                onChange={(event) =>
+                  patch({
+                    start: event.target.value,
+                    end: draft.end < event.target.value ? event.target.value : draft.end,
+                  })
+                }
+              />
+            </label>
+            <label className="timeline-field">
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays size={14} />
+                {translate('End')}
+              </span>
+              <input
+                required
+                type="date"
+                min={draft.start}
+                className="planning-input block w-full"
+                value={draft.end}
+                onChange={(event) => patch({ end: event.target.value })}
+              />
+            </label>
+          </div>
+          <div className="timeline-dialog-grid">
+            <label className="timeline-field">
+              <span className="inline-flex items-center gap-1.5">
+                <UserRound size={14} />
+                {translate('Assignee')}
+              </span>
+              <select
+                className="planning-input block w-full"
+                value={draft.assigneeUserId ?? ''}
+                onChange={(event) => patch({ assigneeUserId: event.target.value || undefined })}
+              >
+                <option value="">{translate('Unassigned')}</option>
+                {participants.map((participant) => (
+                  <option key={participant.userId} value={participant.userId}>
+                    {participant.displayName} · {translate(participant.role)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="timeline-field">
+              <span>{translate('Color')}</span>
+              <span className="timeline-color-field">
+                <input type="color" value={draft.color} onChange={(event) => patch({ color: event.target.value })} />
+                <span>{draft.color.toUpperCase()}</span>
+              </span>
+            </label>
+          </div>
+          <label className="timeline-complete-toggle">
+            <CheckCircle2 size={18} />
             <input type="checkbox" checked={draft.done} onChange={(event) => patch({ done: event.target.checked })} />
             {translate('Completed')}
           </label>
-          <label className="flex items-center gap-2">
-            {translate('Color')}
-            <input type="color" value={draft.color} onChange={(event) => patch({ color: event.target.value })} />
-          </label>
+          <fieldset className="timeline-checklist-fieldset">
+            <legend className="text-sm font-medium mb-2">{translate('Checklist')}</legend>
+            {draft.checklist.map((entry) => (
+              <div key={entry.id} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  aria-label={translate('Complete {{value1}}', { value1: entry.text || translate('Checklist item') })}
+                  checked={entry.done}
+                  onChange={(event) =>
+                    patch({
+                      checklist: draft.checklist.map((check) =>
+                        check.id === entry.id ? { ...check, done: event.target.checked } : check,
+                      ),
+                    })
+                  }
+                />
+                <input
+                  aria-label={translate('Checklist item text')}
+                  className="planning-input flex-1"
+                  value={entry.text}
+                  onChange={(event) =>
+                    patch({
+                      checklist: draft.checklist.map((check) =>
+                        check.id === entry.id ? { ...check, text: event.target.value } : check,
+                      ),
+                    })
+                  }
+                />
+                <button
+                  type="button"
+                  aria-label={translate('Remove checklist item')}
+                  className="planning-button"
+                  onClick={() => patch({ checklist: draft.checklist.filter((check) => check.id !== entry.id) })}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="planning-button"
+              onClick={() => patch({ checklist: [...draft.checklist, { id: createId(), text: '', done: false }] })}
+            >
+              {translate('+ Checklist item')}
+            </button>
+          </fieldset>
         </div>
-        <fieldset className="space-y-2">
-          <legend className="text-sm font-medium mb-2">{translate('Checklist')}</legend>
-          {draft.checklist.map((entry) => (
-            <div key={entry.id} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                aria-label={translate('Complete {{value1}}', { value1: entry.text || translate('Checklist item') })}
-                checked={entry.done}
-                onChange={(event) =>
-                  patch({
-                    checklist: draft.checklist.map((check) =>
-                      check.id === entry.id ? { ...check, done: event.target.checked } : check,
-                    ),
-                  })
-                }
-              />
-              <input
-                aria-label={translate('Checklist item text')}
-                className="planning-input flex-1"
-                value={entry.text}
-                onChange={(event) =>
-                  patch({
-                    checklist: draft.checklist.map((check) =>
-                      check.id === entry.id ? { ...check, text: event.target.value } : check,
-                    ),
-                  })
-                }
-              />
-              <button
-                type="button"
-                aria-label={translate('Remove checklist item')}
-                className="planning-button"
-                onClick={() => patch({ checklist: draft.checklist.filter((check) => check.id !== entry.id) })}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            className="planning-button"
-            onClick={() => patch({ checklist: [...draft.checklist, { id: createId(), text: '', done: false }] })}
-          >
-            {translate('+ Checklist item')}
-          </button>
-        </fieldset>
-        <div className="flex gap-2 pt-3">
+        <footer className="timeline-dialog-footer">
           {!isNew && (
-            <button type="button" className="planning-button text-rose-500" onClick={onDelete}>
-              {translate('Delete task')}
+            <button type="button" className="planning-button timeline-danger-button" onClick={onDelete}>
+              <Trash2 size={14} /> {translate('Delete task')}
             </button>
           )}
           <button type="button" className="planning-button ml-auto" onClick={onClose}>
@@ -181,7 +224,7 @@ export default function TimelineTaskDialog({
           >
             {translate('Save task')}
           </button>
-        </div>
+        </footer>
       </form>
     </div>,
     document.body,

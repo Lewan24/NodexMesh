@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
@@ -85,9 +86,16 @@ public class AdminEndpointsTests : IDisposable
             new AdminCreateUserRequest(email, "Str0ng!AdminSet#1", "Created By Admin", false));
         created.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var login = await _factory.CreateClientNoRedirect()
-            .PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, "Str0ng!AdminSet#1"));
+        var createdUser = _factory.CreateClientNoRedirect();
+        var login = await createdUser.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, "Str0ng!AdminSet#1"));
         login.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var auth = await login.Content.ReadFromJsonAsync<AuthResponse>();
+        createdUser.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
+        var appearance = await createdUser.GetFromJsonAsync<JsonElement>("/api/v1/appearance");
+        appearance.GetProperty("defaults").GetProperty("font").GetString().Should().Be("short-stack");
+        appearance.GetProperty("uiPrimary").GetString().Should().Be("#8000ff");
+        appearance.GetProperty("paletteVersion").GetInt32().Should().Be(2);
     }
 
     [Fact]

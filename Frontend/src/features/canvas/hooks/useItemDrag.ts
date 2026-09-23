@@ -57,6 +57,10 @@ function geometryAt(capture: DragCapture, dx: number, dy: number): DragGeometry 
   };
 }
 
+export function getDragEffectIds(dragIds: readonly string[], capturedIds: ReadonlySet<string>): string[] {
+  return dragIds.filter((dragId) => capturedIds.has(dragId));
+}
+
 export function useItemDrag({
   projectRef,
   selectedIdsRef,
@@ -193,7 +197,10 @@ export function useItemDrag({
 
         if (!hasMoved) {
           pushHistory();
-          setDraggingIds(Array.from(captureMap.keys()));
+          // A frame moves its descendants as one unit. Applying an independent
+          // tilt/scale animation to every captured child makes the group appear
+          // to separate and jump when horizontal direction changes.
+          setDraggingIds(getDragEffectIds(dragIds, capturedIds));
         }
         hasMoved = true;
         lastDx = (moveEvent.clientX - startX) / currentZoom;

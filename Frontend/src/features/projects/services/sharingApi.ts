@@ -1,11 +1,20 @@
 import type { HttpClient } from '@/shared/api/httpClient';
-import type { CreatedShareLink, MemberRole, ProjectMember, ShareLink } from '@/entities/project/shareTypes';
+import type {
+  CreatedShareLink,
+  MemberRole,
+  ProjectMember,
+  ProjectParticipant,
+  ShareLink,
+} from '@/entities/project/shareTypes';
 
 export function createSharingApi(client: HttpClient) {
   const path = (id: string) => `/projects/${encodeURIComponent(id)}`;
   return {
     async members(id: string) {
       return (await client.request(`${path(id)}/members`)) as ProjectMember[];
+    },
+    async participants(id: string) {
+      return (await client.request(`${path(id)}/participants`)) as ProjectParticipant[];
     },
     async invite(id: string, email: string, role: MemberRole) {
       return (await client.request(`${path(id)}/members`, { method: 'POST', body: { email, role } })) as ProjectMember;

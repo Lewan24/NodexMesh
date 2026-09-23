@@ -8,6 +8,7 @@ import { AuthProvider } from '@/features/auth/context/AuthContext';
 
 import '@/app/styles/index.css';
 import { ThemeProvider } from '@/app/providers/ThemeProvider';
+import AppUpdateDialog from '@/features/version/components/AppUpdateDialog';
 
 const publicPath = window.location.pathname.slice(import.meta.env.BASE_URL.length);
 const publicMatch = /^shared\/([^/]+)\/?$/.exec(publicPath);
@@ -18,9 +19,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       {publicMatch ? (
         <PublicProjectPage token={publicMatch[1]!} />
       ) : (
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+          <AppUpdateDialog />
+        </>
       )}
     </ThemeProvider>
   </React.StrictMode>,

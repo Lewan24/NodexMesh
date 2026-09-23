@@ -426,13 +426,18 @@ test('duplicating nested content retains local positions and remaps graph and ch
 });
 
 test('timeline reordering preserves dates, checklists and task identities', () => {
-  const tasks = [{ id: 'a', start: '2026-09-10', checklist: [{ id: 'c', done: true }] }, { id: 'b' }, { id: 'c' }];
+  const tasks = [
+    { id: 'a', start: '2026-09-10', assigneeUserId: 'user-1', checklist: [{ id: 'c', done: true }] },
+    { id: 'b' },
+    { id: 'c' },
+  ];
   const reordered = reorderTasks(tasks, 'c', 'a');
   assert.deepEqual(
     reordered.map((task) => task.id),
     ['c', 'a', 'b'],
   );
   assert.equal(reordered[1], tasks[0]);
+  assert.equal(reordered[1].assigneeUserId, 'user-1');
   assert.equal(reorderTasks(tasks, 'missing', 'a'), tasks);
   assert.deepEqual(
     tasks.map((task) => task.id),
