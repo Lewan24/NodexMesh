@@ -67,7 +67,12 @@ export default function PasteStyleDialog({
             type="checkbox"
             checked={Object.values(parts).every(Boolean)}
             onChange={(event) =>
-              setParts({ fill: event.target.checked, strip: event.target.checked, typography: event.target.checked })
+              setParts({
+                fill: event.target.checked,
+                strip: event.target.checked,
+                typography: event.target.checked,
+                customCss: event.target.checked,
+              })
             }
           />
           {translate('All styles')}
@@ -77,6 +82,7 @@ export default function PasteStyleDialog({
             ['fill', translate('Card color and gradient')],
             ['strip', translate('Top strip color')],
             ['typography', translate('Typography and alignment')],
+            ['customCss', translate('Custom CSS')],
           ] as const
         ).map(([key, label]) => (
           <label key={key} className="flex gap-2">
