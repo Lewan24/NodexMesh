@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { readFile } from 'node:fs/promises';
 import { createServer } from 'vite';
 
 const server = await createServer({
@@ -11,7 +12,7 @@ const server = await createServer({
   server: { middlewareMode: true, watch: null, hmr: false },
 });
 await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
-const { exportProjectJson, exportWorkspaceProject, importProjectJson, persistImportedProject } =
+const { exportProjectJson, exportWorkspaceProject, importProjectJson, persistImportedProject, hasLibraryMedia } =
   await server.ssrLoadModule('/src/features/projects/services/projectJson.ts');
 const { createMockWorkspace } = await server.ssrLoadModule('/src/features/projects/services/mockWorkspace.ts');
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
@@ -49,6 +50,54 @@ function archive(boards, extra = {}) {
 const note = (content) => ({ ...createCanvasItem('note', 20, 20), content });
 const card = (title, boardId) => ({ ...createCanvasItem('board', 20, 20), title, boardId });
 const read = (value) => importProjectJson(JSON.stringify(value), 'new-owner');
+
+test('the checked-in export is valid and supplies the complete portable demo', async () => {
+  const text = await readFile(new URL('../docs/NodexMesh.json', import.meta.url), 'utf8');
+  const archive = JSON.parse(text);
+  const imported = await importProjectJson(text, DEMO_USER_ID);
+  assert.equal(imported.boards.length, archive.project.boards.length);
+  assert.equal(hasLibraryMedia(imported), false);
+  const demo = demoProjects[0];
+  assert.deepEqual(demo.boards, [
+    archive.project.boards.find((board) => board.id === archive.project.boardId),
+    ...archive.project.boards.filter((board) => board.id !== archive.project.boardId),
+  ]);
+  assert.equal(demo.ownerId, DEMO_USER_ID);
+  assert.equal(demo.name, archive.project.name);
+  const visit = (items) => {
+    for (const item of items) {
+      if (item.type === 'column') visit(item.items);
+      if (item.type === 'image' || (item.type === 'icon' && item.iconMode === 'url')) {
+        const source = item.url ?? item.source;
+        assert.match(source, /^https?:\/\//);
+        assert.equal((source.match(/https?:\/\//g) ?? []).length, 1, 'media URL must not be duplicated');
+      }
+    }
+  };
+  demo.boards.forEach((board) => visit(board.items));
+});
+
+test('nested images and additional-board icons retain original library references during transfer', async () => {
+  const reference = 'library://00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002';
+  const image = { ...createCanvasItem('image', 0, 0), url: reference };
+  const icon = { ...createCanvasItem('icon', 0, 0), iconMode: 'library', source: reference };
+  const column = { ...createCanvasItem('column', 0, 0), items: [image] };
+  const imported = await read(
+    archive([
+      { id: 'main', name: 'Main', items: [column] },
+      { id: 'icons', name: 'Icons', items: [icon] },
+    ]),
+  );
+  assert.equal(hasLibraryMedia(imported), true);
+  assert.equal(hasLibraryMedia({ ...imported, boards: undefined }), true);
+  assert.equal(hasLibraryMedia({ ...imported, boards: [imported.boards[1]] }), true);
+  const { api } = workspace();
+  const saved = await persistImportedProject(api, imported);
+  const exported = JSON.parse(await exportWorkspaceProject(api, saved.project.id));
+  assert.equal(exported.project.boards[0].items[0].items[0].url, reference);
+  assert.equal(exported.project.boards[1].items[0].source, reference);
+  assert.equal(exported.project.boards[1].items[0].iconMode, 'library');
+});
 
 function comparable(items) {
   return flattenItems(items, '00000000-0000-4000-8000-000000000001').map((entry) => ({

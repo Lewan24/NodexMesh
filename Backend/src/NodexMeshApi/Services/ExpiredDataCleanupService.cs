@@ -72,6 +72,19 @@ public sealed class ExpiredDataCleanupService(
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var now = clock.GetUtcNow();
+        var storage = scope.ServiceProvider.GetRequiredService<LibraryStorage>();
+        if (Directory.Exists(storage.Root))
+        {
+            // Grace period protects uploads whose database transaction has not committed yet.
+            foreach (var path in Directory.EnumerateFiles(storage.Root))
+            {
+                ct.ThrowIfCancellationRequested();
+                if (Guid.TryParseExact(Path.GetFileName(path), "N", out var id) &&
+                    File.GetLastWriteTimeUtc(path) < now.UtcDateTime.AddDays(-1) &&
+                    !await db.LibraryAssets.AnyAsync(a => a.Id == id, ct))
+                    File.Delete(path);
+            }
+        }
         var projects = await ProjectDeletionService.CleanExpiredAsync(db, now, ct);
         if (projects > 0) logger.LogInformation("Permanently removed {Count} projects after 30 days of user deletion.", projects);
 

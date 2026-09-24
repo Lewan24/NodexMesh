@@ -4,12 +4,25 @@ import type { Project, ProjectBoard, ProjectSnapshot } from '@/entities/project/
 import type { BoardSnapshot, ItemMutation } from '@/entities/board/records';
 import { canonicalJson } from '@/shared/api/canonicalJson';
 import type { BoardItem } from '@/entities/board/types';
+import { parseLibrarySource } from '@/features/library/librarySource';
 import { createMockWorkspace } from './mockWorkspace';
 import { flattenItems, renewProjectIds, toProjectView } from './boardAdapter';
 import type { WorkspaceServices } from './contracts';
 
 export interface ImportedProject extends Project {
   boards: ProjectBoard[];
+}
+
+/** Archives retain references, not the library files or their access permissions. */
+export function hasLibraryMedia(project: Project): boolean {
+  const contains = (items: BoardItem[]): boolean =>
+    items.some((item) => {
+      if (item.type === 'column') return contains(item.items);
+      if (item.type === 'image') return !!parseLibrarySource(item.url);
+      if (item.type === 'icon') return !!parseLibrarySource(item.source);
+      return false;
+    });
+  return project.boards?.length ? project.boards.some((board) => contains(board.items)) : contains(project.items);
 }
 
 export function exportProjectJson(project: Project): string {

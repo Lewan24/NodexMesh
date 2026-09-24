@@ -30,6 +30,9 @@ services:
       db:
         condition: service_healthy
     environment:
+      Library__Path: ${LIBRARY_PATH:-/app/storage/library}
+      Library__MaxFileBytes: ${LIBRARY_MAX_FILE_BYTES:-52428800}
+      Library__MaxProjectBytes: ${LIBRARY_MAX_PROJECT_BYTES:-1073741824}
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       # Keep this password identical to POSTGRES_PASSWORD above.
@@ -43,6 +46,9 @@ services:
       Admin__Email: admin@nodexmesh.pl
       # Empty generates a one-time password in the API startup logs.
       Admin__Password: ''
+
+    volumes:
+      - library-data:/app/storage
 
   frontend:
     image: lewan24/nodexmesh-web:latest
@@ -64,4 +70,5 @@ services:
       retries: 3
 
 volumes:
+  library-data:
   postgres-data:

@@ -1,3 +1,8 @@
+import { useContext } from 'react';
+import { LibraryContext } from '@/features/library/LibraryContext';
+import LibraryDialog from '@/features/library/LibraryDialog';
+import MediaPreview from '@/features/library/MediaPreview';
+import { parseLibrarySource } from '@/features/library/librarySource';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
@@ -19,6 +24,8 @@ interface ImageBlockProps {
 
 export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps) {
   useTranslation();
+  const projectId = useContext(LibraryContext);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [editingUrl, setEditingUrl] = useState(false);
   const [editingCaption, setEditingCaption] = useState(false);
   const [urlInput, setUrlInput] = useState(item.url);
@@ -65,6 +72,17 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
 
   return (
     <div className="group relative" style={{ width, height: item.height }}>
+      {libraryOpen && (
+        <LibraryDialog
+          projectId={projectId}
+          onClose={() => setLibraryOpen(false)}
+          onSelect={(source) => {
+            update({ url: source });
+            setEditingUrl(false);
+            setLibraryOpen(false);
+          }}
+        />
+      )}
       <div
         className={isSticker ? 'overflow-hidden item-rounded' : 'overflow-hidden shadow-xl item-rounded'}
         style={isSticker ? { boxShadow: '0 10px 26px rgba(0,0,0,0.22)' } : { background, borderColor }}
@@ -81,14 +99,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
         >
           {item.url ? (
             <>
-              <img
-                src={item.url}
-                loading="lazy"
-                decoding="async"
-                alt={item.caption || translate('Board image')}
-                className="w-full h-full object-cover"
-                draggable={false}
-              />
+              <MediaPreview fit="cover" source={item.url} name={item.caption || translate('Board image')} />
             </>
           ) : (
             <div
@@ -115,6 +126,16 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
           {/* Actions */}
 
           <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            {projectId && (
+              <button
+                type="button"
+                className="rounded-lg px-2 bg-violet-600 text-white text-xs"
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={() => setLibraryOpen(true)}
+              >
+                {translate('Library')}
+              </button>
+            )}
             {item.url && (
               <>
                 {/* Card / sticker */}
@@ -159,7 +180,10 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
 
                 <button
                   onMouseDown={(event) => event.stopPropagation()}
-                  onClick={() => setEditingUrl((previous) => !previous)}
+                  onClick={() => {
+                    if (parseLibrarySource(item.url)) setUrlInput('');
+                    setEditingUrl((previous) => !previous);
+                  }}
                   className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
                   style={{ backgroundColor: 'rgba(7,19,23,0.7)', color: '#8aacb8' }}
                   onMouseEnter={(event) => {

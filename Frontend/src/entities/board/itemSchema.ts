@@ -1,3 +1,4 @@
+import { parseLibrarySource } from '@/features/library/librarySource';
 import { translate, displayLabel } from '@/shared/i18n';
 import { validMindmapTree } from '@/features/blocks/mindmap/mindmapUtils';
 import type { MindmapNode } from './types';
@@ -121,12 +122,17 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
   icon: {
     version: 1,
     canNest: false,
-    validate: object({ iconMode: choice('preset', 'emoji', 'svg', 'url'), source: text, label: text }),
+    validate: object({ iconMode: choice('preset', 'emoji', 'svg', 'url', 'library'), source: text, label: text }),
   },
   image: {
     version: 1,
     canNest: true,
-    validate: object({ url, caption: text, variant: optional(choice('card', 'sticker')), imgHeight: optional(number) }),
+    validate: object({
+      url: (value) => url(value) || (typeof value === 'string' && !!parseLibrarySource(value)),
+      caption: text,
+      variant: optional(choice('card', 'sticker')),
+      imgHeight: optional(number),
+    }),
   },
   link: { version: 1, canNest: true, validate: object({ url, ...title, description: text }) },
   embed: { version: 1, canNest: true, validate: object({ url, ...title, showLabel: bool }) },

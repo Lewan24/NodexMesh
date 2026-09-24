@@ -1,5 +1,5 @@
 import type { BoardItem, BaseItem } from '@/entities/board/types';
-export type ItemStyle = Pick<BaseItem, 'color' | 'colorRole' | 'gradient' | 'topColor' | 'typography'>;
+export type ItemStyle = Pick<BaseItem, 'color' | 'colorRole' | 'gradient' | 'topColor' | 'typography' | 'customCss'>;
 export function copyItemStyle(item: BoardItem): ItemStyle {
   return structuredClone({
     color: item.color,
@@ -7,10 +7,11 @@ export function copyItemStyle(item: BoardItem): ItemStyle {
     gradient: item.gradient,
     topColor: item.topColor,
     typography: item.typography,
+    customCss: item.customCss,
   });
 }
-export type StyleParts = { fill: boolean; strip: boolean; typography: boolean };
-export const allStyleParts: StyleParts = { fill: true, strip: true, typography: true };
+export type StyleParts = { fill: boolean; strip: boolean; typography: boolean; customCss: boolean };
+export const allStyleParts: StyleParts = { fill: true, strip: true, typography: true, customCss: true };
 export function pasteItemStyle(item: BoardItem, style: ItemStyle, parts: StyleParts = allStyleParts): BoardItem {
   if (item.locked) return item;
   // Geometry, content, identity and frame ownership are deliberately excluded.
@@ -26,5 +27,6 @@ export function pasteItemStyle(item: BoardItem, style: ItemStyle, parts: StylePa
       : {}),
     ...(parts.strip ? { topColor: copy.topColor } : {}),
     ...(parts.typography ? { typography: copy.typography } : {}),
+    ...(parts.customCss ? { customCss: copy.customCss } : {}),
   } as BoardItem;
 }

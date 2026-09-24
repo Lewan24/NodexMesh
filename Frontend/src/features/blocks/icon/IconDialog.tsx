@@ -1,3 +1,7 @@
+import { useContext } from 'react';
+import { LibraryContext } from '@/features/library/LibraryContext';
+import LibraryDialog from '@/features/library/LibraryDialog';
+import { parseLibrarySource } from '@/features/library/librarySource';
 import { translate, displayLabel } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
@@ -8,7 +12,7 @@ import { getIconImageSource, prepareIconSvg } from './iconUtils';
 import IconVisual from './IconVisual';
 
 type IconPatch = Pick<IconItem, 'iconMode' | 'source' | 'label' | 'color'>;
-const MODES = { preset: 'Icons', emoji: 'Emoji', svg: 'Custom SVG', url: 'Image URL' } as const;
+const MODES = { preset: 'Icons', emoji: 'Emoji', svg: 'Custom SVG', url: 'Image URL', library: 'Library' } as const;
 
 export default function IconDialog({
   item,
@@ -20,12 +24,15 @@ export default function IconDialog({
   onSave: (patch: IconPatch) => void;
 }) {
   useTranslation();
+  const projectId = useContext(LibraryContext);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [mode, setMode] = useState(item.iconMode);
   const [sources, setSources] = useState({
     preset: 'star',
     emoji: '😀',
     svg: '',
     url: '',
+    library: '',
     [item.iconMode]: item.source,
   });
   const [label, setLabel] = useState(item.label);
@@ -46,6 +53,7 @@ export default function IconDialog({
       if (!value) throw new Error(translate('Choose an icon or enter its content.'));
       if (mode === 'url' && !getIconImageSource(mode, value))
         throw new Error(translate('Enter a valid HTTP or HTTPS image URL.'));
+      if (mode === 'library' && !parseLibrarySource(value)) throw new Error(translate('Choose a library file.'));
       if (mode === 'emoji' && Array.from(value).length > 32)
         throw new Error(translate('Enter one emoji or a short emoji sequence.'));
       const patch = {
@@ -80,6 +88,29 @@ export default function IconDialog({
           if (patch) onSave(patch);
         }}
       >
+        {libraryOpen && (
+          <LibraryDialog
+            projectId={projectId}
+            iconsOnly
+            onClose={() => setLibraryOpen(false)}
+            onSelect={(value, name) => {
+              setSources((current) => ({ ...current, library: value }));
+              setLabel(name);
+              setPreview({ iconMode: 'library', source: value, label: name, color });
+              setLibraryOpen(false);
+            }}
+          />
+        )}
+        {mode === 'library' && (
+          <button
+            type="button"
+            disabled={!projectId}
+            onClick={() => setLibraryOpen(true)}
+            className="border rounded px-3 py-2"
+          >
+            {translate('Choose from project library')}
+          </button>
+        )}
         <h2 className="text-lg font-semibold">{translate('Choose icon')}</h2>
         <div className="flex flex-wrap gap-2" aria-label={translate('Icon source')}>
           {Object.entries(MODES).map(([key, title]) => (
@@ -87,7 +118,8 @@ export default function IconDialog({
               key={key}
               type="button"
               aria-pressed={mode === key}
-              className={`px-3 py-2 rounded-lg cursor-pointer ${mode === key ? 'bg-violet-600 text-white' : 'hover:bg-violet-500/10'}`}
+              disabled={key === 'library' && !projectId}
+              className={`px-3 py-2 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${mode === key ? 'bg-violet-600 text-white' : 'hover:bg-violet-500/10'}`}
               onClick={() => {
                 setMode(key as IconItem['iconMode']);
                 setError('');
