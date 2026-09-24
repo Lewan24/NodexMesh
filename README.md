@@ -30,7 +30,7 @@ Dev branch has all unstable but newest features, changes and fixes. Main branch 
 ```bash
 cp .env.example .env
 # Set POSTGRES_PASSWORD and JWT_KEY in .env.
-# Leave ADMIN_PASSWORD empty to generate a one-time password in the API logs.
+# Set ADMIN_PASSWORD securely before first startup.
 docker compose build --no-cache
 docker compose up
 ```
@@ -54,7 +54,7 @@ dotnet run --project Backend/src/NodexMeshApi --launch-profile http
 
 Configure PostgreSQL, `Jwt:Key`, and the `Admin` settings through environment variables
 or .NET user secrets. Do not commit real credentials. If `Admin:Password` is empty, the
-bootstrap service generates a cryptographically random password and logs it once.
+bootstrap service refuses to create an account until a password is supplied securely.
 
 ### Frontend
 

@@ -118,7 +118,8 @@ export default function IconDialog({
               key={key}
               type="button"
               aria-pressed={mode === key}
-              className={`px-3 py-2 rounded-lg cursor-pointer ${mode === key ? 'bg-violet-600 text-white' : 'hover:bg-violet-500/10'}`}
+              disabled={key === 'library' && !projectId}
+              className={`px-3 py-2 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${mode === key ? 'bg-violet-600 text-white' : 'hover:bg-violet-500/10'}`}
               onClick={() => {
                 setMode(key as IconItem['iconMode']);
                 setError('');

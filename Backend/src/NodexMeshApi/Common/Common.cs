@@ -67,11 +67,14 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         if (exception is OperationCanceledException && httpContext.RequestAborted.IsCancellationRequested)
             return true;
 
+        httpContext.Items["audit.exceptionType"] = exception.GetType().Name;
+
         // Once the response has started, headers and status are already on the wire —
         // writing again throws inside the handler and kills the connection uncleanly.
         if (httpContext.Response.HasStarted)
         {
-            logger.LogError(exception, "Exception after response started on {Path}", httpContext.Request.Path);
+            if (!httpContext.Items.ContainsKey("audit.middleware"))
+                logger.LogError("Exception after response started: {ExceptionType}, request {RequestId}", exception.GetType().Name, httpContext.TraceIdentifier);
             return false;
         }
 
@@ -83,8 +86,8 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             _ => (StatusCodes.Status500InternalServerError, "internal_error", "An unexpected error occurred.")
         };
 
-        if (status >= 500)
-            logger.LogError(exception, "Unhandled exception on {Path}", httpContext.Request.Path);
+        if (status >= 500 && !httpContext.Items.ContainsKey("audit.middleware"))
+            logger.LogError("Unhandled {ExceptionType}, request {RequestId}", exception.GetType().Name, httpContext.TraceIdentifier);
 
         httpContext.Response.StatusCode = status;
         httpContext.Response.ContentType = "application/problem+json";

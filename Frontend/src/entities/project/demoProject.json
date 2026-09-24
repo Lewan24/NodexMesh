@@ -1,0 +1,4556 @@
+{
+  "format": "nodexmesh-project",
+  "version": 2,
+  "project": {
+    "id": "01a0cae4-0df7-7b60-ac54-eb9b4687e06b",
+    "boardId": "01a0cae4-0df7-7ea9-85f7-af5c45dc892d",
+    "ownerId": "01a0ae6f-b841-73a6-8028-f3552cd4e1b5",
+    "role": "Owner",
+    "name": "NodexMesh",
+    "color": "#059669",
+    "itemCount": 69,
+    "items": [
+      {
+        "title": "Plans for Upcoming Work",
+        "color": "#FF6B8A",
+        "id": "913867ba-a1a7-4899-afaa-2b2ea3c08637",
+        "type": "frame",
+        "x": 1872,
+        "y": 1088,
+        "zIndex": 0,
+        "width": 1852,
+        "height": 644,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "title": "NodexMesh Application Overview",
+        "opacity": 0.3,
+        "color": "#97B6E7",
+        "typography": { "fontSize": 14, "textAlign": "left" },
+        "id": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "type": "frame",
+        "x": 444,
+        "y": 252,
+        "zIndex": 0,
+        "width": 1336,
+        "height": 1268,
+        "frameId": null,
+        "locked": true,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "title": "NodexMesh TODO now",
+        "columns": [
+          {
+            "id": "c4baff33-9669-4869-82f0-f1fab3c77ac0",
+            "cards": [
+              {
+                "id": "53df14b8-93e1-4a83-ba0b-1944e85cd19e",
+                "done": false,
+                "text": "Implement keyboard moving, editing etc. also in blocks like mindmap or diagram"
+              },
+              {
+                "id": "0f04b40c-b4a5-4426-84b0-5ca4a5d49abd",
+                "done": false,
+                "text": "Implement google auth login and other socials and controls in admin panel to enable/disable register and global using these auth"
+              },
+              { "id": "68e60fc5-7b13-479a-82f9-11491f7e12c8", "done": true, "text": "Implement MindMapBlock" },
+              {
+                "id": "64991e48-aa7f-413c-a4f0-bb7ba76ec2c5",
+                "done": true,
+                "text": "Add additional strip color to be like in default links fancy gradient"
+              },
+              {
+                "id": "b770c0bc-20fc-4dab-899f-446a39d2f262",
+                "done": true,
+                "text": "Implement project change color while editing"
+              },
+              {
+                "id": "454eee50-4d3d-4359-8c98-a954f30fe981",
+                "done": true,
+                "text": "Add to project all items count, including all nested boards"
+              },
+              {
+                "id": "290a610e-eb64-4d6a-8c9c-2dc509f56a90",
+                "done": true,
+                "text": "Make in timeline tasks show and dissappear when moving to the left or right"
+              },
+              { "id": "7642111a-9e96-4f5c-b4f5-a41475ecce99", "done": true, "text": "Implement IconBlock" },
+              {
+                "id": "404afb70-cb2a-4fc0-916c-fd466955f7fb",
+                "done": true,
+                "text": "Add column expansion to match the Kanban width"
+              },
+              {
+                "id": "4d779ed2-9424-443a-8324-eab791d5f8be",
+                "done": true,
+                "text": "Check and add appropriate cursors where needed (buttons, etc.)"
+              },
+              {
+                "id": "3fc3ad23-fe42-45d9-b17d-32e33f8cc4b1",
+                "done": true,
+                "text": "Implement copy style and paste style on items like color or typography and font size"
+              },
+              {
+                "id": "762d0c5d-147c-4958-afa0-e35afc6f7216",
+                "done": true,
+                "text": "Change default theme colors to better ones"
+              },
+              { "id": "66c6e319-c123-4a34-b420-6cffde5edc68", "done": true, "text": "Implement arrows flexibility" },
+              { "id": "19a8deee-aded-407f-af49-0526cc8b8ad6", "done": true, "text": "Increase the default item width" },
+              {
+                "id": "07e797ee-3bdd-4803-aaba-3100040b390c",
+                "done": true,
+                "text": "Change the dark mode background to a grayer shade"
+              },
+              {
+                "id": "49e20a75-740a-4dc9-89fe-7f30448ffba3",
+                "done": true,
+                "text": "Check that appropriate animations are used everywhere and add them where needed"
+              },
+              {
+                "id": "13dbb424-acf8-4f1d-8e1b-877f60bf7350",
+                "done": true,
+                "text": "Add changing colors in kanban columns"
+              },
+              {
+                "id": "a270ca7f-9202-4459-b801-cd1461769ee6",
+                "done": true,
+                "text": "Implement multi selected drawing to change color and width for all of them"
+              },
+              {
+                "id": "70833c5d-f99f-41a5-ba42-721bf28ccea7",
+                "done": true,
+                "text": "Add more funny and nice hand writting fonts"
+              },
+              {
+                "id": "2bc818cd-ffe5-47fd-9cbf-374e72bfd49b",
+                "done": true,
+                "text": "Change new items to be more squares instead of rounded"
+              },
+              { "id": "2bdd32f7-4eea-4fd4-bd35-a4695586fd08", "done": true, "text": "Add a new Divider item" }
+            ],
+            "color": "#5a8a94",
+            "title": "Nice to do",
+            "width": 180
+          },
+          {
+            "id": "438980c4-7e52-4d14-9c9b-05eca4ba2581",
+            "cards": [
+              {
+                "id": "6961cb1c-a5c0-4cee-bc9b-49346df89a03",
+                "done": true,
+                "text": "Implement storing data on disk, add matching path and settings to be compatible and configurable with docker"
+              },
+              {
+                "id": "70b10c0a-1ef4-43cb-98b6-b5106559e7aa",
+                "done": true,
+                "text": "Implement library - per project, not accessible by other users or projects until shared"
+              },
+              {
+                "id": "5f5aea52-19ea-4601-9cdd-78ca8dacfefb",
+                "done": true,
+                "text": "Upgrade timeline for collaboration, implement assigning people from project to specific tasks"
+              },
+              {
+                "id": "74d554d5-8a7a-47b5-8769-f220dc490867",
+                "done": true,
+                "text": "Fix creating user default appearance settings"
+              },
+              {
+                "id": "d1168522-c16a-4a2b-b02e-624e64826ac2",
+                "done": true,
+                "text": "Implement collaboration mouses to be visible in live where who is currently"
+              },
+              {
+                "id": "e2296d90-c6ec-4535-bd50-ab2b511c5567",
+                "done": true,
+                "text": "Fix and modify custom css, make it more universal to use ready classess and to use custom styles for specific class/div/element like button>a{color: red;} etc"
+              },
+              {
+                "id": "e9d7aa2e-a27c-45c8-9737-70cc695fc14b",
+                "done": true,
+                "text": "Rebuild edit bar to more modern style, more compact, mobile devices compatible etc"
+              },
+              {
+                "id": "d97e03cb-3708-4e55-aa8b-2a7cf1e5240d",
+                "done": true,
+                "text": "Fix boards nav bar more under app bar and more compact"
+              },
+              {
+                "id": "d83d0c97-0786-4d36-ae60-438c3e9812b1",
+                "done": true,
+                "text": "Fix demo project reset, export and import after boards implementation system"
+              },
+              {
+                "id": "c86d2869-947a-41cc-8259-d9153508bf99",
+                "done": true,
+                "text": "Implement localization and Polish language as default and in browser localstorage store language selection for future sessions"
+              },
+              {
+                "id": "10f11140-048f-4b9a-938c-12459ed3803d",
+                "done": true,
+                "text": "Trashed projects are still visible in admin panel, make them disabled, but able to restore as admin or remove pernamently"
+              },
+              {
+                "id": "8ec069da-13a6-4253-9774-57e778a66c28",
+                "done": true,
+                "text": "Viewer and commenter roles does not change anything its just read only for member"
+              },
+              {
+                "id": "19422819-8bac-4776-b707-4db99f591369",
+                "done": true,
+                "text": "Export/Import doesn't include project additional boards"
+              },
+              {
+                "id": "181229ea-0c8c-4331-83c1-3eeb023795e6",
+                "done": true,
+                "text": "Implement default project setting, so the default one opens always when logged into app"
+              },
+              {
+                "id": "4df37716-783a-4fe3-a8e7-781986bd78f1",
+                "done": true,
+                "text": "Add search bar to admin panels to users and projects to fast lookup specific item"
+              },
+              {
+                "id": "ccd42b3f-85a3-483f-9c28-bdda7307a07c",
+                "done": true,
+                "text": "Fix trash clearing in projects dont refresh trash panel"
+              },
+              {
+                "id": "670761b7-3e50-41e0-8edf-5442f45405b0",
+                "done": true,
+                "text": "Fix DiagramBlock preview connections"
+              },
+              {
+                "id": "707a619e-9fc3-42b3-aad5-cfd1a0fae927",
+                "done": true,
+                "text": "Fix item style on mobile devices"
+              },
+              {
+                "id": "fe776b8d-576f-41ce-ac0c-c79aedf32b54",
+                "done": true,
+                "text": "Change nav bar (Make it visible by deafult.Make an arrow to hide it and show small arrow to open nav bar)"
+              },
+              {
+                "id": "d5630551-445c-4df2-a2c6-d0b6cec3e10f",
+                "done": true,
+                "text": "Make search bar go to buttons more visible when activated"
+              },
+              {
+                "id": "e75990fc-c6cb-4ae9-95df-5b1f42ddb74a",
+                "done": true,
+                "text": "Error while restoring item after deletion"
+              },
+              {
+                "id": "3f6d7a89-eb07-4e36-9cb6-00bfbdbd244e",
+                "done": true,
+                "text": "Implement items trash to restore accidently deleted items"
+              },
+              {
+                "id": "30cefecb-538d-4cbc-b7c6-d6d24b2941ca",
+                "done": true,
+                "text": "Check and modify styles of app of colors, text etc that is compatible with current new app style and default colors"
+              },
+              {
+                "id": "9326b15c-973a-4b79-b580-ef88b55d9744",
+                "done": true,
+                "text": "Implement text color for specific items like color for title, description, link address etc"
+              },
+              { "id": "a6cd7b70-ba43-4bcf-82be-71952c559c60", "done": true, "text": "Fix BoardBlock text visibility" },
+              {
+                "id": "f46f5672-4980-42e5-9538-878b12e3feee",
+                "done": true,
+                "text": "Fix search bar goto next/previous hiding under edit bar"
+              },
+              { "id": "d66cf120-b1bc-4983-ae68-5c1c3245f0ef", "done": true, "text": "Implement sub boards" },
+              {
+                "id": "0507304f-9749-428b-9ad9-e76bfe11fdaf",
+                "done": true,
+                "text": "Fix stickers to not move while items grow"
+              },
+              {
+                "id": "b56763f8-1bf8-4306-96e1-893e70fe8d16",
+                "done": true,
+                "text": "Fix section titles to not be the skeleton when zommed out"
+              },
+              {
+                "id": "f5d0b3eb-3469-49ac-8f54-bc5ebc73ee0b",
+                "done": true,
+                "text": "Implement zooming in mind map block"
+              },
+              {
+                "id": "dba465f5-ae3e-42ed-9f83-649a7e1cbe4c",
+                "done": true,
+                "text": "Fix Adminpanel after refresh showing normal appbar"
+              },
+              {
+                "id": "a06c87a5-a803-4477-bb9f-375a901ec443",
+                "done": true,
+                "text": "Add moving around mindmap with mouse instead of just scrolls"
+              },
+              { "id": "8e994147-ca63-4d16-ba25-22e50a4f4650", "done": true, "text": "Fix and adjust mindmap" },
+              {
+                "id": "96477447-78f7-4fca-8845-5636e722cf38",
+                "done": true,
+                "text": "Implement go to items on enter while highlighting them from searchbox"
+              },
+              {
+                "id": "aee8cf68-20ae-4d9d-a1db-f2fc3f65128f",
+                "done": true,
+                "text": "Implement button for drawings to make them smooth"
+              },
+              {
+                "id": "ec1cd3f9-001c-4af6-8139-0f4f9ef80423",
+                "done": true,
+                "text": "Implement new way to update demo projekt"
+              },
+              {
+                "id": "4cc0fa95-81d8-429b-b1d2-7cc79fb816fb",
+                "done": true,
+                "text": "Implement horizontal layout for diagram"
+              },
+              {
+                "id": "fdf84930-e55d-4054-ae32-5841aca37cf9",
+                "done": true,
+                "text": "Change the float numbers like x, y, pressure etc to make it smaller and upgrade the efficiency"
+              },
+              {
+                "id": "4d29f7e5-3126-4df9-8f9f-50d42c47fcfc",
+                "done": true,
+                "text": "One click on arrow to cleate siblin items dont work on mobile device"
+              },
+              {
+                "id": "e886749f-0691-4311-9c6f-a0cfb812154d",
+                "done": true,
+                "text": "Check all the code and files and make them better readable for humans"
+              },
+              {
+                "id": "2c4b437b-8c33-4af7-a8f2-d369e527f1ea",
+                "done": true,
+                "text": "Implement column resizing of tasks in timeline"
+              },
+              {
+                "id": "e16ebb5a-b9d1-4c9a-98c6-e663f72a051e",
+                "done": true,
+                "text": "Implement reordering fields in database block"
+              },
+              {
+                "id": "403f72f9-555b-4894-867c-fc23b38aa8d7",
+                "done": true,
+                "text": "Fix Database diagram preview, not working properly connections"
+              },
+              {
+                "id": "b5c2adb7-85fb-4bc9-b00a-edd28b4be9d2",
+                "done": true,
+                "text": "Change editbar colors to accents and make them theme related"
+              },
+              { "id": "9ceb3ef2-7667-4412-b99f-5e5e582cff33", "done": true, "text": "Fix task height in checklists" },
+              { "id": "546275cc-be36-4d6d-a073-1996e376685a", "done": true, "text": "Implement DbDiagramBlock" },
+              {
+                "id": "2fe9284c-a189-4640-a002-40c39a5a4097",
+                "done": true,
+                "text": "Implement manual cleaning projects trash"
+              },
+              { "id": "850b023c-c04f-4d40-97f0-c5e7c9c087a1", "done": true, "text": "Update readme" },
+              { "id": "f4488c27-9df6-42fa-a6d3-f6ccd7ae910d", "done": true, "text": "Add auto-fit to checklists" },
+              {
+                "id": "2ce2c105-f8d7-457f-b73c-3c4083083939",
+                "done": true,
+                "text": "Add vertical text alignment to item alignment options"
+              },
+              { "id": "205e80f1-0a6d-4880-bb64-5301225ad227", "done": true, "text": "Adjust diagramblock" },
+              {
+                "id": "a6eca554-c749-4a72-ab75-24c1987faa52",
+                "done": true,
+                "text": "Fix timeline after reordering schedule the milestones should also reorder"
+              },
+              {
+                "id": "66eb9f7f-a19e-4e6b-95e3-30d77f6bda91",
+                "done": true,
+                "text": "Fix youtube embed video to edit video settings and captions"
+              },
+              {
+                "id": "ce2fe7d5-92f5-499d-8a58-4ba2ddd45db9",
+                "done": true,
+                "text": "Add compability to moving checklist items to kanban, and from kanban to checklist (.items are basicaly the same)"
+              },
+              { "id": "70e9a91e-ecc9-4ad4-8285-33298b686114", "done": true, "text": "Fix data-scroll in timeline" },
+              {
+                "id": "2139ac1d-0267-48c2-aeb8-79183a025f07",
+                "done": true,
+                "text": "Implement moving columns in kanban"
+              },
+              {
+                "id": "e7765c64-f478-4485-ae10-10957d7cdaae",
+                "done": true,
+                "text": "Fix kanban add cards buttons to be under last task instead of botton of item"
+              }
+            ],
+            "color": "#FFBD65",
+            "title": "Important",
+            "width": 180
+          },
+          {
+            "id": "b968584e-e538-4873-965a-bc121662d6fa",
+            "cards": [
+              {
+                "id": "55e9b559-d3a7-48c8-978c-5f3e9b884396",
+                "done": true,
+                "text": "Implement storing images in disk and allow selecting them to show in ImageBlock"
+              },
+              {
+                "id": "a5f4e9ba-28c5-43df-a678-75dcc58be35e",
+                "done": true,
+                "text": "Implement missing unit tests in API"
+              },
+              {
+                "id": "2bd7510b-39ea-4751-b720-200fe4fd948a",
+                "done": true,
+                "text": "Implement version checking in github releases and showing dialog with update available"
+              },
+              {
+                "id": "a72fe077-97e2-4158-92b5-529179f6a536",
+                "done": true,
+                "text": "Prepare and execute Tests #2 with collaborators, multi project creating"
+              },
+              {
+                "id": "8fb140f1-8e19-4e39-93f3-2d229282998d",
+                "done": true,
+                "text": "Implement export/import projects"
+              },
+              {
+                "id": "80a08a29-33c8-4060-8aca-9f965fdf0b26",
+                "done": true,
+                "text": "Check performance on different devices and fix problems with performance"
+              },
+              {
+                "id": "17ade331-eda0-44a2-835e-484ace7f0f84",
+                "done": true,
+                "text": "Implement profile page to change display name, email and password"
+              },
+              {
+                "id": "ca49ed13-103b-4869-917e-415f99124919",
+                "done": true,
+                "text": "Implement admin function to change users profiles data"
+              },
+              {
+                "id": "54abab76-40d6-4170-80c8-0b2d9879964f",
+                "done": true,
+                "text": "Fix on mobile devices moving items like kanban, now it opens the context menu instead of moving"
+              },
+              {
+                "id": "0ff8724c-974a-4ea8-904e-5572c4c4afe2",
+                "done": true,
+                "text": "Implement mobile devices compability"
+              },
+              { "id": "cf1198cf-93f6-455c-b281-db6ea8f756e1", "done": true, "text": "Plan database scheme" },
+              { "id": "412af0c8-f861-4d63-8761-f5e92247900a", "done": true, "text": "Plan backend" },
+              {
+                "id": "69469763-9201-4069-850b-fa4e2c3a998d",
+                "done": true,
+                "text": "Show the item center while dragging for easier positioning relative to other items on the board"
+              },
+              {
+                "id": "2544cdb3-60b3-4184-8cc0-a114634e564d",
+                "done": true,
+                "text": "Implement theme colors changing and saving that data"
+              },
+              {
+                "id": "80674caa-bd74-44b2-86a4-f77da10b4043",
+                "done": true,
+                "text": "Add long alignment guides while dragging so items can be aligned vertically and horizontally with distant items"
+              },
+              {
+                "id": "ed58b2a6-53ff-4711-9153-4eef2c2143ff",
+                "done": true,
+                "text": "Fix the drag preview so it shows the item’s current size instead of its default size"
+              },
+              {
+                "id": "a9c645d6-b61e-4e0c-81c7-04ca5d59547e",
+                "done": true,
+                "text": "Add the ability to rename a project"
+              },
+              { "id": "34fa077c-45aa-4bb7-8128-e47f4fa99b8c", "done": true, "text": "Implement drawing on canvas" },
+              {
+                "id": "49812dcb-e337-458a-92ac-fa9c4fc4cdee",
+                "done": true,
+                "text": "Change default font family to better one"
+              },
+              {
+                "id": "7cefd2ef-8fd8-4923-b4e5-3b80d75e3c5c",
+                "done": true,
+                "text": "Fix timelineblock (implement reordering rows)"
+              },
+              {
+                "id": "42c7058d-b48c-474f-8b44-f8c0d106b934",
+                "done": true,
+                "text": "Fix embedBlock for yt videos to instant interact instead of clicking interract"
+              },
+              { "id": "b92b0833-1a23-4df8-9534-77700444fa7b", "done": true, "text": "Fix document block error" },
+              {
+                "id": "71a237dd-4175-4cbd-b8c0-c2753de0e53d",
+                "done": true,
+                "text": "Fix the app bar occasionally bugging out and disappearing"
+              },
+              {
+                "id": "dbf24865-6fe2-449e-a317-c1af365c8f46",
+                "done": true,
+                "text": "Implement a project trash bin with project deletion and restoration"
+              }
+            ],
+            "color": "#02A0A0",
+            "title": "Must have",
+            "width": 180
+          }
+        ],
+        "color": "#2E2E2E",
+        "gradient": { "to": "#2d006b", "from": "#000000", "kind": "radial", "angle": 135 },
+        "topColor": "#FF6B8A",
+        "customCss": { "source": "color: #000;", "enabled": true },
+        "typography": { "fontSize": 14 },
+        "id": "3c22133c-08c0-4445-bcb5-3c89189dc057",
+        "type": "kanban",
+        "x": 1884,
+        "y": 252,
+        "zIndex": 5,
+        "width": 1844,
+        "height": 628,
+        "frameId": null,
+        "locked": true,
+        "comments": [],
+        "tags": ["todo"]
+      },
+      {
+        "size": "lg",
+        "content": "A free alternative to Milanote",
+        "color": "#F2F2F2",
+        "textAlign": "center",
+        "typography": { "italic": true, "fontSize": 30, "textAlign": "center" },
+        "id": "612518a5-54b5-4b74-ab07-17d7d0a819bd",
+        "type": "text",
+        "x": 1472,
+        "y": 64,
+        "zIndex": 6,
+        "width": 720,
+        "height": 60,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "size": "lg",
+        "content": "NodexMesh",
+        "color": "#fefce8",
+        "colorRole": "default",
+        "textAlign": "center",
+        "typography": { "bold": true, "fontSize": 40, "textAlign": "center" },
+        "id": "883d89aa-5c2c-4693-b722-16f87816e180",
+        "type": "text",
+        "x": 1664,
+        "y": 4,
+        "zIndex": 7,
+        "width": 336,
+        "height": 74,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "content": "The application is primarily a free and interesting alternative to the well-known Milanote platform.\n\nThe goal is to make it available to everyone and easy to run locally using\nDocker Compose",
+        "color": "#fdf4ff",
+        "colorRole": "accent1",
+        "typography": { "textAlign": "center", "fontFamily": "short-stack" },
+        "id": "2bbffcf2-4ba4-4100-95b3-c0e6a6182461",
+        "type": "note",
+        "x": 1024,
+        "y": 288,
+        "zIndex": 8,
+        "width": 320,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "content": "NodexMesh\nThe application will offer many familiar features to make the system pleasant and convenient to use.\nIt will also include additional tools and quality-of-life features such as:\n\n- Expandable Kanban boards\n- Smooth animations and task/item statuses\n- Grouping\n- An edit bar with extensive customization options\n- And much more\n\nThe application will remain free, actively developed, and supported, so you can report bugs and expect updates with fixes.\nYou can also contribute to the project using the project page below:",
+        "color": "#fdf4ff",
+        "colorRole": "accent4",
+        "customCss": { "source": "", "enabled": false },
+        "typography": { "bold": false, "fontSize": 14, "textAlign": "center" },
+        "id": "8acdcf2e-feea-4d82-a8a5-599b34bd4266",
+        "type": "note",
+        "x": 1424,
+        "y": 288,
+        "zIndex": 9,
+        "width": 320,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "url": "https://github.com/Lewan24/NodexMesh",
+        "title": "Nodex Mesh",
+        "description": "GitHub project",
+        "color": "#fdf4ff",
+        "colorRole": "default",
+        "id": "514c93c5-f9a0-4848-b358-b39a6910b9da",
+        "type": "link",
+        "x": 1424,
+        "y": 896,
+        "zIndex": 10,
+        "width": 320,
+        "height": 144,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "content": "Feel free to fork the project, improve the code, add useful features or fixes, and submit a Pull Request. Contributions and collaboration are welcome.",
+        "color": "#fdf4ff",
+        "topColor": "#7C3AED",
+        "colorRole": "accent2",
+        "typography": { "textAlign": "center" },
+        "id": "d626fbbf-8a72-4eed-a6b0-056e9ea31595",
+        "type": "note",
+        "x": 1424,
+        "y": 1088,
+        "zIndex": 11,
+        "width": 320,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "content": "All required information, commands, and setup recommendations are available on the project page",
+        "color": "#fdf4ff",
+        "colorRole": "default",
+        "typography": { "textAlign": "center" },
+        "id": "c2a5c152-e47c-4225-b3e3-7fa47d050464",
+        "type": "note",
+        "x": 1024,
+        "y": 608,
+        "zIndex": 12,
+        "width": 320,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "x2": 1476,
+        "y2": 896,
+        "arrowEnd": true,
+        "arrowStart": false,
+        "strokeWidth": 3,
+        "color": "#7C3AED",
+        "id": "05d6a1fd-ce3d-4c9a-a69d-84d251aec20a",
+        "type": "line",
+        "x": 1306,
+        "y": 778,
+        "zIndex": 13,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": [],
+        "endItemId": "514c93c5-f9a0-4848-b358-b39a6910b9da",
+        "startItemId": "c2a5c152-e47c-4225-b3e3-7fa47d050464"
+      },
+      {
+        "content": "NodexMesh is still under active development and continuous improvement. A working demo is currently available to everyone for free and can be opened directly in a browser using the link in the project’s GitHub repository.\n\nAll demo data is stored exclusively in the browser’s local storage, so changes and data created in the DEMO version may disappear after some updates.\n\nTo reset the data, clear local storage in your browser’s developer tools (F12).\nAlternatively, open the user menu in the top-right corner and use the\nReset DEMO\nbutton.",
+        "color": "#434347",
+        "colorRole": "accent2",
+        "typography": { "textAlign": "center" },
+        "id": "992d17b4-d717-4a3b-a197-81417a52ab21",
+        "type": "note",
+        "x": 1024,
+        "y": 811,
+        "zIndex": 14,
+        "width": 320,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "title": "Future Plans",
+        "entries": [
+          {
+            "id": "a57cc6c0-b689-4cff-b3fa-c4d6f609e05b",
+            "done": true,
+            "text": "Display images from the user’s library instead of requiring a link (link optional)"
+          },
+          {
+            "id": "0203be12-6d0c-43be-b970-4a27c59dc56d",
+            "done": true,
+            "text": "Add a global trash bin for items so previously deleted elements can be restored"
+          },
+          { "id": "25de4803-6411-43d3-9f3f-9667fd72a04b", "done": true, "text": "Custom application color themes" },
+          {
+            "id": "591a85c5-65fc-4d87-99bb-b0d2c747fc3b",
+            "done": true,
+            "text": "Implement project export and import between NodexMesh instances"
+          },
+          { "id": "5fdfc60d-61ad-43bb-a141-a854a5bea51a", "done": true, "text": "API in C# .NET 10" },
+          {
+            "id": "ea1c4c39-c682-493d-aa8f-1a732f7b2c4f",
+            "done": true,
+            "text": "Follow the OWASP Top 10 when implementing the API"
+          },
+          {
+            "id": "f512c7bf-941e-46f7-8724-cb3f5670c860",
+            "done": true,
+            "text": "Real-time collaboration (SignalR or something similar)"
+          },
+          { "id": "543a7175-9fc0-4445-a730-0379773eb3e8", "done": true, "text": "Read-only project sharing" }
+        ],
+        "color": "#ffffff",
+        "topColor": "#7C3AED",
+        "typography": { "fontSize": 16, "textAlign": "left" },
+        "id": "61b89df7-29c4-4e10-8ae8-30b59613c72d",
+        "type": "checklist",
+        "x": 1908,
+        "y": 1124,
+        "zIndex": 16,
+        "width": 580,
+        "frameId": "913867ba-a1a7-4899-afaa-2b2ea3c08637",
+        "locked": true,
+        "comments": [],
+        "tags": ["todo"]
+      },
+      {
+        "x2": 2803,
+        "y2": 880,
+        "curve": 0.1,
+        "label": "TODO Lists",
+        "lineCap": "round",
+        "arrowEnd": true,
+        "labelMode": "follow-line",
+        "arrowStart": true,
+        "labelOffset": 29,
+        "strokeWidth": 3,
+        "labelFontSize": 21,
+        "color": "#02A0A0",
+        "id": "8d42b1a2-826d-4497-9585-59823345c902",
+        "type": "line",
+        "x": 2801,
+        "y": 1088,
+        "zIndex": 17,
+        "frameId": "913867ba-a1a7-4899-afaa-2b2ea3c08637",
+        "locked": false,
+        "comments": [],
+        "tags": [],
+        "endItemId": "3c22133c-08c0-4445-bcb5-3c89189dc057",
+        "startItemId": "913867ba-a1a7-4899-afaa-2b2ea3c08637"
+      },
+      {
+        "content": "\nThe API will be built with\nC# .NET 10\n\nThe API is planned as a secure system designed with the\nOWASP Top 10\nin mind.\n\nThe API will run in a separate container, with the whole system defined in a single\ndocker-compose.yml\nfile so the application can be started easily and containers can be updated without hassle.\n\nAll required instructions, recommendations, and important information are available in the relevant sections of the project’s GitHub page.",
+        "color": "#fdf4ff",
+        "colorRole": "default",
+        "typography": { "textAlign": "center", "fontFamily": "short-stack" },
+        "id": "f88e291e-9965-4dbd-9b55-96fb706ec1d1",
+        "type": "note",
+        "x": 480,
+        "y": 584,
+        "zIndex": 18,
+        "width": 448,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": true,
+        "comments": [],
+        "tags": ["todo"]
+      },
+      {
+        "size": "lg",
+        "content": "Api",
+        "color": "#000000",
+        "topColor": "#e11d48",
+        "colorRole": "accent5",
+        "textAlign": "center",
+        "typography": { "bold": true, "fontSize": 32, "textAlign": "center" },
+        "id": "604b7425-1f37-4849-b701-257976e7ba08",
+        "type": "text",
+        "x": 608,
+        "y": 536,
+        "zIndex": 19,
+        "width": 192,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "title": "New Tools and Functionalities",
+        "entries": [
+          { "id": "27617e11-9c30-4c0b-a434-6adc49cd49da", "done": true, "text": "Custom css /& classes to each item?" },
+          {
+            "id": "2f456023-e5e3-471b-ba21-4adf00ebb7a7",
+            "done": true,
+            "text": "Bookmarks for saving important board locations for quick access later (Actually tags could work like that and search bar)"
+          },
+          {
+            "id": "62d4f45c-d581-4fe4-b376-da45abf0bcc0",
+            "done": true,
+            "text": "Sub-board node / portal for opening a new canvas or navigating to another project"
+          },
+          {
+            "id": "18e3187a-39e2-49c8-a3d0-24ffb41b2ded",
+            "done": true,
+            "text": "Mind Map with connections, automatic layout, etc."
+          },
+          {
+            "id": "95d2cbbd-8859-4d1a-861f-ec7f6b777124",
+            "done": true,
+            "text": "IconBlock - selectable custom icons or icons loaded from a link"
+          },
+          {
+            "id": "81bdbb8a-5cb4-4096-a00a-a9f79ad617c7",
+            "done": true,
+            "text": "DbDiagramBlock - item to plan and prepare version of database like tables, relations etc"
+          }
+        ],
+        "color": "#ffffff",
+        "topColor": "#059669",
+        "typography": { "fontFamily": "short-stack" },
+        "id": "4a5fd33f-320b-4f38-a3eb-47185a6806f2",
+        "type": "checklist",
+        "x": 2528,
+        "y": 1124,
+        "zIndex": 20,
+        "width": 616,
+        "frameId": "913867ba-a1a7-4899-afaa-2b2ea3c08637",
+        "locked": true,
+        "comments": [],
+        "tags": ["todo"]
+      },
+      {
+        "size": "lg",
+        "content": "Search for #todo in the app bar to display all items marked as tasks",
+        "color": "#0d2a35",
+        "typography": { "fontSize": 32, "textAlign": "center", "verticalAlign": "middle" },
+        "id": "d909bc2b-ddcc-41df-8dd0-2f4f97234c98",
+        "type": "text",
+        "x": 444,
+        "y": 1568,
+        "zIndex": 21,
+        "width": 1336,
+        "height": 98,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "title": "Done",
+        "entries": [
+          {
+            "id": "5395a55d-ad8c-4192-8d0b-d486055340c4",
+            "done": true,
+            "text": "Lock items to prevent accidental movement"
+          },
+          {
+            "id": "0540e868-6060-4faf-a751-2e537c506ebf",
+            "done": true,
+            "text": "Assign tags to items and highlight items when a tag is selected"
+          },
+          { "id": "25656502-4588-4652-a278-2c261c8d25ed", "done": true, "text": "Labels on arrows" },
+          {
+            "id": "ffdd37f9-8cff-477a-8bac-15cb67c5ec96",
+            "done": true,
+            "text": "Automatically create arrows from a selected item"
+          },
+          {
+            "id": "b92a0139-b2c9-446a-8163-d3b58a23f94b",
+            "done": true,
+            "text": "General comments and comments attached to specific items"
+          },
+          {
+            "id": "7ca1c662-6a41-4d05-b585-a5dda9686624",
+            "done": true,
+            "text": "Filter and search the board for specific text, tags, etc."
+          },
+          { "id": "bafd2109-4a72-4e07-b7b9-96cee4a9f2a2", "done": true, "text": "Divider" },
+          {
+            "id": "2797212d-52fe-4329-b651-674881bde487",
+            "done": true,
+            "text": "Something like cards dispenser in miro - block with cards, label and card color, dragging card is creating a note with center justify in vertical and horizontal"
+          },
+          {
+            "id": "1d47586c-2eb0-42c1-9802-ddaf35974236",
+            "done": true,
+            "text": "One click on arrow creates same empy item like note creates a note with its color and settings etc and attachted arrow"
+          },
+          {
+            "id": "ecb31ac7-f4c0-4e2b-9818-5eae4c8a7b5e",
+            "done": true,
+            "text": "DocumentBlock - more advanced note with specific lines and text styles etc"
+          },
+          {
+            "id": "f12e794b-773f-40ff-86cb-0afdcaa30c8f",
+            "done": true,
+            "text": "EmbedBlock - display content such as a YouTube video, image, or website"
+          },
+          { "id": "f919d84d-87bc-4adf-a20b-fe8a7bbdbb9f", "done": true, "text": "DiagramBlock" },
+          {
+            "id": "93222cba-b8a2-4153-bc52-71dd87795865",
+            "done": true,
+            "text": "CodeBlock - nicely formatted code display with language selection and default syntax highlighting"
+          },
+          { "id": "fb5e0d80-4ac0-48e1-a2dd-ceb769deef76", "done": true, "text": "Project management" },
+          {
+            "id": "20e25c57-7877-4b4d-b93a-9c2c925ee790",
+            "done": true,
+            "text": "TimelineBlock - version simple with just date and label and more advances with weeks, tasks etc"
+          },
+          {
+            "id": "f022ddad-4e41-4fa4-8f28-9e99ff53a555",
+            "done": true,
+            "text": "Context menu with actions such as copy, paste, duplicate, delete, etc."
+          },
+          {
+            "id": "9c996305-a77f-4caa-aff7-f11fe83980be",
+            "done": true,
+            "text": "Add more font families, more funny ones, some for like hand writing or sans serif etc"
+          },
+          { "id": "cb008620-7131-4c51-880e-dade8c927cec", "done": true, "text": "Drawing - drawing on canvas" }
+        ],
+        "color": "#ffffff",
+        "id": "f0559fc6-28d7-4e2b-b2b0-13a3fcb2c696",
+        "type": "checklist",
+        "x": 3192,
+        "y": 1124,
+        "zIndex": 22,
+        "width": 496,
+        "height": 544,
+        "frameId": "913867ba-a1a7-4899-afaa-2b2ea3c08637",
+        "locked": true,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "mode": "schedule",
+        "tasks": [
+          {
+            "id": "c8720ab0-9af2-4a2f-8184-d5d51a9212d3",
+            "end": "2026-09-10",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-10",
+            "title": "Fix now problems (kanban)",
+            "checklist": [
+              { "id": "01df089a-9a7f-4b0a-92f9-ef15d2ce635f", "done": true, "text": "DocumentBlock is throwing error" },
+              { "id": "56645e5d-96d2-407e-918e-80ef7a159fe7", "done": true, "text": "Add more fonts to app" }
+            ]
+          },
+          {
+            "id": "8900a638-b621-4cb4-a71f-b67d91e406d9",
+            "end": "2026-09-10",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-10",
+            "title": "Implement context menu",
+            "checklist": []
+          },
+          {
+            "id": "9e10bb84-9203-4f4b-9661-e401606f22bb",
+            "end": "2026-09-10",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-10",
+            "title": "Fixes from kanban",
+            "checklist": [
+              { "id": "8c8b81eb-e412-4803-8251-01f72e7709d2", "done": true, "text": "Timeline" },
+              { "id": "a0767114-13db-42f7-bdbd-3a0809f3b921", "done": true, "text": "Kanban" }
+            ]
+          },
+          {
+            "id": "f13e002b-24c8-4b72-8aa2-48596e5f8aa7",
+            "end": "2026-09-11",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-10",
+            "title": "Implement drawing on canvas",
+            "checklist": []
+          },
+          {
+            "id": "810ccad9-5c32-4ded-aa2b-63cb1ea7c2b5",
+            "end": "2026-09-10",
+            "done": true,
+            "color": "#ff0000",
+            "start": "2026-09-10",
+            "title": "Test #1",
+            "checklist": []
+          },
+          {
+            "id": "05a1094b-250c-4547-b221-e77c8874edae",
+            "end": "2026-09-14",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-11",
+            "title": "Test #1 Fixes",
+            "checklist": []
+          },
+          {
+            "id": "b058d9f6-6b38-4619-bda0-c57506e63ce3",
+            "end": "2026-09-12",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-11",
+            "title": "Implement Database Diagram",
+            "checklist": []
+          },
+          {
+            "id": "1fcaafb7-f99f-4360-9f1a-417147621e91",
+            "end": "2026-09-11",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-11",
+            "title": "hotfixes from kanban",
+            "checklist": [
+              {
+                "id": "1f19357a-5ec5-41a2-93d7-1628b0aac248",
+                "done": true,
+                "text": "Implement editbar for drawing to change colors and size when multi selected"
+              },
+              {
+                "id": "ef713e29-0184-47df-a5b4-7d3accfd0916",
+                "done": true,
+                "text": "Auto Adjust columns width in kanban when resizing kanban"
+              }
+            ]
+          },
+          {
+            "id": "d0217aca-7c11-4c50-902f-79e19e85ad16",
+            "end": "2026-09-14",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-12",
+            "title": "Kanban fixes",
+            "checklist": []
+          },
+          {
+            "id": "2ee7cbe0-4e29-4b90-ac83-753dbdf1a61c",
+            "end": "2026-09-14",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-13",
+            "title": "Implement new blocks",
+            "checklist": [
+              { "id": "8ced27cb-a23b-489f-b5b3-828635aa76eb", "done": true, "text": "IconBlock" },
+              { "id": "96ad1b87-268c-4647-8717-214d85476371", "done": true, "text": "MindmapBlock" }
+            ]
+          },
+          {
+            "id": "9a17a859-42f3-4705-84c7-e9cfc5a94d22",
+            "end": "2026-09-16",
+            "done": true,
+            "color": "#0d39e7",
+            "start": "2026-09-12",
+            "title": "Implement mobile devices compability",
+            "checklist": []
+          },
+          {
+            "id": "ded585d2-1240-49ef-8de0-8966758ff592",
+            "end": "2026-09-19",
+            "done": true,
+            "color": "#7c40ed",
+            "start": "2026-09-10",
+            "title": "API Planning",
+            "checklist": []
+          },
+          {
+            "id": "1b3fe8bd-4761-470e-bb91-945755174c18",
+            "end": "2026-09-27",
+            "done": true,
+            "color": "#ed4040",
+            "start": "2026-09-18",
+            "title": "Test #2",
+            "checklist": []
+          },
+          {
+            "id": "37e2fdad-36af-4d98-a4dc-61dbfe81ba2a",
+            "end": "2026-09-21",
+            "done": true,
+            "color": "#7c3aed",
+            "start": "2026-09-16",
+            "title": "API Implementation",
+            "checklist": []
+          },
+          {
+            "id": "1b351b98-3bbd-4f2a-84d9-147b5b18578f",
+            "end": "2026-10-04",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-20",
+            "title": "Change default app styles and modify existing items styles",
+            "checklist": []
+          },
+          {
+            "id": "752f5f2e-1d62-4dfd-9b7e-443d39c600ae",
+            "end": "2026-09-25",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-21",
+            "title": "Fixes",
+            "checklist": []
+          },
+          {
+            "id": "234f14c6-fb4a-450c-b89d-540f8a132c33",
+            "end": "2026-09-21",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-21",
+            "title": "Implement items trash",
+            "checklist": []
+          },
+          {
+            "id": "f90f4fad-ab92-4da1-aa50-f9970729a8bb",
+            "end": "2026-10-11",
+            "done": false,
+            "color": "#000000",
+            "start": "2026-09-23",
+            "title": "Implement keyboard compability and functionallities while editing, moving etc",
+            "checklist": []
+          },
+          {
+            "id": "ed747fc4-f2dd-4b3d-8860-3a65ff778cf6",
+            "end": "2026-09-23",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-21",
+            "title": "Implement custom css and classes to items to allow user set custom styles",
+            "checklist": []
+          },
+          {
+            "id": "64f61a94-3eea-4f2c-9c54-a08f305a2af8",
+            "end": "2026-10-11",
+            "done": false,
+            "color": "#000000",
+            "start": "2026-09-25",
+            "title": "Implement oath or some kind of google and socials login / register methods",
+            "checklist": []
+          },
+          {
+            "id": "3ffecf96-ece4-4f8d-b513-62c1e398d24e",
+            "end": "2026-10-01",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-22",
+            "title": "Implement storing images in disk",
+            "checklist": []
+          },
+          {
+            "id": "887bf285-0fd5-45f4-9847-40d74a0e9753",
+            "end": "2026-09-25",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-21",
+            "title": "Admin panel upgrades",
+            "checklist": []
+          },
+          {
+            "id": "4b40dc69-4e48-4faa-9e22-24d692567ec8",
+            "end": "2026-10-16",
+            "done": false,
+            "color": "#ff0000",
+            "start": "2026-10-09",
+            "title": "Tests #3",
+            "checklist": []
+          },
+          {
+            "id": "2b2ae8ac-cfd3-4f19-b682-791f7da7cce7",
+            "end": "2026-10-04",
+            "done": false,
+            "color": "#00ff91",
+            "start": "2026-09-23",
+            "title": "Tests #2 fixes",
+            "checklist": []
+          }
+        ],
+        "title": "NodexMesh todo timeline",
+        "taskColumnWidth": 352,
+        "color": "#ffffff",
+        "topColor": "linear-gradient(to right, #7C3AED, #FFBD65)",
+        "customCss": { "source": "div.h-\\[5px\\].shrink-0 { height: 15px; }", "enabled": true },
+        "id": "5326afe0-d25b-47f4-81e8-ac3f5d9c252e",
+        "type": "timeline",
+        "x": 2204,
+        "y": 2120,
+        "zIndex": 23,
+        "width": 1520,
+        "frameId": null,
+        "locked": true,
+        "comments": [],
+        "tags": ["important", "todo"]
+      },
+      {
+        "title": "Updates info",
+        "content": "<h2>Updates and timeline</h2><p>Updates are made practically everyday. timeline here is the <strong>new block</strong> that should help me <em>(and you for your future projects)</em> to plan the tasks of new features, fixes etc.</p><p>The project is growing and I'm adding new useful things, if you have any new ideas and you think that your new feature would help in creating project, plans etc in this app, just go to my <strong><u>github project</u></strong> <em>(link next to this document) </em>and create the feature improvement issue. Or you can fork the project and create the feature by yourself, so if you would want to have this in official codebase, just create <strong>pull request</strong> and wait for <strong>review</strong>.</p>",
+        "autoHeight": true,
+        "contentFormat": "tiptap-html",
+        "contentVersion": 1,
+        "typography": { "fontSize": 16 },
+        "id": "c3c43109-6fff-487f-95f1-b72c29ab2a3b",
+        "type": "document",
+        "x": 3904,
+        "y": 2120,
+        "zIndex": 25,
+        "width": 480,
+        "frameId": null,
+        "locked": true,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "url": "https://github.com/Lewan24/NodexMesh",
+        "title": "Nodex Mesh",
+        "description": "GitHub project",
+        "color": "#fdf4ff",
+        "topColor": "#7C3AED",
+        "colorRole": "default",
+        "id": "6c3a3264-b40f-486c-a8a7-ae783ece17c2",
+        "type": "link",
+        "x": 4096,
+        "y": 2645,
+        "zIndex": 26,
+        "width": 320,
+        "height": 144,
+        "frameId": null,
+        "locked": true,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "title": "Tests #1 problems",
+        "columns": [
+          {
+            "id": "703ac201-e1b2-418b-bb6f-93c11452af28",
+            "cards": [
+              {
+                "id": "0e88404d-8f8e-404c-9f91-d54b591b20a8",
+                "done": true,
+                "text": "Change editing kanban columns to dialog"
+              },
+              {
+                "id": "564a40c2-6031-4a30-a8e9-1114baa94aad",
+                "done": true,
+                "text": "Implement manual deleting trash with projects"
+              },
+              {
+                "id": "12559903-0781-49c9-b609-37015801f33a",
+                "done": true,
+                "text": "Show checklist completion percentage based on completed tasks"
+              },
+              { "id": "b7b525a9-67f5-4bfc-a02d-ad98ce32b416", "done": true, "text": "Implement arrow flexibility" },
+              {
+                "id": "68e8354f-060a-4a7a-a46a-d9cd976caea8",
+                "done": true,
+                "text": "Fix and improve DiagramBlock so it reacts better to moving items and handles arrows and connections more reliably"
+              },
+              { "id": "970a8807-9826-4c74-92db-b6be15e8bf7c", "done": true, "text": "Edit timeline tasks in a dialog" },
+              {
+                "id": "f83083a8-4cd5-4db5-8aeb-e0f1a26e0656",
+                "done": true,
+                "text": "Dropping a checklist item or Kanban card onto the canvas creates a new checklist"
+              },
+              {
+                "id": "7d2b9575-ddf4-4d68-b801-9c5042aaefa3",
+                "done": true,
+                "text": "ImageBlock also looks inconsistent with the rest of the app and needs styling improvements"
+              },
+              {
+                "id": "81ad6b19-c89d-4665-a7b9-8fbe0725d710",
+                "done": true,
+                "text": "Review and adjust colors and item styles so the overall UI is visually consistent"
+              },
+              {
+                "id": "8d322f50-4200-47f1-9232-55ad85679b2d",
+                "done": true,
+                "text": "Fix arrow and line thickness so arrowheads scale correctly with the selected stroke width"
+              },
+              {
+                "id": "148ac814-0337-45b6-8f31-802fdf8fcf03",
+                "done": true,
+                "text": "Add a lock icon to locked items so their locked state is clearly visible"
+              },
+              {
+                "id": "a82827e7-de68-4be6-acdb-6a5a81df2290",
+                "done": true,
+                "text": "Prevent a frame from moving when it contains a locked item"
+              }
+            ],
+            "color": "#5a8a94",
+            "title": "Nice to do",
+            "width": 387
+          },
+          {
+            "id": "9cfe69a3-5e07-4a73-9736-3f8cbe778cb8",
+            "cards": [
+              {
+                "id": "99a10d5f-3832-44f4-97a7-0d7d8a8bdaa4",
+                "done": true,
+                "text": "Update this column after adding new features"
+              },
+              {
+                "id": "d959e5ab-28aa-4b39-b578-a421784cf88d",
+                "done": true,
+                "text": "When an item is resized and starts overlapping other items, push those items away and cascade the movement if they overlap additional items"
+              },
+              {
+                "id": "4ebdae21-bd1c-4a33-a66b-b55280969113",
+                "done": true,
+                "text": "Check TimelineBlock and the other new items because they are not being added to frames"
+              },
+              {
+                "id": "603b8788-9aaa-4a29-82ba-b2ba280c3cc9",
+                "done": true,
+                "text": "Review fonts across the app and fix any inconsistent usage"
+              },
+              {
+                "id": "11a1a172-6fd7-4390-b9cd-b11e540d3ff4",
+                "done": true,
+                "text": "Allow TextBlock to support multiple lines instead of a single line"
+              },
+              {
+                "id": "1f8cce40-453b-4549-bcbe-7a1522618833",
+                "done": true,
+                "text": "Fix vertical alignment in NoteBlock"
+              },
+              {
+                "id": "2fb386cd-63d1-45eb-907c-102d873190cf",
+                "done": true,
+                "text": "Make checklist item font size configurable in the edit bar and apply it in the textarea when adding a new task"
+              }
+            ],
+            "color": "#FFBD65",
+            "title": "Important",
+            "width": 341
+          },
+          {
+            "id": "c0dea1f9-e627-491a-b5e4-02dc4db30b61",
+            "cards": [
+              {
+                "id": "e617e8a7-554c-4833-8dec-b4669c4d3a18",
+                "done": true,
+                "text": "Handle overlapping frames so when one frame overlaps another and tries to capture its items, the newer frame does not take items that already belong to the existing frame"
+              },
+              {
+                "id": "304d002e-c98e-486e-8c8e-33db482d73cd",
+                "done": true,
+                "text": "Review and improve Ctrl+Z support, including the existing issue with Kanban cards and tasks"
+              },
+              {
+                "id": "ddb9e049-d360-415f-b30e-0d9c46cd99eb",
+                "done": true,
+                "text": "Fix inconsistent item dimensions and sizing"
+              },
+              {
+                "id": "bcfacb3b-856a-4478-bb2c-80bbbc79c54b",
+                "done": true,
+                "text": "Set the default zIndex to 1 and all frames to 0"
+              }
+            ],
+            "color": "#7C3AED",
+            "title": "Must have",
+            "width": 358
+          }
+        ],
+        "color": "#ffffff",
+        "typography": { "fontSize": 16 },
+        "id": "54118c7a-77ad-456f-a75a-3f0705d0afdb",
+        "type": "kanban",
+        "x": 3864,
+        "y": 252,
+        "zIndex": 37,
+        "width": 1176,
+        "height": 743,
+        "frameId": null,
+        "locked": true,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "content": "Backend and Database Plan",
+        "color": "#7C3AED",
+        "id": "41ca5aca-bc91-4ad1-a646-ed9010215c13",
+        "type": "section-title",
+        "x": 444,
+        "y": 1982,
+        "zIndex": 69,
+        "width": 320,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "content": "NodexMesh TODO Section",
+        "color": "#FFBD65",
+        "id": "8f88de73-60a9-4b3d-8a37-a3c292b2f3f0",
+        "type": "section-title",
+        "x": 1884,
+        "y": 153,
+        "zIndex": 71,
+        "width": 320,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "label": "Star",
+        "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800px\" height=\"800px\" viewBox=\"-1.35 0 1504.4 1504.4\" id=\"Layer_1\"><style>.st0{fill:#5e91ff}.st1{fill:#fff}</style><title>Like</title><ellipse class=\"st0\" cx=\"750.8\" cy=\"752.2\" rx=\"750.8\" ry=\"752.2\"/><path class=\"st1\" d=\"M378.3 667.5h165.1c13 0 23.6 10.5 23.6 23.6v379.1c0 13-10.5 23.6-23.6 23.6H378.3c-13 0-23.6-10.5-23.6-23.6V691c.1-13 10.6-23.5 23.6-23.5zM624.7 1004.7V733.1c.1-66.9 18.8-132.4 54.1-189.2 21.5-34.4 69.7-89.5 96.7-118 6-6.4 27.8-25.2 27.8-35.5 0-13.2 1.5-34.5 2-74.2.3-25.2 20.8-45.9 46-45.7h1.1c44.1.8 58.2 41.6 58.2 41.6s37.7 74.4 2.5 165.4c-29.7 76.9-35.8 83.1-35.8 83.1s-9.6 13.9 20.8 13.3c0 0 185.6-.8 192-.8 13.7 0 57.4 12.5 54.9 68.2-1.8 41.2-27.4 55.6-40.5 60.3-1.7.6-2.6 2.5-1.9 4.2.3.7.8 1.3 1.5 1.7 13.4 7.8 40.8 27.5 40.2 57.7-.8 36.6-15.5 50.1-46.1 58.5-1.7.4-2.8 2.2-2.3 3.9.2.9.8 1.6 1.5 2 11.6 6.6 31.5 22.7 30.3 55.3-1.2 33.2-25.2 44.9-38.3 48.9-1.7.5-2.7 2.3-2.2 4 .2.7.7 1.4 1.3 1.8 8.3 5.7 20.6 18.6 20 45.1-.3 14-5 24.2-10.9 31.5-9.3 11.5-23.9 17.5-38.7 17.6l-411.8.8c-.1-.1-22.4 0-22.4-29.9z\"/></svg>",
+        "iconMode": "svg",
+        "color": "#7C3AED",
+        "id": "c3d0a6d5-3cb8-42f0-9895-ac94d8f68032",
+        "type": "icon",
+        "x": 608,
+        "y": 1282,
+        "zIndex": 75,
+        "width": 192,
+        "height": 172,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "size": "lg",
+        "content": "Custom SVG",
+        "typography": { "textAlign": "center", "verticalAlign": "middle" },
+        "id": "25e95fea-49ef-4aab-82e9-80423778eadf",
+        "type": "text",
+        "x": 656,
+        "y": 1164,
+        "zIndex": 76,
+        "width": 240,
+        "height": 60,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "x2": 740,
+        "y2": 1282,
+        "curve": -0.55,
+        "label": "",
+        "arrowEnd": true,
+        "labelMode": "horizontal",
+        "arrowStart": false,
+        "labelOffset": 14,
+        "strokeWidth": 2,
+        "color": "#7C3AED",
+        "id": "9aed8572-1374-4efb-84ff-a30463824a2a",
+        "type": "line",
+        "x": 764,
+        "y": 1224,
+        "zIndex": 77,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": [],
+        "endItemId": "c3d0a6d5-3cb8-42f0-9895-ac94d8f68032",
+        "startItemId": "25e95fea-49ef-4aab-82e9-80423778eadf"
+      },
+      {
+        "icon": "layout-dashboard",
+        "title": "Database Plan",
+        "boardId": "01a0cae4-0e9b-79da-ac1f-8c274239c7a2",
+        "description": "Double-click to open this database plan board",
+        "color": "#ffffff",
+        "topColor": "linear-gradient(to right, #7C3AED, #FFBD65)",
+        "id": "6f6472e2-8fb2-463b-9ccb-0ee51a76b01b",
+        "type": "board",
+        "x": 1200,
+        "y": 2232,
+        "zIndex": 80,
+        "width": 320,
+        "height": 190,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": ["important"]
+      },
+      {
+        "size": "lg",
+        "content": "Open individual boards",
+        "typography": { "textAlign": "center" },
+        "id": "d13ff994-c4e6-49a8-8e86-a773b1012451",
+        "type": "text",
+        "x": 822,
+        "y": 2120,
+        "zIndex": 81,
+        "width": 320,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "x2": 1200,
+        "y2": 2252,
+        "curve": 0.35,
+        "label": "",
+        "arrowEnd": true,
+        "labelMode": "horizontal",
+        "arrowStart": false,
+        "labelOffset": 14,
+        "strokeWidth": 2,
+        "color": "#7C3AED",
+        "id": "1c1b9353-143a-4940-8d16-292e307d4d77",
+        "type": "line",
+        "x": 1046,
+        "y": 2180,
+        "zIndex": 82,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": [],
+        "endItemId": "6f6472e2-8fb2-463b-9ccb-0ee51a76b01b",
+        "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451"
+      },
+      {
+        "icon": "layout-dashboard",
+        "title": "Backend API Plan",
+        "boardId": "01a0cae4-0ec0-79b4-9c52-2009bcf0c730",
+        "description": "Double-click to open this Backend Plan Board",
+        "color": "#ffffff",
+        "topColor": "linear-gradient(to right, #7C3AED, #FFBD65)",
+        "colorRole": "default",
+        "id": "b7ae5ada-810d-466f-a90e-3435f762ee25",
+        "type": "board",
+        "x": 444,
+        "y": 2232,
+        "zIndex": 83,
+        "width": 320,
+        "height": 190,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": ["important"]
+      },
+      {
+        "x2": 764,
+        "y2": 2252,
+        "curve": -0.25,
+        "label": "",
+        "arrowEnd": true,
+        "labelMode": "horizontal",
+        "arrowStart": false,
+        "labelOffset": 14,
+        "strokeWidth": 2,
+        "color": "#7C3AED",
+        "id": "e7006d46-aa34-4a2c-ac5e-587a256c1667",
+        "type": "line",
+        "x": 918,
+        "y": 2180,
+        "zIndex": 84,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": [],
+        "endItemId": "b7ae5ada-810d-466f-a90e-3435f762ee25",
+        "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451"
+      },
+      {
+        "x2": 3724,
+        "y2": 2406,
+        "curve": 0.2,
+        "label": "",
+        "arrowEnd": true,
+        "labelMode": "horizontal",
+        "arrowStart": false,
+        "labelOffset": 14,
+        "strokeWidth": 2,
+        "color": "#7C3AED",
+        "id": "f9dbbdce-8522-4a6e-99e5-60422dba3727",
+        "type": "line",
+        "x": 3904,
+        "y": 2412,
+        "zIndex": 85,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": [],
+        "endItemId": "5326afe0-d25b-47f4-81e8-ac3f5d9c252e",
+        "startItemId": "c3c43109-6fff-487f-95f1-b72c29ab2a3b"
+      },
+      {
+        "title": "Kolorystyka",
+        "content": "<h2>Default palette: <strong><em><u>Dark</u></em></strong></h2><p></p><h1>UI</h1><ul><li><p>Primary: <strong>#4c00ff</strong></p></li><li><p>Secondary: <strong>#000</strong></p></li></ul><p></p><h2>Dark Mode</h2><ul><li><p>Background: <strong>#0B0B0C</strong></p></li><li><p>Card default: <strong>#18181B</strong></p></li><li><p>Primary: <strong>#735CFF</strong></p></li></ul><p></p><h2>Light Mode</h2><ul><li><p>Background: <strong>#</strong>F5F5F7</p></li><li><p>Card default: <strong>#</strong>FFFFFF</p></li><li><p>Primary: #5B3DF5</p></li></ul><p></p><p></p><h2><strong>Accent    Light        Dark</strong></h2><h2><br><em>Violet   </em><strong><em>#7C63E8 </em></strong><em>  </em><strong><em>#8F7AF2</em></strong><em><br>Blue     </em><strong><em>#4C7FD9</em></strong><em>   </em><strong><em>#6295E8</em></strong><em><br>Cyan    </em><strong><em>#3B9BA8</em></strong><em>   </em><strong><em>#54B5C0</em></strong><em><br>Green  </em><strong><em>#4A9B76</em></strong><em>   </em><strong><em>#63B38E</em></strong><em><br>Coral   </em><strong><em>#D66F6F</em></strong><em>   </em><strong><em>#E78383</em></strong></h2><p></p>",
+        "autoHeight": true,
+        "contentFormat": "tiptap-html",
+        "contentVersion": 1,
+        "color": "#ffffff",
+        "topColor": "#059669",
+        "colorRole": "accent2",
+        "id": "7dde8f55-066b-487c-89d8-36c44774c828",
+        "type": "document",
+        "x": -192,
+        "y": 252,
+        "zIndex": 86,
+        "width": 480,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": ["style", "important"]
+      },
+      {
+        "x2": 1424,
+        "y2": 373,
+        "label": "",
+        "arrowEnd": true,
+        "labelMode": "horizontal",
+        "arrowStart": false,
+        "labelOffset": 14,
+        "strokeWidth": 2,
+        "color": "#7C3AED",
+        "id": "729c8638-334d-4698-a852-b9da9dc037f1",
+        "type": "line",
+        "x": 1344,
+        "y": 373,
+        "zIndex": 87,
+        "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+        "locked": false,
+        "comments": [],
+        "tags": [],
+        "startItemId": "2bbffcf2-4ba4-4100-95b3-c0e6a6182461",
+        "endItemId": "8acdcf2e-feea-4d82-a8a5-599b34bd4266"
+      },
+      {
+        "size": "lg",
+        "content": "Project version actual for 24.09.2026",
+        "topColor": "#e11d48",
+        "colorRole": "default",
+        "typography": {
+          "sections": { "body": { "bold": true, "fontSize": 40, "textAlign": "center" } },
+          "verticalAlign": "middle"
+        },
+        "id": "5a42890d-6825-403c-8eb4-1506fb52d0a4",
+        "type": "text",
+        "x": 444,
+        "y": -160,
+        "zIndex": 89,
+        "width": 500,
+        "height": 208,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "title": "Tests #2 problems",
+        "columns": [
+          {
+            "id": "e9fecdd0-0b7b-444f-80a9-11f18159a32a",
+            "cards": [
+              {
+                "id": "48be2f5c-6f2c-458c-b9f9-8b77c96ea880",
+                "done": false,
+                "text": "To think about - click and create item on other item instead of selectin (Maybe some kind of option for user to personal setting)"
+              },
+              {
+                "id": "db9455e8-26b6-44cc-adb4-2137949d9340",
+                "done": true,
+                "text": "Add copying and overriding custom css from and to items"
+              },
+              {
+                "id": "80896e26-d1d4-432b-9aa2-40a12c4c8c3b",
+                "done": true,
+                "text": "Animation for frame for moving should me more smooth, it jumps when moving from left to right and so on"
+              }
+            ],
+            "color": "#5a8a94",
+            "title": "To Do",
+            "width": 180.00000000000003
+          },
+          {
+            "id": "d6bcd985-1518-448a-9bd6-bd38ad15c897",
+            "cards": [
+              {
+                "id": "a87417bc-5a62-4a36-bb60-017e0dd5f757",
+                "done": true,
+                "text": "Make the app more compact on phones and mobile devices"
+              },
+              { "id": "0b93cd8f-5a35-4300-afd4-c743dc2dc714", "done": true, "text": "Hide tooltips on phone." },
+              {
+                "id": "68583d79-cfd1-4b67-9a0d-913375cf6b75",
+                "done": true,
+                "text": "Frame can't be assigned to another frame as child"
+              },
+              {
+                "id": "83e36c24-1e9b-4d42-9f22-9be7952cad91",
+                "done": true,
+                "text": "Item should be auto attached to frame when dragged into frame"
+              },
+              {
+                "id": "d726ee76-267c-4367-9af1-63bb941f0163",
+                "done": true,
+                "text": "Lines and arrow can be stacked and multiplied within the same items"
+              },
+              {
+                "id": "e0a9cf97-d32b-4efe-b573-f06225343f20",
+                "done": true,
+                "text": "Arrows are bugged when its going from frame to item inside the same frame"
+              },
+              {
+                "id": "71bb5ed9-26dc-4086-8f5e-cb9df3469804",
+                "done": true,
+                "text": "Wrong frame fitting with note dispenser"
+              }
+            ],
+            "color": "#FFBD65",
+            "title": "Important",
+            "width": 180.00000000000003
+          },
+          {
+            "id": "eb1fec2b-2f36-4d70-95dc-db96c0256a60",
+            "cards": [
+              {
+                "id": "4f3810b7-3a42-4d3f-9b32-03d1bb74cbc4",
+                "done": true,
+                "text": "Collaboration - make it refresh automatically when error occurs"
+              },
+              {
+                "id": "2c1f731d-13c6-406c-99d8-fe49d1b06280",
+                "done": true,
+                "text": "Refactor collaboration for better and more realistic together work"
+              },
+              {
+                "id": "0bd26ef6-b08e-457b-aae2-33e5140c046b",
+                "done": true,
+                "text": "Think about some other improvements of app efficiency and rendering items"
+              }
+            ],
+            "color": "#7C3AED",
+            "title": "Must Have",
+            "width": 179.99999999999997
+          }
+        ],
+        "color": "#ffffff",
+        "id": "6d909ce9-aed3-4066-b392-4877ef5549fc",
+        "type": "kanban",
+        "x": 3864,
+        "y": 1056,
+        "zIndex": 90,
+        "width": 1176,
+        "height": 740,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": ["todo"]
+      },
+      {
+        "content": "Project timeline for future and actualwork",
+        "color": "#02A0A0",
+        "id": "804d3f13-f535-40d7-9db4-34928cab0b39",
+        "type": "section-title",
+        "x": 2204,
+        "y": 1952,
+        "zIndex": 91,
+        "width": 660,
+        "height": 96,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": []
+      },
+      {
+        "url": "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGVxYzAzc2xycjYzbnl0bGhsNGhreW4xaXQ2aWJwMnRoeW82OWU0bSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Dkf37ayTUExQ4/giphy.gif",
+        "caption": "",
+        "variant": "sticker",
+        "imgHeight": 687,
+        "color": "#ffffff",
+        "id": "00cfd1cf-f4c2-4c3d-848f-74e0209ce7bb",
+        "type": "image",
+        "x": -192,
+        "y": 1361,
+        "zIndex": 92,
+        "width": 480,
+        "height": 687,
+        "frameId": null,
+        "locked": false,
+        "comments": [],
+        "tags": []
+      }
+    ],
+    "boards": [
+      {
+        "id": "01a0cae4-0df7-7ea9-85f7-af5c45dc892d",
+        "name": "Board",
+        "items": [
+          {
+            "title": "Plans for Upcoming Work",
+            "color": "#FF6B8A",
+            "id": "913867ba-a1a7-4899-afaa-2b2ea3c08637",
+            "type": "frame",
+            "x": 1872,
+            "y": 1088,
+            "zIndex": 0,
+            "width": 1852,
+            "height": 644,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "title": "NodexMesh Application Overview",
+            "opacity": 0.3,
+            "color": "#97B6E7",
+            "typography": { "fontSize": 14, "textAlign": "left" },
+            "id": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "type": "frame",
+            "x": 444,
+            "y": 252,
+            "zIndex": 0,
+            "width": 1336,
+            "height": 1268,
+            "frameId": null,
+            "locked": true,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "title": "NodexMesh TODO now",
+            "columns": [
+              {
+                "id": "c4baff33-9669-4869-82f0-f1fab3c77ac0",
+                "cards": [
+                  {
+                    "id": "53df14b8-93e1-4a83-ba0b-1944e85cd19e",
+                    "done": false,
+                    "text": "Implement keyboard moving, editing etc. also in blocks like mindmap or diagram"
+                  },
+                  {
+                    "id": "0f04b40c-b4a5-4426-84b0-5ca4a5d49abd",
+                    "done": false,
+                    "text": "Implement google auth login and other socials and controls in admin panel to enable/disable register and global using these auth"
+                  },
+                  { "id": "68e60fc5-7b13-479a-82f9-11491f7e12c8", "done": true, "text": "Implement MindMapBlock" },
+                  {
+                    "id": "64991e48-aa7f-413c-a4f0-bb7ba76ec2c5",
+                    "done": true,
+                    "text": "Add additional strip color to be like in default links fancy gradient"
+                  },
+                  {
+                    "id": "b770c0bc-20fc-4dab-899f-446a39d2f262",
+                    "done": true,
+                    "text": "Implement project change color while editing"
+                  },
+                  {
+                    "id": "454eee50-4d3d-4359-8c98-a954f30fe981",
+                    "done": true,
+                    "text": "Add to project all items count, including all nested boards"
+                  },
+                  {
+                    "id": "290a610e-eb64-4d6a-8c9c-2dc509f56a90",
+                    "done": true,
+                    "text": "Make in timeline tasks show and dissappear when moving to the left or right"
+                  },
+                  { "id": "7642111a-9e96-4f5c-b4f5-a41475ecce99", "done": true, "text": "Implement IconBlock" },
+                  {
+                    "id": "404afb70-cb2a-4fc0-916c-fd466955f7fb",
+                    "done": true,
+                    "text": "Add column expansion to match the Kanban width"
+                  },
+                  {
+                    "id": "4d779ed2-9424-443a-8324-eab791d5f8be",
+                    "done": true,
+                    "text": "Check and add appropriate cursors where needed (buttons, etc.)"
+                  },
+                  {
+                    "id": "3fc3ad23-fe42-45d9-b17d-32e33f8cc4b1",
+                    "done": true,
+                    "text": "Implement copy style and paste style on items like color or typography and font size"
+                  },
+                  {
+                    "id": "762d0c5d-147c-4958-afa0-e35afc6f7216",
+                    "done": true,
+                    "text": "Change default theme colors to better ones"
+                  },
+                  {
+                    "id": "66c6e319-c123-4a34-b420-6cffde5edc68",
+                    "done": true,
+                    "text": "Implement arrows flexibility"
+                  },
+                  {
+                    "id": "19a8deee-aded-407f-af49-0526cc8b8ad6",
+                    "done": true,
+                    "text": "Increase the default item width"
+                  },
+                  {
+                    "id": "07e797ee-3bdd-4803-aaba-3100040b390c",
+                    "done": true,
+                    "text": "Change the dark mode background to a grayer shade"
+                  },
+                  {
+                    "id": "49e20a75-740a-4dc9-89fe-7f30448ffba3",
+                    "done": true,
+                    "text": "Check that appropriate animations are used everywhere and add them where needed"
+                  },
+                  {
+                    "id": "13dbb424-acf8-4f1d-8e1b-877f60bf7350",
+                    "done": true,
+                    "text": "Add changing colors in kanban columns"
+                  },
+                  {
+                    "id": "a270ca7f-9202-4459-b801-cd1461769ee6",
+                    "done": true,
+                    "text": "Implement multi selected drawing to change color and width for all of them"
+                  },
+                  {
+                    "id": "70833c5d-f99f-41a5-ba42-721bf28ccea7",
+                    "done": true,
+                    "text": "Add more funny and nice hand writting fonts"
+                  },
+                  {
+                    "id": "2bc818cd-ffe5-47fd-9cbf-374e72bfd49b",
+                    "done": true,
+                    "text": "Change new items to be more squares instead of rounded"
+                  },
+                  { "id": "2bdd32f7-4eea-4fd4-bd35-a4695586fd08", "done": true, "text": "Add a new Divider item" }
+                ],
+                "color": "#5a8a94",
+                "title": "Nice to do",
+                "width": 180
+              },
+              {
+                "id": "438980c4-7e52-4d14-9c9b-05eca4ba2581",
+                "cards": [
+                  {
+                    "id": "6961cb1c-a5c0-4cee-bc9b-49346df89a03",
+                    "done": true,
+                    "text": "Implement storing data on disk, add matching path and settings to be compatible and configurable with docker"
+                  },
+                  {
+                    "id": "70b10c0a-1ef4-43cb-98b6-b5106559e7aa",
+                    "done": true,
+                    "text": "Implement library - per project, not accessible by other users or projects until shared"
+                  },
+                  {
+                    "id": "5f5aea52-19ea-4601-9cdd-78ca8dacfefb",
+                    "done": true,
+                    "text": "Upgrade timeline for collaboration, implement assigning people from project to specific tasks"
+                  },
+                  {
+                    "id": "74d554d5-8a7a-47b5-8769-f220dc490867",
+                    "done": true,
+                    "text": "Fix creating user default appearance settings"
+                  },
+                  {
+                    "id": "d1168522-c16a-4a2b-b02e-624e64826ac2",
+                    "done": true,
+                    "text": "Implement collaboration mouses to be visible in live where who is currently"
+                  },
+                  {
+                    "id": "e2296d90-c6ec-4535-bd50-ab2b511c5567",
+                    "done": true,
+                    "text": "Fix and modify custom css, make it more universal to use ready classess and to use custom styles for specific class/div/element like button>a{color: red;} etc"
+                  },
+                  {
+                    "id": "e9d7aa2e-a27c-45c8-9737-70cc695fc14b",
+                    "done": true,
+                    "text": "Rebuild edit bar to more modern style, more compact, mobile devices compatible etc"
+                  },
+                  {
+                    "id": "d97e03cb-3708-4e55-aa8b-2a7cf1e5240d",
+                    "done": true,
+                    "text": "Fix boards nav bar more under app bar and more compact"
+                  },
+                  {
+                    "id": "d83d0c97-0786-4d36-ae60-438c3e9812b1",
+                    "done": true,
+                    "text": "Fix demo project reset, export and import after boards implementation system"
+                  },
+                  {
+                    "id": "c86d2869-947a-41cc-8259-d9153508bf99",
+                    "done": true,
+                    "text": "Implement localization and Polish language as default and in browser localstorage store language selection for future sessions"
+                  },
+                  {
+                    "id": "10f11140-048f-4b9a-938c-12459ed3803d",
+                    "done": true,
+                    "text": "Trashed projects are still visible in admin panel, make them disabled, but able to restore as admin or remove pernamently"
+                  },
+                  {
+                    "id": "8ec069da-13a6-4253-9774-57e778a66c28",
+                    "done": true,
+                    "text": "Viewer and commenter roles does not change anything its just read only for member"
+                  },
+                  {
+                    "id": "19422819-8bac-4776-b707-4db99f591369",
+                    "done": true,
+                    "text": "Export/Import doesn't include project additional boards"
+                  },
+                  {
+                    "id": "181229ea-0c8c-4331-83c1-3eeb023795e6",
+                    "done": true,
+                    "text": "Implement default project setting, so the default one opens always when logged into app"
+                  },
+                  {
+                    "id": "4df37716-783a-4fe3-a8e7-781986bd78f1",
+                    "done": true,
+                    "text": "Add search bar to admin panels to users and projects to fast lookup specific item"
+                  },
+                  {
+                    "id": "ccd42b3f-85a3-483f-9c28-bdda7307a07c",
+                    "done": true,
+                    "text": "Fix trash clearing in projects dont refresh trash panel"
+                  },
+                  {
+                    "id": "670761b7-3e50-41e0-8edf-5442f45405b0",
+                    "done": true,
+                    "text": "Fix DiagramBlock preview connections"
+                  },
+                  {
+                    "id": "707a619e-9fc3-42b3-aad5-cfd1a0fae927",
+                    "done": true,
+                    "text": "Fix item style on mobile devices"
+                  },
+                  {
+                    "id": "fe776b8d-576f-41ce-ac0c-c79aedf32b54",
+                    "done": true,
+                    "text": "Change nav bar (Make it visible by deafult.Make an arrow to hide it and show small arrow to open nav bar)"
+                  },
+                  {
+                    "id": "d5630551-445c-4df2-a2c6-d0b6cec3e10f",
+                    "done": true,
+                    "text": "Make search bar go to buttons more visible when activated"
+                  },
+                  {
+                    "id": "e75990fc-c6cb-4ae9-95df-5b1f42ddb74a",
+                    "done": true,
+                    "text": "Error while restoring item after deletion"
+                  },
+                  {
+                    "id": "3f6d7a89-eb07-4e36-9cb6-00bfbdbd244e",
+                    "done": true,
+                    "text": "Implement items trash to restore accidently deleted items"
+                  },
+                  {
+                    "id": "30cefecb-538d-4cbc-b7c6-d6d24b2941ca",
+                    "done": true,
+                    "text": "Check and modify styles of app of colors, text etc that is compatible with current new app style and default colors"
+                  },
+                  {
+                    "id": "9326b15c-973a-4b79-b580-ef88b55d9744",
+                    "done": true,
+                    "text": "Implement text color for specific items like color for title, description, link address etc"
+                  },
+                  {
+                    "id": "a6cd7b70-ba43-4bcf-82be-71952c559c60",
+                    "done": true,
+                    "text": "Fix BoardBlock text visibility"
+                  },
+                  {
+                    "id": "f46f5672-4980-42e5-9538-878b12e3feee",
+                    "done": true,
+                    "text": "Fix search bar goto next/previous hiding under edit bar"
+                  },
+                  { "id": "d66cf120-b1bc-4983-ae68-5c1c3245f0ef", "done": true, "text": "Implement sub boards" },
+                  {
+                    "id": "0507304f-9749-428b-9ad9-e76bfe11fdaf",
+                    "done": true,
+                    "text": "Fix stickers to not move while items grow"
+                  },
+                  {
+                    "id": "b56763f8-1bf8-4306-96e1-893e70fe8d16",
+                    "done": true,
+                    "text": "Fix section titles to not be the skeleton when zommed out"
+                  },
+                  {
+                    "id": "f5d0b3eb-3469-49ac-8f54-bc5ebc73ee0b",
+                    "done": true,
+                    "text": "Implement zooming in mind map block"
+                  },
+                  {
+                    "id": "dba465f5-ae3e-42ed-9f83-649a7e1cbe4c",
+                    "done": true,
+                    "text": "Fix Adminpanel after refresh showing normal appbar"
+                  },
+                  {
+                    "id": "a06c87a5-a803-4477-bb9f-375a901ec443",
+                    "done": true,
+                    "text": "Add moving around mindmap with mouse instead of just scrolls"
+                  },
+                  { "id": "8e994147-ca63-4d16-ba25-22e50a4f4650", "done": true, "text": "Fix and adjust mindmap" },
+                  {
+                    "id": "96477447-78f7-4fca-8845-5636e722cf38",
+                    "done": true,
+                    "text": "Implement go to items on enter while highlighting them from searchbox"
+                  },
+                  {
+                    "id": "aee8cf68-20ae-4d9d-a1db-f2fc3f65128f",
+                    "done": true,
+                    "text": "Implement button for drawings to make them smooth"
+                  },
+                  {
+                    "id": "ec1cd3f9-001c-4af6-8139-0f4f9ef80423",
+                    "done": true,
+                    "text": "Implement new way to update demo projekt"
+                  },
+                  {
+                    "id": "4cc0fa95-81d8-429b-b1d2-7cc79fb816fb",
+                    "done": true,
+                    "text": "Implement horizontal layout for diagram"
+                  },
+                  {
+                    "id": "fdf84930-e55d-4054-ae32-5841aca37cf9",
+                    "done": true,
+                    "text": "Change the float numbers like x, y, pressure etc to make it smaller and upgrade the efficiency"
+                  },
+                  {
+                    "id": "4d29f7e5-3126-4df9-8f9f-50d42c47fcfc",
+                    "done": true,
+                    "text": "One click on arrow to cleate siblin items dont work on mobile device"
+                  },
+                  {
+                    "id": "e886749f-0691-4311-9c6f-a0cfb812154d",
+                    "done": true,
+                    "text": "Check all the code and files and make them better readable for humans"
+                  },
+                  {
+                    "id": "2c4b437b-8c33-4af7-a8f2-d369e527f1ea",
+                    "done": true,
+                    "text": "Implement column resizing of tasks in timeline"
+                  },
+                  {
+                    "id": "e16ebb5a-b9d1-4c9a-98c6-e663f72a051e",
+                    "done": true,
+                    "text": "Implement reordering fields in database block"
+                  },
+                  {
+                    "id": "403f72f9-555b-4894-867c-fc23b38aa8d7",
+                    "done": true,
+                    "text": "Fix Database diagram preview, not working properly connections"
+                  },
+                  {
+                    "id": "b5c2adb7-85fb-4bc9-b00a-edd28b4be9d2",
+                    "done": true,
+                    "text": "Change editbar colors to accents and make them theme related"
+                  },
+                  {
+                    "id": "9ceb3ef2-7667-4412-b99f-5e5e582cff33",
+                    "done": true,
+                    "text": "Fix task height in checklists"
+                  },
+                  { "id": "546275cc-be36-4d6d-a073-1996e376685a", "done": true, "text": "Implement DbDiagramBlock" },
+                  {
+                    "id": "2fe9284c-a189-4640-a002-40c39a5a4097",
+                    "done": true,
+                    "text": "Implement manual cleaning projects trash"
+                  },
+                  { "id": "850b023c-c04f-4d40-97f0-c5e7c9c087a1", "done": true, "text": "Update readme" },
+                  { "id": "f4488c27-9df6-42fa-a6d3-f6ccd7ae910d", "done": true, "text": "Add auto-fit to checklists" },
+                  {
+                    "id": "2ce2c105-f8d7-457f-b73c-3c4083083939",
+                    "done": true,
+                    "text": "Add vertical text alignment to item alignment options"
+                  },
+                  { "id": "205e80f1-0a6d-4880-bb64-5301225ad227", "done": true, "text": "Adjust diagramblock" },
+                  {
+                    "id": "a6eca554-c749-4a72-ab75-24c1987faa52",
+                    "done": true,
+                    "text": "Fix timeline after reordering schedule the milestones should also reorder"
+                  },
+                  {
+                    "id": "66eb9f7f-a19e-4e6b-95e3-30d77f6bda91",
+                    "done": true,
+                    "text": "Fix youtube embed video to edit video settings and captions"
+                  },
+                  {
+                    "id": "ce2fe7d5-92f5-499d-8a58-4ba2ddd45db9",
+                    "done": true,
+                    "text": "Add compability to moving checklist items to kanban, and from kanban to checklist (.items are basicaly the same)"
+                  },
+                  { "id": "70e9a91e-ecc9-4ad4-8285-33298b686114", "done": true, "text": "Fix data-scroll in timeline" },
+                  {
+                    "id": "2139ac1d-0267-48c2-aeb8-79183a025f07",
+                    "done": true,
+                    "text": "Implement moving columns in kanban"
+                  },
+                  {
+                    "id": "e7765c64-f478-4485-ae10-10957d7cdaae",
+                    "done": true,
+                    "text": "Fix kanban add cards buttons to be under last task instead of botton of item"
+                  }
+                ],
+                "color": "#FFBD65",
+                "title": "Important",
+                "width": 180
+              },
+              {
+                "id": "b968584e-e538-4873-965a-bc121662d6fa",
+                "cards": [
+                  {
+                    "id": "55e9b559-d3a7-48c8-978c-5f3e9b884396",
+                    "done": true,
+                    "text": "Implement storing images in disk and allow selecting them to show in ImageBlock"
+                  },
+                  {
+                    "id": "a5f4e9ba-28c5-43df-a678-75dcc58be35e",
+                    "done": true,
+                    "text": "Implement missing unit tests in API"
+                  },
+                  {
+                    "id": "2bd7510b-39ea-4751-b720-200fe4fd948a",
+                    "done": true,
+                    "text": "Implement version checking in github releases and showing dialog with update available"
+                  },
+                  {
+                    "id": "a72fe077-97e2-4158-92b5-529179f6a536",
+                    "done": true,
+                    "text": "Prepare and execute Tests #2 with collaborators, multi project creating"
+                  },
+                  {
+                    "id": "8fb140f1-8e19-4e39-93f3-2d229282998d",
+                    "done": true,
+                    "text": "Implement export/import projects"
+                  },
+                  {
+                    "id": "80a08a29-33c8-4060-8aca-9f965fdf0b26",
+                    "done": true,
+                    "text": "Check performance on different devices and fix problems with performance"
+                  },
+                  {
+                    "id": "17ade331-eda0-44a2-835e-484ace7f0f84",
+                    "done": true,
+                    "text": "Implement profile page to change display name, email and password"
+                  },
+                  {
+                    "id": "ca49ed13-103b-4869-917e-415f99124919",
+                    "done": true,
+                    "text": "Implement admin function to change users profiles data"
+                  },
+                  {
+                    "id": "54abab76-40d6-4170-80c8-0b2d9879964f",
+                    "done": true,
+                    "text": "Fix on mobile devices moving items like kanban, now it opens the context menu instead of moving"
+                  },
+                  {
+                    "id": "0ff8724c-974a-4ea8-904e-5572c4c4afe2",
+                    "done": true,
+                    "text": "Implement mobile devices compability"
+                  },
+                  { "id": "cf1198cf-93f6-455c-b281-db6ea8f756e1", "done": true, "text": "Plan database scheme" },
+                  { "id": "412af0c8-f861-4d63-8761-f5e92247900a", "done": true, "text": "Plan backend" },
+                  {
+                    "id": "69469763-9201-4069-850b-fa4e2c3a998d",
+                    "done": true,
+                    "text": "Show the item center while dragging for easier positioning relative to other items on the board"
+                  },
+                  {
+                    "id": "2544cdb3-60b3-4184-8cc0-a114634e564d",
+                    "done": true,
+                    "text": "Implement theme colors changing and saving that data"
+                  },
+                  {
+                    "id": "80674caa-bd74-44b2-86a4-f77da10b4043",
+                    "done": true,
+                    "text": "Add long alignment guides while dragging so items can be aligned vertically and horizontally with distant items"
+                  },
+                  {
+                    "id": "ed58b2a6-53ff-4711-9153-4eef2c2143ff",
+                    "done": true,
+                    "text": "Fix the drag preview so it shows the item’s current size instead of its default size"
+                  },
+                  {
+                    "id": "a9c645d6-b61e-4e0c-81c7-04ca5d59547e",
+                    "done": true,
+                    "text": "Add the ability to rename a project"
+                  },
+                  { "id": "34fa077c-45aa-4bb7-8128-e47f4fa99b8c", "done": true, "text": "Implement drawing on canvas" },
+                  {
+                    "id": "49812dcb-e337-458a-92ac-fa9c4fc4cdee",
+                    "done": true,
+                    "text": "Change default font family to better one"
+                  },
+                  {
+                    "id": "7cefd2ef-8fd8-4923-b4e5-3b80d75e3c5c",
+                    "done": true,
+                    "text": "Fix timelineblock (implement reordering rows)"
+                  },
+                  {
+                    "id": "42c7058d-b48c-474f-8b44-f8c0d106b934",
+                    "done": true,
+                    "text": "Fix embedBlock for yt videos to instant interact instead of clicking interract"
+                  },
+                  { "id": "b92b0833-1a23-4df8-9534-77700444fa7b", "done": true, "text": "Fix document block error" },
+                  {
+                    "id": "71a237dd-4175-4cbd-b8c0-c2753de0e53d",
+                    "done": true,
+                    "text": "Fix the app bar occasionally bugging out and disappearing"
+                  },
+                  {
+                    "id": "dbf24865-6fe2-449e-a317-c1af365c8f46",
+                    "done": true,
+                    "text": "Implement a project trash bin with project deletion and restoration"
+                  }
+                ],
+                "color": "#02A0A0",
+                "title": "Must have",
+                "width": 180
+              }
+            ],
+            "color": "#2E2E2E",
+            "gradient": { "to": "#2d006b", "from": "#000000", "kind": "radial", "angle": 135 },
+            "topColor": "#FF6B8A",
+            "customCss": { "source": "color: #000;", "enabled": true },
+            "typography": { "fontSize": 14 },
+            "id": "3c22133c-08c0-4445-bcb5-3c89189dc057",
+            "type": "kanban",
+            "x": 1884,
+            "y": 252,
+            "zIndex": 5,
+            "width": 1844,
+            "height": 628,
+            "frameId": null,
+            "locked": true,
+            "comments": [],
+            "tags": ["todo"]
+          },
+          {
+            "size": "lg",
+            "content": "A free alternative to Milanote",
+            "color": "#F2F2F2",
+            "textAlign": "center",
+            "typography": { "italic": true, "fontSize": 30, "textAlign": "center" },
+            "id": "612518a5-54b5-4b74-ab07-17d7d0a819bd",
+            "type": "text",
+            "x": 1472,
+            "y": 64,
+            "zIndex": 6,
+            "width": 720,
+            "height": 60,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "size": "lg",
+            "content": "NodexMesh",
+            "color": "#fefce8",
+            "colorRole": "default",
+            "textAlign": "center",
+            "typography": { "bold": true, "fontSize": 40, "textAlign": "center" },
+            "id": "883d89aa-5c2c-4693-b722-16f87816e180",
+            "type": "text",
+            "x": 1664,
+            "y": 4,
+            "zIndex": 7,
+            "width": 336,
+            "height": 74,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "content": "The application is primarily a free and interesting alternative to the well-known Milanote platform.\n\nThe goal is to make it available to everyone and easy to run locally using\nDocker Compose",
+            "color": "#fdf4ff",
+            "colorRole": "accent1",
+            "typography": { "textAlign": "center", "fontFamily": "short-stack" },
+            "id": "2bbffcf2-4ba4-4100-95b3-c0e6a6182461",
+            "type": "note",
+            "x": 1024,
+            "y": 288,
+            "zIndex": 8,
+            "width": 320,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "content": "NodexMesh\nThe application will offer many familiar features to make the system pleasant and convenient to use.\nIt will also include additional tools and quality-of-life features such as:\n\n- Expandable Kanban boards\n- Smooth animations and task/item statuses\n- Grouping\n- An edit bar with extensive customization options\n- And much more\n\nThe application will remain free, actively developed, and supported, so you can report bugs and expect updates with fixes.\nYou can also contribute to the project using the project page below:",
+            "color": "#fdf4ff",
+            "colorRole": "accent4",
+            "customCss": { "source": "", "enabled": false },
+            "typography": { "bold": false, "fontSize": 14, "textAlign": "center" },
+            "id": "8acdcf2e-feea-4d82-a8a5-599b34bd4266",
+            "type": "note",
+            "x": 1424,
+            "y": 288,
+            "zIndex": 9,
+            "width": 320,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "url": "https://github.com/Lewan24/NodexMesh",
+            "title": "Nodex Mesh",
+            "description": "GitHub project",
+            "color": "#fdf4ff",
+            "colorRole": "default",
+            "id": "514c93c5-f9a0-4848-b358-b39a6910b9da",
+            "type": "link",
+            "x": 1424,
+            "y": 896,
+            "zIndex": 10,
+            "width": 320,
+            "height": 144,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "content": "Feel free to fork the project, improve the code, add useful features or fixes, and submit a Pull Request. Contributions and collaboration are welcome.",
+            "color": "#fdf4ff",
+            "topColor": "#7C3AED",
+            "colorRole": "accent2",
+            "typography": { "textAlign": "center" },
+            "id": "d626fbbf-8a72-4eed-a6b0-056e9ea31595",
+            "type": "note",
+            "x": 1424,
+            "y": 1088,
+            "zIndex": 11,
+            "width": 320,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "content": "All required information, commands, and setup recommendations are available on the project page",
+            "color": "#fdf4ff",
+            "colorRole": "default",
+            "typography": { "textAlign": "center" },
+            "id": "c2a5c152-e47c-4225-b3e3-7fa47d050464",
+            "type": "note",
+            "x": 1024,
+            "y": 608,
+            "zIndex": 12,
+            "width": 320,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "x2": 1476,
+            "y2": 896,
+            "arrowEnd": true,
+            "arrowStart": false,
+            "strokeWidth": 3,
+            "color": "#7C3AED",
+            "id": "05d6a1fd-ce3d-4c9a-a69d-84d251aec20a",
+            "type": "line",
+            "x": 1306,
+            "y": 778,
+            "zIndex": 13,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "endItemId": "514c93c5-f9a0-4848-b358-b39a6910b9da",
+            "startItemId": "c2a5c152-e47c-4225-b3e3-7fa47d050464"
+          },
+          {
+            "content": "NodexMesh is still under active development and continuous improvement. A working demo is currently available to everyone for free and can be opened directly in a browser using the link in the project’s GitHub repository.\n\nAll demo data is stored exclusively in the browser’s local storage, so changes and data created in the DEMO version may disappear after some updates.\n\nTo reset the data, clear local storage in your browser’s developer tools (F12).\nAlternatively, open the user menu in the top-right corner and use the\nReset DEMO\nbutton.",
+            "color": "#434347",
+            "colorRole": "accent2",
+            "typography": { "textAlign": "center" },
+            "id": "992d17b4-d717-4a3b-a197-81417a52ab21",
+            "type": "note",
+            "x": 1024,
+            "y": 811,
+            "zIndex": 14,
+            "width": 320,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "title": "Future Plans",
+            "entries": [
+              {
+                "id": "a57cc6c0-b689-4cff-b3fa-c4d6f609e05b",
+                "done": true,
+                "text": "Display images from the user’s library instead of requiring a link (link optional)"
+              },
+              {
+                "id": "0203be12-6d0c-43be-b970-4a27c59dc56d",
+                "done": true,
+                "text": "Add a global trash bin for items so previously deleted elements can be restored"
+              },
+              { "id": "25de4803-6411-43d3-9f3f-9667fd72a04b", "done": true, "text": "Custom application color themes" },
+              {
+                "id": "591a85c5-65fc-4d87-99bb-b0d2c747fc3b",
+                "done": true,
+                "text": "Implement project export and import between NodexMesh instances"
+              },
+              { "id": "5fdfc60d-61ad-43bb-a141-a854a5bea51a", "done": true, "text": "API in C# .NET 10" },
+              {
+                "id": "ea1c4c39-c682-493d-aa8f-1a732f7b2c4f",
+                "done": true,
+                "text": "Follow the OWASP Top 10 when implementing the API"
+              },
+              {
+                "id": "f512c7bf-941e-46f7-8724-cb3f5670c860",
+                "done": true,
+                "text": "Real-time collaboration (SignalR or something similar)"
+              },
+              { "id": "543a7175-9fc0-4445-a730-0379773eb3e8", "done": true, "text": "Read-only project sharing" }
+            ],
+            "color": "#ffffff",
+            "topColor": "#7C3AED",
+            "typography": { "fontSize": 16, "textAlign": "left" },
+            "id": "61b89df7-29c4-4e10-8ae8-30b59613c72d",
+            "type": "checklist",
+            "x": 1908,
+            "y": 1124,
+            "zIndex": 16,
+            "width": 580,
+            "frameId": "913867ba-a1a7-4899-afaa-2b2ea3c08637",
+            "locked": true,
+            "comments": [],
+            "tags": ["todo"]
+          },
+          {
+            "x2": 2803,
+            "y2": 880,
+            "curve": 0.1,
+            "label": "TODO Lists",
+            "lineCap": "round",
+            "arrowEnd": true,
+            "labelMode": "follow-line",
+            "arrowStart": true,
+            "labelOffset": 29,
+            "strokeWidth": 3,
+            "labelFontSize": 21,
+            "color": "#02A0A0",
+            "id": "8d42b1a2-826d-4497-9585-59823345c902",
+            "type": "line",
+            "x": 2801,
+            "y": 1088,
+            "zIndex": 17,
+            "frameId": "913867ba-a1a7-4899-afaa-2b2ea3c08637",
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "endItemId": "3c22133c-08c0-4445-bcb5-3c89189dc057",
+            "startItemId": "913867ba-a1a7-4899-afaa-2b2ea3c08637"
+          },
+          {
+            "content": "\nThe API will be built with\nC# .NET 10\n\nThe API is planned as a secure system designed with the\nOWASP Top 10\nin mind.\n\nThe API will run in a separate container, with the whole system defined in a single\ndocker-compose.yml\nfile so the application can be started easily and containers can be updated without hassle.\n\nAll required instructions, recommendations, and important information are available in the relevant sections of the project’s GitHub page.",
+            "color": "#fdf4ff",
+            "colorRole": "default",
+            "typography": { "textAlign": "center", "fontFamily": "short-stack" },
+            "id": "f88e291e-9965-4dbd-9b55-96fb706ec1d1",
+            "type": "note",
+            "x": 480,
+            "y": 584,
+            "zIndex": 18,
+            "width": 448,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": true,
+            "comments": [],
+            "tags": ["todo"]
+          },
+          {
+            "size": "lg",
+            "content": "Api",
+            "color": "#000000",
+            "topColor": "#e11d48",
+            "colorRole": "accent5",
+            "textAlign": "center",
+            "typography": { "bold": true, "fontSize": 32, "textAlign": "center" },
+            "id": "604b7425-1f37-4849-b701-257976e7ba08",
+            "type": "text",
+            "x": 608,
+            "y": 536,
+            "zIndex": 19,
+            "width": 192,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "title": "New Tools and Functionalities",
+            "entries": [
+              {
+                "id": "27617e11-9c30-4c0b-a434-6adc49cd49da",
+                "done": true,
+                "text": "Custom css /& classes to each item?"
+              },
+              {
+                "id": "2f456023-e5e3-471b-ba21-4adf00ebb7a7",
+                "done": true,
+                "text": "Bookmarks for saving important board locations for quick access later (Actually tags could work like that and search bar)"
+              },
+              {
+                "id": "62d4f45c-d581-4fe4-b376-da45abf0bcc0",
+                "done": true,
+                "text": "Sub-board node / portal for opening a new canvas or navigating to another project"
+              },
+              {
+                "id": "18e3187a-39e2-49c8-a3d0-24ffb41b2ded",
+                "done": true,
+                "text": "Mind Map with connections, automatic layout, etc."
+              },
+              {
+                "id": "95d2cbbd-8859-4d1a-861f-ec7f6b777124",
+                "done": true,
+                "text": "IconBlock - selectable custom icons or icons loaded from a link"
+              },
+              {
+                "id": "81bdbb8a-5cb4-4096-a00a-a9f79ad617c7",
+                "done": true,
+                "text": "DbDiagramBlock - item to plan and prepare version of database like tables, relations etc"
+              }
+            ],
+            "color": "#ffffff",
+            "topColor": "#059669",
+            "typography": { "fontFamily": "short-stack" },
+            "id": "4a5fd33f-320b-4f38-a3eb-47185a6806f2",
+            "type": "checklist",
+            "x": 2528,
+            "y": 1124,
+            "zIndex": 20,
+            "width": 616,
+            "frameId": "913867ba-a1a7-4899-afaa-2b2ea3c08637",
+            "locked": true,
+            "comments": [],
+            "tags": ["todo"]
+          },
+          {
+            "size": "lg",
+            "content": "Search for #todo in the app bar to display all items marked as tasks",
+            "color": "#0d2a35",
+            "typography": { "fontSize": 32, "textAlign": "center", "verticalAlign": "middle" },
+            "id": "d909bc2b-ddcc-41df-8dd0-2f4f97234c98",
+            "type": "text",
+            "x": 444,
+            "y": 1568,
+            "zIndex": 21,
+            "width": 1336,
+            "height": 98,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "title": "Done",
+            "entries": [
+              {
+                "id": "5395a55d-ad8c-4192-8d0b-d486055340c4",
+                "done": true,
+                "text": "Lock items to prevent accidental movement"
+              },
+              {
+                "id": "0540e868-6060-4faf-a751-2e537c506ebf",
+                "done": true,
+                "text": "Assign tags to items and highlight items when a tag is selected"
+              },
+              { "id": "25656502-4588-4652-a278-2c261c8d25ed", "done": true, "text": "Labels on arrows" },
+              {
+                "id": "ffdd37f9-8cff-477a-8bac-15cb67c5ec96",
+                "done": true,
+                "text": "Automatically create arrows from a selected item"
+              },
+              {
+                "id": "b92a0139-b2c9-446a-8163-d3b58a23f94b",
+                "done": true,
+                "text": "General comments and comments attached to specific items"
+              },
+              {
+                "id": "7ca1c662-6a41-4d05-b585-a5dda9686624",
+                "done": true,
+                "text": "Filter and search the board for specific text, tags, etc."
+              },
+              { "id": "bafd2109-4a72-4e07-b7b9-96cee4a9f2a2", "done": true, "text": "Divider" },
+              {
+                "id": "2797212d-52fe-4329-b651-674881bde487",
+                "done": true,
+                "text": "Something like cards dispenser in miro - block with cards, label and card color, dragging card is creating a note with center justify in vertical and horizontal"
+              },
+              {
+                "id": "1d47586c-2eb0-42c1-9802-ddaf35974236",
+                "done": true,
+                "text": "One click on arrow creates same empy item like note creates a note with its color and settings etc and attachted arrow"
+              },
+              {
+                "id": "ecb31ac7-f4c0-4e2b-9818-5eae4c8a7b5e",
+                "done": true,
+                "text": "DocumentBlock - more advanced note with specific lines and text styles etc"
+              },
+              {
+                "id": "f12e794b-773f-40ff-86cb-0afdcaa30c8f",
+                "done": true,
+                "text": "EmbedBlock - display content such as a YouTube video, image, or website"
+              },
+              { "id": "f919d84d-87bc-4adf-a20b-fe8a7bbdbb9f", "done": true, "text": "DiagramBlock" },
+              {
+                "id": "93222cba-b8a2-4153-bc52-71dd87795865",
+                "done": true,
+                "text": "CodeBlock - nicely formatted code display with language selection and default syntax highlighting"
+              },
+              { "id": "fb5e0d80-4ac0-48e1-a2dd-ceb769deef76", "done": true, "text": "Project management" },
+              {
+                "id": "20e25c57-7877-4b4d-b93a-9c2c925ee790",
+                "done": true,
+                "text": "TimelineBlock - version simple with just date and label and more advances with weeks, tasks etc"
+              },
+              {
+                "id": "f022ddad-4e41-4fa4-8f28-9e99ff53a555",
+                "done": true,
+                "text": "Context menu with actions such as copy, paste, duplicate, delete, etc."
+              },
+              {
+                "id": "9c996305-a77f-4caa-aff7-f11fe83980be",
+                "done": true,
+                "text": "Add more font families, more funny ones, some for like hand writing or sans serif etc"
+              },
+              { "id": "cb008620-7131-4c51-880e-dade8c927cec", "done": true, "text": "Drawing - drawing on canvas" }
+            ],
+            "color": "#ffffff",
+            "id": "f0559fc6-28d7-4e2b-b2b0-13a3fcb2c696",
+            "type": "checklist",
+            "x": 3192,
+            "y": 1124,
+            "zIndex": 22,
+            "width": 496,
+            "height": 544,
+            "frameId": "913867ba-a1a7-4899-afaa-2b2ea3c08637",
+            "locked": true,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "mode": "schedule",
+            "tasks": [
+              {
+                "id": "c8720ab0-9af2-4a2f-8184-d5d51a9212d3",
+                "end": "2026-09-10",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-10",
+                "title": "Fix now problems (kanban)",
+                "checklist": [
+                  {
+                    "id": "01df089a-9a7f-4b0a-92f9-ef15d2ce635f",
+                    "done": true,
+                    "text": "DocumentBlock is throwing error"
+                  },
+                  { "id": "56645e5d-96d2-407e-918e-80ef7a159fe7", "done": true, "text": "Add more fonts to app" }
+                ]
+              },
+              {
+                "id": "8900a638-b621-4cb4-a71f-b67d91e406d9",
+                "end": "2026-09-10",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-10",
+                "title": "Implement context menu",
+                "checklist": []
+              },
+              {
+                "id": "9e10bb84-9203-4f4b-9661-e401606f22bb",
+                "end": "2026-09-10",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-10",
+                "title": "Fixes from kanban",
+                "checklist": [
+                  { "id": "8c8b81eb-e412-4803-8251-01f72e7709d2", "done": true, "text": "Timeline" },
+                  { "id": "a0767114-13db-42f7-bdbd-3a0809f3b921", "done": true, "text": "Kanban" }
+                ]
+              },
+              {
+                "id": "f13e002b-24c8-4b72-8aa2-48596e5f8aa7",
+                "end": "2026-09-11",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-10",
+                "title": "Implement drawing on canvas",
+                "checklist": []
+              },
+              {
+                "id": "810ccad9-5c32-4ded-aa2b-63cb1ea7c2b5",
+                "end": "2026-09-10",
+                "done": true,
+                "color": "#ff0000",
+                "start": "2026-09-10",
+                "title": "Test #1",
+                "checklist": []
+              },
+              {
+                "id": "05a1094b-250c-4547-b221-e77c8874edae",
+                "end": "2026-09-14",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-11",
+                "title": "Test #1 Fixes",
+                "checklist": []
+              },
+              {
+                "id": "b058d9f6-6b38-4619-bda0-c57506e63ce3",
+                "end": "2026-09-12",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-11",
+                "title": "Implement Database Diagram",
+                "checklist": []
+              },
+              {
+                "id": "1fcaafb7-f99f-4360-9f1a-417147621e91",
+                "end": "2026-09-11",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-11",
+                "title": "hotfixes from kanban",
+                "checklist": [
+                  {
+                    "id": "1f19357a-5ec5-41a2-93d7-1628b0aac248",
+                    "done": true,
+                    "text": "Implement editbar for drawing to change colors and size when multi selected"
+                  },
+                  {
+                    "id": "ef713e29-0184-47df-a5b4-7d3accfd0916",
+                    "done": true,
+                    "text": "Auto Adjust columns width in kanban when resizing kanban"
+                  }
+                ]
+              },
+              {
+                "id": "d0217aca-7c11-4c50-902f-79e19e85ad16",
+                "end": "2026-09-14",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-12",
+                "title": "Kanban fixes",
+                "checklist": []
+              },
+              {
+                "id": "2ee7cbe0-4e29-4b90-ac83-753dbdf1a61c",
+                "end": "2026-09-14",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-13",
+                "title": "Implement new blocks",
+                "checklist": [
+                  { "id": "8ced27cb-a23b-489f-b5b3-828635aa76eb", "done": true, "text": "IconBlock" },
+                  { "id": "96ad1b87-268c-4647-8717-214d85476371", "done": true, "text": "MindmapBlock" }
+                ]
+              },
+              {
+                "id": "9a17a859-42f3-4705-84c7-e9cfc5a94d22",
+                "end": "2026-09-16",
+                "done": true,
+                "color": "#0d39e7",
+                "start": "2026-09-12",
+                "title": "Implement mobile devices compability",
+                "checklist": []
+              },
+              {
+                "id": "ded585d2-1240-49ef-8de0-8966758ff592",
+                "end": "2026-09-19",
+                "done": true,
+                "color": "#7c40ed",
+                "start": "2026-09-10",
+                "title": "API Planning",
+                "checklist": []
+              },
+              {
+                "id": "1b3fe8bd-4761-470e-bb91-945755174c18",
+                "end": "2026-09-27",
+                "done": true,
+                "color": "#ed4040",
+                "start": "2026-09-18",
+                "title": "Test #2",
+                "checklist": []
+              },
+              {
+                "id": "37e2fdad-36af-4d98-a4dc-61dbfe81ba2a",
+                "end": "2026-09-21",
+                "done": true,
+                "color": "#7c3aed",
+                "start": "2026-09-16",
+                "title": "API Implementation",
+                "checklist": []
+              },
+              {
+                "id": "1b351b98-3bbd-4f2a-84d9-147b5b18578f",
+                "end": "2026-10-04",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-20",
+                "title": "Change default app styles and modify existing items styles",
+                "checklist": []
+              },
+              {
+                "id": "752f5f2e-1d62-4dfd-9b7e-443d39c600ae",
+                "end": "2026-09-25",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-21",
+                "title": "Fixes",
+                "checklist": []
+              },
+              {
+                "id": "234f14c6-fb4a-450c-b89d-540f8a132c33",
+                "end": "2026-09-21",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-21",
+                "title": "Implement items trash",
+                "checklist": []
+              },
+              {
+                "id": "f90f4fad-ab92-4da1-aa50-f9970729a8bb",
+                "end": "2026-10-11",
+                "done": false,
+                "color": "#000000",
+                "start": "2026-09-23",
+                "title": "Implement keyboard compability and functionallities while editing, moving etc",
+                "checklist": []
+              },
+              {
+                "id": "ed747fc4-f2dd-4b3d-8860-3a65ff778cf6",
+                "end": "2026-09-23",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-21",
+                "title": "Implement custom css and classes to items to allow user set custom styles",
+                "checklist": []
+              },
+              {
+                "id": "64f61a94-3eea-4f2c-9c54-a08f305a2af8",
+                "end": "2026-10-11",
+                "done": false,
+                "color": "#000000",
+                "start": "2026-09-25",
+                "title": "Implement oath or some kind of google and socials login / register methods",
+                "checklist": []
+              },
+              {
+                "id": "3ffecf96-ece4-4f8d-b513-62c1e398d24e",
+                "end": "2026-10-01",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-22",
+                "title": "Implement storing images in disk",
+                "checklist": []
+              },
+              {
+                "id": "887bf285-0fd5-45f4-9847-40d74a0e9753",
+                "end": "2026-09-25",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-21",
+                "title": "Admin panel upgrades",
+                "checklist": []
+              },
+              {
+                "id": "4b40dc69-4e48-4faa-9e22-24d692567ec8",
+                "end": "2026-10-16",
+                "done": false,
+                "color": "#ff0000",
+                "start": "2026-10-09",
+                "title": "Tests #3",
+                "checklist": []
+              },
+              {
+                "id": "2b2ae8ac-cfd3-4f19-b682-791f7da7cce7",
+                "end": "2026-10-04",
+                "done": false,
+                "color": "#00ff91",
+                "start": "2026-09-23",
+                "title": "Tests #2 fixes",
+                "checklist": []
+              }
+            ],
+            "title": "NodexMesh todo timeline",
+            "taskColumnWidth": 352,
+            "color": "#ffffff",
+            "topColor": "linear-gradient(to right, #7C3AED, #FFBD65)",
+            "customCss": { "source": "div.h-\\[5px\\].shrink-0 { height: 15px; }", "enabled": true },
+            "id": "5326afe0-d25b-47f4-81e8-ac3f5d9c252e",
+            "type": "timeline",
+            "x": 2204,
+            "y": 2120,
+            "zIndex": 23,
+            "width": 1520,
+            "frameId": null,
+            "locked": true,
+            "comments": [],
+            "tags": ["important", "todo"]
+          },
+          {
+            "title": "Updates info",
+            "content": "<h2>Updates and timeline</h2><p>Updates are made practically everyday. timeline here is the <strong>new block</strong> that should help me <em>(and you for your future projects)</em> to plan the tasks of new features, fixes etc.</p><p>The project is growing and I'm adding new useful things, if you have any new ideas and you think that your new feature would help in creating project, plans etc in this app, just go to my <strong><u>github project</u></strong> <em>(link next to this document) </em>and create the feature improvement issue. Or you can fork the project and create the feature by yourself, so if you would want to have this in official codebase, just create <strong>pull request</strong> and wait for <strong>review</strong>.</p>",
+            "autoHeight": true,
+            "contentFormat": "tiptap-html",
+            "contentVersion": 1,
+            "typography": { "fontSize": 16 },
+            "id": "c3c43109-6fff-487f-95f1-b72c29ab2a3b",
+            "type": "document",
+            "x": 3904,
+            "y": 2120,
+            "zIndex": 25,
+            "width": 480,
+            "frameId": null,
+            "locked": true,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "url": "https://github.com/Lewan24/NodexMesh",
+            "title": "Nodex Mesh",
+            "description": "GitHub project",
+            "color": "#fdf4ff",
+            "topColor": "#7C3AED",
+            "colorRole": "default",
+            "id": "6c3a3264-b40f-486c-a8a7-ae783ece17c2",
+            "type": "link",
+            "x": 4096,
+            "y": 2645,
+            "zIndex": 26,
+            "width": 320,
+            "height": 144,
+            "frameId": null,
+            "locked": true,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "title": "Tests #1 problems",
+            "columns": [
+              {
+                "id": "703ac201-e1b2-418b-bb6f-93c11452af28",
+                "cards": [
+                  {
+                    "id": "0e88404d-8f8e-404c-9f91-d54b591b20a8",
+                    "done": true,
+                    "text": "Change editing kanban columns to dialog"
+                  },
+                  {
+                    "id": "564a40c2-6031-4a30-a8e9-1114baa94aad",
+                    "done": true,
+                    "text": "Implement manual deleting trash with projects"
+                  },
+                  {
+                    "id": "12559903-0781-49c9-b609-37015801f33a",
+                    "done": true,
+                    "text": "Show checklist completion percentage based on completed tasks"
+                  },
+                  { "id": "b7b525a9-67f5-4bfc-a02d-ad98ce32b416", "done": true, "text": "Implement arrow flexibility" },
+                  {
+                    "id": "68e8354f-060a-4a7a-a46a-d9cd976caea8",
+                    "done": true,
+                    "text": "Fix and improve DiagramBlock so it reacts better to moving items and handles arrows and connections more reliably"
+                  },
+                  {
+                    "id": "970a8807-9826-4c74-92db-b6be15e8bf7c",
+                    "done": true,
+                    "text": "Edit timeline tasks in a dialog"
+                  },
+                  {
+                    "id": "f83083a8-4cd5-4db5-8aeb-e0f1a26e0656",
+                    "done": true,
+                    "text": "Dropping a checklist item or Kanban card onto the canvas creates a new checklist"
+                  },
+                  {
+                    "id": "7d2b9575-ddf4-4d68-b801-9c5042aaefa3",
+                    "done": true,
+                    "text": "ImageBlock also looks inconsistent with the rest of the app and needs styling improvements"
+                  },
+                  {
+                    "id": "81ad6b19-c89d-4665-a7b9-8fbe0725d710",
+                    "done": true,
+                    "text": "Review and adjust colors and item styles so the overall UI is visually consistent"
+                  },
+                  {
+                    "id": "8d322f50-4200-47f1-9232-55ad85679b2d",
+                    "done": true,
+                    "text": "Fix arrow and line thickness so arrowheads scale correctly with the selected stroke width"
+                  },
+                  {
+                    "id": "148ac814-0337-45b6-8f31-802fdf8fcf03",
+                    "done": true,
+                    "text": "Add a lock icon to locked items so their locked state is clearly visible"
+                  },
+                  {
+                    "id": "a82827e7-de68-4be6-acdb-6a5a81df2290",
+                    "done": true,
+                    "text": "Prevent a frame from moving when it contains a locked item"
+                  }
+                ],
+                "color": "#5a8a94",
+                "title": "Nice to do",
+                "width": 387
+              },
+              {
+                "id": "9cfe69a3-5e07-4a73-9736-3f8cbe778cb8",
+                "cards": [
+                  {
+                    "id": "99a10d5f-3832-44f4-97a7-0d7d8a8bdaa4",
+                    "done": true,
+                    "text": "Update this column after adding new features"
+                  },
+                  {
+                    "id": "d959e5ab-28aa-4b39-b578-a421784cf88d",
+                    "done": true,
+                    "text": "When an item is resized and starts overlapping other items, push those items away and cascade the movement if they overlap additional items"
+                  },
+                  {
+                    "id": "4ebdae21-bd1c-4a33-a66b-b55280969113",
+                    "done": true,
+                    "text": "Check TimelineBlock and the other new items because they are not being added to frames"
+                  },
+                  {
+                    "id": "603b8788-9aaa-4a29-82ba-b2ba280c3cc9",
+                    "done": true,
+                    "text": "Review fonts across the app and fix any inconsistent usage"
+                  },
+                  {
+                    "id": "11a1a172-6fd7-4390-b9cd-b11e540d3ff4",
+                    "done": true,
+                    "text": "Allow TextBlock to support multiple lines instead of a single line"
+                  },
+                  {
+                    "id": "1f8cce40-453b-4549-bcbe-7a1522618833",
+                    "done": true,
+                    "text": "Fix vertical alignment in NoteBlock"
+                  },
+                  {
+                    "id": "2fb386cd-63d1-45eb-907c-102d873190cf",
+                    "done": true,
+                    "text": "Make checklist item font size configurable in the edit bar and apply it in the textarea when adding a new task"
+                  }
+                ],
+                "color": "#FFBD65",
+                "title": "Important",
+                "width": 341
+              },
+              {
+                "id": "c0dea1f9-e627-491a-b5e4-02dc4db30b61",
+                "cards": [
+                  {
+                    "id": "e617e8a7-554c-4833-8dec-b4669c4d3a18",
+                    "done": true,
+                    "text": "Handle overlapping frames so when one frame overlaps another and tries to capture its items, the newer frame does not take items that already belong to the existing frame"
+                  },
+                  {
+                    "id": "304d002e-c98e-486e-8c8e-33db482d73cd",
+                    "done": true,
+                    "text": "Review and improve Ctrl+Z support, including the existing issue with Kanban cards and tasks"
+                  },
+                  {
+                    "id": "ddb9e049-d360-415f-b30e-0d9c46cd99eb",
+                    "done": true,
+                    "text": "Fix inconsistent item dimensions and sizing"
+                  },
+                  {
+                    "id": "bcfacb3b-856a-4478-bb2c-80bbbc79c54b",
+                    "done": true,
+                    "text": "Set the default zIndex to 1 and all frames to 0"
+                  }
+                ],
+                "color": "#7C3AED",
+                "title": "Must have",
+                "width": 358
+              }
+            ],
+            "color": "#ffffff",
+            "typography": { "fontSize": 16 },
+            "id": "54118c7a-77ad-456f-a75a-3f0705d0afdb",
+            "type": "kanban",
+            "x": 3864,
+            "y": 252,
+            "zIndex": 37,
+            "width": 1176,
+            "height": 743,
+            "frameId": null,
+            "locked": true,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "content": "Backend and Database Plan",
+            "color": "#7C3AED",
+            "id": "41ca5aca-bc91-4ad1-a646-ed9010215c13",
+            "type": "section-title",
+            "x": 444,
+            "y": 1982,
+            "zIndex": 69,
+            "width": 320,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "content": "NodexMesh TODO Section",
+            "color": "#FFBD65",
+            "id": "8f88de73-60a9-4b3d-8a37-a3c292b2f3f0",
+            "type": "section-title",
+            "x": 1884,
+            "y": 153,
+            "zIndex": 71,
+            "width": 320,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "label": "Star",
+            "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800px\" height=\"800px\" viewBox=\"-1.35 0 1504.4 1504.4\" id=\"Layer_1\"><style>.st0{fill:#5e91ff}.st1{fill:#fff}</style><title>Like</title><ellipse class=\"st0\" cx=\"750.8\" cy=\"752.2\" rx=\"750.8\" ry=\"752.2\"/><path class=\"st1\" d=\"M378.3 667.5h165.1c13 0 23.6 10.5 23.6 23.6v379.1c0 13-10.5 23.6-23.6 23.6H378.3c-13 0-23.6-10.5-23.6-23.6V691c.1-13 10.6-23.5 23.6-23.5zM624.7 1004.7V733.1c.1-66.9 18.8-132.4 54.1-189.2 21.5-34.4 69.7-89.5 96.7-118 6-6.4 27.8-25.2 27.8-35.5 0-13.2 1.5-34.5 2-74.2.3-25.2 20.8-45.9 46-45.7h1.1c44.1.8 58.2 41.6 58.2 41.6s37.7 74.4 2.5 165.4c-29.7 76.9-35.8 83.1-35.8 83.1s-9.6 13.9 20.8 13.3c0 0 185.6-.8 192-.8 13.7 0 57.4 12.5 54.9 68.2-1.8 41.2-27.4 55.6-40.5 60.3-1.7.6-2.6 2.5-1.9 4.2.3.7.8 1.3 1.5 1.7 13.4 7.8 40.8 27.5 40.2 57.7-.8 36.6-15.5 50.1-46.1 58.5-1.7.4-2.8 2.2-2.3 3.9.2.9.8 1.6 1.5 2 11.6 6.6 31.5 22.7 30.3 55.3-1.2 33.2-25.2 44.9-38.3 48.9-1.7.5-2.7 2.3-2.2 4 .2.7.7 1.4 1.3 1.8 8.3 5.7 20.6 18.6 20 45.1-.3 14-5 24.2-10.9 31.5-9.3 11.5-23.9 17.5-38.7 17.6l-411.8.8c-.1-.1-22.4 0-22.4-29.9z\"/></svg>",
+            "iconMode": "svg",
+            "color": "#7C3AED",
+            "id": "c3d0a6d5-3cb8-42f0-9895-ac94d8f68032",
+            "type": "icon",
+            "x": 608,
+            "y": 1282,
+            "zIndex": 75,
+            "width": 192,
+            "height": 172,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "size": "lg",
+            "content": "Custom SVG",
+            "typography": { "textAlign": "center", "verticalAlign": "middle" },
+            "id": "25e95fea-49ef-4aab-82e9-80423778eadf",
+            "type": "text",
+            "x": 656,
+            "y": 1164,
+            "zIndex": 76,
+            "width": 240,
+            "height": 60,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "x2": 740,
+            "y2": 1282,
+            "curve": -0.55,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "9aed8572-1374-4efb-84ff-a30463824a2a",
+            "type": "line",
+            "x": 764,
+            "y": 1224,
+            "zIndex": 77,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "endItemId": "c3d0a6d5-3cb8-42f0-9895-ac94d8f68032",
+            "startItemId": "25e95fea-49ef-4aab-82e9-80423778eadf"
+          },
+          {
+            "icon": "layout-dashboard",
+            "title": "Database Plan",
+            "boardId": "01a0cae4-0e9b-79da-ac1f-8c274239c7a2",
+            "description": "Double-click to open this database plan board",
+            "color": "#ffffff",
+            "topColor": "linear-gradient(to right, #7C3AED, #FFBD65)",
+            "id": "6f6472e2-8fb2-463b-9ccb-0ee51a76b01b",
+            "type": "board",
+            "x": 1200,
+            "y": 2232,
+            "zIndex": 80,
+            "width": 320,
+            "height": 190,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": ["important"]
+          },
+          {
+            "size": "lg",
+            "content": "Open individual boards",
+            "typography": { "textAlign": "center" },
+            "id": "d13ff994-c4e6-49a8-8e86-a773b1012451",
+            "type": "text",
+            "x": 822,
+            "y": 2120,
+            "zIndex": 81,
+            "width": 320,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "x2": 1200,
+            "y2": 2252,
+            "curve": 0.35,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "1c1b9353-143a-4940-8d16-292e307d4d77",
+            "type": "line",
+            "x": 1046,
+            "y": 2180,
+            "zIndex": 82,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "endItemId": "6f6472e2-8fb2-463b-9ccb-0ee51a76b01b",
+            "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451"
+          },
+          {
+            "icon": "layout-dashboard",
+            "title": "Backend API Plan",
+            "boardId": "01a0cae4-0ec0-79b4-9c52-2009bcf0c730",
+            "description": "Double-click to open this Backend Plan Board",
+            "color": "#ffffff",
+            "topColor": "linear-gradient(to right, #7C3AED, #FFBD65)",
+            "colorRole": "default",
+            "id": "b7ae5ada-810d-466f-a90e-3435f762ee25",
+            "type": "board",
+            "x": 444,
+            "y": 2232,
+            "zIndex": 83,
+            "width": 320,
+            "height": 190,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": ["important"]
+          },
+          {
+            "x2": 764,
+            "y2": 2252,
+            "curve": -0.25,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "e7006d46-aa34-4a2c-ac5e-587a256c1667",
+            "type": "line",
+            "x": 918,
+            "y": 2180,
+            "zIndex": 84,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "endItemId": "b7ae5ada-810d-466f-a90e-3435f762ee25",
+            "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451"
+          },
+          {
+            "x2": 3724,
+            "y2": 2406,
+            "curve": 0.2,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "f9dbbdce-8522-4a6e-99e5-60422dba3727",
+            "type": "line",
+            "x": 3904,
+            "y": 2412,
+            "zIndex": 85,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "endItemId": "5326afe0-d25b-47f4-81e8-ac3f5d9c252e",
+            "startItemId": "c3c43109-6fff-487f-95f1-b72c29ab2a3b"
+          },
+          {
+            "title": "Kolorystyka",
+            "content": "<h2>Default palette: <strong><em><u>Dark</u></em></strong></h2><p></p><h1>UI</h1><ul><li><p>Primary: <strong>#4c00ff</strong></p></li><li><p>Secondary: <strong>#000</strong></p></li></ul><p></p><h2>Dark Mode</h2><ul><li><p>Background: <strong>#0B0B0C</strong></p></li><li><p>Card default: <strong>#18181B</strong></p></li><li><p>Primary: <strong>#735CFF</strong></p></li></ul><p></p><h2>Light Mode</h2><ul><li><p>Background: <strong>#</strong>F5F5F7</p></li><li><p>Card default: <strong>#</strong>FFFFFF</p></li><li><p>Primary: #5B3DF5</p></li></ul><p></p><p></p><h2><strong>Accent    Light        Dark</strong></h2><h2><br><em>Violet   </em><strong><em>#7C63E8 </em></strong><em>  </em><strong><em>#8F7AF2</em></strong><em><br>Blue     </em><strong><em>#4C7FD9</em></strong><em>   </em><strong><em>#6295E8</em></strong><em><br>Cyan    </em><strong><em>#3B9BA8</em></strong><em>   </em><strong><em>#54B5C0</em></strong><em><br>Green  </em><strong><em>#4A9B76</em></strong><em>   </em><strong><em>#63B38E</em></strong><em><br>Coral   </em><strong><em>#D66F6F</em></strong><em>   </em><strong><em>#E78383</em></strong></h2><p></p>",
+            "autoHeight": true,
+            "contentFormat": "tiptap-html",
+            "contentVersion": 1,
+            "color": "#ffffff",
+            "topColor": "#059669",
+            "colorRole": "accent2",
+            "id": "7dde8f55-066b-487c-89d8-36c44774c828",
+            "type": "document",
+            "x": -192,
+            "y": 252,
+            "zIndex": 86,
+            "width": 480,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": ["style", "important"]
+          },
+          {
+            "x2": 1424,
+            "y2": 373,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "729c8638-334d-4698-a852-b9da9dc037f1",
+            "type": "line",
+            "x": 1344,
+            "y": 373,
+            "zIndex": 87,
+            "frameId": "c85f1b21-9367-4b2a-91ab-702d22e2e342",
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "startItemId": "2bbffcf2-4ba4-4100-95b3-c0e6a6182461",
+            "endItemId": "8acdcf2e-feea-4d82-a8a5-599b34bd4266"
+          },
+          {
+            "size": "lg",
+            "content": "Project version actual for 24.09.2026",
+            "topColor": "#e11d48",
+            "colorRole": "default",
+            "typography": {
+              "sections": { "body": { "bold": true, "fontSize": 40, "textAlign": "center" } },
+              "verticalAlign": "middle"
+            },
+            "id": "5a42890d-6825-403c-8eb4-1506fb52d0a4",
+            "type": "text",
+            "x": 444,
+            "y": -160,
+            "zIndex": 89,
+            "width": 500,
+            "height": 208,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "title": "Tests #2 problems",
+            "columns": [
+              {
+                "id": "e9fecdd0-0b7b-444f-80a9-11f18159a32a",
+                "cards": [
+                  {
+                    "id": "48be2f5c-6f2c-458c-b9f9-8b77c96ea880",
+                    "done": false,
+                    "text": "To think about - click and create item on other item instead of selectin (Maybe some kind of option for user to personal setting)"
+                  },
+                  {
+                    "id": "db9455e8-26b6-44cc-adb4-2137949d9340",
+                    "done": true,
+                    "text": "Add copying and overriding custom css from and to items"
+                  },
+                  {
+                    "id": "80896e26-d1d4-432b-9aa2-40a12c4c8c3b",
+                    "done": true,
+                    "text": "Animation for frame for moving should me more smooth, it jumps when moving from left to right and so on"
+                  }
+                ],
+                "color": "#5a8a94",
+                "title": "To Do",
+                "width": 180.00000000000003
+              },
+              {
+                "id": "d6bcd985-1518-448a-9bd6-bd38ad15c897",
+                "cards": [
+                  {
+                    "id": "a87417bc-5a62-4a36-bb60-017e0dd5f757",
+                    "done": true,
+                    "text": "Make the app more compact on phones and mobile devices"
+                  },
+                  { "id": "0b93cd8f-5a35-4300-afd4-c743dc2dc714", "done": true, "text": "Hide tooltips on phone." },
+                  {
+                    "id": "68583d79-cfd1-4b67-9a0d-913375cf6b75",
+                    "done": true,
+                    "text": "Frame can't be assigned to another frame as child"
+                  },
+                  {
+                    "id": "83e36c24-1e9b-4d42-9f22-9be7952cad91",
+                    "done": true,
+                    "text": "Item should be auto attached to frame when dragged into frame"
+                  },
+                  {
+                    "id": "d726ee76-267c-4367-9af1-63bb941f0163",
+                    "done": true,
+                    "text": "Lines and arrow can be stacked and multiplied within the same items"
+                  },
+                  {
+                    "id": "e0a9cf97-d32b-4efe-b573-f06225343f20",
+                    "done": true,
+                    "text": "Arrows are bugged when its going from frame to item inside the same frame"
+                  },
+                  {
+                    "id": "71bb5ed9-26dc-4086-8f5e-cb9df3469804",
+                    "done": true,
+                    "text": "Wrong frame fitting with note dispenser"
+                  }
+                ],
+                "color": "#FFBD65",
+                "title": "Important",
+                "width": 180.00000000000003
+              },
+              {
+                "id": "eb1fec2b-2f36-4d70-95dc-db96c0256a60",
+                "cards": [
+                  {
+                    "id": "4f3810b7-3a42-4d3f-9b32-03d1bb74cbc4",
+                    "done": true,
+                    "text": "Collaboration - make it refresh automatically when error occurs"
+                  },
+                  {
+                    "id": "2c1f731d-13c6-406c-99d8-fe49d1b06280",
+                    "done": true,
+                    "text": "Refactor collaboration for better and more realistic together work"
+                  },
+                  {
+                    "id": "0bd26ef6-b08e-457b-aae2-33e5140c046b",
+                    "done": true,
+                    "text": "Think about some other improvements of app efficiency and rendering items"
+                  }
+                ],
+                "color": "#7C3AED",
+                "title": "Must Have",
+                "width": 179.99999999999997
+              }
+            ],
+            "color": "#ffffff",
+            "id": "6d909ce9-aed3-4066-b392-4877ef5549fc",
+            "type": "kanban",
+            "x": 3864,
+            "y": 1056,
+            "zIndex": 90,
+            "width": 1176,
+            "height": 740,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": ["todo"]
+          },
+          {
+            "content": "Project timeline for future and actualwork",
+            "color": "#02A0A0",
+            "id": "804d3f13-f535-40d7-9db4-34928cab0b39",
+            "type": "section-title",
+            "x": 2204,
+            "y": 1952,
+            "zIndex": 91,
+            "width": 660,
+            "height": 96,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "url": "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGVxYzAzc2xycjYzbnl0bGhsNGhreW4xaXQ2aWJwMnRoeW82OWU0bSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Dkf37ayTUExQ4/giphy.gif",
+            "caption": "",
+            "variant": "sticker",
+            "imgHeight": 687,
+            "color": "#ffffff",
+            "id": "00cfd1cf-f4c2-4c3d-848f-74e0209ce7bb",
+            "type": "image",
+            "x": -192,
+            "y": 1361,
+            "zIndex": 92,
+            "width": 480,
+            "height": 687,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          }
+        ]
+      },
+      {
+        "id": "01a0cae4-0e9b-79da-ac1f-8c274239c7a2",
+        "name": "Database Plan",
+        "items": [
+          {
+            "title": "Database preview plan",
+            "content": "<h2>               Database plan #1</h2><p></p><p><u>Below is the first fun preview of upcoming database.</u></p><p>It is still in <strong>planning</strong> and preparing until most of <strong><em>functionallities</em></strong> are already <strong><em>implemented</em></strong> in frontend.</p><p></p><p><strong>Projects</strong></p><p>- Id<br>- Name<br>- Color<br>- OwnerId<br>- CreatedAt<br>- UpdatedAt<br>- Version</p><p><strong>BoardItems</strong></p><p>- Id<br>- ProjectId<br>- Type<br>- X<br>- Y<br>- ZIndex<br>- Width<br>- Height<br>- Locked<br>- Data JSONB (specific data of item)<br>- UpdatedAt<br>- Version</p>",
+            "autoHeight": true,
+            "contentFormat": "tiptap-html",
+            "contentVersion": 1,
+            "color": "#ffffff",
+            "colorRole": "default",
+            "id": "00dd0842-dce8-4a6b-81f7-2fab600b24c6",
+            "type": "document",
+            "x": 768,
+            "y": 370,
+            "zIndex": 1,
+            "width": 480,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "title": "NodexMesh Database preview schema",
+            "tables": [
+              {
+                "id": "c9cf7fbd-fbfd-4b31-bb3b-c80b39eafc56",
+                "name": "Users",
+                "fields": [
+                  {
+                    "id": "88d39e8c-f6d4-4417-9c10-e1e678ac392b",
+                    "name": "id",
+                    "unique": true,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": true,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "770ad56e-9d17-4d8b-8827-5fa737478315",
+                    "name": "Email",
+                    "unique": true,
+                    "dataType": "string",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "e3ea8cd2-0f52-4ec1-96b9-4bc297d714bc",
+                    "name": "PasswordHash",
+                    "unique": false,
+                    "dataType": "string",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  }
+                ],
+                "position": { "x": -688, "y": 0 }
+              },
+              {
+                "id": "ed743e16-2e21-4721-8081-446ef58f04c3",
+                "name": "Roles",
+                "fields": [
+                  {
+                    "id": "1385f677-c135-434a-8d39-f9995af24e08",
+                    "name": "id",
+                    "unique": true,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": true,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "61a77501-b3a1-429d-b179-06c882615c95",
+                    "name": "RoleName",
+                    "unique": true,
+                    "dataType": "string",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  }
+                ],
+                "position": { "x": -688, "y": 288 }
+              },
+              {
+                "id": "7da5ca18-2cfb-473a-9800-9811cceee2f0",
+                "name": "UsersRoles",
+                "fields": [
+                  {
+                    "id": "fcdbff54-879b-4076-836e-3d678fc5eb3f",
+                    "name": "User_ID",
+                    "unique": false,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "2ddc4e6c-7bce-47a6-bac6-41f8ea330842",
+                    "name": "Role_ID",
+                    "unique": false,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  }
+                ],
+                "position": { "x": -304, "y": 256 }
+              },
+              {
+                "id": "e31e1899-9125-4920-8495-d7c8f5d75e05",
+                "name": "Projects",
+                "fields": [
+                  {
+                    "id": "ff0dacf2-2937-4348-8077-e35ca2d18d06",
+                    "name": "id",
+                    "unique": true,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": true,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "2109d674-43c8-4688-a632-9ce1908d7a07",
+                    "name": "Name",
+                    "unique": false,
+                    "dataType": "string",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "8744b6ac-5153-4b53-b880-ac0536c03670",
+                    "name": "Color",
+                    "unique": false,
+                    "dataType": "string",
+                    "nullable": true,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "2f02e24e-e9a5-4438-92dd-b29b24278fe6",
+                    "name": "OwnerUser_ID",
+                    "unique": false,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "18b39b01-9fd6-4f83-832e-17555ce77c26",
+                    "name": "CreatedAt",
+                    "unique": false,
+                    "dataType": "DateTime",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "59089d46-6df0-43c0-a608-db65f2feb9b3",
+                    "name": "UpdatedAt",
+                    "unique": false,
+                    "dataType": "DateTime",
+                    "nullable": true,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "6c7dc649-80cc-4088-b783-803909f40130",
+                    "name": "Version",
+                    "unique": false,
+                    "dataType": "string",
+                    "nullable": true,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  }
+                ],
+                "position": { "x": 16, "y": 16 }
+              },
+              {
+                "id": "fad5d664-72be-409b-b1e5-80623442aae7",
+                "name": "BoardItems",
+                "fields": [
+                  {
+                    "id": "0aed57f4-6caa-4314-a8f8-813eeb066837",
+                    "name": "id",
+                    "unique": true,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": true,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "ccc39567-6a76-4645-9526-ab4fdd551e05",
+                    "name": "Project_ID",
+                    "unique": false,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "aa9cbafa-1b93-4a1c-9195-d102fa5c6af8",
+                    "name": "Type",
+                    "unique": false,
+                    "dataType": "enum",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "ad3c9700-c534-4aa3-a776-1db81e3256e3",
+                    "name": "Pos_X",
+                    "unique": false,
+                    "dataType": "float",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "70cd6c12-37a3-4930-b831-541f92d1bf5e",
+                    "name": "Pos_Y",
+                    "unique": false,
+                    "dataType": "float",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "e5181e1e-6010-4c0c-aebe-58d49395fa3a",
+                    "name": "ZIndex",
+                    "unique": false,
+                    "dataType": "integer",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "1f7c04a5-5c63-4bf6-b3fa-4ddd748ce0c7",
+                    "name": "Width",
+                    "unique": false,
+                    "dataType": "integer",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "acacfcbd-bcfb-4c78-86eb-55bfddd06e8c",
+                    "name": "Height",
+                    "unique": false,
+                    "dataType": "integer",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "81b8a6a0-b11e-418d-bb5c-dd500938f94f",
+                    "name": "Locked",
+                    "unique": false,
+                    "dataType": "boolean",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "ec22b1f1-dda0-4e4c-9d54-b0060f1b4925",
+                    "name": "Item_Data",
+                    "unique": false,
+                    "dataType": "JSONB",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "2cfa4d4c-f9f3-4774-bce3-a850546eec42",
+                    "name": "UpdatedAt",
+                    "unique": false,
+                    "dataType": "DateTime",
+                    "nullable": true,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "f34b77f3-75c3-4549-9a9e-0552acdc097e",
+                    "name": "Version",
+                    "unique": false,
+                    "dataType": "string",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  }
+                ],
+                "position": { "x": 400, "y": 0 }
+              },
+              {
+                "id": "416b720a-4373-41f5-a99a-8fa3efe30b8e",
+                "name": "UsersProjectsSettings",
+                "fields": [
+                  {
+                    "id": "d42f432e-e9e5-488b-8d4d-8cacb209a1bb",
+                    "name": "Project_ID",
+                    "unique": false,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "d18f15da-199b-4ed7-be12-8b871da93ae9",
+                    "name": "User_ID",
+                    "unique": false,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "deaa6e24-216f-4473-a12b-533de84c9e53",
+                    "name": "Settings_ID",
+                    "unique": false,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  }
+                ],
+                "position": { "x": -352, "y": -288 }
+              },
+              {
+                "id": "84f281d9-8b9f-4060-a82c-7a0d9c7be37c",
+                "name": "ProjectSettings",
+                "fields": [
+                  {
+                    "id": "109cd4f3-0129-4a84-b0db-29a461a20afa",
+                    "name": "id",
+                    "unique": false,
+                    "dataType": "Guid",
+                    "nullable": false,
+                    "primaryKey": true,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "ae95e9cb-6d8d-4e8f-82fd-9bb9611a9d3a",
+                    "name": "ThemeSettings",
+                    "unique": false,
+                    "dataType": "JSONB",
+                    "nullable": true,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "04c9f3d9-b60b-40d8-bc6a-bd0e1523b91e",
+                    "name": "UIFont",
+                    "unique": false,
+                    "dataType": "string",
+                    "nullable": true,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "id": "dbe6ad6c-3443-4609-93f0-be4ed38888af",
+                    "name": "BoardItemsFont",
+                    "unique": false,
+                    "dataType": "string",
+                    "nullable": true,
+                    "primaryKey": false,
+                    "defaultValue": ""
+                  }
+                ],
+                "position": { "x": 128, "y": -256 }
+              }
+            ],
+            "relations": [
+              {
+                "id": "28929a69-04c0-419e-8367-55ac8da00f15",
+                "source": "7da5ca18-2cfb-473a-9800-9811cceee2f0",
+                "target": "ed743e16-2e21-4721-8081-446ef58f04c3",
+                "cardinality": "1:1",
+                "sourceField": "2ddc4e6c-7bce-47a6-bac6-41f8ea330842",
+                "targetField": "1385f677-c135-434a-8d39-f9995af24e08"
+              },
+              {
+                "id": "12ccece7-efb3-43d8-845a-a9ab02ed8818",
+                "source": "7da5ca18-2cfb-473a-9800-9811cceee2f0",
+                "target": "c9cf7fbd-fbfd-4b31-bb3b-c80b39eafc56",
+                "cardinality": "1:1",
+                "sourceField": "fcdbff54-879b-4076-836e-3d678fc5eb3f",
+                "targetField": "88d39e8c-f6d4-4417-9c10-e1e678ac392b"
+              },
+              {
+                "id": "bbb159d7-0d69-46b1-be10-18eb05937253",
+                "source": "e31e1899-9125-4920-8495-d7c8f5d75e05",
+                "target": "c9cf7fbd-fbfd-4b31-bb3b-c80b39eafc56",
+                "cardinality": "N:1",
+                "sourceField": "2f02e24e-e9a5-4438-92dd-b29b24278fe6",
+                "targetField": "88d39e8c-f6d4-4417-9c10-e1e678ac392b"
+              },
+              {
+                "id": "31acff97-f29d-487a-af52-27e88edabeaf",
+                "source": "fad5d664-72be-409b-b1e5-80623442aae7",
+                "target": "e31e1899-9125-4920-8495-d7c8f5d75e05",
+                "cardinality": "1:N",
+                "sourceField": "ccc39567-6a76-4645-9526-ab4fdd551e05",
+                "targetField": "ff0dacf2-2937-4348-8077-e35ca2d18d06"
+              },
+              {
+                "id": "3d4e3f7d-2db4-477a-9251-7496a3c03def",
+                "source": "416b720a-4373-41f5-a99a-8fa3efe30b8e",
+                "target": "e31e1899-9125-4920-8495-d7c8f5d75e05",
+                "cardinality": "1:1",
+                "sourceField": "d42f432e-e9e5-488b-8d4d-8cacb209a1bb",
+                "targetField": "ff0dacf2-2937-4348-8077-e35ca2d18d06"
+              },
+              {
+                "id": "e8221431-9d1f-4686-9c84-401147dffdad",
+                "source": "416b720a-4373-41f5-a99a-8fa3efe30b8e",
+                "target": "c9cf7fbd-fbfd-4b31-bb3b-c80b39eafc56",
+                "cardinality": "1:1",
+                "sourceField": "d18f15da-199b-4ed7-be12-8b871da93ae9",
+                "targetField": "88d39e8c-f6d4-4417-9c10-e1e678ac392b"
+              },
+              {
+                "id": "3eee103d-e844-460e-8252-3daf120e9b2a",
+                "source": "416b720a-4373-41f5-a99a-8fa3efe30b8e",
+                "target": "84f281d9-8b9f-4060-a82c-7a0d9c7be37c",
+                "cardinality": "1:1",
+                "sourceField": "deaa6e24-216f-4473-a12b-533de84c9e53",
+                "targetField": "109cd4f3-0129-4a84-b0db-29a461a20afa"
+              }
+            ],
+            "color": "#292929",
+            "id": "07056318-7eec-462a-ab3f-f6e238a94dde",
+            "type": "database",
+            "x": 1397,
+            "y": 970,
+            "zIndex": 2,
+            "width": 1920,
+            "height": 928,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "x2": 1407,
+            "y2": 970,
+            "curve": -0.25,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 3,
+            "color": "#7C3AED",
+            "id": "d30eb3b4-980c-49ec-8354-193e11e1977f",
+            "type": "line",
+            "x": 1248,
+            "y": 892,
+            "zIndex": 3,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "startItemId": "00dd0842-dce8-4a6b-81f7-2fab600b24c6",
+            "endItemId": "07056318-7eec-462a-ab3f-f6e238a94dde"
+          },
+          {
+            "content": "public abstract class BoardItemData\n{\n}\n\npublic sealed class NoteData : BoardItemData\n{\n    public string Content { get; set; } = \"\";\n    public string? Color { get; set; }\n    public TypographyOptions? Typography { get; set; }\n}\n\npublic sealed class ChecklistData : BoardItemData\n{\n    public string Title { get; set; } = \"\";\n    public List<ChecklistEntry> Entries { get; set; } = [];\n}",
+            "language": "csharp",
+            "autoHeight": true,
+            "color": "#ffffff",
+            "id": "3545cb22-79f0-4458-9880-e22c62d84474",
+            "type": "code",
+            "x": 1541,
+            "y": 304,
+            "zIndex": 4,
+            "width": 480,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "x2": 1541,
+            "y2": 610,
+            "curve": 0,
+            "label": "Example data C# boxing",
+            "arrowEnd": true,
+            "labelMode": "follow-line",
+            "arrowStart": false,
+            "labelOffset": 15,
+            "strokeWidth": 3,
+            "labelFontSize": 16,
+            "color": "#5a8a94",
+            "typography": { "fontSize": 16 },
+            "id": "41d88b4a-c891-4858-9332-f4836be5cab0",
+            "type": "line",
+            "x": 1248,
+            "y": 701,
+            "zIndex": 5,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "startItemId": "00dd0842-dce8-4a6b-81f7-2fab600b24c6",
+            "endItemId": "3545cb22-79f0-4458-9880-e22c62d84474"
+          },
+          {
+            "label": "🔥",
+            "source": "🔥",
+            "iconMode": "emoji",
+            "color": "#7C3AED",
+            "id": "5c7fd3dc-cd5b-4134-a24f-25da5e9cda47",
+            "type": "icon",
+            "x": 1141,
+            "y": 416,
+            "zIndex": 6,
+            "width": 96,
+            "height": 96,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "size": "lg",
+            "content": "First scheme preview #1",
+            "topColor": "#e11d48",
+            "colorRole": "accent3",
+            "typography": { "bold": true, "fontSize": 24, "textAlign": "center", "verticalAlign": "middle" },
+            "id": "eccee52f-7a20-4df5-bf64-cebcc5443059",
+            "type": "text",
+            "x": 1493,
+            "y": 1140,
+            "zIndex": 7,
+            "width": 352,
+            "height": 87,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          }
+        ]
+      },
+      {
+        "id": "01a0cae4-0ec0-79b4-9c52-2009bcf0c730",
+        "name": "Backend API Plan",
+        "items": [
+          {
+            "url": "https://dotnet.microsoft.com/en-us/",
+            "title": ".NET",
+            "description": "",
+            "color": "#ffffff",
+            "id": "e185be7d-6875-4adc-a7fa-3600197965b9",
+            "type": "link",
+            "x": 756,
+            "y": 1360,
+            "zIndex": 1,
+            "width": 320,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "url": "https://top10.owasp.org/2025/",
+            "title": "OWASP TOP 10 2025",
+            "description": "",
+            "color": "#ffffff",
+            "id": "937788a6-981d-4161-97a2-3dc9c0c11585",
+            "type": "link",
+            "x": 752,
+            "y": 482,
+            "zIndex": 2,
+            "width": 320,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "url": "https://owasp.github.io/www-project-smart-contract-top-10/assets/images/Top10mapping2025-2026.png",
+            "caption": "",
+            "variant": "sticker",
+            "imgHeight": 528,
+            "color": "#ffffff",
+            "id": "a9d8bb14-2602-4d27-ab3e-d7c1967c0924",
+            "type": "image",
+            "x": 756,
+            "y": 714,
+            "zIndex": 3,
+            "width": 970,
+            "height": 528,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "x2": 1042,
+            "y2": 714,
+            "curve": 0.2,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "1bbf2183-2972-4441-ac2e-71317e6b35b8",
+            "type": "line",
+            "x": 956,
+            "y": 599,
+            "zIndex": 4,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "startItemId": "937788a6-981d-4161-97a2-3dc9c0c11585",
+            "endItemId": "a9d8bb14-2602-4d27-ab3e-d7c1967c0924"
+          },
+          {
+            "size": "lg",
+            "content": "Upcoming changes 2025 => 2026",
+            "typography": { "textAlign": "center", "verticalAlign": "top" },
+            "id": "443abc7a-832a-48ed-b8a2-45d315a3c268",
+            "type": "text",
+            "x": 1088,
+            "y": 572,
+            "zIndex": 5,
+            "width": 320,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "url": "https://github.com/Lewan24/SampleWarehouseApi",
+            "title": "Secure .NET project template",
+            "description": "My custom project created as template for new .NET projects with already implemented OWASP TOP 10 security features",
+            "color": "#ffffff",
+            "colorRole": "default",
+            "id": "336bfc64-381d-4dad-8f0a-7b3e4157c8b2",
+            "type": "link",
+            "x": 1144,
+            "y": 1568,
+            "zIndex": 6,
+            "width": 320,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "content": "There will be all prepared information needed to prepare and implement backend in .NET 10.\n\nAfter frontend and app upcoming updates, there will be also database diagram with example of data in database how its gonna be stored.",
+            "color": "#ffffff",
+            "typography": { "bold": true, "fontSize": 20 },
+            "id": "ea8d2e53-710f-49a3-bd68-9316a13420a7",
+            "type": "note",
+            "x": 1209,
+            "y": 144,
+            "zIndex": 7,
+            "width": 448,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "url": "https://www.youtube.com/watch?v=Jzr0Jdnq_EI",
+            "title": "",
+            "showLabel": false,
+            "color": "#ffffff",
+            "id": "30619dff-5ddd-453a-9bdb-8d59edad05c6",
+            "type": "embed",
+            "x": 1865,
+            "y": 714,
+            "zIndex": 8,
+            "width": 672,
+            "height": 384,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "content": "builder.Services.AddIdentityCore<ApplicationUser>(options =>\n    {\n        // Password policy (OWASP ASVS-aligned: length over complexity \n        // gymnastics, but we do both here for the demo)\n        options.Password.RequiredLength = 12;\n        options.Password.RequireDigit = true;\n        options.Password.RequireUppercase = true;\n        options.Password.RequireLowercase = true;\n        options.Password.RequireNonAlphanumeric = true;\n\n        // Account lockout after repeated failed attempts — \n        // mitigates credential stuffing / brute force.\n        options.Lockout.MaxFailedAccessAttempts = 5;\n        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);\n        options.Lockout.AllowedForNewUsers = true;\n\n        options.User.RequireUniqueEmail = true;\n    })\n        .AddRoles<IdentityRole>()\n        .AddEntityFrameworkStores<AppDbContext>()\n        .AddSignInManager()\n        .AddDefaultTokenProviders();",
+            "language": "csharp",
+            "autoHeight": true,
+            "color": "#ffffff",
+            "typography": { "fontSize": 14 },
+            "id": "8739885c-de0a-44d2-bac8-7a9dafef401d",
+            "type": "code",
+            "x": 756,
+            "y": 1962,
+            "zIndex": 9,
+            "width": 624,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "x2": 1433,
+            "y2": 2285,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "0ddacd59-5008-438c-b727-90c0fc5b6b33",
+            "type": "line",
+            "x": 1380,
+            "y": 2282,
+            "zIndex": 10,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "endItemId": "cd1722f3-2974-45db-b552-895c678f538a",
+            "startItemId": "8739885c-de0a-44d2-bac8-7a9dafef401d"
+          },
+          {
+            "content": "builder.Services.AddAuthentication(options =>\n    {\n        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;\n        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;\n    })\n        .AddJwtBearer(options =>\n        {\n            options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();\n            options.SaveToken = false;\n            options.TokenValidationParameters = new TokenValidationParameters\n            {\n                ValidateIssuer = true,\n                ValidIssuer = jwtSection[\"Issuer\"],\n                ValidateAudience = true,\n                ValidAudience = jwtSection[\"Audience\"],\n                ValidateLifetime = true,\n                ClockSkew = TimeSpan.FromSeconds(30),\n                ValidateIssuerSigningKey = true,\n                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))\n            };\n        });\n\n    builder.Services.AddAuthorizationBuilder()\n        .AddPolicy(Policies.AdminOnly, p => p.RequireRole(Roles.Admin))\n        .AddPolicy(Policies.ManagerOrAdmin, p => p.RequireRole(Roles.Manager, Roles.Admin))\n        .AddPolicy(Policies.ViewerOrAbove, p => p.RequireRole(Roles.Viewer, Roles.Manager, Roles.Admin));",
+            "language": "csharp",
+            "autoHeight": true,
+            "color": "#ffffff",
+            "id": "cd1722f3-2974-45db-b552-895c678f538a",
+            "type": "code",
+            "x": 1433,
+            "y": 1962,
+            "zIndex": 11,
+            "width": 864,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "x2": 1520,
+            "y2": 2687,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "9eaafae2-7ec2-4605-adf0-e7a038dab745",
+            "type": "line",
+            "x": 1544,
+            "y": 2660,
+            "zIndex": 12,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "startItemId": "cd1722f3-2974-45db-b552-895c678f538a",
+            "endItemId": "6631cb66-3227-4b05-9f1e-433d72d28c59"
+          },
+          {
+            "content": "builder.Services.AddRateLimiter(options =>\n    {\n        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;\n\n        options.OnRejected = async (context, token) =>\n        {\n            context.HttpContext.Response.Headers.RetryAfter = \"60\";\n            await context.HttpContext.Response.WriteAsJsonAsync(\n                new { error = \"Too many requests. Please try again later.\" }, token);\n        };\n\n        // Global limiter applied to every request: partitioned per authenticated user and per ip\n        // (so one noisy user can't starve others) or per IP for anonymous traffic.\n        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>\n        {\n            var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);\n\n            var key = !string.IsNullOrWhiteSpace(userId)\n                ? $\"user:{userId}\"\n                : $\"ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? \"unknown\"}\";\n\n            return RateLimitPartition.GetSlidingWindowLimiter(\n                key,\n                _ => new SlidingWindowRateLimiterOptions\n                {\n                    PermitLimit = 300,\n                    Window = TimeSpan.FromMinutes(1),\n                    SegmentsPerWindow = 6,\n                    QueueLimit = 0\n                });\n        });",
+            "language": "csharp",
+            "autoHeight": true,
+            "color": "#ffffff",
+            "id": "6631cb66-3227-4b05-9f1e-433d72d28c59",
+            "type": "code",
+            "x": 752,
+            "y": 2687,
+            "zIndex": 13,
+            "width": 784,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "x2": 1593,
+            "y2": 3089,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "c60471f5-e5c9-4eeb-9e4f-9c006921fad4",
+            "type": "line",
+            "x": 1536,
+            "y": 3090,
+            "zIndex": 14,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "startItemId": "6631cb66-3227-4b05-9f1e-433d72d28c59",
+            "endItemId": "72f90a55-8b92-4f0a-b481-a8a57d57d453"
+          },
+          {
+            "content": "options.AddPolicy(\"auth-strict\", httpContext =>\n        {\n            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? \"unknown\";\n            return RateLimitPartition.GetSlidingWindowLimiter(\n                partitionKey: $\"ip:{ip}\",\n                _ => new SlidingWindowRateLimiterOptions\n            {\n                PermitLimit = 5,\n                Window = TimeSpan.FromMinutes(1),\n                SegmentsPerWindow = 6,\n                QueueLimit = 0\n            });\n        });\n        \n        options.AddPolicy(\"auth-refresh\", httpContext =>\n        {\n            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? \"unknown\";\n\n            return RateLimitPartition.GetTokenBucketLimiter(\n                partitionKey: $\"ip:{ip}\",\n                factory: _ => new TokenBucketRateLimiterOptions\n                {\n                    TokenLimit = 30,\n                    TokensPerPeriod = 30,\n                    ReplenishmentPeriod = TimeSpan.FromMinutes(1),\n                    AutoReplenishment = true,\n                    QueueLimit = 0\n                });\n        });\n    });",
+            "language": "csharp",
+            "autoHeight": true,
+            "color": "#ffffff",
+            "id": "72f90a55-8b92-4f0a-b481-a8a57d57d453",
+            "type": "code",
+            "x": 1593,
+            "y": 2687,
+            "zIndex": 15,
+            "width": 704,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "x2": 1304,
+            "y2": 1962,
+            "curve": -0.25,
+            "label": "",
+            "lineCap": "round",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": true,
+            "labelOffset": 14,
+            "strokeWidth": 3,
+            "color": "#7C3AED",
+            "id": "3e45397b-df2a-4a23-9aff-f443a01960b2",
+            "type": "line",
+            "x": 1972,
+            "y": 1108,
+            "zIndex": 16,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "startItemId": "336bfc64-381d-4dad-8f0a-7b3e4157c8b2",
+            "endItemId": "8739885c-de0a-44d2-bac8-7a9dafef401d"
+          },
+          {
+            "size": "lg",
+            "content": "Example code of \nidentity\nauth\nrate limiter\nlimiter policies",
+            "typography": { "textAlign": "center" },
+            "id": "69a251bf-48a6-4d7e-b7b7-f47700c70c51",
+            "type": "text",
+            "x": 768,
+            "y": 1688,
+            "zIndex": 17,
+            "width": 320,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "x2": 1002,
+            "y2": 1962,
+            "curve": 0.35,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "951be0bc-0486-4a72-8ff4-724a17ae4efa",
+            "type": "line",
+            "x": 993,
+            "y": 1924,
+            "zIndex": 18,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "startItemId": "69a251bf-48a6-4d7e-b7b7-f47700c70c51",
+            "endItemId": "8739885c-de0a-44d2-bac8-7a9dafef401d"
+          },
+          {
+            "x2": 1267,
+            "y2": 714,
+            "curve": -0.4,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "f7b447dc-d84a-4f34-9962-277de9453fbe",
+            "type": "line",
+            "x": 1270,
+            "y": 688,
+            "zIndex": 19,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "startItemId": "443abc7a-832a-48ed-b8a2-45d315a3c268",
+            "endItemId": "a9d8bb14-2602-4d27-ab3e-d7c1967c0924"
+          },
+          {
+            "x2": 1948,
+            "y2": 879,
+            "curve": -0.25,
+            "label": "",
+            "arrowEnd": true,
+            "labelMode": "horizontal",
+            "arrowStart": false,
+            "labelOffset": 14,
+            "strokeWidth": 2,
+            "color": "#7C3AED",
+            "id": "4f2188e9-928a-4e69-b3c5-3a0f9a4f388c",
+            "type": "line",
+            "x": 1646,
+            "y": 575,
+            "zIndex": 20,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": [],
+            "startItemId": "e185be7d-6875-4adc-a7fa-3600197965b9",
+            "endItemId": "336bfc64-381d-4dad-8f0a-7b3e4157c8b2"
+          },
+          {
+            "label": "🤔",
+            "source": "🤔",
+            "iconMode": "emoji",
+            "color": "#7C3AED",
+            "id": "dd5a437c-f3b1-4931-9e05-d775df0d3af5",
+            "type": "icon",
+            "x": 1652,
+            "y": 682,
+            "zIndex": 21,
+            "width": 96,
+            "height": 96,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          },
+          {
+            "label": "Star",
+            "source": "<svg xmlns=\"http://www.w3.org/2000/svg\" id=\"Layer_1\" viewBox=\"0 0 64 64\"><defs><style>.cls-1{fill:#5c2d91;}.cls-2,.cls-3{fill:#fff;}.cls-2{opacity:0.1;}.cls-4{fill:#f2f2f2;}</style></defs><title>logo_NETcore</title><circle class=\"cls-1\" cx=\"32\" cy=\"32\" r=\"32\"/><path class=\"cls-2\" d=\"M9.82,9A32,32,0,1,0,55,54.18Z\"/><path class=\"cls-3\" d=\"M7.4,37.25a1.35,1.35,0,0,1-1-.42,1.38,1.38,0,0,1-.41-1,1.4,1.4,0,0,1,.41-1,1.34,1.34,0,0,1,1-.43,1.37,1.37,0,0,1,1,.43,1.39,1.39,0,0,1,.42,1,1.37,1.37,0,0,1-.42,1A1.38,1.38,0,0,1,7.4,37.25Z\"/><path class=\"cls-3\" d=\"M27.27,37H24.65L15.28,22.46a6,6,0,0,1-.58-1.14h-.08a18.72,18.72,0,0,1,.1,2.5V37H12.59V18.77h2.77l9.12,14.28q.57.89.74,1.22h.05a19.28,19.28,0,0,1-.13-2.68V18.77h2.13Z\"/><path class=\"cls-3\" d=\"M41.69,37H32V18.77h9.24V20.7H34.18v6.06h6.58v1.92H34.18V35h7.52Z\"/><path class=\"cls-3\" d=\"M56,20.7H50.7V37H48.57V20.7H43.33V18.77H56Z\"/><path class=\"cls-4\" d=\"M26.12,49.4a4.93,4.93,0,0,1-2.32.49,3.74,3.74,0,0,1-2.87-1.15,4.26,4.26,0,0,1-1.08-3,4.46,4.46,0,0,1,1.21-3.26,4.12,4.12,0,0,1,3.08-1.24,4.93,4.93,0,0,1,2,.35v1a4,4,0,0,0-2-.5,3.06,3.06,0,0,0-2.35,1,3.64,3.64,0,0,0-.9,2.58,3.47,3.47,0,0,0,.84,2.45,2.86,2.86,0,0,0,2.21.91,4.14,4.14,0,0,0,2.19-.56Z\"/><path class=\"cls-4\" d=\"M30.21,49.89A2.78,2.78,0,0,1,28.08,49a3.11,3.11,0,0,1-.79-2.23,3.24,3.24,0,0,1,.83-2.36,3,3,0,0,1,2.23-.85,2.69,2.69,0,0,1,2.09.83,3.28,3.28,0,0,1,.75,2.29,3.22,3.22,0,0,1-.81,2.3A2.84,2.84,0,0,1,30.21,49.89Zm.07-5.47a1.83,1.83,0,0,0-1.46.63,2.59,2.59,0,0,0-.54,1.74,2.45,2.45,0,0,0,.54,1.68,1.85,1.85,0,0,0,1.46.62,1.76,1.76,0,0,0,1.43-.6,2.62,2.62,0,0,0,.5-1.72,2.66,2.66,0,0,0-.5-1.73A1.75,1.75,0,0,0,30.28,44.42Z\"/><path class=\"cls-4\" d=\"M37.86,44.72a1.18,1.18,0,0,0-.73-.19,1.23,1.23,0,0,0-1,.58,2.68,2.68,0,0,0-.41,1.58v3.06h-1v-6h1V45h0a2.1,2.1,0,0,1,.63-1,1.43,1.43,0,0,1,.94-.35,1.57,1.57,0,0,1,.57.08Z\"/><path class=\"cls-4\" d=\"M43.72,47H39.49A2.24,2.24,0,0,0,40,48.54a1.86,1.86,0,0,0,1.42.54,3,3,0,0,0,1.86-.67v.9a3.48,3.48,0,0,1-2.09.57,2.54,2.54,0,0,1-2-.82,3.35,3.35,0,0,1-.73-2.3,3.28,3.28,0,0,1,.79-2.28,2.55,2.55,0,0,1,2-.88,2.26,2.26,0,0,1,1.82.76,3.18,3.18,0,0,1,.64,2.12Zm-1-.81a2,2,0,0,0-.4-1.29,1.37,1.37,0,0,0-1.1-.46,1.55,1.55,0,0,0-1.15.49,2.21,2.21,0,0,0-.59,1.27Z\"/></svg>",
+            "iconMode": "svg",
+            "color": "#7C3AED",
+            "id": "bfceb9d3-ae47-48c7-827d-48d4b51480fc",
+            "type": "icon",
+            "x": 980,
+            "y": 1384,
+            "zIndex": 22,
+            "width": 75,
+            "height": 68,
+            "frameId": null,
+            "locked": false,
+            "comments": [],
+            "tags": []
+          }
+        ]
+      }
+    ]
+  }
+}

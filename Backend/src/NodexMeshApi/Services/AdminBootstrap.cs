@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NodexMeshApi.Data;
@@ -22,7 +21,8 @@ public static class AdminBootstrap
         {
             var password = configuration["Admin:Password"] ?? string.Empty;
             var generated = string.IsNullOrWhiteSpace(password);
-            password = generated ? GeneratePassword() : password;
+            if (generated)
+                throw new InvalidOperationException("Admin:Password must be supplied securely when creating the administrator account.");
             admin = new ApplicationUser
             {
                 Id = Guid.CreateVersion7(), UserName = email, Email = email, DisplayName = "Administrator",
@@ -32,8 +32,6 @@ public static class AdminBootstrap
             if (!result.Succeeded)
                 throw new InvalidOperationException("Unable to create the default administrator: " + string.Join(" ", result.Errors.Select(e => e.Description)));
             logger.LogInformation("Created default administrator account {Email}.", email);
-            if (generated)
-                logger.LogWarning("Generated administrator password (store it securely; it will not be shown again): {Password}", password);
         }
         else if (!admin.IsAdmin)
         {
@@ -55,9 +53,4 @@ public static class AdminBootstrap
         }
     }
 
-    private static string GeneratePassword()
-    {
-        var bytes = RandomNumberGenerator.GetBytes(30);
-        return Convert.ToBase64String(bytes) + "!A1";
-    }
 }

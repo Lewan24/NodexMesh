@@ -1,3 +1,5 @@
+using NodexMeshApi.Auditing;
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -7,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
-using Serilog.Events;
 using NodexMeshApi.Common;
 using NodexMeshApi.Data;
 using NodexMeshApi.Endpoints;
@@ -19,7 +20,7 @@ using NodexMeshApi.Services;
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .Enrich.FromLogContext()
-    .WriteTo.Console()
+    .WriteTo.Console(new ReadableConsoleFormatter())
     .CreateBootstrapLogger();
 
 try
@@ -29,7 +30,7 @@ try
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
         .Enrich.FromLogContext()
-        .WriteTo.Console());
+        .WriteTo.Console(new ReadableConsoleFormatter()));
 
     // Board items cap at 2MB each (enforced in BoardMutationService), a mutation batch
     // is capped separately at MutationLimits.MaxUpsertsPerBatch — this Kestrel limit is
@@ -56,6 +57,17 @@ try
     var connectionString = builder.Configuration.GetConnectionString("Default")
         ?? throw new InvalidOperationException("ConnectionStrings:Default is required.");
 
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.Configure<ForwardedHeadersOptions>(options => ClientIpResolver.Configure(options, builder.Configuration));
+    builder.Services.AddOptions<AuditOptions>().Bind(builder.Configuration.GetSection("Audit"))
+        .Validate(o => o.SecurityRetentionDays > 0 && o.ActivityRetentionDays > 0 && o.DiagnosticRetentionDays > 0
+            && o.IncidentRetentionDays > 0 && o.WindowMinutes is >= 1 and <= 1440
+            && o.FailedLoginThreshold > 0 && o.DistinctAccountsThreshold > 0 && o.DistinctIpsThreshold > 0
+            && o.ForbiddenThreshold > 0 && o.NotFoundThreshold > 0 && o.RateLimitThreshold > 0)
+        .ValidateOnStart();
+    builder.Services.AddSingleton<AuditHealth>();
+    builder.Services.AddScoped<AuditWriter>();
+    builder.Services.AddHostedService<AuditMaintenanceService>();
     builder.Services.AddDbContext<AppDbContext>(options => options
         .UseNpgsql(connectionString, npgsql => npgsql.EnableRetryOnFailure())
         // Requires the EFCore.NamingConventions package — maps PascalCase C#
@@ -176,7 +188,7 @@ try
             var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var key = !string.IsNullOrWhiteSpace(userId)
                 ? $"user:{userId}"
-                : $"ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+                : $"ip:{ClientIpResolver.Resolve(httpContext) ?? "unknown"}";
 
             return RateLimitPartition.GetSlidingWindowLimiter(key, _ => new SlidingWindowRateLimiterOptions
             {
@@ -189,7 +201,7 @@ try
 
         options.AddPolicy("auth-strict", httpContext =>
         {
-            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var ip = ClientIpResolver.Resolve(httpContext) ?? "unknown";
             return RateLimitPartition.GetSlidingWindowLimiter($"ip:{ip}", _ => new SlidingWindowRateLimiterOptions
             {
                 PermitLimit = 5,
@@ -201,7 +213,7 @@ try
 
         options.AddPolicy("auth-refresh", httpContext =>
         {
-            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var ip = ClientIpResolver.Resolve(httpContext) ?? "unknown";
             return RateLimitPartition.GetTokenBucketLimiter($"ip:{ip}", _ => new TokenBucketRateLimiterOptions
             {
                 TokenLimit = 30,
@@ -232,7 +244,7 @@ try
         // there is no account to throttle or lock out.
         options.AddPolicy("public-share", httpContext =>
         {
-            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var ip = ClientIpResolver.Resolve(httpContext) ?? "unknown";
             return RateLimitPartition.GetSlidingWindowLimiter($"ip:{ip}", _ => new SlidingWindowRateLimiterOptions
             {
                 PermitLimit = 60,
@@ -316,23 +328,9 @@ try
         await AdminBootstrap.EnsureAsync(scope.ServiceProvider, app.Configuration, app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AdminBootstrap"));
     }
 
-    app.UseSerilogRequestLogging(options =>
-    {
-        // Routine successful requests are intentionally quiet. Warnings and errors
-        // still retain method, path, status and elapsed time for incident analysis.
-        options.GetLevel = (context, _, exception) =>
-            exception is not null || context.Response.StatusCode >= 500
-                ? LogEventLevel.Error
-                : context.Response.StatusCode >= 400
-                    ? LogEventLevel.Warning
-                    : LogEventLevel.Debug;
-        options.EnrichDiagnosticContext = (diagnostics, context) =>
-        {
-            diagnostics.Set("RequestMethod", context.Request.Method);
-            diagnostics.Set("RequestPath", context.Request.Path.Value);
-            diagnostics.Set("ResponseStatus", context.Response.StatusCode);
-        };
-    });
+    app.UseForwardedHeaders();
+    app.UseRouting();
+    app.UseMiddleware<AuditMiddleware>();
     app.UseSecurityHeaders();
     app.UseExceptionHandler();
 
@@ -356,6 +354,7 @@ try
 
     app.MapAuthEndpoints();
     app.MapAdminEndpoints();
+    app.MapAuditEndpoints();
     app.MapProjectEndpoints();
     app.MapLibraryEndpoints();
     app.MapBoardEndpoints();
