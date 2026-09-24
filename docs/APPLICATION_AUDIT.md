@@ -42,6 +42,13 @@ New administrator bootstrap now requires `Admin__Password` supplied through depl
 
 Forwarded headers run before routing, auditing, transport security, authentication and rate limiting. `ClientIpResolver` consumes only the middleware-validated RemoteIpAddress, normalizes IPv4-mapped IPv6 and preserves native IPv6/null. Raw X-Forwarded-For is never read by audit/auth code.
 
+The production Compose file now creates a dedicated `172.30.0.0/24` network and assigns the
+frontend `172.30.0.10`, API `172.30.0.11`, and database `172.30.0.12`. It configures the API
+with `ReverseProxy__KnownProxies__0=172.30.0.10` and `ReverseProxy__ForwardLimit=1`. This is
+the correct one-hop trust boundary for the checked-in topology. If your deployment already
+uses different addresses, replace those values with the actual stable frontend address and
+subnet before starting the stack.
+
 Configure actual deployment values, for example environment keys:
 
 ```text
@@ -53,7 +60,7 @@ ReverseProxy__ForwardLimit=<number-of-validated-hops>
 
 Default arrays are empty and forwarding is disabled, including loopback. Do not use catch-all CIDRs, the entire LAN, or a shared container network containing untrusted workloads. Use exact addresses or a dedicated controlled proxy subnet. Never enable ASPNETCORE_FORWARDEDHEADERS_ENABLED as a replacement for this explicit trust configuration.
 
-The checked-in topology is external TLS proxy → frontend Nginx → API. API has no production host-published port, but frontend port 3000 must be firewall-restricted to the TLS proxy. The existing frontend Nginx appends X-Forwarded-For but replaces X-Forwarded-Proto with its HTTP `$scheme`. **An operator must configure that hop before claiming genuine public-IP/HTTPS attribution.** No unknown production trust addresses are guessed here.
+The checked-in topology is external TLS proxy → frontend Nginx → API. API has no production host-published port, but frontend port 3000 must be firewall-restricted to the TLS proxy. Frontend Nginx preserves `X-Forwarded-Proto` from Nginx Proxy Manager and forwards its sanitized single-client `X-Forwarded-For` value without appending another hop. Nginx Proxy Manager must discard browser-supplied forwarding headers and create one trusted client value. If NPM intentionally forwards a multi-address chain, this one-hop configuration is not sufficient; configure NPM to emit the resolved client address or configure every trusted hop and set the matching `ForwardLimit`.
 
 Either configure Nginx real-IP processing with the exact outer proxy address, then send its verified `$remote_addr` and a sanitized scheme to the API (one trusted hop); or preserve a matching, sanitized For/Proto chain and configure both hops plus ForwardLimit=2. The edge proxy must discard client-supplied forwarding headers and create its own. Only a network-restricted internal frontend may preserve the trusted edge scheme. Never blindly forward arbitrary inbound headers from a publicly reachable frontend. Consult [ASP.NET Core forwarding guidance](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0).
 
