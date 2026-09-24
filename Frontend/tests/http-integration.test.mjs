@@ -338,3 +338,30 @@ test('appearance reset resolves canonical defaults while retaining project overr
   preferences.defaults.light.primary = '#000000';
   assert.notEqual(defaultAppearance.light.primary, '#000000');
 });
+
+test('library binary requests retain bearer authentication and refresh without JSON-encoding files', async () => {
+  let accessToken = 'old';
+  const file = new Blob(['GIF89a-test'], { type: 'image/gif' });
+  const calls = [];
+  const client = createHttpClient(
+    async () => accessToken,
+    async (url, options) => {
+      calls.push(options);
+      if (options.headers.Authorization === 'Bearer old') return new Response(null, { status: 401 });
+      return new Response(file, { headers: { 'Content-Type': 'image/gif' } });
+    },
+    async () => {
+      accessToken = 'new';
+    },
+  );
+  const blob = await client.request('/projects/example/library?name=demo.gif', {
+    method: 'POST',
+    rawBody: file,
+    responseType: 'blob',
+  });
+  assert.equal(await blob.text(), 'GIF89a-test');
+  assert.equal(blob.type, 'image/gif');
+  assert.equal(calls.length, 2);
+  assert.ok(calls.every((call) => call.body === file && !call.headers['Content-Type']));
+  assert.equal(calls[1].headers.Authorization, 'Bearer new');
+});

@@ -37,7 +37,7 @@ export type BoardItem =
 
 export interface IconItem extends BaseItem {
   type: 'icon';
-  iconMode: 'preset' | 'emoji' | 'svg' | 'url';
+  iconMode: 'preset' | 'emoji' | 'svg' | 'url' | 'library';
   source: string;
   label: string;
 }

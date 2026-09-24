@@ -2,7 +2,10 @@ import { translate } from '@/shared/i18n';
 import { ApiError, fail } from './errors';
 
 export interface HttpClient {
-  request(path: string, options?: { method?: string; body?: unknown; signal?: AbortSignal }): Promise<unknown>;
+  request(
+    path: string,
+    options?: { method?: string; body?: unknown; signal?: AbortSignal; rawBody?: Blob; responseType?: 'blob' },
+  ): Promise<unknown>;
 }
 
 export function createHttpClient(
@@ -42,9 +45,9 @@ export function createHttpClient(
           cache: 'no-store',
           redirect: 'error',
           signal: options.signal
-            ? AbortSignal.any([options.signal, AbortSignal.timeout(30_000)])
-            : AbortSignal.timeout(30_000),
-          body: options.body === undefined ? undefined : JSON.stringify(options.body),
+            ? AbortSignal.any([options.signal, AbortSignal.timeout(options.rawBody ? 300_000 : 30_000)])
+            : AbortSignal.timeout(options.rawBody ? 300_000 : 30_000),
+          body: options.rawBody ?? (options.body === undefined ? undefined : JSON.stringify(options.body)),
         });
       };
       const token = await getAccessToken();
@@ -97,7 +100,7 @@ export function createHttpClient(
           retryAfterMs: response.status === 429 ? Math.max(0, retryAfter - Date.now()) : undefined,
         });
       }
-      return response.status === 204 ? undefined : response.json();
+      return response.status === 204 ? undefined : options.responseType === 'blob' ? response.blob() : response.json();
     },
   };
 }

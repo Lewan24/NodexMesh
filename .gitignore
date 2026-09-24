@@ -21,3 +21,6 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sw?
+
+# Private media uploaded during local development
+**/App_Data/

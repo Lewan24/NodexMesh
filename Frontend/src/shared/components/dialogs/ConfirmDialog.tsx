@@ -69,7 +69,7 @@ export default function ConfirmDialog({
               type="button"
               onClick={onCancel}
               className="flex-1 text-sm font-semibold rounded-xl py-2.5 transition-colors"
-              style={{ backgroundColor: 'var(--color-surface-alt)', color: 'var(--color-item-default)' }}
+              style={{ backgroundColor: 'var(--color-surface-alt)' }}
             >
               {cancelLabel}
             </button>

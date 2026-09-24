@@ -37,6 +37,9 @@ services:
     environment:
       # Development keeps the local HTTP stack from redirecting to HTTPS. Set
       # Production when TLS is terminated by an external reverse proxy.
+      Library__Path: ${LIBRARY_PATH:-/app/storage/library}
+      Library__MaxFileBytes: ${LIBRARY_MAX_FILE_BYTES:-52428800}
+      Library__MaxProjectBytes: ${LIBRARY_MAX_PROJECT_BYTES:-1073741824}
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ConnectionStrings__Default: Host=db;Port=5432;Database=${POSTGRES_DB:-nodexmesh};Username=${POSTGRES_USER:-nodexmesh_app};Password=${POSTGRES_PASSWORD:-}
       Jwt__Key: ${JWT_KEY:-}
@@ -47,6 +50,9 @@ services:
       Admin__Password: ${ADMIN_PASSWORD:-}
     ports:
       - "${API_PORT:-8080}:8080"
+
+    volumes:
+      - library-data:/app/storage
 
   frontend:
     build:
@@ -83,4 +89,5 @@ services:
       - "${ADMINER_PORT:-8081}:8080"
 
 volumes:
+  library-data:
   postgres-data:

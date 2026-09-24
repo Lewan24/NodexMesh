@@ -1,3 +1,5 @@
+import LibraryDialog from '@/features/library/LibraryDialog';
+import { isMockDataSource } from '@/app/services';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -70,6 +72,7 @@ export default function AppBar({
   const { theme, toggleTheme } = useTheme();
   const mobile = useMobileLayout();
 
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [mobileCollapsed, setMobileCollapsed] = useState(false);
 
@@ -103,6 +106,9 @@ export default function AppBar({
 
   return (
     <>
+      {libraryOpen && (
+        <LibraryDialog key={activeProjectId} projectId={activeProjectId} onClose={() => setLibraryOpen(false)} />
+      )}
       <header
         data-app-bar="true"
         className="h-14 min-h-14 flex items-center shrink-0 relative z-50"
@@ -128,6 +134,14 @@ export default function AppBar({
           {translate('Appearance')}
         </button>
 
+        <button
+          type="button"
+          className="px-3 py-2 text-sm text-white disabled:opacity-40"
+          disabled={isMockDataSource || !activeProjectId}
+          onClick={() => setLibraryOpen(true)}
+        >
+          {translate('Library')}
+        </button>
         <ProjectMenu
           projects={projects}
           activeProjectId={activeProjectId}

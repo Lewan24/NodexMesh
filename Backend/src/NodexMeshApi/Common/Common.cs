@@ -125,6 +125,8 @@ public static class SecurityHeadersMiddlewareExtensions
             headers["Content-Security-Policy"] = isApi
                 ? "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
                 : "frame-ancestors 'none'; base-uri 'self'";
+            if (isApi && context.Response.ContentType?.StartsWith("image/svg+xml", StringComparison.OrdinalIgnoreCase) == true)
+                headers["Content-Security-Policy"] += "; sandbox";
             if (isApi)
             {
                 headers["Cache-Control"] = path.StartsWithSegments("/api/v1/public")

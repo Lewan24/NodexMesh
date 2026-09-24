@@ -14,6 +14,7 @@ namespace NodexMeshApi.Data;
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     : IdentityUserContext<ApplicationUser, Guid>(options)
 {
+    public DbSet<LibraryAsset> LibraryAssets => Set<LibraryAsset>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
@@ -32,6 +33,19 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
+
+        b.Entity<LibraryAsset>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200);
+            e.Property(x => x.ContentType).HasMaxLength(64);
+            e.Property(x => x.ShareToken).HasMaxLength(64);
+            e.HasIndex(x => x.ShareToken).IsUnique();
+            e.Property(x => x.ShareTokenHash).HasMaxLength(64);
+            e.HasIndex(x => x.ShareTokenHash).IsUnique();
+            e.HasIndex(x => x.ProjectId);
+            e.HasOne<Project>().WithMany().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
+        });
 
         // ---------------- RefreshToken ----------------
         b.Entity<RefreshToken>(e =>

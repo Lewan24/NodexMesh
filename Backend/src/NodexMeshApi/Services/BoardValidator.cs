@@ -28,6 +28,13 @@ public static class BoardValidator
         return (u.Scheme is "http" or "https") && string.IsNullOrEmpty(u.UserInfo);
     }
 
+    public static bool IsLibrarySource(string value)
+    {
+        if (!value.StartsWith("library://", StringComparison.OrdinalIgnoreCase)) return false;
+        var parts = value[10..].Split('/');
+        return parts.Length == 2 && parts.All(part => Guid.TryParseExact(part, "D", out _));
+    }
+
     public static bool IsDay(string v) =>
         DateOnly.TryParseExact(v, "yyyy-MM-dd", out var d) && d.ToString("yyyy-MM-dd") == v;
 
@@ -75,7 +82,7 @@ public static class BoardValidator
     /// <summary>
     /// OWASP A10 (SSRF) / stored-XSS surface: image, link and embed items carry
     /// user-supplied URLs that the frontend renders into &lt;img&gt;/&lt;iframe&gt;. Reject
-    /// anything that isn't plain http(s) before it is ever stored — javascript: and
+    /// anything other than http(s) or a structured private image library reference — javascript: and
     /// data: URIs must never reach the database.
     /// </summary>
     private static void ValidateUrlFields(ItemWriteDto item)
@@ -89,7 +96,7 @@ public static class BoardValidator
             _ => null
         };
 
-        if (url is not null && !IsUrl(url))
+        if (url is not null && !IsUrl(url) && !(item.Type == "image" && IsLibrarySource(url)))
             throw new ApiException(422, "invalid_item", $"Invalid {item.Type} URL.");
     }
 
