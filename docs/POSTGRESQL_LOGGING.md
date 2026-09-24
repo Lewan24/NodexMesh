@@ -1,5 +1,7 @@
 # PostgreSQL server logs: operator-managed configuration
 
+Reviewed: 2026-09-24.
+
 Application audit tables record user/security/business actions. PostgreSQL server logs diagnose the database engine, SQL failures and connections; they cannot replace application actor/permission history. This implementation does not change PostgreSQL logging or install pgAudit.
 
 For PostgreSQL 17, inspect `SHOW config_file` and `pg_settings` before manually editing the active server configuration. A conservative starting point is stderr output, warning-level messages, connection/disconnection diagnostics and lock-wait/checkpoint information. Enable slow-statement logging only with an appropriate threshold and privacy review; SQL text and parameter values can expose application secrets. Avoid `log_statement = 'all'`. Limit parameter logging, including on errors. A collector writes files instead of relying solely on Docker's stderr capture; `logging_collector` requires restart. Consult the [PostgreSQL logging reference](https://www.postgresql.org/docs/17/runtime-config-logging.html).
