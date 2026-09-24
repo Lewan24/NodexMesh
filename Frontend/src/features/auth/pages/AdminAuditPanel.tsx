@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { httpClient } from '@/app/services';
 import { translate } from '@/shared/i18n';
+import Modal from '@/shared/components/dialogs/Modal';
 
 type AuditRow = {
   id: string;
@@ -45,6 +46,32 @@ const labels: Record<(typeof fields)[number], string> = {
   requestId: 'Request ID',
   search: 'Event or resource search',
 };
+
+const severityTone = (severity: string) => {
+  const value = severity.toLowerCase();
+  if (value.includes('error') || value.includes('critical'))
+    return { color: 'var(--color-danger-strong)', background: 'rgba(255,107,138,.14)', icon: '!' };
+  if (value.includes('warn')) return { color: '#b7791f', background: 'rgba(245,158,11,.16)', icon: '⚠' };
+  return { color: 'var(--color-accent)', background: 'var(--color-accent-soft)', icon: 'i' };
+};
+
+function SeverityBadge({ severity }: { severity: string }) {
+  const tone = severityTone(severity);
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold"
+      style={{ color: tone.color, backgroundColor: tone.background }}
+    >
+      <span
+        className="flex h-4 w-4 items-center justify-center rounded-full text-[10px]"
+        style={{ backgroundColor: tone.color, color: 'var(--color-surface)' }}
+      >
+        {tone.icon}
+      </span>
+      {severity}
+    </span>
+  );
+}
 
 export default function AdminAuditPanel() {
   const [filters, setFilters] = useState<Record<string, string>>({});
@@ -107,24 +134,86 @@ export default function AdminAuditPanel() {
     }
   }
   const total = mode === 'events' ? events.total : incidents.total;
+  const openIncidents = incidents.items.filter((incident) => incident.status !== 'resolved').length;
+  const errorCount = incidents.items.filter((incident) => /error|critical/i.test(incident.severity)).length;
+  const warningCount = incidents.items.filter((incident) => /warn/i.test(incident.severity)).length;
+  const infoCount = incidents.items.filter((incident) => /info/i.test(incident.severity)).length;
   return (
-    <section className="min-w-0 space-y-4 rounded-2xl p-3 sm:p-4" style={{ backgroundColor: 'var(--color-surface)' }}>
-      <h2 className="font-semibold">{translate('Audit and security monitoring')}</h2>
-      <p className="text-sm">{translate('Times are displayed in UTC. Statistics cover the last 24 hours.')}</p>
+    <section className="min-w-0 space-y-5 rounded-3xl p-3 sm:p-5" style={{ backgroundColor: 'var(--color-surface)' }}>
+      <div
+        className="relative overflow-hidden rounded-3xl border p-5 sm:p-7"
+        style={{
+          background: 'linear-gradient(135deg, var(--color-surface-alt), var(--color-accent-soft))',
+          borderColor: 'var(--color-border)',
+        }}
+      >
+        <div
+          className="pointer-events-none absolute -right-12 -top-16 h-48 w-48 rounded-full opacity-40"
+          style={{ background: 'var(--color-accent)', filter: 'blur(45px)' }}
+        />
+        <div className="relative flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p
+              className="mb-2 text-[10px] font-bold uppercase tracking-[.24em]"
+              style={{ color: 'var(--color-accent)' }}
+            >
+              NodexMesh · {translate('Security')}
+            </p>
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              {translate('Audit and security monitoring')}
+            </h2>
+            <p className="mt-2 max-w-xl text-sm" style={{ color: 'var(--color-text-muted)' }}>
+              {translate('Times are displayed in UTC. Statistics cover the last 24 hours.')}
+            </p>
+          </div>
+          <div className="rounded-2xl px-4 py-3" style={{ backgroundColor: 'rgba(255,255,255,.16)' }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
+              {translate('Open incidents')}
+            </p>
+            <p
+              className="text-3xl font-bold"
+              style={{ color: openIncidents ? 'var(--color-danger-strong)' : 'var(--color-accent)' }}
+            >
+              {openIncidents}
+            </p>
+          </div>
+        </div>
+      </div>
       {statistics && (
-        <details>
-          <summary>{translate('Recent statistics')}</summary>
-          <ul>
-            {statistics.counts.map((entry) => (
-              <li key={entry.eventType}>
-                {entry.eventType}: {entry.count}
-              </li>
-            ))}
-            <li>
-              {translate('Audit persistence failures since startup')}: {statistics.persistenceFailuresSinceStartup}
-            </li>
-          </ul>
-        </details>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { label: translate('Info logs'), value: infoCount, color: 'var(--color-accent)', icon: 'i' },
+            { label: translate('Warning logs'), value: warningCount, color: '#b7791f', icon: '⚠' },
+            { label: translate('Error logs'), value: errorCount, color: 'var(--color-danger-strong)', icon: '!' },
+            {
+              label: translate('Persistence failures'),
+              value: statistics.persistenceFailuresSinceStartup,
+              color: 'var(--color-text-secondary)',
+              icon: '↗',
+            },
+          ].map((card) => (
+            <div
+              key={card.label}
+              className="rounded-2xl border p-4"
+              style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-alt)' }}
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className="flex h-8 w-8 items-center justify-center rounded-xl font-bold"
+                  style={{ color: card.color, backgroundColor: `${card.color}22` }}
+                >
+                  {card.icon}
+                </span>
+                <span className="text-2xl font-bold" style={{ color: card.color }}>
+                  {card.value}
+                </span>
+              </div>
+              <p className="mt-3 text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                {card.label}
+              </p>
+            </div>
+          ))}
+        </div>
       )}
       <div className="flex flex-wrap gap-2">
         <button
@@ -209,14 +298,22 @@ export default function AdminAuditPanel() {
           </select>
         </label>
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p
+          className="rounded-xl px-3 py-2 text-sm"
+          role="alert"
+          style={{ color: 'var(--color-danger-strong)', backgroundColor: 'rgba(255,107,138,.12)' }}
+        >
+          {error}
+        </p>
+      )}
       {busy ? (
         <p role="status">{translate('Loading…')}</p>
       ) : (
         <>
           {total === 0 && <p>{translate('No audit records match these filters.')}</p>}
           {mode === 'events' ? (
-            <div className="min-w-0 max-w-full overflow-x-auto">
+            <div className="min-w-0 overflow-hidden rounded-2xl border" style={{ borderColor: 'var(--color-border)' }}>
               <table className="w-full min-w-[40rem] text-left text-sm">
                 <thead>
                   <tr>
@@ -229,13 +326,32 @@ export default function AdminAuditPanel() {
                 </thead>
                 <tbody>
                   {events.items.map((entry) => (
-                    <tr key={entry.id}>
-                      <td className="p-2">{new Date(entry.occurredAt).toISOString()}</td>
-                      <td>{entry.eventType}</td>
-                      <td>{entry.severity}</td>
-                      <td>{entry.outcome}</td>
+                    <tr key={entry.id} className="border-t" style={{ borderColor: 'var(--color-border)' }}>
+                      <td className="p-3 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                        {new Date(entry.occurredAt).toISOString()}
+                      </td>
+                      <td className="font-semibold">{entry.eventType}</td>
                       <td>
-                        <button className="btn-ghost p-2" onClick={() => void inspect(entry.id)}>
+                        <SeverityBadge severity={entry.severity} />
+                      </td>
+                      <td>
+                        <span
+                          className="rounded-full px-2 py-1 text-xs"
+                          style={{
+                            backgroundColor:
+                              entry.outcome.toLowerCase() === 'success'
+                                ? 'var(--color-accent-soft)'
+                                : 'rgba(255,107,138,.12)',
+                          }}
+                        >
+                          {entry.outcome}
+                        </span>
+                      </td>
+                      <td className="text-right pr-3">
+                        <button
+                          className="btn-ghost rounded-lg px-3 py-1.5 text-xs"
+                          onClick={() => void inspect(entry.id)}
+                        >
                           {translate('Inspect')}
                         </button>
                       </td>
@@ -247,25 +363,54 @@ export default function AdminAuditPanel() {
           ) : (
             <div className="space-y-2">
               {incidents.items.map((incident) => (
-                <article key={incident.id} className="min-w-0 break-words rounded-xl border p-3">
-                  <p>
-                    {incident.rule} · {incident.severity} · {new Date(incident.windowStart).toISOString()}
-                  </p>
-                  <button className="btn-ghost p-2" onClick={() => void inspect(incident.eventId)}>
-                    {translate('Underlying event')}
-                  </button>
-                  <select
-                    aria-label={translate('Review status')}
-                    className="input-theme min-w-0 max-w-full px-3 py-2"
-                    value={incident.status}
-                    onChange={(event) => void review(incident.id, event.target.value)}
-                  >
-                    {['open', 'investigating', 'resolved'].map((status) => (
-                      <option key={status} value={status}>
-                        {translate(status)}
-                      </option>
-                    ))}
-                  </select>
+                <article
+                  key={incident.id}
+                  className="min-w-0 break-words rounded-2xl border p-4"
+                  style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-alt)' }}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <SeverityBadge severity={incident.severity} />
+                        <span
+                          className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                          style={{
+                            backgroundColor:
+                              incident.status === 'resolved' ? 'var(--color-accent-soft)' : 'rgba(245,158,11,.16)',
+                          }}
+                        >
+                          {incident.status}
+                        </span>
+                      </div>
+                      <h3 className="mt-2 font-semibold">{incident.rule}</h3>
+                      <p className="mt-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                        {new Date(incident.windowStart).toISOString()}
+                      </p>
+                    </div>
+                    <button
+                      className="btn-ghost rounded-lg px-3 py-1.5 text-xs"
+                      onClick={() => void inspect(incident.eventId)}
+                    >
+                      {translate('Underlying event')}
+                    </button>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                      {translate('Review status')}
+                    </span>
+                    <select
+                      aria-label={translate('Review status')}
+                      className="input-theme min-w-0 max-w-full px-3 py-2"
+                      value={incident.status}
+                      onChange={(event) => void review(incident.id, event.target.value)}
+                    >
+                      {['open', 'investigating', 'resolved'].map((status) => (
+                        <option key={status} value={status}>
+                          {translate(status)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </article>
               ))}
             </div>
@@ -284,25 +429,93 @@ export default function AdminAuditPanel() {
         </>
       )}
       {details !== null && (
-        <div className="min-w-0 break-words rounded-xl border p-3">
-          <button onClick={() => setDetails(null)}>{translate('Close details')}</button>
-          <pre className="max-h-96 overflow-auto whitespace-pre-wrap break-all text-xs">
-            {JSON.stringify(details, null, 2)}
-          </pre>
-          <button
-            onClick={() => {
-              const requestId = (details as AuditRow).requestId;
-              if (requestId) {
-                setMode('events');
-                setPage(1);
-                setFilters({ requestId });
-                setQuery(`requestId=${encodeURIComponent(requestId)}`);
-              }
+        <Modal onClose={() => setDetails(null)} centered label={translate('Details')}>
+          <div
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+            style={{ backgroundColor: 'rgba(8,16,20,.62)', backdropFilter: 'blur(6px)' }}
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setDetails(null);
             }}
           >
-            {translate('Related request events')}
-          </button>
-        </div>
+            <section
+              className="w-full max-w-2xl overflow-hidden rounded-3xl border shadow-2xl"
+              style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+            >
+              <header
+                className="flex items-start justify-between gap-4 p-5"
+                style={{ background: 'linear-gradient(135deg, var(--color-surface-alt), var(--color-accent-soft))' }}
+              >
+                <div>
+                  <p
+                    className="mb-1 text-[10px] font-bold uppercase tracking-[.2em]"
+                    style={{ color: 'var(--color-accent)' }}
+                  >
+                    {translate('Audit event')}
+                  </p>
+                  <h2 className="text-xl font-bold">{translate('Event details')}</h2>
+                </div>
+                <button className="btn-ghost rounded-xl px-3 py-2 text-sm" onClick={() => setDetails(null)}>
+                  ×
+                </button>
+              </header>
+              <div className="space-y-4 p-5">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {['eventType', 'severity', 'outcome'].map((field) => (
+                    <div
+                      key={field}
+                      className="rounded-2xl p-3"
+                      style={{ backgroundColor: 'var(--color-surface-alt)' }}
+                    >
+                      <p
+                        className="text-[10px] font-bold uppercase tracking-wider"
+                        style={{ color: 'var(--color-text-muted)' }}
+                      >
+                        {field}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold">
+                        {String((details as Record<string, unknown>)[field] ?? '—')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-2xl border p-3" style={{ borderColor: 'var(--color-border)' }}>
+                  <p
+                    className="mb-2 text-xs font-bold uppercase tracking-wider"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    {translate('Raw event data')}
+                  </p>
+                  <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-all text-xs">
+                    {JSON.stringify(details, null, 2)}
+                  </pre>
+                </div>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <button
+                    className="btn-ghost rounded-xl px-4 py-2 text-sm"
+                    onClick={() => {
+                      const requestId = (details as AuditRow).requestId;
+                      if (requestId) {
+                        setMode('events');
+                        setPage(1);
+                        setFilters({ requestId });
+                        setQuery(`requestId=${encodeURIComponent(requestId)}`);
+                        setDetails(null);
+                      }
+                    }}
+                  >
+                    {translate('Related request events')}
+                  </button>
+                  <button
+                    className="btn-accent rounded-xl px-4 py-2 text-sm font-semibold"
+                    onClick={() => setDetails(null)}
+                  >
+                    {translate('Close details')}
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </Modal>
       )}
     </section>
   );
