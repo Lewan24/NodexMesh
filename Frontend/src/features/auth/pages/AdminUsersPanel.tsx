@@ -1,3 +1,4 @@
+import AdminAuditPanel from './AdminAuditPanel';
 import { locale, displayLabel, translate } from '@/shared/i18n';
 import LanguageSelect from '@/shared/i18n/LanguageSelect';
 import { useTranslation } from 'react-i18next';
@@ -38,7 +39,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
       ),
   );
   const [registration, setRegistration] = useState(true);
-  const [tab, setTab] = useState<'users' | 'projects'>('users');
+  const [tab, setTab] = useState<'users' | 'projects' | 'audit'>('users');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [newUser, setNewUser] = useState({ email: '', displayName: '', password: '', isAdmin: false });
@@ -88,22 +89,22 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
 
   return (
     <main
-      className="min-h-dvh p-4 sm:p-8"
+      className="flex h-dvh min-h-0 flex-col overflow-hidden p-3 sm:p-6"
       style={{ backgroundColor: 'var(--color-app-bg)', color: 'var(--color-text-primary)' }}
     >
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div>
+      <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col">
+        <header className="mb-4 flex shrink-0 flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.2em]" style={{ color: 'var(--color-accent)' }}>
               NodexMesh
             </p>
             <h1 className="text-2xl font-bold">{translate('Administration')}</h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="break-all text-sm" style={{ color: 'var(--color-text-muted)' }}>
               {translate('Signed in as') + ' '}
               {auth.currentUser?.username}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button className="btn-ghost rounded-xl px-3 py-2 text-sm" onClick={toggleTheme}>
               {translate('Use') + ' '}
               {theme === 'light' ? 'dark' : 'light'} {' ' + translate('theme')}
@@ -119,22 +120,53 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
           </div>
           <LanguageSelect />
         </header>
-        <div className="mb-4 flex flex-wrap gap-2">
-          {(['users', 'projects'] as const).map((value) => (
-            <button
-              key={displayLabel(value)}
-              onClick={() => setTab(value)}
-              className="rounded-xl px-4 py-2 text-sm font-semibold capitalize"
-              style={{
-                backgroundColor: tab === value ? 'var(--color-accent-soft)' : 'var(--color-surface)',
-                color: tab === value ? 'var(--color-accent)' : 'var(--color-text-secondary)',
-              }}
-            >
-              {displayLabel(value)}
-            </button>
-          ))}
+        <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
+          <div
+            className="grid min-w-0 grid-cols-3 gap-2 sm:flex"
+            role="tablist"
+            aria-label={translate('Administration')}
+          >
+            {(['users', 'projects', 'audit'] as const).map((value) => (
+              <button
+                key={value}
+                id={`admin-tab-${value}`}
+                role="tab"
+                aria-selected={tab === value}
+                aria-controls="admin-tab-content"
+                tabIndex={tab === value ? 0 : -1}
+                onKeyDown={(event) => {
+                  const tabs = ['users', 'projects', 'audit'] as const;
+                  const index = tabs.indexOf(value);
+                  const next =
+                    event.key === 'ArrowRight'
+                      ? (index + 1) % tabs.length
+                      : event.key === 'ArrowLeft'
+                        ? (index + tabs.length - 1) % tabs.length
+                        : event.key === 'Home'
+                          ? 0
+                          : event.key === 'End'
+                            ? tabs.length - 1
+                            : null;
+                  if (next === null) return;
+                  event.preventDefault();
+                  const nextTab = tabs[next];
+                  if (!nextTab) return;
+                  setTab(nextTab);
+                  document.getElementById(`admin-tab-${nextTab}`)?.focus();
+                }}
+                onClick={() => setTab(value)}
+                className="min-w-0 rounded-xl px-3 py-2.5 text-sm font-semibold capitalize sm:px-5"
+                style={{
+                  backgroundColor: tab === value ? 'var(--color-accent-soft)' : 'var(--color-surface)',
+                  color: tab === value ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+                }}
+              >
+                {value === 'audit' ? translate('Audit') : displayLabel(value)}
+              </button>
+            ))}
+          </div>
           <label
-            className="ml-auto flex items-center gap-2 rounded-xl px-3 py-2 text-sm"
+            className="sm:ml-auto flex items-center gap-2 rounded-xl px-3 py-2 text-sm"
             style={{ backgroundColor: 'var(--color-surface)' }}
           >
             <input
@@ -150,182 +182,202 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
             {translate('Allow registration')}
           </label>
         </div>
-        {(error || message) && (
-          <p
-            className="mb-4 rounded-xl px-3 py-2 text-sm"
-            style={{
-              backgroundColor: error ? 'rgba(255,107,138,.12)' : 'var(--color-accent-soft)',
-              color: error ? 'var(--color-danger-strong)' : 'var(--color-accent)',
-            }}
-          >
-            {error || message}
-          </p>
-        )}
-        <div className="mb-4 flex flex-wrap gap-2">
-          {tab === 'users' ? (
-            <>
-              <input
-                type="search"
-                aria-label={translate('Search users')}
-                placeholder={translate('Search users by name, email or ID')}
-                className="input-theme min-w-64 flex-1 px-3 py-2 text-sm"
-                value={userSearch}
-                onChange={(event) => setUserSearch(event.target.value)}
-              />
-              <select
-                aria-label={translate('User status')}
-                className="input-theme px-3 py-2 text-sm"
-                value={userStatus}
-                onChange={(event) => setUserStatus(event.target.value)}
-              >
-                <option value="all">{translate('All users')}</option>
-                <option value="active">{translate('Active users')}</option>
-                <option value="blocked">{translate('Blocked users')}</option>
-              </select>
-            </>
+        <div
+          key={tab}
+          id="admin-tab-content"
+          role="tabpanel"
+          aria-labelledby={`admin-tab-${tab}`}
+          tabIndex={0}
+          className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain pr-1 pb-4 [scrollbar-gutter:stable]"
+        >
+          {(error || message) && (
+            <p
+              className="mb-4 rounded-xl px-3 py-2 text-sm"
+              style={{
+                backgroundColor: error ? 'rgba(255,107,138,.12)' : 'var(--color-accent-soft)',
+                color: error ? 'var(--color-danger-strong)' : 'var(--color-accent)',
+              }}
+            >
+              {error || message}
+            </p>
+          )}
+          {tab === 'audit' ? (
+            <AdminAuditPanel />
           ) : (
             <>
-              <input
-                type="search"
-                aria-label={translate('Search projects')}
-                placeholder={translate('Search projects by name or ID')}
-                className="input-theme min-w-56 flex-1 px-3 py-2 text-sm"
-                value={projectSearch}
-                onChange={(event) => setProjectSearch(event.target.value)}
-              />
-              <input
-                type="search"
-                aria-label={translate('Search project owners and members')}
-                placeholder={translate('Owner or member name, email or ID')}
-                className="input-theme min-w-56 flex-1 px-3 py-2 text-sm"
-                value={projectUserSearch}
-                onChange={(event) => setProjectUserSearch(event.target.value)}
-              />
-              <select
-                aria-label={translate('Project status')}
-                className="input-theme px-3 py-2 text-sm"
-                value={projectStatus}
-                onChange={(event) => setProjectStatus(event.target.value)}
-              >
-                <option value="all">{translate('All projects')}</option>
-                <option value="active">{translate('Active projects')}</option>
-                <option value="trashed">{translate('Trashed projects')}</option>
-                <option value="userdeleted">{translate('User-deleted projects')}</option>
-              </select>
+              <div className="mb-4 flex flex-wrap gap-2">
+                {tab === 'users' ? (
+                  <>
+                    <input
+                      type="search"
+                      aria-label={translate('Search users')}
+                      placeholder={translate('Search users by name, email or ID')}
+                      className="input-theme min-w-0 max-w-full min-w-0 basis-full sm:basis-64 flex-1 px-3 py-2 text-sm"
+                      value={userSearch}
+                      onChange={(event) => setUserSearch(event.target.value)}
+                    />
+                    <select
+                      aria-label={translate('User status')}
+                      className="input-theme min-w-0 max-w-full px-3 py-2 text-sm"
+                      value={userStatus}
+                      onChange={(event) => setUserStatus(event.target.value)}
+                    >
+                      <option value="all">{translate('All users')}</option>
+                      <option value="active">{translate('Active users')}</option>
+                      <option value="blocked">{translate('Blocked users')}</option>
+                    </select>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="search"
+                      aria-label={translate('Search projects')}
+                      placeholder={translate('Search projects by name or ID')}
+                      className="input-theme min-w-0 max-w-full min-w-0 basis-full sm:basis-56 flex-1 px-3 py-2 text-sm"
+                      value={projectSearch}
+                      onChange={(event) => setProjectSearch(event.target.value)}
+                    />
+                    <input
+                      type="search"
+                      aria-label={translate('Search project owners and members')}
+                      placeholder={translate('Owner or member name, email or ID')}
+                      className="input-theme min-w-0 max-w-full min-w-0 basis-full sm:basis-56 flex-1 px-3 py-2 text-sm"
+                      value={projectUserSearch}
+                      onChange={(event) => setProjectUserSearch(event.target.value)}
+                    />
+                    <select
+                      aria-label={translate('Project status')}
+                      className="input-theme min-w-0 max-w-full px-3 py-2 text-sm"
+                      value={projectStatus}
+                      onChange={(event) => setProjectStatus(event.target.value)}
+                    >
+                      <option value="all">{translate('All projects')}</option>
+                      <option value="active">{translate('Active projects')}</option>
+                      <option value="trashed">{translate('Trashed projects')}</option>
+                      <option value="userdeleted">{translate('User-deleted projects')}</option>
+                    </select>
+                  </>
+                )}
+              </div>
+              <p className="mb-3 text-sm" role="status">
+                {tab === 'users'
+                  ? translate('{{value1}} of {{value2}} users', { value1: filteredUsers.length, value2: users.length })
+                  : translate('{{value1}} of {{value2}} projects', {
+                      value1: filteredProjects.length,
+                      value2: projects.length,
+                    })}
+              </p>
+              {tab === 'users' ? (
+                <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+                  <div className="min-w-0 rounded-2xl p-4" style={{ backgroundColor: 'var(--color-surface)' }}>
+                    <h2 className="mb-3 font-semibold">{translate('Users')}</h2>
+                    <div className="space-y-2" role="region" aria-label={translate('Users list')} tabIndex={0}>
+                      {filteredUsers.map((user) => (
+                        <AdminUserRow
+                          key={user.id}
+                          user={user}
+                          currentUserId={auth.currentUser?.id}
+                          onSave={(input) =>
+                            run(() => auth.updateAdminUser(user.id, input), translate('User updated.'))
+                          }
+                          onResetPassword={() => resetPassword(user)}
+                          onResetAppearance={(scope) => {
+                            const label =
+                              scope === 'Defaults'
+                                ? translate('global appearance settings')
+                                : scope === 'ProjectOverrides'
+                                  ? translate('project appearance overrides')
+                                  : translate('all appearance settings');
+                            if (
+                              !window.confirm(
+                                translate('Reset {{value1}} for {{value2}}?', { value1: label, value2: user.email }),
+                              )
+                            )
+                              return;
+                            void run(
+                              () => auth.resetUserAppearance(user.id, scope),
+                              translate('User appearance reset.'),
+                            );
+                          }}
+                          onToggleBlocked={() =>
+                            run(
+                              () => auth.setUserBlocked(user.id, !user.isBlocked),
+                              user.isBlocked ? translate('User unblocked.') : translate('User blocked.'),
+                            )
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <form
+                    onSubmit={createUser}
+                    className="min-w-0 space-y-3 self-start rounded-2xl p-4"
+                    style={{ backgroundColor: 'var(--color-surface)' }}
+                  >
+                    <h2 className="font-semibold">{translate('Create user')}</h2>
+                    {(['email', 'displayName', 'password'] as const).map((field) => (
+                      <input
+                        key={field}
+                        required
+                        value={newUser[field]}
+                        onChange={(event) => setNewUser({ ...newUser, [field]: event.target.value })}
+                        type={field === 'password' ? 'password' : field === 'email' ? 'email' : 'text'}
+                        placeholder={
+                          field === 'displayName'
+                            ? translate('Display name')
+                            : translate(field === 'email' ? 'Email' : 'Password')
+                        }
+                        className="input-theme min-w-0 max-w-full w-full px-3 py-2 text-sm"
+                      />
+                    ))}
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={newUser.isAdmin}
+                        onChange={(event) => setNewUser({ ...newUser, isAdmin: event.target.checked })}
+                      />
+                      {translate('Administrator')}
+                    </label>
+                    <button className="btn-accent w-full rounded-xl px-3 py-2 text-sm font-semibold">
+                      {translate('Create user')}
+                    </button>
+                  </form>
+                </section>
+              ) : (
+                <section
+                  className="min-w-0 space-y-4"
+                  role="region"
+                  aria-label={translate('Projects list')}
+                  tabIndex={0}
+                >
+                  {filteredProjects.map((project) => (
+                    <ProjectCard
+                      key={project.id}
+                      project={project}
+                      users={users}
+                      onRestore={() => run(() => auth.restoreAdminProject(project.id), translate('Project restored.'))}
+                      onPurge={() =>
+                        run(() => auth.purgeAdminProject(project.id), translate('Project permanently deleted.'))
+                      }
+                      onAdd={(email, role) =>
+                        void run(() => auth.addProjectMember(project.id, email, role), translate('Member added.'))
+                      }
+                      onRemove={(userId) =>
+                        void run(() => auth.removeProjectMember(project.id, userId), translate('Member removed.'))
+                      }
+                      onTransferOwner={(email) =>
+                        void run(
+                          () => auth.transferProjectOwner(project.id, email),
+                          translate('Project owner changed.'),
+                        )
+                      }
+                    />
+                  ))}
+                </section>
+              )}
             </>
           )}
         </div>
-        <p className="mb-3 text-sm" role="status">
-          {tab === 'users'
-            ? translate('{{value1}} of {{value2}} users', { value1: filteredUsers.length, value2: users.length })
-            : translate('{{value1}} of {{value2}} projects', {
-                value1: filteredProjects.length,
-                value2: projects.length,
-              })}
-        </p>
-        {tab === 'users' ? (
-          <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="min-w-0 rounded-2xl p-4" style={{ backgroundColor: 'var(--color-surface)' }}>
-              <h2 className="mb-3 font-semibold">{translate('Users')}</h2>
-              <div
-                className="max-h-[min(58dvh,42rem)] space-y-2 overflow-y-auto overscroll-contain pr-1"
-                role="region"
-                aria-label={translate('Users list')}
-                tabIndex={0}
-              >
-                {filteredUsers.map((user) => (
-                  <AdminUserRow
-                    key={user.id}
-                    user={user}
-                    currentUserId={auth.currentUser?.id}
-                    onSave={(input) => run(() => auth.updateAdminUser(user.id, input), translate('User updated.'))}
-                    onResetPassword={() => resetPassword(user)}
-                    onResetAppearance={(scope) => {
-                      const label =
-                        scope === 'Defaults'
-                          ? translate('global appearance settings')
-                          : scope === 'ProjectOverrides'
-                            ? translate('project appearance overrides')
-                            : translate('all appearance settings');
-                      if (
-                        !window.confirm(
-                          translate('Reset {{value1}} for {{value2}}?', { value1: label, value2: user.email }),
-                        )
-                      )
-                        return;
-                      void run(() => auth.resetUserAppearance(user.id, scope), translate('User appearance reset.'));
-                    }}
-                    onToggleBlocked={() =>
-                      run(
-                        () => auth.setUserBlocked(user.id, !user.isBlocked),
-                        user.isBlocked ? translate('User unblocked.') : translate('User blocked.'),
-                      )
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-            <form
-              onSubmit={createUser}
-              className="space-y-3 rounded-2xl p-4"
-              style={{ backgroundColor: 'var(--color-surface)' }}
-            >
-              <h2 className="font-semibold">{translate('Create user')}</h2>
-              {(['email', 'displayName', 'password'] as const).map((field) => (
-                <input
-                  key={field}
-                  required
-                  value={newUser[field]}
-                  onChange={(event) => setNewUser({ ...newUser, [field]: event.target.value })}
-                  type={field === 'password' ? 'password' : field === 'email' ? 'email' : 'text'}
-                  placeholder={
-                    field === 'displayName'
-                      ? translate('Display name')
-                      : translate(field === 'email' ? 'Email' : 'Password')
-                  }
-                  className="input-theme w-full px-3 py-2 text-sm"
-                />
-              ))}
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={newUser.isAdmin}
-                  onChange={(event) => setNewUser({ ...newUser, isAdmin: event.target.checked })}
-                />
-                {translate('Administrator')}
-              </label>
-              <button className="btn-accent w-full rounded-xl px-3 py-2 text-sm font-semibold">
-                {translate('Create user')}
-              </button>
-            </form>
-          </section>
-        ) : (
-          <section
-            className="max-h-[calc(100dvh-13rem)] space-y-4 overflow-y-auto overscroll-contain pr-1 pb-2 sm:max-h-[calc(100dvh-14rem)]"
-            role="region"
-            aria-label={translate('Projects list')}
-            tabIndex={0}
-          >
-            {filteredProjects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                users={users}
-                onRestore={() => run(() => auth.restoreAdminProject(project.id), translate('Project restored.'))}
-                onPurge={() => run(() => auth.purgeAdminProject(project.id), translate('Project permanently deleted.'))}
-                onAdd={(email, role) =>
-                  void run(() => auth.addProjectMember(project.id, email, role), translate('Member added.'))
-                }
-                onRemove={(userId) =>
-                  void run(() => auth.removeProjectMember(project.id, userId), translate('Member removed.'))
-                }
-                onTransferOwner={(email) =>
-                  void run(() => auth.transferProjectOwner(project.id, email), translate('Project owner changed.'))
-                }
-              />
-            ))}
-          </section>
-        )}
       </div>
     </main>
   );
@@ -367,7 +419,7 @@ function AdminUserRow({
           required
           maxLength={100}
           aria-label={translate('Display name')}
-          className="input-theme px-3 py-2 text-sm"
+          className="input-theme min-w-0 max-w-full px-3 py-2 text-sm"
           value={draft.displayName}
           onChange={(event) => setDraft({ ...draft, displayName: event.target.value })}
         />
@@ -376,14 +428,14 @@ function AdminUserRow({
           type="email"
           aria-label={translate('Email address')}
           disabled={user.id === currentUserId}
-          className="input-theme px-3 py-2 text-sm"
+          className="input-theme min-w-0 max-w-full px-3 py-2 text-sm"
           value={draft.email}
           onChange={(event) => setDraft({ ...draft, email: event.target.value })}
         />
         <select
           aria-label={translate('Application role')}
           disabled={user.id === currentUserId}
-          className="input-theme px-3 py-2 text-sm"
+          className="input-theme min-w-0 max-w-full px-3 py-2 text-sm"
           value={draft.isAdmin ? 'admin' : 'user'}
           onChange={(event) => setDraft({ ...draft, isAdmin: event.target.value === 'admin' })}
         >
@@ -430,7 +482,7 @@ function AdminUserRow({
       <div className="flex max-w-full flex-wrap items-center gap-1">
         <select
           aria-label={translate('Appearance reset scope for {{value1}}', { value1: user.email })}
-          className="input-theme px-2 py-1 text-xs"
+          className="input-theme min-w-0 max-w-full px-2 py-1 text-xs"
           value={resetScope}
           onChange={(event) => setResetScope(event.target.value as AdminAppearanceResetScope)}
         >
@@ -480,7 +532,7 @@ function ProjectCard({
   if (project.deletedAt || project.userDeletedAt)
     return (
       <article
-        className="rounded-2xl border p-4"
+        className="min-w-0 break-words rounded-2xl border p-4"
         style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
       >
         <div className="opacity-60" aria-disabled="true">
@@ -543,7 +595,7 @@ function ProjectCard({
     );
   return (
     <article
-      className="rounded-2xl border p-4"
+      className="min-w-0 break-words rounded-2xl border p-4"
       style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
     >
       <div className="flex flex-wrap justify-between gap-2">
@@ -569,12 +621,12 @@ function ProjectCard({
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="user@example.com"
-            className="input-theme min-w-0 flex-1 px-2 py-1 text-xs sm:flex-none"
+            className="input-theme min-w-0 max-w-full min-w-0 flex-1 px-2 py-1 text-xs sm:flex-none"
           />
           <select
             value={role}
             onChange={(event) => setRole(event.target.value as typeof role)}
-            className="input-theme px-2 py-1 text-xs"
+            className="input-theme min-w-0 max-w-full px-2 py-1 text-xs"
           >
             <option value="Viewer">{translate('Viewer')}</option>
             <option value="Commenter">{translate('Commenter')}</option>
@@ -605,7 +657,7 @@ function ProjectCard({
         <select
           id={`owner-${project.id}`}
           required
-          className="input-theme min-w-0 max-w-full flex-1 basis-56 px-2 py-1 text-xs"
+          className="input-theme min-w-0 max-w-full min-w-0 max-w-full flex-1 basis-56 px-2 py-1 text-xs"
           value={nextOwnerEmail}
           onChange={(event) => setNextOwnerEmail(event.target.value)}
         >
