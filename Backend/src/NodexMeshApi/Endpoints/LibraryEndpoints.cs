@@ -80,6 +80,8 @@ public static class LibraryEndpoints
                 }
                 await transaction.CommitAsync(ct);
             });
+            await db.LibraryAssets.Where(a => a.Id == id && a.ProjectId == projectId && a.ShareToken == null)
+                .ExecuteUpdateAsync(update => update.SetProperty(a => a.ShareToken, token), ct);
             await db.Entry(asset).ReloadAsync(ct);
             if (asset.ShareToken is null)
                 throw new ApiException(409, "share_changed", "Public access changed. Please try again.");
