@@ -44,7 +44,7 @@ services:
       # Public browser origin, without a trailing slash.
       Cors__AllowedOrigins__0: https://nodexmesh.example.com
       Admin__Email: admin@nodexmesh.pl
-      # Empty generates a one-time password in the API startup logs.
+      # Supply securely before first startup; passwords are never generated into logs.
       Admin__Password: ''
 
     volumes:

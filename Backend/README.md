@@ -119,8 +119,8 @@ Two things the HTTP client **must** do:
 
 The API validates JWTs and refresh-token rotation, rejects blocked accounts, applies
 project-role and admin authorization, rate limits authentication/public sharing, and uses
-strict DTO validation. The first startup creates the configured administrator; leave
-`Admin:Password` empty to generate a random password and print it once in the API logs.
+strict DTO validation. The first startup creates the configured administrator; provide
+`Admin:Password` securely before initial account creation; passwords are never printed in API logs.
 See the repository [README](../README.md) for the current API surface, security posture,
 roadmap, and deployment guidance.
 

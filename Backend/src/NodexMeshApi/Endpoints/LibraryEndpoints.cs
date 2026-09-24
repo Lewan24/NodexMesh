@@ -1,3 +1,4 @@
+using NodexMeshApi.Auditing;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
@@ -64,6 +65,21 @@ public static class LibraryEndpoints
             // Set once, including concurrent requests. Keep any old hash-only link alive:
             // its original token cannot be recovered, so this adds a stable alias.
             var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
+            await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+            {
+                await using var transaction = await db.Database.BeginTransactionAsync(ct);
+                var changed = await db.LibraryAssets.Where(a => a.Id == id && a.ProjectId == projectId && a.ShareToken == null)
+                    .ExecuteUpdateAsync(update => update.SetProperty(a => a.ShareToken, token), ct);
+                if (changed > 0)
+                {
+                    var audit = AuditCapture.Create(context, "library.share_created", "activity");
+                    audit.ResourceType = "LibraryAsset";
+                    audit.ResourceId = id.ToString();
+                    db.AuditEvents.Add(audit);
+                    await db.SaveChangesAsync(ct);
+                }
+                await transaction.CommitAsync(ct);
+            });
             await db.LibraryAssets.Where(a => a.Id == id && a.ProjectId == projectId && a.ShareToken == null)
                 .ExecuteUpdateAsync(update => update.SetProperty(a => a.ShareToken, token), ct);
             await db.Entry(asset).ReloadAsync(ct);

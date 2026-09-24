@@ -1,3 +1,4 @@
+using NodexMeshApi.Auditing;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -130,24 +131,38 @@ public static class AuthEndpoints
         {
             // Same generic response whether the email doesn't exist, the password is wrong,
             // or the account is locked out — avoids leaking account state.
-            logger.LogWarning("Failed login attempt for {Email}", request.Email);
+            var failure = AuditCapture.Create(http, checkResult.IsLockedOut ? "auth.login_locked" : "auth.login_failed", outcome: "failure", target: user?.Id);
+            failure.AccountKey = AuditCapture.AccountKey(request.Email);
+            failure.StatusCode = 401;
+            http.Items[AuditCapture.ExplicitEvent] = true;
+            await http.RequestServices.GetRequiredService<AuditWriter>().WriteAsync(failure);
             return TypedResults.Unauthorized();
         }
 
         var (accessToken, accessTokenExpiresAtUtc) = tokenService.GenerateAccessToken(user);
         var (refreshToken, hash, expiresAtUtc) = tokenService.GenerateRefreshToken();
 
+        var sessionId = Guid.CreateVersion7();
         db.RefreshTokens.Add(new RefreshToken
         {
-            Id = Guid.CreateVersion7(),
+            Id = sessionId,
             UserId = user.Id,
             TokenHash = hash,
             ExpiresAtUtc = expiresAtUtc,
             CreatedAtUtc = DateTime.UtcNow,
-            CreatedByIp = http.Connection.RemoteIpAddress?.ToString()
+            CreatedByIp = ClientIpResolver.Resolve(http)
         });
+        var login = AuditCapture.Create(http, "auth.login_succeeded", target: user.Id);
+        login.ActorId = user.Id;
+        login.ResourceId = sessionId.ToString();
+        login.Metadata = "{\"authenticationMethod\":\"password\"}";
+        login.AccountKey = AuditCapture.AccountKey(request.Email);
+        login.StatusCode = 200;
+        db.AuditEvents.Add(login);
         await db.SaveChangesAsync();
 
+        http.Items[AuditCapture.ExplicitEvent] = true;
+        AuditWriter.Log(logger, login);
         SetRefreshTokenCookie(http, refreshToken, expiresAtUtc, environment);
         return TypedResults.Ok(CreateAuthResponse(user, accessToken, accessTokenExpiresAtUtc));
     }
@@ -173,7 +188,11 @@ public static class AuthEndpoints
         var hash = tokenService.HashToken(refreshToken);
         var existing = await db.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == hash);
 
-        if (existing is null) return TypedResults.Unauthorized();
+        if (existing is null)
+        {
+            await RecordRefreshFailure(http, "auth.refresh_invalid");
+            return TypedResults.Unauthorized();
+        }
 
         if (existing.RevokedAtUtc is not null)
         {
@@ -188,8 +207,15 @@ public static class AuthEndpoints
                     .ToListAsync();
 
                 foreach (var token in activeTokens) token.RevokedAtUtc = DateTime.UtcNow;
+                var reuse = AuditCapture.Create(http, "auth.refresh_reuse", outcome: "blocked", target: existing.UserId);
+                reuse.Severity = "Critical";
+                reuse.ResourceId = existing.Id.ToString();
+                db.AuditEvents.Add(reuse);
                 await db.SaveChangesAsync();
+                http.Items[AuditCapture.ExplicitEvent] = true;
+                AuditWriter.Log(http.RequestServices.GetRequiredService<ILogger<AuditWriter>>(), reuse);
             }
+            else await RecordRefreshFailure(http, "auth.refresh_revoked", existing.UserId);
 
             ClearRefreshTokenCookie(http, environment);
             return TypedResults.Unauthorized();
@@ -197,6 +223,7 @@ public static class AuthEndpoints
 
         if (!existing.IsActive)
         {
+            await RecordRefreshFailure(http, "auth.refresh_expired", existing.UserId);
             ClearRefreshTokenCookie(http, environment);
             return TypedResults.Unauthorized();
         }
@@ -210,7 +237,7 @@ public static class AuthEndpoints
 
         // Rotate: the old token is consumed, a new one takes its place.
         existing.RevokedAtUtc = DateTime.UtcNow;
-        existing.RevokedByIp = http.Connection.RemoteIpAddress?.ToString();
+        existing.RevokedByIp = ClientIpResolver.Resolve(http);
 
         var (accessToken, accessTokenExpiresAtUtc) = tokenService.GenerateAccessToken(user);
         var (newRefreshToken, newHash, newExpiresAtUtc) = tokenService.GenerateRefreshToken();
@@ -223,12 +250,33 @@ public static class AuthEndpoints
             TokenHash = newHash,
             ExpiresAtUtc = newExpiresAtUtc,
             CreatedAtUtc = DateTime.UtcNow,
-            CreatedByIp = http.Connection.RemoteIpAddress?.ToString()
+            CreatedByIp = ClientIpResolver.Resolve(http)
         });
-        await db.SaveChangesAsync();
+        var rotation = AuditCapture.Create(http, "auth.refresh_rotated", target: user.Id);
+        rotation.ActorId = user.Id;
+        rotation.ResourceId = existing.Id.ToString();
+        db.AuditEvents.Add(rotation);
+        try { await db.SaveChangesAsync(); }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Another request consumed this token. Do not claim theft or revoke its winner.
+            db.ChangeTracker.Clear();
+            await RecordRefreshFailure(http, "auth.refresh_concurrent", user.Id);
+            return TypedResults.Unauthorized();
+        }
+        http.Items[AuditCapture.ExplicitEvent] = true;
+        AuditWriter.Log(http.RequestServices.GetRequiredService<ILogger<AuditWriter>>(), rotation);
 
         SetRefreshTokenCookie(http, newRefreshToken, newExpiresAtUtc, environment);
         return TypedResults.Ok(CreateAuthResponse(user, accessToken, accessTokenExpiresAtUtc));
+    }
+
+    private static async Task RecordRefreshFailure(HttpContext http, string type, Guid? target = null)
+    {
+        http.Items[AuditCapture.ExplicitEvent] = true;
+        var audit = AuditCapture.Create(http, type, outcome: "failure", target: target);
+        audit.StatusCode = 401;
+        await http.RequestServices.GetRequiredService<AuditWriter>().WriteAsync(audit);
     }
 
     private static async Task<Ok<UserProfileResponse>> GetProfileAsync(
@@ -321,7 +369,7 @@ public static class AuthEndpoints
             TokenHash = hash,
             ExpiresAtUtc = refreshExpiresAtUtc,
             CreatedAtUtc = now,
-            CreatedByIp = http.Connection.RemoteIpAddress?.ToString()
+            CreatedByIp = ClientIpResolver.Resolve(http)
         });
         await db.SaveChangesAsync(ct);
 
