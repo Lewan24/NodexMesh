@@ -3,6 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { Project } from '@/entities/project/types';
+import { hasLibraryMedia } from '@/features/projects/services/projectJson';
+
+function notifyLibraryReferences(text: string) {
+  const { version, project } = JSON.parse(text);
+  if (hasLibraryMedia(version === 1 ? { ...project, boards: undefined } : project))
+    toast.info(
+      translate(
+        'JSON contains library references, not files. Images and icons still require access to the original library.',
+      ),
+    );
+}
 
 export default function ProjectTransfer({
   project,
@@ -20,12 +31,14 @@ export default function ProjectTransfer({
     if (!project) return;
     setBusy(true);
     try {
-      const url = URL.createObjectURL(new Blob([await onExport()], { type: 'application/json' }));
+      const text = await onExport();
+      const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
       const link = document.createElement('a');
       link.href = url;
       link.download = `${project.name.replace(/[^\p{L}\p{N}_-]+/gu, '-').slice(0, 80) || 'project'}.json`;
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
+      notifyLibraryReferences(text);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : translate('Could not export project.'));
     } finally {
@@ -53,8 +66,10 @@ export default function ProjectTransfer({
           setBusy(true);
           try {
             if (file.size > 20 * 1024 * 1024) throw new Error(translate('Project file exceeds 20 MB.'));
-            await onImport(await file.text());
+            const text = await file.text();
+            await onImport(text);
             toast.success(translate('Project imported. Changes will be saved automatically.'));
+            notifyLibraryReferences(text);
           } catch (error) {
             toast.error(error instanceof Error ? error.message : translate('Could not import project.'));
           } finally {

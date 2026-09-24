@@ -1192,5 +1192,6 @@
   "Revoke public access? Existing public links will stop working.": "Unieważnić dostęp publiczny? Istniejące linki publiczne przestaną działać.",
   "Make room for inspiration": "Zrób miejsce na inspirację",
   "Select a file to preview it, edit its name or manage sharing.": "Wybierz plik, aby go podejrzeć, zmienić nazwę lub zarządzać udostępnianiem.",
-  "Your files, your project.": "Twoje pliki, Twój projekt."
+  "Your files, your project.": "Twoje pliki, Twój projekt.",
+  "JSON contains library references, not files. Images and icons still require access to the original library.": "JSON zawiera odwołania do biblioteki, a nie pliki. Obrazy i ikony nadal wymagają dostępu do oryginalnej biblioteki."
 }

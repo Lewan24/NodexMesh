@@ -1192,5 +1192,6 @@
   "Revoke public access? Existing public links will stop working.": "Revoke public access? Existing public links will stop working.",
   "Make room for inspiration": "Make room for inspiration",
   "Select a file to preview it, edit its name or manage sharing.": "Select a file to preview it, edit its name or manage sharing.",
-  "Your files, your project.": "Your files, your project."
+  "Your files, your project.": "Your files, your project.",
+  "JSON contains library references, not files. Images and icons still require access to the original library.": "JSON contains library references, not files. Images and icons still require access to the original library."
 }

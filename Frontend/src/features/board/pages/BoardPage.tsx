@@ -3,7 +3,7 @@ import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import SharingDialog from '@/features/projects/components/SharingDialog';
 import ReadOnlyBoard from '@/features/projects/components/ReadOnlyBoard';
-import { collaborationToken, sharingApi } from '@/app/services';
+import { collaborationToken, isMockDataSource, sharingApi } from '@/app/services';
 import { flushPendingChanges } from '@/shared/api/pendingChanges';
 import { createId } from '@/shared/lib/createId';
 const AppearanceDialog = lazy(() => import('@/features/appearance/AppearanceDialog'));
@@ -615,7 +615,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
   }
 
   return (
-    <LibraryContext.Provider value={activeProjectId}>
+    <LibraryContext.Provider value={isMockDataSource ? '' : activeProjectId}>
       <div className="board-shell flex flex-col h-dvh w-full overflow-clip">
         {appBar}
 
