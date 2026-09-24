@@ -1,3 +1,4 @@
+import { useMediaSource } from '@/features/library/useMediaSource';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
@@ -8,6 +9,9 @@ import { getIconImageSource } from './iconUtils';
 
 export default function IconVisual({ item, size }: { item: IconItem; size: number }) {
   useTranslation();
+  const media = useMediaSource(
+    item.iconMode === 'library' ? item.source : (getIconImageSource(item.iconMode, item.source) ?? ''),
+  );
   const [failedSource, setFailedSource] = useState<string | null>(null);
   if (item.iconMode === 'preset') {
     const Icon = getPresetIcon(item.source);
@@ -20,7 +24,7 @@ export default function IconVisual({ item, size }: { item: IconItem; size: numbe
       </span>
     );
   }
-  const source = getIconImageSource(item.iconMode, item.source);
+  const source = media.url;
   if (!source || failedSource === source) {
     return (
       <ImageOff

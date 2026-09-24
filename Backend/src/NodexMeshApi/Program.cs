@@ -259,6 +259,10 @@ try
     // revocation logic in ShareLinkService is testable without waiting in real time.
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.Configure<AppVersionOptions>(builder.Configuration.GetSection(AppVersionOptions.SectionName));
+    builder.Services.AddOptions<LibraryOptions>().Bind(builder.Configuration.GetSection("Library"))
+        .Validate(o => !string.IsNullOrWhiteSpace(o.Path) && o.MaxFileBytes > 0 && o.MaxProjectBytes >= o.MaxFileBytes)
+        .ValidateOnStart();
+    builder.Services.AddSingleton<LibraryStorage>();
     builder.Services.AddMemoryCache();
     builder.Services.AddHttpClient("GitHubReleases", client =>
     {
@@ -353,6 +357,7 @@ try
     app.MapAuthEndpoints();
     app.MapAdminEndpoints();
     app.MapProjectEndpoints();
+    app.MapLibraryEndpoints();
     app.MapBoardEndpoints();
     app.MapCommentEndpoints();
     app.MapPublicEndpoints();

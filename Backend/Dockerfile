@@ -38,6 +38,8 @@ USER root
 RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
     && chmod +x /usr/local/bin/docker-entrypoint.sh
 
+RUN mkdir -p /app/storage && chown app:app /app/storage
+
 USER app
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

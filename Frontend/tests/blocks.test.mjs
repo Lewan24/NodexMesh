@@ -118,6 +118,8 @@ const {
   validMindmapTree,
 } = await server.ssrLoadModule('/src/features/blocks/mindmap/mindmapUtils.ts');
 const { flattenItems, renewProjectIds } = await server.ssrLoadModule('/src/features/projects/services/boardAdapter.ts');
+const { itemSchemas } = await server.ssrLoadModule('/src/entities/board/itemSchema.ts');
+const { parseLibrarySource } = await server.ssrLoadModule('/src/features/library/librarySource.ts');
 await server.close();
 
 test('icons render presets, emoji and isolated SVG with transparent scalable geometry', () => {
@@ -1248,4 +1250,18 @@ test('mind map validation rejects disconnected cycles and empty identities', () 
     validMindmapTree([nodes[0], { ...nodes[1], parentId: nodes[2].id }, { ...nodes[2], parentId: nodes[1].id }]),
     false,
   );
+});
+
+test('private library references persist for image and icon blocks without becoming general-purpose URLs', () => {
+  const source = 'library://11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222';
+  assert.ok(parseLibrarySource(source));
+  assert.equal(parseLibrarySource(source + '/../../secret'), null);
+  assert.equal(itemSchemas.image.validate({ url: source, caption: '' }), true);
+  assert.equal(itemSchemas.icon.validate({ iconMode: 'library', source, label: 'Logo' }), true);
+  assert.equal(itemSchemas.link.validate({ url: source, title: '', description: '' }), false);
+  assert.equal(itemSchemas.image.validate({ url: 'javascript:alert(1)', caption: '' }), false);
+  const icon = { ...createCanvasItem('icon', 10, 20), iconMode: 'library', source };
+  const copy = cloneItems([icon], 32, 32, 2)[0];
+  assert.equal(copy.source, source);
+  assert.equal(copy.iconMode, 'library');
 });

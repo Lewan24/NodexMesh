@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodexMeshApi.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NodexMeshApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260924063001_AddProjectLibrary")]
+    partial class AddProjectLibrary
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -619,11 +622,6 @@ namespace NodexMeshApi.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("project_id");
 
-                    b.Property<string>("ShareToken")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("share_token");
-
                     b.Property<string>("ShareTokenHash")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
@@ -638,10 +636,6 @@ namespace NodexMeshApi.Migrations
 
                     b.HasIndex("ProjectId")
                         .HasDatabaseName("ix_library_assets_project_id");
-
-                    b.HasIndex("ShareToken")
-                        .IsUnique()
-                        .HasDatabaseName("ix_library_assets_share_token");
 
                     b.HasIndex("ShareTokenHash")
                         .IsUnique()

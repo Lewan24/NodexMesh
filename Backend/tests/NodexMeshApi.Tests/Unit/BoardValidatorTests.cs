@@ -63,6 +63,17 @@ public class BoardValidatorTests
         BoardValidator.IsUrl(url).Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData("library://11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222", true)]
+    [InlineData("library://11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222/extra", false)]
+    [InlineData("library://user:pass@host/file", false)]
+    [InlineData("library://../../file", false)]
+    public void LibraryReferences_AreStructuredAndNeverGeneralUrls(string value, bool valid)
+    {
+        BoardValidator.IsLibrarySource(value).Should().Be(valid);
+        BoardValidator.IsUrl(value).Should().BeFalse();
+    }
+
     // ---------------- IsNumber / IsText / IsDay ----------------
 
     [Theory]
