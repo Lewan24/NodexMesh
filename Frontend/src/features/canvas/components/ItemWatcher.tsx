@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useEffect, useRef } from 'react';
+import { observeWheelOverflow } from '../utils/wheelOverflow';
 
 import type { ReactNode } from 'react';
 
@@ -22,6 +23,7 @@ export default function ItemWatcher({ itemId, onResize, children }: ItemWatcherP
       return;
     }
 
+    const stopObservingOverflow = observeWheelOverflow(element);
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
 
@@ -36,6 +38,7 @@ export default function ItemWatcher({ itemId, onResize, children }: ItemWatcherP
 
     return () => {
       observer.disconnect();
+      stopObservingOverflow();
     };
   }, [itemId, onResize]);
 

@@ -71,16 +71,18 @@ export default function LineControls({ item, onUpdate }: LineControlsProps) {
       <EditBarButton title={translate('Straight line')} onClick={() => update({ curve: 0 })}>
         {translate('Straight')}
       </EditBarButton>
-      <select
-        aria-label={translate('Line cap')}
-        className="h-8 text-xs bg-transparent"
-        value={item.lineCap ?? 'round'}
-        onChange={(event) => update({ lineCap: event.target.value as LineItem['lineCap'] })}
-      >
-        <option value="round">{translate('Round ends')}</option>
-        <option value="butt">{translate('Flat ends')}</option>
-        <option value="square">{translate('Square ends')}</option>
-      </select>
+      {!(item.arrowStart && item.arrowEnd) && (
+        <select
+          aria-label={translate('Line cap')}
+          className="h-8 text-xs bg-transparent"
+          value={item.lineCap ?? 'round'}
+          onChange={(event) => update({ lineCap: event.target.value as LineItem['lineCap'] })}
+        >
+          <option value="round">{translate('Round ends')}</option>
+          <option value="butt">{translate('Flat ends')}</option>
+          <option value="square">{translate('Square ends')}</option>
+        </select>
+      )}
       <EditBarDivider />
 
       {[1, 2, 3, 4, 5, 6].map((thickness) => (

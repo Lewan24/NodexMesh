@@ -48,7 +48,12 @@ export default function ChecklistBlock({ item, onUpdate, onDelete, onEntryDroppe
     if (addingEntry) addInputRef.current?.focus();
   }, [addingEntry]);
 
-  const { background, light, textColor, mutedColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  const { background, light, textColor, mutedColor } = useCardAppearance(
+    item.color,
+    item.gradient,
+    item.colorRole,
+    item.backgroundOpacity,
+  );
   const accentColor = light ? 'var(--color-accent)' : '#e8f4f4';
 
   const update = useCallback(

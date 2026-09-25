@@ -32,6 +32,24 @@ public class BoardValidatorTests
     }
 
     [Fact]
+    public void ValidateItem_AcceptsBackgroundOpacity()
+    {
+        var item = NoteItem(appearance: Json(new { backgroundOpacity = 42 }));
+        var act = () => BoardValidator.ValidateItem(item);
+        act.Should().NotThrow();
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(101)]
+    public void ValidateItem_RejectsOutOfRangeBackgroundOpacity(double opacity)
+    {
+        var item = NoteItem(appearance: Json(new { backgroundOpacity = opacity }));
+        var act = () => BoardValidator.ValidateItem(item);
+        act.Should().Throw<ApiException>().Where(error => error.Code == "invalid_item");
+    }
+
+    [Fact]
     public void ValidateItem_RejectsOversizedCustomCss()
     {
         var item = NoteItem(appearance: Json(new { customCss = new { enabled = true, source = new string('a', 10_001) } }));

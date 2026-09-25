@@ -29,14 +29,15 @@ export default function SaveStatus({
   useTranslation();
   const [confirmReload, setConfirmReload] = useState(false);
   const failed = status === 'error' || status === 'conflict';
+  const attention = failed || recoveryDrafts.length > 0;
   return (
     <div
       className={
         status === 'saved' && !recoveryDrafts.length
           ? 'sr-only'
-          : 'save-status flex flex-wrap items-center gap-3 text-xs'
+          : `save-status flex flex-wrap items-center gap-3 text-xs${attention ? ' save-status--failed' : ''}`
       }
-      role={failed ? 'alert' : 'status'}
+      role={attention ? 'alert' : 'status'}
     >
       <span>
         {failed
@@ -80,11 +81,9 @@ export default function SaveStatus({
           <button className="underline" onClick={() => downloadDraft(projects)}>
             {translate('Download local draft')}
           </button>
-          {status === 'error' && (
-            <button className="underline" onClick={() => void retry()}>
-              {translate('Retry')}
-            </button>
-          )}
+          <button className="underline font-semibold" onClick={() => void retry()}>
+            {translate('Refresh and retry')}
+          </button>
           <button className="underline" onClick={() => setConfirmReload(true)}>
             {translate('Reload saved data')}
           </button>

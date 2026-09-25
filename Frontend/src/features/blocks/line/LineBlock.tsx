@@ -59,7 +59,7 @@ export default function LineBlock({ item, isSelected, onDelete, onLineEndpointDr
   const curve = getLineCurve(originX, originY, endX, endY, item.curve);
   const { centerX, centerY } = curve;
   const showHandles = hovered || isSelected;
-  const lineColor = isSelected ? '#7C3AED' : item.color;
+  const lineColor = item.color;
 
   const labelOffset = item.labelOffset ?? 14;
 
@@ -88,6 +88,17 @@ export default function LineBlock({ item, isSelected, onDelete, onLineEndpointDr
     >
       <svg width={svgWidth} height={svgHeight} style={{ overflow: 'visible', display: 'block' }}>
         {/* Larger invisible hit area */}
+
+        {isSelected && (
+          <path
+            d={curve.path}
+            fill="none"
+            stroke="var(--color-accent)"
+            strokeWidth={item.strokeWidth + 2}
+            opacity={0.8}
+            pointerEvents="none"
+          />
+        )}
 
         <path
           d={curve.path}

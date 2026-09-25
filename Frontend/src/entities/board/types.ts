@@ -218,6 +218,8 @@ export interface BaseItem {
   /** Persistent root-frame ownership; null means explicitly unassigned. */
   frameId?: string | null;
   color?: string;
+  /** Opacity of the item's fill only. Omitted means fully opaque. */
+  backgroundOpacity?: number;
   id: string;
   typography?: TypographySettings;
   x: number;

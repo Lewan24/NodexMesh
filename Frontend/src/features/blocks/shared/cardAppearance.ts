@@ -19,6 +19,7 @@ export function resolveAppearance(
   palette: Palette,
   gradient?: BaseItem['gradient'],
   role?: BaseItem['colorRole'],
+  opacity = 100,
 ) {
   const paletteRole = role ?? (isDefaultCardColor(color) ? 'default' : undefined);
   gradient = gradient ?? (paletteRole ? palette.gradients?.[paletteRole] : undefined);
@@ -27,9 +28,9 @@ export function resolveAppearance(
   const to = gradient ? resolvePaletteColor(gradient.to, palette) : solid;
   const background = gradient
     ? gradient.kind === 'radial'
-      ? `radial-gradient(circle at center, ${from}, ${to})`
-      : `linear-gradient(${gradient.angle}deg, ${from}, ${to})`
-    : solid;
+      ? `radial-gradient(circle at center, ${withOpacity(from, opacity)}, ${withOpacity(to, opacity)})`
+      : `linear-gradient(${gradient.angle}deg, ${withOpacity(from, opacity)}, ${withOpacity(to, opacity)})`
+    : withOpacity(solid, opacity);
   const textColor = readableText(from, to);
   const light = textColor === '#000000';
   const muted = light ? '#374151' : '#e5e7eb';
@@ -41,7 +42,17 @@ export function resolveAppearance(
     mutedColor: Math.min(contrastRatio(muted, from), contrastRatio(muted, to)) >= 4.5 ? muted : textColor,
   };
 }
-export function useCardAppearance(color?: string, gradient?: BaseItem['gradient'], role?: BaseItem['colorRole']) {
+function withOpacity(color: string, opacity: number): string {
+  const bounded = Math.max(0, Math.min(100, opacity));
+  return bounded === 100 ? color : `color-mix(in srgb, ${color} ${bounded}%, transparent)`;
+}
+
+export function useCardAppearance(
+  color?: string,
+  gradient?: BaseItem['gradient'],
+  role?: BaseItem['colorRole'],
+  opacity = 100,
+) {
   const { theme, appearance } = useTheme();
-  return resolveAppearance(color, appearance[theme], gradient, role);
+  return resolveAppearance(color, appearance[theme], gradient, role, opacity);
 }
