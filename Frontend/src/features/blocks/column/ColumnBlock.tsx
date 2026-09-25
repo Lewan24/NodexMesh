@@ -145,7 +145,7 @@ export default function ColumnBlock({
     light: columnLight,
     textColor: headerTextColor,
     mutedColor: headerMutedColor,
-  } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  } = useCardAppearance(item.color, item.gradient, item.colorRole, item.backgroundOpacity);
 
   const update = useCallback(
     (patch: Partial<ColumnItem>) => {

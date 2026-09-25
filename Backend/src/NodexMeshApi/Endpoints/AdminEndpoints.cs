@@ -126,6 +126,8 @@ public static class AdminEndpoints
         var user = await users.FindByIdAsync(userId.ToString()) ?? throw new ApiException(404, "not_found", "User not found.");
         if (request.Blocked && user.IsAdmin && await users.Users.CountAsync(candidate => candidate.IsAdmin && !candidate.IsBlocked, ct) <= 1)
             throw new ApiException(409, "last_admin", "The last active administrator cannot be blocked.");
+        if (user.DeletionRequestedAt is not null)
+            throw new ApiException(409, "account_pending_deletion", "Use Restore account to cancel account deletion.");
         user.IsBlocked = request.Blocked;
         await users.UpdateAsync(user);
         if (request.Blocked) await RevokeSessionsAsync(db, userId, ct);
@@ -298,7 +300,7 @@ public static class AdminEndpoints
         return settings;
     }
 
-    private static AdminUserDto ToUser(ApplicationUser user) => new(user.Id, user.Email!, user.DisplayName, user.IsAdmin, user.IsBlocked, user.CreatedAt);
+    private static AdminUserDto ToUser(ApplicationUser user) => new(user.Id, user.Email!, user.DisplayName, user.IsAdmin, user.IsBlocked, user.CreatedAt, user.DeletionRequestedAt, user.DeletionRequestedAt + AccountDeletionService.Retention);
 
     private static async Task RevokeSessionsAsync(AppDbContext db, Guid userId, CancellationToken ct)
     {

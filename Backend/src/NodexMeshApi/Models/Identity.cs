@@ -7,6 +7,8 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     public string DisplayName { get; set; } = string.Empty;
     public bool IsAdmin { get; set; }
     public bool IsBlocked { get; set; }
+    public DateTimeOffset? DeletionRequestedAt { get; set; }
+    public DateTimeOffset? SecurityNoticeAcceptedAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
 

@@ -85,6 +85,8 @@ public sealed class ExpiredDataCleanupService(
                     File.Delete(path);
             }
         }
+        var accounts = await AccountDeletionService.CleanExpiredAsync(db, now, ct);
+        if (accounts > 0) logger.LogInformation("Permanently removed {Count} accounts after 90 days of account deletion.", accounts);
         var projects = await ProjectDeletionService.CleanExpiredAsync(db, now, ct);
         if (projects > 0) logger.LogInformation("Permanently removed {Count} projects after 30 days of user deletion.", projects);
 

@@ -55,6 +55,20 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
+.save-status.save-status--failed {
+  top: calc(16px + env(safe-area-inset-top));
+  bottom: auto;
+  left: 50%;
+  z-index: 9999;
+  width: min(760px, calc(100vw - 32px));
+  max-width: min(760px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  border-color: color-mix(in srgb, var(--color-danger-strong) 55%, var(--color-border));
+  background: color-mix(in srgb, var(--color-danger-strong) 13%, var(--color-surface));
+  color: var(--color-text-primary);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
 @media (max-width: 900px), (pointer: coarse) {
   .save-status {
     bottom: calc(88px + env(safe-area-inset-bottom));

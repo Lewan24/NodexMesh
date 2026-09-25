@@ -26,7 +26,7 @@ public class AuthEndpointsTests : IDisposable
         var email = $"{Guid.NewGuid():N}@nodexmesh.test";
 
         var register = await client.PostAsJsonAsync("/api/v1/auth/register",
-            new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "New User"));
+            new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "New User", true));
         register.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var login = await client.PostAsJsonAsync("/api/v1/auth/login",
@@ -45,7 +45,7 @@ public class AuthEndpointsTests : IDisposable
         var client = _factory.CreateClientNoRedirect();
         var email = $"{Guid.NewGuid():N}@nodexmesh.test";
         await client.PostAsJsonAsync("/api/v1/auth/register",
-            new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "New User"));
+            new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "New User", true));
         var login = await client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, "Correct#Horse9Battery"));
 
         login.Headers.TryGetValues("Set-Cookie", out var cookies).Should().BeTrue();
@@ -62,7 +62,7 @@ public class AuthEndpointsTests : IDisposable
     {
         var client = _factory.CreateClientNoRedirect();
         var response = await client.PostAsJsonAsync("/api/v1/auth/register",
-            new RegisterRequest($"{Guid.NewGuid():N}@nodexmesh.test", "weak", "weak", "User"));
+            new RegisterRequest($"{Guid.NewGuid():N}@nodexmesh.test", "weak", "weak", "User", true));
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest); // DataAnnotations validation problem
     }
@@ -72,7 +72,7 @@ public class AuthEndpointsTests : IDisposable
     {
         var client = _factory.CreateClientNoRedirect();
         var email = $"{Guid.NewGuid():N}@nodexmesh.test";
-        var request = new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "User");
+        var request = new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "User", true);
         await client.PostAsJsonAsync("/api/v1/auth/register", request);
 
         var second = await client.PostAsJsonAsync("/api/v1/auth/register", request);
@@ -90,7 +90,7 @@ public class AuthEndpointsTests : IDisposable
         var client = _factory.CreateClientNoRedirect();
         var email = $"{Guid.NewGuid():N}@nodexmesh.test";
         await client.PostAsJsonAsync("/api/v1/auth/register",
-            new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "User"));
+            new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "User", true));
 
         var wrongPassword = await client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, "WrongPassword123!"));
         var unknownEmail = await client.PostAsJsonAsync("/api/v1/auth/login",
@@ -107,7 +107,7 @@ public class AuthEndpointsTests : IDisposable
         var client = _factory.CreateClientNoRedirect();
         var email = $"{Guid.NewGuid():N}@nodexmesh.test";
         await client.PostAsJsonAsync("/api/v1/auth/register",
-            new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "User"));
+            new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "User", true));
         await client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, "Correct#Horse9Battery"));
         // HttpClient in this test carries the Set-Cookie automatically via CookieContainer
         // handling in WebApplicationFactory's default handler.
@@ -135,7 +135,7 @@ public class AuthEndpointsTests : IDisposable
         var client = _factory.CreateClientNoRedirect();
         var email = $"{Guid.NewGuid():N}@nodexmesh.test";
         await client.PostAsJsonAsync("/api/v1/auth/register",
-            new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "User"));
+            new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "User", true));
         await client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, "Correct#Horse9Battery"));
 
         var refreshRequest = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/refresh");

@@ -19,6 +19,17 @@ public class BoardItemTypesTests
     }
 
     [Fact]
+    public void Appearance_BackgroundOpacity_RoundTripsWithStrictOptions()
+    {
+        const string json = """{"backgroundOpacity":42}""";
+        var appearance = System.Text.Json.JsonSerializer.Deserialize<ItemAppearance>(json, BoardItemTypes.StrictOptions)!;
+        appearance.BackgroundOpacity.Should().Be(42);
+        var saved = System.Text.Json.JsonSerializer.Serialize(appearance, BoardItemTypes.StrictOptions);
+        var restored = System.Text.Json.JsonSerializer.Deserialize<ItemAppearance>(saved, BoardItemTypes.StrictOptions)!;
+        restored.BackgroundOpacity.Should().Be(42);
+    }
+
+    [Fact]
     public void Appearance_SectionTypography_RoundTripsWithStrictOptions()
     {
         const string json = """{"typography":{"fontFamily":"serif","sections":{"title":{"color":"#ffffff","fontSize":24},"description":{"fontSize":14,"bold":false}}}}""";

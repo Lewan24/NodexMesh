@@ -187,7 +187,7 @@ public class AdminEndpointsTests : IDisposable
 
         var anonymous = _factory.CreateClientNoRedirect();
         var response = await anonymous.PostAsJsonAsync("/api/v1/auth/register",
-            new RegisterRequest($"{Guid.NewGuid():N}@nodexmesh.test", "Correct#Horse9Battery", "Correct#Horse9Battery", "User"));
+            new RegisterRequest($"{Guid.NewGuid():N}@nodexmesh.test", "Correct#Horse9Battery", "Correct#Horse9Battery", "User", true));
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }

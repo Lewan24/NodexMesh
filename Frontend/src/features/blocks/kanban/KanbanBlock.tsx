@@ -68,7 +68,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
     light: isLight,
     textColor,
     mutedColor,
-  } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  } = useCardAppearance(item.color, item.gradient, item.colorRole, item.backgroundOpacity);
 
   const doneColor = mutedColor;
   const cardBackground = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(7,19,23,0.5)';

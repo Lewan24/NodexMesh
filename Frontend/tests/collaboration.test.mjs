@@ -22,6 +22,8 @@ const { zoomCamera } = await server.ssrLoadModule('/src/features/projects/hooks/
 const { ApiError } = await server.ssrLoadModule('/src/shared/api/errors.ts');
 const { browserRecoveryStore } = await server.ssrLoadModule('/src/features/projects/services/recoveryDrafts.ts');
 const { createHttpClient } = await server.ssrLoadModule('/src/shared/api/httpClient.ts');
+const { createDrawing } = await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts');
+const { hasWheelOverflow } = await server.ssrLoadModule('/src/features/canvas/utils/wheelOverflow.ts');
 await server.close();
 
 async function setup() {
@@ -89,6 +91,18 @@ test('different properties of the same item merge without replacing content', as
   assert.equal(b.getSnapshot().status, 'saved');
   assert.equal(item(a, itemA).content, 'Text');
   assert.equal(item(a, itemA).x, 123);
+});
+
+test('background opacity survives item mutation, save, and reload', async () => {
+  const { api, a, itemA } = await setup();
+  change(a, itemA, { backgroundOpacity: 37, color: '#aabbcc' });
+  await a.flush();
+  assert.equal(a.getSnapshot().status, 'saved');
+  const saved = toProjectView((await api.projects.list())[0]);
+  assert.equal(saved.items.find((entry) => entry.id === itemA).backgroundOpacity, 37);
+  const reloaded = new WorkspaceController(api);
+  await reloaded.load();
+  assert.equal(item(reloaded, itemA).backgroundOpacity, 37);
 });
 
 test('same-property conflicts refresh automatically and preserve a separate recovery draft', async () => {
@@ -541,4 +555,97 @@ test('HTTP throttling reports the remaining retry delay without making another r
   await assert.rejects(client.request('/boards/board'), throttled);
   await assert.rejects(client.request('/boards/board'), throttled);
   assert.equal(requests, 1);
+});
+
+test('unchanged background refresh resumes failed saves with the same mutation id', async () => {
+  const { api, id, itemA } = await setup();
+  let failing = true;
+  const requests = [];
+  const controller = new WorkspaceController({
+    ...api,
+    sync: async () => null,
+    boards: {
+      ...api.boards,
+      mutate: async (...args) => {
+        requests.push(args[2].clientMutationId);
+        if (failing) throw new Error('Connection interrupted');
+        return api.boards.mutate(...args);
+      },
+    },
+  });
+  await controller.load();
+  change(controller, itemA, { content: 'Retained draft' });
+  await controller.flush();
+  assert.equal(controller.getSnapshot().status, 'error');
+  failing = false;
+  await controller.syncProject(id);
+  await controller.flush();
+  assert.equal(controller.getSnapshot().status, 'saved');
+  assert.equal(new Set(requests).size, 1);
+  const loaded = new WorkspaceController(api);
+  await loaded.load();
+  assert.equal(item(loaded, itemA).content, 'Retained draft');
+});
+
+test('drawing undo survives a controller save and persists its deletion', async () => {
+  const { a, api, id } = await setup();
+  const original = project(a).items;
+  const history = new ItemHistory(original, 50);
+  let version = a.getRemoteVersion(id);
+  const unsubscribe = a.subscribe(() => {
+    const nextVersion = a.getRemoteVersion(id);
+    if (version !== nextVersion) history.rebase(project(a).items);
+    else history.observe(project(a).items);
+    version = nextVersion;
+  });
+  const drawing = createDrawing(
+    [
+      { x: 20, y: 30 },
+      { x: 40, y: 60 },
+    ],
+    3,
+  );
+  history.boundary();
+  a.update((projects) => projects.map((p) => ({ ...p, items: [...p.items, drawing] })));
+  // Changing tool before the acknowledgement must not create a no-op undo.
+  history.boundary();
+  await a.flush();
+  const undone = history.undo(project(a).items);
+  assert.deepEqual(
+    undone?.map((entry) => entry.id),
+    original.map((entry) => entry.id),
+  );
+  a.update((projects) => projects.map((p) => ({ ...p, items: undone })));
+  await a.flush();
+  unsubscribe();
+  const loaded = new WorkspaceController(api);
+  await loaded.load();
+  assert.equal(
+    project(loaded).items.some((entry) => entry.id === drawing.id),
+    false,
+  );
+});
+
+test('wheel guards require scrollable overflow, not just fixed or clipped dimensions', () => {
+  const previous = globalThis.getComputedStyle;
+  globalThis.getComputedStyle = (element) => element.style;
+  try {
+    const element = {
+      clientHeight: 100,
+      scrollHeight: 100,
+      clientWidth: 100,
+      scrollWidth: 100,
+      style: { overflowY: 'auto', overflowX: 'hidden' },
+    };
+    assert.equal(hasWheelOverflow(element), false);
+    element.scrollHeight = 150;
+    assert.equal(hasWheelOverflow(element), true);
+    element.style.overflowY = 'hidden';
+    assert.equal(hasWheelOverflow(element), false);
+    element.scrollWidth = 150;
+    element.style.overflowX = 'auto';
+    assert.equal(hasWheelOverflow(element), true);
+  } finally {
+    globalThis.getComputedStyle = previous;
+  }
 });

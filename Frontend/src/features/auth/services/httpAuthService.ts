@@ -76,6 +76,21 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
         listeners.delete(listener);
       };
     },
+    async accountDeletionPlan() {
+      return admin('/auth/account-deletion');
+    },
+    async deleteAccount(input) {
+      await admin('/auth/account-deletion', { method: 'POST', body: input });
+      accessToken = '';
+      user = null;
+      listeners.forEach((listener) => listener());
+    },
+    async restoreAccount(id) {
+      await admin(`/admin/users/${encodeURIComponent(id)}/restore`, { method: 'POST' });
+    },
+    async purgeAccount(id) {
+      await admin(`/admin/users/${encodeURIComponent(id)}/permanent`, { method: 'DELETE' });
+    },
     async me() {
       if (user) return user;
       try {

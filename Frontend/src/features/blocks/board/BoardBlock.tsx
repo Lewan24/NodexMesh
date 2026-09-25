@@ -16,7 +16,7 @@ interface BoardBlockProps {
 export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard }: BoardBlockProps) {
   useTranslation();
   const color = item.color ?? '#7C3AED';
-  const appearance = useCardAppearance(color, item.gradient, item.colorRole);
+  const appearance = useCardAppearance(color, item.gradient, item.colorRole, item.backgroundOpacity);
   const typographyStyle = getTypographyStyle(item);
   const open = () => {
     if (item.boardId) onOpenBoard?.(item.boardId);

@@ -54,6 +54,7 @@ export default function SectionTypographyControls({
 }) {
   useTranslation();
   const available = ITEM_TEXT_SECTIONS[item.type];
+  const [fontDraft, setFontDraft] = useState<string | null>(null);
   const [selection, setSelection] = useState<TextSection[]>(available.slice(0, 1));
   const sections = selection.filter((section) => available.includes(section));
   const targets = sections.length ? sections : available.slice(0, 1);
@@ -66,6 +67,7 @@ export default function SectionTypographyControls({
   if (!available.length) return null;
 
   const toggleSection = (section: TextSection) => {
+    setFontDraft(null);
     setSelection((current) => {
       if (!current.includes(section)) return [...current, section];
       return current.length > 1 ? current.filter((entry) => entry !== section) : current;
@@ -126,19 +128,22 @@ export default function SectionTypographyControls({
             min={MIN_FONT_SIZE}
             max={MAX_FONT_SIZE}
             placeholder="—"
-            key={`${targets.join(',')}-${common('fontSize')}`}
-            defaultValue={common('fontSize') ?? ''}
+            value={fontDraft ?? common('fontSize') ?? ''}
+            onBlur={() => setFontDraft(null)}
             className="h-full w-12 bg-transparent pr-2 text-right text-xs font-semibold outline-none"
             onKeyDown={(event) => {
               if (event.key === 'Enter') event.currentTarget.blur();
             }}
-            onBlur={(event) => {
+            onChange={(event) => {
               const value = event.target.value;
+              setFontDraft(value);
               if (!value) update({ fontSize: undefined });
-              else if (Number.isFinite(Number(value))) {
-                const fontSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, Number(value)));
-                event.currentTarget.value = String(fontSize);
-                update({ fontSize });
+              else if (
+                Number.isFinite(Number(value)) &&
+                Number(value) >= MIN_FONT_SIZE &&
+                Number(value) <= MAX_FONT_SIZE
+              ) {
+                update({ fontSize: Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, Number(value))) });
               }
             }}
           />

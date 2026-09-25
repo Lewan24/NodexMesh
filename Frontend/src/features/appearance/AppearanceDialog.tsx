@@ -130,11 +130,13 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
               {translate('Interface font')}
               <select
                 className="planning-input w-full"
+                size={5}
+                aria-label={translate('Interface font')}
                 value={settings.uiFont}
                 onChange={(event) => setSettings({ ...settings, uiFont: event.target.value as FontFamily })}
               >
                 {FONT_FAMILIES.map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <option key={option.value} value={option.value} style={{ fontFamily: option.css }}>
                     {option.label}
                   </option>
                 ))}
@@ -230,11 +232,13 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
                 {translate('Default font for board items')}
                 <select
                   className="planning-input w-full"
+                  size={5}
+                  aria-label={translate('Default font for board items')}
                   value={draft.font}
                   onChange={(event) => updateDraft({ ...draft, font: event.target.value as FontFamily })}
                 >
                   {FONT_FAMILIES.map((option) => (
-                    <option key={option.value} value={option.value}>
+                    <option key={option.value} value={option.value} style={{ fontFamily: option.css }}>
                       {option.label}
                     </option>
                   ))}

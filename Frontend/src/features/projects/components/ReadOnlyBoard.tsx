@@ -13,6 +13,7 @@ import RemoteCursors from '@/features/canvas/components/RemoteCursors';
 import type { RemoteCursor } from '@/features/projects/hooks/useCollaborationPresence';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import './sharing.css';
+import { copyBoardItems } from '@/features/canvas/hooks/useCanvasClipboard';
 
 const noop = () => {};
 
@@ -25,7 +26,7 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({
   projectParticipants,
 }: {
   item: BoardItem;
-  onSelect?: (id: string) => void;
+  onSelect?: (id: string, additive?: boolean) => void;
   onOpenBoard?: (id: string) => void;
   selected: boolean;
   projectParticipants?: ProjectParticipant[];
@@ -56,6 +57,23 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({
       aria-label={translate('{{value1}} block (read-only)', { value1: displayLabel(item.type) })}
       tabIndex={onSelect ? 0 : undefined}
       style={{ outline: selected ? '2px solid var(--color-accent)' : undefined }}
+      onKeyDownCapture={(event) => {
+        const target = event.target as HTMLElement;
+        // Native text selection and copy remain available. Never activate a
+        // mutation control via keyboard (capture click alone misses inputs).
+        if (target.closest('a, [data-read-only-action]')) return;
+        if (target.closest('button, input, select, textarea, [contenteditable="true"]')) {
+          if (
+            event.key !== 'Tab' &&
+            !((event.ctrlKey || event.metaKey) && ['a', 'c'].includes(event.key.toLowerCase()))
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        }
+      }}
+      onPasteCapture={(event) => event.preventDefault()}
+      onCutCapture={(event) => event.preventDefault()}
       onKeyDown={(event) => {
         if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
           event.preventDefault();
@@ -64,7 +82,10 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({
       }}
       onClickCapture={(event) => {
         const nested = (event.target as Element).closest('[data-nested-item-id]');
-        onSelect?.(nested?.getAttribute('data-nested-item-id') ?? item.id);
+        onSelect?.(
+          nested?.getAttribute('data-nested-item-id') ?? item.id,
+          event.shiftKey || event.ctrlKey || event.metaKey,
+        );
         preventMutation(event);
       }}
       onDoubleClickCapture={(event) => {
@@ -104,6 +125,7 @@ export default function ReadOnlyBoard({
   inspect = false,
   canComment = false,
   currentUserId,
+  clipboardOwnerId,
   onSaveComments,
   onOpenBoard,
   remoteCursors = [],
@@ -114,6 +136,7 @@ export default function ReadOnlyBoard({
   inspect?: boolean;
   canComment?: boolean;
   currentUserId?: string;
+  clipboardOwnerId?: string;
   onSaveComments?: (itemId: string, comments: import('@/entities/board/types').ItemComment[]) => Promise<void>;
   onOpenBoard?: (boardId: string) => void;
   remoteCursors?: RemoteCursor[];
@@ -121,18 +144,18 @@ export default function ReadOnlyBoard({
   projectParticipants?: ProjectParticipant[];
 }) {
   useTranslation();
-  const [selectedId, setSelectedId] = useState('');
-  const findItem = (entries: BoardItem[]): BoardItem | undefined => {
-    for (const item of entries) {
-      if (item.id === selectedId) return item;
-      if (item.type === 'column') {
-        const nested = findItem(item.items);
-        if (nested) return nested;
-      }
-    }
-    return undefined;
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const flatten = (entries: BoardItem[]): BoardItem[] =>
+    entries.flatMap((item) => [item, ...(item.type === 'column' ? flatten(item.items) : [])]);
+  const selected = flatten(items).filter((item) => selectedIds.includes(item.id));
+  const selectItem = (id: string, additive = false) => {
+    setSelectedIds((current) =>
+      additive ? (current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id]) : [id],
+    );
   };
-  const selected = findItem(items);
+  const copySelection = () => {
+    if (clipboardOwnerId) copyBoardItems(clipboardOwnerId, selected);
+  };
   const navigation = useReadOnlyNavigation();
   const { camera, touchMode } = navigation;
   const zoom = camera.zoom;
@@ -173,6 +196,11 @@ export default function ReadOnlyBoard({
   return (
     <section className="relative flex min-h-0 min-w-0 flex-1 flex-col" aria-label={translate('Read-only board')}>
       <div className="flex items-center gap-3 p-2 border-b" style={{ background: 'var(--color-surface)' }}>
+        {inspect && (
+          <button disabled={!selected.length} onClick={copySelection}>
+            {translate('Copy')}
+          </button>
+        )}
         <span>{canComment ? translate('Commenter — select an item to comment') : translate('Read-only')}</span>
         <button aria-label={translate('Zoom out')} onClick={() => navigation.zoomBy(1 / 1.25)}>
           -
@@ -206,8 +234,19 @@ export default function ReadOnlyBoard({
         onPointerUp={navigation.endDrag}
         onPointerCancel={navigation.endDrag}
         onLostPointerCapture={navigation.endDrag}
-        onKeyDown={navigation.keyDown}
+        onCopy={(event) => {
+          if (window.getSelection()?.toString()) return;
+          if (!selected.length || !clipboardOwnerId) return;
+          copySelection();
+          event.clipboardData.setData('text/plain', JSON.stringify(selected));
+          event.preventDefault();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') setSelectedIds([]);
+          navigation.keyDown(event);
+        }}
         onClickCapture={(event) => {
+          if (!(event.target as Element).closest('.read-only-block')) setSelectedIds([]);
           if (navigation.suppressClick()) {
             event.preventDefault();
             event.stopPropagation();
@@ -260,10 +299,10 @@ export default function ReadOnlyBoard({
                       item={item}
                       projectParticipants={projectParticipants}
                       selected={
-                        selectedId === item.id ||
-                        (item.type === 'column' && item.items.some((child) => child.id === selectedId))
+                        selectedIds.includes(item.id) ||
+                        (item.type === 'column' && item.items.some((child) => selectedIds.includes(child.id)))
                       }
-                      onSelect={inspect ? setSelectedId : undefined}
+                      onSelect={inspect ? selectItem : undefined}
                       onOpenBoard={onOpenBoard}
                     />
                   </ItemWatcher>
@@ -280,16 +319,17 @@ export default function ReadOnlyBoard({
           />
         )}
       </div>
-      {inspect && selected && (
+      {inspect && selected.length > 0 && (
         <ItemInspector
-          items={[selected]}
+          items={selected}
           readOnly
           canComment={canComment}
           currentUserId={currentUserId}
-          onClose={() => setSelectedId('')}
+          onClose={() => setSelectedIds([])}
           onUpdateAll={async (updater) => {
-            if (!canComment || !onSaveComments) return;
-            await onSaveComments(selected.id, updater(selected).comments ?? []);
+            const item = selected[0];
+            if (!canComment || !onSaveComments || selected.length !== 1 || !item) return;
+            await onSaveComments(item.id, updater(item).comments ?? []);
           }}
         />
       )}

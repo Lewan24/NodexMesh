@@ -9,6 +9,11 @@ import { cloneItems, copyOrigin } from '../utils/cloneItems';
 
 // Board clipboard survives switching projects, and stays isolated per signed-in user.
 const clipboards = new Map<string, BoardItem[]>();
+
+export function copyBoardItems(ownerId: string, items: BoardItem[]) {
+  if (items.length) clipboards.set(ownerId, structuredClone(items));
+}
+
 export function useCanvasClipboard({
   projectRef,
   selectedIdsRef,
@@ -62,7 +67,7 @@ export function useCanvasClipboard({
   const copy = useCallback(() => {
     const items = selected();
     if (!items.length) return;
-    clipboards.set(projectRef.current.ownerId, structuredClone(items));
+    copyBoardItems(projectRef.current.ownerId, items);
     setRevision((value) => value + 1);
   }, [selected, projectRef]);
   const insert = useCallback(

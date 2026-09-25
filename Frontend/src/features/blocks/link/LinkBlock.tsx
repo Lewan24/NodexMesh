@@ -24,7 +24,12 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
 
   const typographyStyle = getTypographyStyle(item);
 
-  const { background, light, textColor, mutedColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  const { background, light, textColor, mutedColor } = useCardAppearance(
+    item.color,
+    item.gradient,
+    item.colorRole,
+    item.backgroundOpacity,
+  );
 
   const borderBase = light ? 'rgba(0,0,0,0.1)' : '#1a3040';
   const borderHover = light ? 'rgba(124, 58, 237,0.5)' : 'rgba(124, 58, 237,0.4)';

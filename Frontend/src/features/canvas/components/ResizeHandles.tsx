@@ -6,8 +6,8 @@ interface ResizeHandlesProps {
   onResizeStart: (event: React.MouseEvent, direction: ResizeDirection) => void;
 }
 
-const EDGE_SIZE = 10;
-const CORNER_SIZE = 12;
+const EDGE_SIZE = 16;
+const CORNER_SIZE = 18;
 
 export default function ResizeHandles({ visible, onResizeStart }: ResizeHandlesProps) {
   useTranslation();

@@ -18,7 +18,12 @@ export default function DispenserBlock({
   onDelete: () => void;
 }) {
   useTranslation();
-  const { background, solid, textColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  const { background, solid, textColor } = useCardAppearance(
+    item.color,
+    item.gradient,
+    item.colorRole,
+    item.backgroundOpacity,
+  );
   const [editingLabel, setEditingLabel] = useState(false);
   return (
     <ContentBlockShell

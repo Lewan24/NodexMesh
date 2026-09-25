@@ -5,7 +5,7 @@ using NodexMeshApi.Common;
 namespace NodexMeshApi.Dtos;
 
 public sealed record AdminUserDto(
-    Guid Id, string Email, string DisplayName, bool IsAdmin, bool IsBlocked, DateTimeOffset CreatedAt);
+    Guid Id, string Email, string DisplayName, bool IsAdmin, bool IsBlocked, DateTimeOffset CreatedAt, DateTimeOffset? DeletionRequestedAt, DateTimeOffset? PermanentDeletionAt);
 
 public sealed record AdminCreateUserRequest(
     [property: Required, EmailAddress, MaxLength(256)] string Email,

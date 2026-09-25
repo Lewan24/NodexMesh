@@ -8,6 +8,7 @@ import { canonicalJson } from '@/shared/api/canonicalJson';
 
 const appearanceKeys = [
   'color',
+  'backgroundOpacity',
   'colorRole',
   'gradient',
   'topColor',

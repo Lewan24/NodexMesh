@@ -19,7 +19,7 @@ public class DtoValidationTests
     [Fact]
     public void RegisterRequest_AcceptsAStrongMatchingPassword()
     {
-        var request = new RegisterRequest("user@example.com", "Str0ng!Passw0rd", "Str0ng!Passw0rd", "User");
+        var request = new RegisterRequest("user@example.com", "Str0ng!Passw0rd", "Str0ng!Passw0rd", "User", true);
         Validate(request).Should().BeEmpty();
     }
 
@@ -30,7 +30,7 @@ public class DtoValidationTests
     [InlineData("NoSpecialChar123", "a special character")]
     public void RegisterRequest_RejectsPasswordsMissingARequiredCharacterClass(string password, string expectedFragment)
     {
-        var request = new RegisterRequest("user@example.com", password, password, "User");
+        var request = new RegisterRequest("user@example.com", password, password, "User", true);
         var errors = Validate(request);
 
         errors.Should().Contain(e => e.ErrorMessage!.Contains(expectedFragment));
@@ -39,7 +39,7 @@ public class DtoValidationTests
     [Fact]
     public void RegisterRequest_RejectsMismatchedConfirmation()
     {
-        var request = new RegisterRequest("user@example.com", "Str0ng!Passw0rd", "Different!Passw0rd1", "User");
+        var request = new RegisterRequest("user@example.com", "Str0ng!Passw0rd", "Different!Passw0rd1", "User", true);
         var errors = Validate(request);
 
         errors.Should().Contain(e => e.MemberNames.Contains(nameof(RegisterRequest.ConfirmPassword)));

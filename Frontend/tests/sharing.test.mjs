@@ -222,3 +222,37 @@ test('commenter saves through the comments endpoint without modifying item conte
     1,
   );
 });
+
+test('commenter inspector enables comments but keeps item editing disabled', () => {
+  const html = renderToStaticMarkup(
+    createElement(ItemInspector, {
+      items: [createCanvasItem('note', 0, 0)],
+      readOnly: true,
+      canComment: true,
+      currentUserId: DEMO_USER_ID,
+      onUpdateAll: () => {},
+      onClose: () => {},
+    }),
+  );
+  assert.match(html, /Add comment/);
+  assert.doesNotMatch(html, /Add tag/);
+  assert.match(html, /disabled=""[^>]*class="w-full flex items-center justify-between/);
+});
+
+test('viewer can inspect a multiple-item selection without editing tags', () => {
+  const html = renderToStaticMarkup(
+    createElement(ItemInspector, {
+      items: [
+        { ...createCanvasItem('note', 0, 0), tags: ['first'] },
+        { ...createCanvasItem('text', 50, 0), tags: ['second'] },
+      ],
+      readOnly: true,
+      canComment: false,
+      onUpdateAll: () => {},
+      onClose: () => {},
+    }),
+  );
+  assert.match(html, /#first/);
+  assert.match(html, /#second/);
+  assert.doesNotMatch(html, /Add tag|Add comment/);
+});

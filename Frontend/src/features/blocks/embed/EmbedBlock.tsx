@@ -20,7 +20,12 @@ export default function EmbedBlock({
   onDelete: () => void;
 }) {
   useTranslation();
-  const { background, textColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  const { background, textColor } = useCardAppearance(
+    item.color,
+    item.gradient,
+    item.colorRole,
+    item.backgroundOpacity,
+  );
   const [editing, setEditing] = useState(false);
   const [interactive, setInteractive] = useState(false);
   const [draft, setDraft] = useState(item.url);

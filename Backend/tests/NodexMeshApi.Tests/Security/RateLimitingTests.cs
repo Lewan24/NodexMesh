@@ -61,7 +61,7 @@ public class RateLimitingTests : IDisposable
         }
 
         var registerAttempt = await client.PostAsJsonAsync("/api/v1/auth/register",
-            new RegisterRequest($"{Guid.NewGuid():N}@nodexmesh.test", "Correct#Horse9Battery", "Correct#Horse9Battery", "User"));
+            new RegisterRequest($"{Guid.NewGuid():N}@nodexmesh.test", "Correct#Horse9Battery", "Correct#Horse9Battery", "User", true));
 
         registerAttempt.StatusCode.Should().Be((HttpStatusCode)429);
     }

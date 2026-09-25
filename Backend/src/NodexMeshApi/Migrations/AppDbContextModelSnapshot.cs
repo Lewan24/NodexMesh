@@ -398,6 +398,10 @@ namespace NodexMeshApi.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<DateTimeOffset?>("DeletionRequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletion_requested_at");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasColumnType("text")
@@ -449,6 +453,10 @@ namespace NodexMeshApi.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean")
                         .HasColumnName("phone_number_confirmed");
+
+                    b.Property<DateTimeOffset?>("SecurityNoticeAcceptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("security_notice_accepted_at");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text")
