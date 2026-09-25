@@ -14,9 +14,32 @@ import { validateNewUser } from '../utils/authValidation';
 import { fail } from '@/shared/api/errors';
 import { newPreferences, preferenceKey, readPreferences } from '@/features/appearance/appearanceModel';
 
+export interface AccountDeletionPlan {
+  retentionDays: number;
+  projects: Array<{
+    id: string;
+    name: string;
+    collaborators: Array<{ id: string; displayName: string; email: string }>;
+  }>;
+}
+export interface AccountDeletionInput {
+  currentPassword: string;
+  projects: Array<{ projectId: string; action: string; newOwnerId: string | null }>;
+}
+
 export interface AuthService {
+  accountDeletionPlan(): Promise<AccountDeletionPlan>;
+  deleteAccount(input: AccountDeletionInput): Promise<void>;
+  restoreAccount(id: string): Promise<void>;
+  purgeAccount(id: string): Promise<void>;
   subscribeSessionExpired?(listener: () => void): () => void;
-  register?(input: { email: string; password: string; confirmPassword: string; displayName?: string }): Promise<void>;
+  register?(input: {
+    email: string;
+    password: string;
+    confirmPassword: string;
+    displayName?: string;
+    acceptSecurityNotice: boolean;
+  }): Promise<void>;
   me(): Promise<User | null>;
   login(input: LoginInput): Promise<User>;
   logout(): Promise<void>;
@@ -57,6 +80,18 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
   };
   return {
     currentUserId: () => current?.id ?? null,
+    async accountDeletionPlan() {
+      return fail(501, 'unsupported', translate('Account deletion is unavailable in demo mode.'));
+    },
+    async deleteAccount() {
+      return fail(501, 'unsupported', translate('Account deletion is unavailable in demo mode.'));
+    },
+    async restoreAccount() {
+      return fail(501, 'unsupported', translate('Account deletion is unavailable in demo mode.'));
+    },
+    async purgeAccount() {
+      return fail(501, 'unsupported', translate('Account deletion is unavailable in demo mode.'));
+    },
     async me() {
       return current;
     },

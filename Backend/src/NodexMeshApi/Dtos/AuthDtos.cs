@@ -41,7 +41,8 @@ public record RegisterRequest(
     [property: MinLength(12, ErrorMessage = "Password must be at least 12 characters long.")]
     string Password,
     [property: Required] string ConfirmPassword,
-    [property: MaxLength(100)] string? DisplayName) : IValidatableObject
+    [property: MaxLength(100)] string? DisplayName,
+    bool AcceptSecurityNotice = false) : IValidatableObject
 {
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

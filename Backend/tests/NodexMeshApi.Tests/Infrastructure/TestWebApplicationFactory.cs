@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -28,7 +29,7 @@ namespace NodexMeshApi.Tests.Infrastructure;
 /// <see cref="Guid"/> suffix) since <see cref="CreateAdminClientAsync"/>'s bootstrapped
 /// admin aside, nothing else is pre-seeded.
 /// </remarks>
-public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
+public sealed class TestWebApplicationFactory(bool useNpgsqlRetryStrategy = false) : WebApplicationFactory<Program>
 {
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
 
@@ -74,9 +75,12 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
         {
             services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
             services.RemoveAll<DbContextOptions<AppDbContext>>();
-            services.AddDbContext<AppDbContext>(options => options
-                .UseSqlite(_connection)
-                .UseSnakeCaseNamingConvention());
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseSqlite(_connection).UseSnakeCaseNamingConvention();
+                if (useNpgsqlRetryStrategy)
+                    options.ReplaceService<IExecutionStrategyFactory, NpgsqlTestExecutionStrategyFactory>();
+            });
         });
     }
 
@@ -97,7 +101,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
         const string password = "Correct#Horse9Battery";
 
         var register = await client.PostAsJsonAsync("/api/v1/auth/register", new RegisterRequest(
-            email, password, password, displayName ?? "Test User"));
+            email, password, password, displayName ?? "Test User", true));
         register.EnsureSuccessStatusCode();
         var registered = await register.Content.ReadFromJsonAsync<RegisteredUserResponse>();
 

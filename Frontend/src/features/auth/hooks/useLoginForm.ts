@@ -13,6 +13,7 @@ export function useLoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  const [acceptSecurityNotice, setAcceptSecurityNotice] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -35,12 +36,16 @@ export function useLoginForm() {
       return;
     }
 
+    if (registering && !acceptSecurityNotice) {
+      setError(translate('Accept the security data collection notice to register.'));
+      return;
+    }
     setSubmitting(true);
     setError('');
 
     if (registering) {
       try {
-        await authService.register?.({ email: username.trim(), password, confirmPassword });
+        await authService.register?.({ email: username.trim(), password, confirmPassword, acceptSecurityNotice });
       } catch (error) {
         setError(errorMessage(error));
         setSubmitting(false);
@@ -57,6 +62,8 @@ export function useLoginForm() {
   };
 
   return {
+    acceptSecurityNotice,
+    setAcceptSecurityNotice,
     registering,
     registrationAvailable,
     setRegistering,

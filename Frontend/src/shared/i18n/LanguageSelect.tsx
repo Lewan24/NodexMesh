@@ -1,12 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { changeLanguage, type Language } from './index';
 
-export default function LanguageSelect() {
+export default function LanguageSelect({ surface = false }: { surface?: boolean }) {
   const { t, i18n } = useTranslation();
   return (
     <label
       className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
-      style={{ color: 'var(--color-chrome-text)' }}
+      style={{ color: surface ? 'var(--color-text-secondary)' : 'var(--color-chrome-text)' }}
     >
       <span>{t('Language')}</span>
       <select
