@@ -52,7 +52,7 @@ const card = (title, boardId) => ({ ...createCanvasItem('board', 20, 20), title,
 const read = (value) => importProjectJson(JSON.stringify(value), 'new-owner');
 
 test('the checked-in export is valid and supplies the complete portable demo', async () => {
-  const text = await readFile(new URL('../docs/NodexMesh.json', import.meta.url), 'utf8');
+  const text = await readFile(new URL('../src/entities/project/demoProject.json', import.meta.url), 'utf8');
   const archive = JSON.parse(text);
   const imported = await importProjectJson(text, DEMO_USER_ID);
   assert.equal(imported.boards.length, archive.project.boards.length);

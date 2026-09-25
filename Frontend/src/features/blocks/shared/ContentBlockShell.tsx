@@ -22,7 +22,12 @@ export default function ContentBlockShell({
   minHeight?: number;
 }) {
   useTranslation();
-  const { background, textColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  const { background, textColor } = useCardAppearance(
+    item.color,
+    item.gradient,
+    item.colorRole,
+    item.backgroundOpacity,
+  );
   return (
     <section
       className="content-block-shell item-rounded shadow-xl flex flex-col overflow-hidden"

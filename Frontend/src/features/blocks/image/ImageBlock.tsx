@@ -34,7 +34,12 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
 
   const width = item.width ?? DEFAULT_IMAGE_WIDTH;
   const imageHeight = item.imgHeight ?? DEFAULT_IMAGE_HEIGHT;
-  const { background, light, textColor, mutedColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  const { background, light, textColor, mutedColor } = useCardAppearance(
+    item.color,
+    item.gradient,
+    item.colorRole,
+    item.backgroundOpacity,
+  );
 
   const borderColor = light ? 'rgba(0,0,0,0.1)' : '#1a3040';
   const inputBackground = light ? '#f8fafc' : '#071317';
@@ -95,7 +100,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
 
         <div
           className="relative cursor-grab active:cursor-grabbing"
-          style={{ height: imageHeight, backgroundColor: light ? '#e2e8f0' : '#071317' }}
+          style={{ height: imageHeight, background: isSticker ? background : undefined }}
         >
           {item.url ? (
             <>

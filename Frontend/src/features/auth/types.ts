@@ -15,6 +15,8 @@ export interface AddUserInput {
 export type AuthResult = { ok: true } | { ok: false; error: string };
 
 export interface AdminUser {
+  deletionRequestedAt?: string | null;
+  permanentDeletionAt?: string | null;
   id: string;
   email: string;
   displayName: string;

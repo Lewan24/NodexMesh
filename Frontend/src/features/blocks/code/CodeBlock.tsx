@@ -41,7 +41,12 @@ export default function CodeBlock({
   readOnly?: boolean;
 }) {
   useTranslation();
-  const { background, textColor, light } = useCardAppearance('#0d1117');
+  const { background, textColor, light } = useCardAppearance(
+    isDefaultCardColor(item.color) && !item.colorRole ? '#0d1117' : item.color,
+    item.gradient,
+    item.colorRole,
+    item.backgroundOpacity,
+  );
   const codeStyle = {
     ...getTypographyStyle(item),
     fontFamily: item.typography?.fontFamily

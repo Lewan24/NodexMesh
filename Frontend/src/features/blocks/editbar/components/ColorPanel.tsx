@@ -319,6 +319,26 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
             </div>
           </div>
 
+          <label className="flex items-center gap-2 text-xs" title={translate('Background transparency')}>
+            <span className="shrink-0">{translate('Opacity')}</span>
+            <input
+              aria-label={translate('Background opacity')}
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              className="min-w-16 flex-1 accent-violet-600"
+              value={item.backgroundOpacity ?? 100}
+              onChange={(event) => {
+                const value = Number(event.target.value);
+                onUpdate((current) => ({ ...current, backgroundOpacity: value === 100 ? undefined : value }));
+              }}
+            />
+            <span className="w-9 text-right tabular-nums" style={{ color: 'var(--color-text-faint)' }}>
+              {item.backgroundOpacity ?? 100}%
+            </span>
+          </label>
+
           {item.gradient && (
             <div className="flex items-center gap-2">
               <GradientStops

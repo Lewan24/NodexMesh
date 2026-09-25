@@ -18,6 +18,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      nodexmesh_app:
+        ipv4_address: 172.30.0.12
 
   api:
     image: lewan24/nodexmesh-api:latest
@@ -46,9 +49,16 @@ services:
       Admin__Email: admin@nodexmesh.pl
       # Supply securely before first startup; passwords are never generated into logs.
       Admin__Password: ''
+      # The API receives requests from the frontend Nginx container only.
+      # Keep this address stable; do not replace it with 0.0.0.0/0.
+      ReverseProxy__KnownProxies__0: 172.30.0.10
+      ReverseProxy__ForwardLimit: 1
 
     volumes:
       - library-data:/app/storage
+    networks:
+      nodexmesh_app:
+        ipv4_address: 172.30.0.11
 
   frontend:
     image: lewan24/nodexmesh-web:latest
@@ -68,7 +78,17 @@ services:
       timeout: 3s
       start_period: 5s
       retries: 3
+    networks:
+      nodexmesh_app:
+        ipv4_address: 172.30.0.10
 
 volumes:
   library-data:
   postgres-data:
+
+networks:
+  nodexmesh_app:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24

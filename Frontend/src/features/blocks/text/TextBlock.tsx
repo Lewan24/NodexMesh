@@ -62,7 +62,7 @@ export default function TextBlock({ item, onUpdate, fillWidth = false }: TextBlo
     background,
     textColor: cardText,
     mutedColor: cardMuted,
-  } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  } = useCardAppearance(item.color, item.gradient, item.colorRole, item.backgroundOpacity);
 
   const textColor = isCard ? cardText : 'var(--color-text-primary)';
 

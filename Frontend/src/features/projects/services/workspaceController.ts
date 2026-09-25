@@ -30,6 +30,7 @@ export class WorkspaceController {
   private generation = 0;
   private syncing: Promise<void> | undefined;
   private remoteVersions = new Map<string, number>();
+  private autoRetryOnRefresh = false;
   private rebases = 0;
   getRemoteVersion = (id: string) => this.remoteVersions.get(id) ?? 0;
 
@@ -37,21 +38,24 @@ export class WorkspaceController {
     previous: ProjectSnapshot,
     remote: ProjectSnapshot,
     base = toProjectView(previous),
-    forceRefresh = false,
+    preserveLocal = false,
+    rebaseHistory = true,
   ) {
     const local = this.state.projects.find((project) => project.id === previous.project.id);
     if (!local) return;
     const remoteView = toProjectView(remote);
     let merged = remoteView;
-    let recovered = forceRefresh && canonicalJson(local) !== canonicalJson(remoteView);
-    if (!forceRefresh) {
-      try {
-        merged = mergeProject(base, local, remoteView, remote);
-      } catch (error) {
-        if (!(error instanceof ApiError) || error.problem.code !== 'collaboration_conflict') throw error;
-        recovered = true;
-      }
+    let recovered = false;
+    try {
+      // Refreshing after a conflict should preserve independent local edits and
+      // retry them against the latest revision. Only overlapping edits need a
+      // recovery copy.
+      merged = mergeProject(base, local, remoteView, remote);
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.problem.code !== 'collaboration_conflict') throw error;
+      recovered = true;
     }
+    if (preserveLocal && canonicalJson(local) !== canonicalJson(remoteView)) recovered = true;
     if (
       (remote.project.role === 'Viewer' || remote.project.role === 'Commenter') &&
       canonicalJson(merged) !== canonicalJson(remoteView)
@@ -63,12 +67,14 @@ export class WorkspaceController {
       this.preserveRecovery(local);
       merged = remoteView;
     }
-    if (canonicalJson(local.items) !== canonicalJson(merged.items))
+    if (rebaseHistory && canonicalJson(local.items) !== canonicalJson(merged.items))
       this.remoteVersions.set(local.id, this.getRemoteVersion(local.id) + 1);
     this.confirmed.set(local.id, remote);
+    const retrying =
+      recovered || this.state.status === 'conflict' || (this.state.status === 'error' && this.autoRetryOnRefresh);
     this.publish({
       projects: this.state.projects.map((project) => (project.id === local.id ? merged : project)),
-      ...(recovered ? { error: '', status: this.running ? ('saving' as const) : ('pending' as const) } : {}),
+      ...(retrying ? { error: '', status: this.running ? ('saving' as const) : ('pending' as const) } : {}),
     });
   }
 
@@ -76,27 +82,41 @@ export class WorkspaceController {
   syncProject = (id: string, signal?: AbortSignal): Promise<void> => {
     if (this.syncing) return this.syncing;
     const previous = this.confirmed.get(id);
-    if (
-      !previous ||
-      this.running ||
-      this.retryOperation ||
-      previous.project.deletedAt ||
-      ['loading', 'error', 'conflict'].includes(this.state.status)
-    )
+    if (!previous || this.running || previous.project.deletedAt || this.state.status === 'loading')
       return Promise.resolve();
     const generation = this.generation;
     this.syncing = (async () => {
       try {
+        if (this.state.status === 'error' && this.autoRetryOnRefresh && this.retryOperation) {
+          // Resolve an ambiguous write with its original idempotency key before
+          // merging remote data; it may already contain our earlier draft.
+          this.autoRetryOnRefresh = false;
+          this.publish({ status: 'pending', error: '' });
+          return;
+        }
         const remote = this.services.sync
           ? await this.services.sync(previous, signal)
           : { ...previous, board: await this.services.boards.get(id, previous.board.board.id, signal) };
-        if (!remote || signal?.aborted || generation !== this.generation || this.confirmed.get(id) !== previous) return;
+        if (signal?.aborted || generation !== this.generation || this.confirmed.get(id) !== previous) return;
+        if (!remote) {
+          // No new revision still confirms connectivity. Replay the retained
+          // request with its original idempotency key after a transient failure.
+          if (this.state.status === 'error' && this.autoRetryOnRefresh) {
+            this.autoRetryOnRefresh = false;
+            this.publish({ status: 'pending', error: '' });
+          }
+          return;
+        }
         if (
           BigInt(remote.board.board.revision) < BigInt(previous.board.board.revision) ||
           BigInt(remote.project.revision) < BigInt(previous.project.revision)
         )
           return;
         this.acceptRemote(previous, remote);
+        // Reconcile a failed or timed out write against the latest snapshot,
+        // then generate a fresh mutation instead of replaying stale revisions.
+        this.retryOperation = undefined;
+        this.autoRetryOnRefresh = false;
       } catch (error) {
         if (signal?.aborted || generation !== this.generation) return;
         if (error instanceof ApiError && error.problem.status === 409) this.report(error);
@@ -127,7 +147,7 @@ export class WorkspaceController {
     }
     if (signal?.aborted || generation !== this.generation || this.confirmed.get(id) !== previous) return;
     if (available) {
-      this.acceptRemote(previous, available, toProjectView(previous), true);
+      this.acceptRemote(previous, available, toProjectView(previous));
       return;
     }
     const local = this.state.projects.find((project) => project.id === id);
@@ -392,6 +412,10 @@ export class WorkspaceController {
   };
 
   private report(error: unknown) {
+    this.autoRetryOnRefresh =
+      !(error instanceof ApiError) ||
+      error.problem.status === 409 ||
+      [408, 425, 429, 500, 502, 503, 504].includes(error.problem.status);
     this.publish({
       status: error instanceof ApiError && error.problem.status === 409 ? 'conflict' : 'error',
       error: errorMessage(error),
@@ -413,7 +437,20 @@ export class WorkspaceController {
 
   retry = async (): Promise<void> => {
     if (!this.confirmed.size && !this.state.projects.length) return this.load();
-    if (this.state.status === 'conflict') return;
+    if (this.state.status === 'conflict' || (this.state.status === 'error' && !this.retryOperation)) {
+      try {
+        const beforeRefresh = new Map(this.confirmed);
+        for (const id of this.confirmed.keys()) {
+          if (this.state.projects.some((project) => project.id === id)) await this.refreshCurrentBoard(id);
+        }
+        if ([...this.confirmed].some(([id, snapshot]) => beforeRefresh.get(id) !== snapshot))
+          this.retryOperation = undefined;
+        this.autoRetryOnRefresh = false;
+      } catch (error) {
+        this.report(error);
+        return;
+      }
+    }
     this.publish({ status: 'pending', error: '' });
     await this.flush();
   };
@@ -528,12 +565,7 @@ export class WorkspaceController {
               throw error;
             // A rejected revision has not committed. Rebase independent edits and mint a new mutation ID.
             const remote = await this.services.boards.get(desired.id, previous.board.board.id);
-            this.acceptRemote(
-              previous,
-              { ...previous, board: remote },
-              toProjectView(previous),
-              error.problem.code === 'presence_locked' || ++this.rebases > 3,
-            );
+            this.acceptRemote(previous, { ...previous, board: remote }, toProjectView(previous), ++this.rebases > 3);
             return;
           }
           if (BigInt(board.board.revision) < BigInt(previous.board.board.revision))
@@ -545,6 +577,8 @@ export class WorkspaceController {
             previous,
             { ...previous, board },
             { ...desired, ...toProjectView(previous), items: desired.items },
+            false,
+            diffBoard(board, desired.items) !== null,
           );
         };
     }

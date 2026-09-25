@@ -28,7 +28,12 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const { background, textColor, mutedColor } = useCardAppearance(item.color, item.gradient, item.colorRole);
+  const { background, textColor, mutedColor } = useCardAppearance(
+    item.color,
+    item.gradient,
+    item.colorRole,
+    item.backgroundOpacity,
+  );
 
   const fontSize: NoteFontSize = item.fontSize ?? 'base';
 

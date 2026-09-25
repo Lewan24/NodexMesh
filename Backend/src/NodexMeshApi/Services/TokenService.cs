@@ -30,6 +30,7 @@ public sealed class TokenService(IConfiguration configuration) : ITokenService
 
         var claims = new List<Claim>
         {
+            new("security_stamp", user.SecurityStamp ?? string.Empty),
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),

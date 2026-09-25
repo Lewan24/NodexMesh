@@ -1,49 +1,36 @@
-# Collaboration: recovery and scaling
+# Collaboration, saving, and recovery
 
 ## Current write path
 
-```mermaid
-sequenceDiagram
-    participant A as Editing browser
-    participant API
-    participant DB as PostgreSQL
-    participant Hub as SignalR
-    participant B as Other browsers
-    A->>API: Item mutation + board/item revisions + mutation ID
-    API->>DB: Validate permissions, revisions, references and save transaction
-    DB-->>API: Commit changes and idempotency receipt
-    API->>Hub: BoardChanged(projectId, boardId, revision)
-    Hub-->>B: Invalidate board snapshot
-    API-->>A: Acknowledge committed mutation
-    B->>API: Fetch authorized current data and merge local edits
-```
+1. The frontend batches durable edits after 250 ms from the first change and spaces HTTP mutations by at least 1.1 seconds to stay within 60 mutations/minute/user.
+2. Dragging keeps frame-scheduled temporary geometry outside persisted project state and commits final positions in one board update on release.
+3. A board mutation sends changed items/deletions, expected board/item revisions, and a stable mutation ID.
+4. The API validates access, revisions, presence locks, references, schemas, and graph integrity and commits the mutation plus idempotency/audit data transactionally.
+5. After commit, the API publishes `BoardChanged(projectId, boardId, revision)` through SignalR. Other clients coalesce the hint into an authorized HTTP synchronization read.
+6. Periodic polling remains the reconciliation fallback for missed notifications, reconnects, changes from routes that do not publish a hint, and authorization changes.
 
-Canvas writes commit directly to the database. The browser batches edits starting after 250 ms; the HTTP adapter spaces mutations by at least 1.1 seconds to respect the 60 mutations/minute/user limit. Item dragging is kept as frame-scheduled visual geometry and commits the final positions in one board update on release, so pointer movement does not enter the durable write queue. Each mutation contains changed items, not an entire replacement board. A transaction checks the board revision, each touched item revision, permissions and graph references. A persisted mutation ID makes retries of a lost response safe.
+A SignalR message is never authoritative data. The following HTTP request rechecks access and returns the current database snapshot.
 
-Successful canvas writes now publish a small SignalR invalidation after commit. Notification failure does not turn a committed write into an API error. Clients coalesce notifications with background reads. Polling remains a fallback for missed events, disconnected clients, and changes made through other endpoints (including comments, membership and trash). A notification is not authoritative data: the following HTTP request checks access again.
+## Presence
 
-## Automatic recovery
+Authenticated members join one project group after a Viewer-level database permission check. The browser publishes selected/editing item IDs and optional board-space cursor coordinates, throttled on both client and server. The server supplies the display name, limits payloads to 50 items, and expires entries after 15 seconds.
 
-Independent changes are merged against the last confirmed state. A rejected revision causes a fresh read and a bounded rebase/retry. Temporary network/gateway failures replay the identical mutation; throttled retries respect `Retry-After`.
+Only active Editor/Owner editing presence locks an item against a conflicting board mutation. Viewer/Commenter selection does not lock it. Presence is advisory and in memory; revision checks remain the durable concurrency boundary. It is never exposed by public links or written into board revisions.
 
-If edits overlap, or contention repeatedly prevents a save, the browser stores a separate copy of its unsaved project view before adopting the shared snapshot. The UI explains the refresh and offers download/deletion of recovery copies. Copies are account-scoped and survive reloads; separate keys prevent tabs from overwriting each other's copies. They contain the board being edited, not a full multi-board project backup. Storage failure keeps the unsaved version on screen and retains the manual error controls. No full-page reload is needed.
+## Merge and recovery
 
-Comment writes rebase unrelated board changes. Conflicting comment text is also preserved before refresh. Board switching cannot discard a blocked save. Only active editing presence locks an item; selection/inspection and read-only roles do not lock it. Presence is advisory and expires: database revision checks remain the final concurrency protection.
+The frontend merges independent remote changes against the last confirmed snapshot. A stale revision triggers a fresh read and bounded rebase/retry with a new mutation ID; transport retry of an unacknowledged request retains the original ID.
 
-## Why a write queue is not the first fix
+If the same field changed on both sides, an edited item was deleted, relationships cannot be combined, or repeated contention prevents saving, the browser stores an account- and tab-scoped recovery draft in local storage before adopting the shared snapshot. The save status UI can download or delete those drafts. Storage failure leaves the unsaved version visible with manual recovery controls.
 
-RabbitMQ can buffer bursts, but queueing conflicting edits does not determine which text should win. It adds worker lag, delivery retries and ordering requirements. A broker accepting a message is different from the database committing it. The UI would need to distinguish queued, committed and rejected changes. Every command would still need idempotency and revision checks.
+Incoming remote state is rebased into local undo history so undo does not reverse another user's work. Board switching and logout wait for pending writes and expose errors instead of silently discarding them. Comment writes use the same board-revision conflict boundary.
 
-Keep interactive writes synchronous until measurements show database write throughput is the bottleneck. RabbitMQ is more suitable for background exports, notifications, indexing and other work outside the interactive save path. If added, publish via a transactional outbox so database commit and event delivery cannot silently diverge.
+## Scaling limits and next work
 
-## Next steps, in order
+- SignalR groups and `PresenceRegistry` are single-process. Multiple API replicas require a Redis backplane/Azure SignalR **and** distributed presence/lease storage; a backplane alone is insufficient.
+- Board invalidation still results in snapshot/revision reads. A bounded revision change feed could reduce full-board transfers, but needs cursor expiry, permission checks, idempotent replay, and snapshot fallback.
+- Same-property conflicts are intentionally preserved for user recovery, not silently resolved. Concurrent rich-text editing would require a deliberately designed CRDT/OT model and migration/history semantics.
+- The whole-board revision gate can reject independent writes. Relaxing it requires concurrent transaction tests for parent/frame deletion, links, tags, comments, and other graph changes.
+- Interactive writes remain synchronous. A message broker would not decide merge semantics; use a transactional outbox only for genuinely asynchronous background work.
 
-1. Measure 409 reasons, failed rebases, 429s, save latency, snapshot size and presence traffic with several clients editing the same board. The whole-board revision gate can reject independent item edits; do not equate these expected concurrency conflicts with database outages.
-2. Add notifications to the remaining write endpoints and measure reducing polling frequency. Delta reads by revision and narrower invalidation can reduce full-board downloads on busy boards. Retain periodic reconciliation for missing/out-of-order events.
-3. Evaluate accepting independent item writes against stale board revisions, retaining per-item checks, graph validation and transactional protection. This needs concurrent transaction tests, especially for parent/frame deletion and links.
-4. For multiple API instances, use a SignalR Redis backplane (or Azure SignalR) **and** distributed presence/lease storage. A backplane alone does not distribute the in-memory `PresenceRegistry`. The current deployment should be treated as a single presence instance.
-5. If multiple people must edit the same rich-text document simultaneously, evaluate a CRDT/OT editor. Snapshot merging deliberately does not try to combine overlapping text edits automatically.
-
-No broker or database migration is required by this change. Capacity claims require load testing; the regression tests establish behavior, not a maximum supported number of collaborators.
-
-References: [SignalR Redis backplane](https://learn.microsoft.com/en-us/aspnet/core/signalr/redis-backplane?view=aspnetcore-10.0), [RabbitMQ acknowledgements and publisher confirms](https://www.rabbitmq.com/docs/confirms), [RabbitMQ reliability](https://www.rabbitmq.com/docs/reliability).
+Measure save latency, conflict/rebase rates, 409/429 responses, polling/SignalR traffic, and snapshot bytes with multiple real clients before changing these boundaries.

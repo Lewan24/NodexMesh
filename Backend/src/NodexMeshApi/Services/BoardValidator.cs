@@ -68,6 +68,9 @@ public static class BoardValidator
         try
         {
             var appearance = JsonSerializer.Deserialize<ItemAppearance>(item.Appearance.GetRawText(), BoardItemTypes.StrictOptions);
+            if (appearance?.BackgroundOpacity is { } backgroundOpacity &&
+                (!double.IsFinite(backgroundOpacity) || backgroundOpacity is < 0 or > 100))
+                throw new ApiException(422, "invalid_item", "Background opacity must be between 0 and 100.");
             if (appearance?.CustomCss is { } customCss && (customCss.Source is null || customCss.Source.Length > 10_000))
                 throw new ApiException(422, "invalid_item", "Custom CSS must contain at most 10,000 characters.");
         }

@@ -714,6 +714,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
             <ReadOnlyBoard
               key={`${activeProjectId}:${activeProject.boardId}`}
               items={activeProject.items}
+              clipboardOwnerId={activeProject.ownerId}
               inspect
               canComment={activeProject.role === 'Commenter'}
               currentUserId={userId}

@@ -156,7 +156,9 @@ try
                     var user = await users.FindByIdAsync(userId.ToString());
                     var tokenRole = context.Principal.FindFirstValue(ClaimTypes.Role);
                     var currentRole = user?.IsAdmin == true ? "admin" : "user";
-                    if (user is null || user.IsBlocked || !string.Equals(tokenRole, currentRole, StringComparison.Ordinal))
+                    if (user is null || user.IsBlocked ||
+                        context.Principal.FindFirstValue("security_stamp") != user.SecurityStamp ||
+                        !string.Equals(tokenRole, currentRole, StringComparison.Ordinal))
                         context.Fail("User account or role has changed.");
                 }
             };
@@ -353,6 +355,7 @@ try
        .WithTags("Health");
 
     app.MapAuthEndpoints();
+    app.MapAccountDeletionEndpoints();
     app.MapAdminEndpoints();
     app.MapAuditEndpoints();
     app.MapProjectEndpoints();

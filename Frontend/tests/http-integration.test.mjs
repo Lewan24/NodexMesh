@@ -365,3 +365,28 @@ test('library binary requests retain bearer authentication and refresh without J
   assert.ok(calls.every((call) => call.body === file && !call.headers['Content-Type']));
   assert.equal(calls[1].headers.Authorization, 'Bearer new');
 });
+
+test('account deletion signs out only after the server accepts all project decisions', async () => {
+  let reject = true;
+  let expired = 0;
+  let submitted;
+  const { auth, getAccessToken } = createHttpAuthService(async (url, options) => {
+    if (url.endsWith('/auth/login')) return json({ accessToken: token('owner') });
+    submitted = JSON.parse(options.body);
+    return reject ? json({ error: 'Project choices changed.' }, 409) : new Response(null, { status: 204 });
+  });
+  auth.subscribeSessionExpired(() => expired++);
+  await auth.login({ username: 'owner@example.com', password: 'secret' });
+  const input = {
+    currentPassword: 'secret',
+    projects: [{ projectId: 'project', action: 'transfer', newOwnerId: 'collaborator' }],
+  };
+  await assert.rejects(auth.deleteAccount(input));
+  assert.equal(expired, 0);
+  assert.equal(getAccessToken(), token('owner'));
+  reject = false;
+  await auth.deleteAccount(input);
+  assert.deepEqual(submitted, input);
+  assert.equal(getAccessToken(), '');
+  assert.equal(expired, 1);
+});

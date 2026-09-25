@@ -1,3 +1,4 @@
+import { authService } from '@/app/services';
 import AdminAuditPanel from './AdminAuditPanel';
 import { locale, displayLabel, translate } from '@/shared/i18n';
 import LanguageSelect from '@/shared/i18n/LanguageSelect';
@@ -292,6 +293,15 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                           onResetAppearance={(scope) =>
                             run(() => auth.resetUserAppearance(user.id, scope), translate('User appearance reset.'))
                           }
+                          onRestore={() =>
+                            run(
+                              () => authService.restoreAccount(user.id),
+                              translate('Account restored. Project changes remain in effect.'),
+                            )
+                          }
+                          onPurge={() =>
+                            run(() => authService.purgeAccount(user.id), translate('Account permanently deleted.'))
+                          }
                           onToggleBlocked={() =>
                             run(
                               () => auth.setUserBlocked(user.id, !user.isBlocked),
@@ -383,6 +393,8 @@ function AdminUserRow({
   onResetPassword,
   onResetAppearance,
   onToggleBlocked,
+  onRestore,
+  onPurge,
 }: {
   user: AdminUser;
   currentUserId?: string;
@@ -390,8 +402,12 @@ function AdminUserRow({
   onResetPassword: (password: string) => Promise<boolean>;
   onResetAppearance: (scope: AdminAppearanceResetScope) => Promise<boolean>;
   onToggleBlocked: () => Promise<boolean>;
+  onRestore: () => Promise<boolean>;
+  onPurge: () => Promise<boolean>;
 }) {
   useTranslation();
+  const [purgeOpen, setPurgeOpen] = useState(false);
+  const [accountBusy, setAccountBusy] = useState(false);
   const [dialog, setDialog] = useState<'edit' | 'password' | 'appearance' | null>(null);
   const [resetScope, setResetScope] = useState<AdminAppearanceResetScope>('Defaults');
   const [password, setPassword] = useState('');
@@ -423,7 +439,13 @@ function AdminUserRow({
               color: user.isBlocked ? 'var(--color-danger-strong)' : 'var(--color-accent)',
             }}
           >
-            {user.isBlocked ? translate('Blocked') : user.isAdmin ? translate('Administrator') : translate('User')}
+            {user.deletionRequestedAt
+              ? translate('Pending deletion')
+              : user.isBlocked
+                ? translate('Blocked')
+                : user.isAdmin
+                  ? translate('Administrator')
+                  : translate('User')}
           </span>
           <button className="btn-ghost rounded-lg px-2.5 py-1.5 text-xs" onClick={() => setDialog('edit')}>
             {translate('Edit')}
@@ -434,7 +456,46 @@ function AdminUserRow({
           <button className="btn-ghost rounded-lg px-2.5 py-1.5 text-xs" onClick={() => setDialog('appearance')}>
             {translate('Reset appearance')}
           </button>
-          {user.id !== currentUserId && (
+          {user.deletionRequestedAt && (
+            <div className="w-full space-y-2 text-xs">
+              <p>
+                {translate('Scheduled for permanent deletion:')}{' '}
+                {user.permanentDeletionAt ? new Date(user.permanentDeletionAt).toLocaleDateString(locale()) : ''}
+              </p>
+              <p>{translate('Restoring the account does not undo project changes or restore memberships.')}</p>
+              <button
+                disabled={accountBusy}
+                className="btn-accent rounded-lg px-3 py-2"
+                onClick={async () => {
+                  setAccountBusy(true);
+                  try {
+                    await onRestore();
+                  } finally {
+                    setAccountBusy(false);
+                  }
+                }}
+              >
+                {translate('Restore account')}
+              </button>
+              <button
+                disabled={accountBusy}
+                className="btn-ghost rounded-lg px-3 py-2"
+                onClick={() => setPurgeOpen(true)}
+              >
+                {translate('Delete permanently')}
+              </button>
+            </div>
+          )}
+          {user.isBlocked && !user.deletionRequestedAt && user.id !== currentUserId && (
+            <button
+              disabled={accountBusy}
+              className="btn-ghost rounded-lg px-3 py-2 text-xs"
+              onClick={() => setPurgeOpen(true)}
+            >
+              {translate('Delete permanently')}
+            </button>
+          )}
+          {user.id !== currentUserId && !user.deletionRequestedAt && (
             <button
               className="rounded-lg px-2.5 py-1.5 text-xs font-semibold"
               style={{ color: user.isBlocked ? 'var(--color-success)' : 'var(--color-danger-strong)' }}
@@ -445,6 +506,23 @@ function AdminUserRow({
           )}
         </div>
       </div>
+      {purgeOpen && (
+        <ConfirmProjectDialog
+          title={translate('Permanently delete this account? This cannot be undone.')}
+          onCancel={() => {
+            if (!accountBusy) setPurgeOpen(false);
+          }}
+          onConfirm={async () => {
+            if (accountBusy) return;
+            setAccountBusy(true);
+            try {
+              if (await onPurge()) setPurgeOpen(false);
+            } finally {
+              setAccountBusy(false);
+            }
+          }}
+        />
+      )}
       {dialog && (
         <Modal
           onClose={() => setDialog(null)}

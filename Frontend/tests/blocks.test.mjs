@@ -702,6 +702,16 @@ test('history groups gestures, ignores no-ops and isolates project resets', () =
   assert.equal(history.undo(original), undefined);
 });
 
+test('saving a drawing does not add a no-op step ahead of undo', () => {
+  const history = new ItemHistory([], 10);
+  const drawing = createInk([{ x: 10, y: 10, pressure: 1 }], 1);
+  history.boundary();
+  history.observe([drawing]);
+  const acknowledged = [{ ...drawing, frameId: null, locked: false, comments: [], tags: [] }];
+  history.observe(acknowledged);
+  assert.deepEqual(history.undo(acknowledged), []);
+});
+
 test('default white cards follow the theme; custom colors remain fixed', () => {
   for (const value of [undefined, '#fff', '#FFFFFF', '#ffffff', 'white']) {
     assert.equal(resolveCardColor(value, 'light'), '#ffffff');
@@ -953,6 +963,10 @@ test('semantic card colors and gradient stops follow palettes while fixed colors
   assert.equal(resolveAppearance('#ffffff', light, undefined, 'accent2').background, light.accent2);
   assert.equal(resolveAppearance('#ffffff', dark, undefined, 'accent2').background, dark.accent2);
   assert.equal(resolveAppearance('#123456', dark).background, '#123456');
+  assert.equal(
+    resolveAppearance('#123456', dark, undefined, undefined, 40).background,
+    'color-mix(in srgb, #123456 40%, transparent)',
+  );
   const gradient = { from: 'accent1', to: '#123456', kind: 'linear', angle: 90 };
   assert.equal(
     resolveAppearance(undefined, dark, gradient).background,

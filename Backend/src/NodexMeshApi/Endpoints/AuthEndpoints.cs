@@ -75,6 +75,9 @@ public static class AuthEndpoints
         ILogger<Program> logger,
         CancellationToken ct)
     {
+        if (!request.AcceptSecurityNotice)
+            throw new ApiException(400, "security_notice_required", "Accept the security data collection notice to register.");
+
         var settings = await db.SystemSettings.AsNoTracking().SingleOrDefaultAsync(ct);
         if (settings is { RegistrationEnabled: false })
             throw new ApiException(403, "registration_disabled", "New account registration is disabled.");
@@ -89,6 +92,7 @@ public static class AuthEndpoints
 
         var user = new ApplicationUser
         {
+            SecurityNoticeAcceptedAt = DateTimeOffset.UtcNow,
             Id = Guid.CreateVersion7(),
             UserName = request.Email,
             Email = request.Email,

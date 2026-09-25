@@ -64,6 +64,7 @@ const appearance = object({
     object({ enabled: bool, source: (value) => typeof value === 'string' && value.length <= 10_000 }),
   ),
   color: optional(text),
+  backgroundOpacity: optional((value) => typeof value === 'number' && number(value) && value >= 0 && value <= 100),
   colorRole: optional(choice('default', 'accent1', 'accent2', 'accent3', 'accent4', 'accent5')),
   topColor: optional(text),
   gradient: optional(object({ from: text, to: text, kind: choice('linear', 'radial'), angle: number })),
