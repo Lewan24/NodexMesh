@@ -77,6 +77,40 @@ public class AdminEndpointsTests : IDisposable
     }
 
     [Fact]
+    public async Task EmailTemplates_CanBePreviewedEditedAndRestored_AndRejectDangerousHtml()
+    {
+        var admin = await _factory.CreateAdminClientAsync();
+        var templates = await admin.GetFromJsonAsync<List<EmailTemplateDto>>("/api/v1/admin/settings/email/templates");
+        var original = templates!.Single(template => template.Key == "account.confirmation");
+
+        var editedContent = new UpdateEmailTemplateRequest(
+            "Welcome, {{display_name}}",
+            "Hello {{display_name}}. Open {{action_url}}",
+            "<h1>Welcome {{display_name}}</h1><p class=\"action\"><a href=\"{{action_url}}\">Confirm</a></p>");
+        var preview = await admin.PostAsJsonAsync(
+            "/api/v1/admin/settings/email/templates/account.confirmation/preview", editedContent);
+        preview.EnsureSuccessStatusCode();
+        var rendered = await preview.Content.ReadFromJsonAsync<EmailTemplatePreviewDto>();
+        rendered!.Subject.Should().Be("Welcome, Alex Morgan");
+        rendered.HtmlBody.Should().Contain("<!doctype html>").And.Contain("Welcome Alex Morgan");
+
+        var update = await admin.PutAsJsonAsync(
+            "/api/v1/admin/settings/email/templates/account.confirmation", editedContent);
+        update.EnsureSuccessStatusCode();
+        (await update.Content.ReadFromJsonAsync<EmailTemplateDto>())!.Subject.Should().Be(editedContent.Subject);
+
+        var dangerous = await admin.PutAsJsonAsync(
+            "/api/v1/admin/settings/email/templates/account.confirmation",
+            editedContent with { HtmlBody = "<script>alert(1)</script>" });
+        dangerous.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+
+        var reset = await admin.PostAsync(
+            "/api/v1/admin/settings/email/templates/account.confirmation/reset", content: null);
+        reset.EnsureSuccessStatusCode();
+        (await reset.Content.ReadFromJsonAsync<EmailTemplateDto>())!.Subject.Should().Be(original.Subject);
+    }
+
+    [Fact]
     public async Task CreateUser_ThenThatUserCanLogIn()
     {
         var admin = await _factory.CreateAdminClientAsync();

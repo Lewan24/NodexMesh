@@ -1,5 +1,7 @@
 using NodexMeshApi.Auditing;
 using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +27,10 @@ public static class AuthEndpoints
         var group = app.MapGroup("/api/v1/auth").WithTags("Auth");
 
         group.MapPost("/register", RegisterAsync).RequireRateLimiting("auth-strict");
+        group.MapPost("/confirm-email", ConfirmEmailAsync).RequireRateLimiting("auth-strict");
+        group.MapPost("/resend-confirmation", ResendConfirmationAsync).RequireRateLimiting("auth-strict");
+        group.MapPost("/forgot-password", ForgotPasswordAsync).RequireRateLimiting("auth-strict");
+        group.MapPost("/reset-password", ResetPasswordAsync).RequireRateLimiting("auth-strict");
         group.MapGet("/registration", RegistrationStatusAsync);
         group.MapPost("/login", LoginAsync).RequireRateLimiting("auth-strict");
         group.MapPost("/refresh", RefreshAsync).RequireRateLimiting("auth-refresh");
@@ -72,6 +78,8 @@ public static class AuthEndpoints
         RegisterRequest request,
         UserManager<ApplicationUser> userManager,
         AppDbContext db,
+        IEmailSettingsService emailSettings,
+        IEmailQueue emailQueue,
         ILogger<Program> logger,
         CancellationToken ct)
     {
@@ -90,13 +98,15 @@ public static class AuthEndpoints
             return TypedResults.Conflict(new ErrorResponse("Unable to register with the provided details."));
         }
 
+        var effectiveEmail = await emailSettings.GetEffectiveAsync(db, ct);
         var user = new ApplicationUser
         {
             SecurityNoticeAcceptedAt = DateTimeOffset.UtcNow,
             Id = Guid.CreateVersion7(),
             UserName = request.Email,
             Email = request.Email,
-            DisplayName = request.DisplayName ?? request.Email.Split('@')[0]
+            DisplayName = request.DisplayName ?? request.Email.Split('@')[0],
+            EmailConfirmed = !effectiveEmail.Enabled
         };
 
         var result = await userManager.CreateAsync(user, request.Password);
@@ -109,10 +119,107 @@ public static class AuthEndpoints
         // Every user starts with a default appearance profile so the SPA always has
         // something to load — mirrors the frontend's `defaults` object.
         db.AppearanceProfiles.Add(DefaultThemes.CreateProfile(user.Id, DateTimeOffset.UtcNow));
+        if (effectiveEmail.Enabled)
+        {
+            var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            var link = AccountActionLink(effectiveEmail.PublicBaseUrl, "confirm-email", user.Id, token);
+            await emailQueue.QueueTemplateAsync(db, "account.confirmation", user.Email!, new Dictionary<string, string>
+            {
+                ["display_name"] = user.DisplayName,
+                ["action_url"] = link
+            }, ct);
+        }
         await db.SaveChangesAsync();
 
         logger.LogInformation("New user registered: {UserId}", user.Id);
-        return TypedResults.Created($"/api/v1/auth/users/{user.Id}", new RegisteredUserResponse(user.Id, user.Email!));
+        return TypedResults.Created($"/api/v1/auth/users/{user.Id}",
+            new RegisteredUserResponse(user.Id, user.Email!, effectiveEmail.Enabled));
+    }
+
+    private static async Task<NoContent> ConfirmEmailAsync(
+        ConfirmEmailRequest request,
+        UserManager<ApplicationUser> userManager,
+        CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var user = await userManager.FindByIdAsync(request.UserId.ToString());
+        if (user is null) throw new ApiException(400, "invalid_confirmation", "The confirmation link is invalid or expired.");
+        if (user.EmailConfirmed) return TypedResults.NoContent();
+
+        var result = await userManager.ConfirmEmailAsync(user, DecodeToken(request.Token));
+        if (!result.Succeeded)
+            throw new ApiException(400, "invalid_confirmation", "The confirmation link is invalid or expired.");
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<IResult> ForgotPasswordAsync(
+        ForgotPasswordRequest request,
+        UserManager<ApplicationUser> userManager,
+        AppDbContext db,
+        IEmailSettingsService emailSettings,
+        IEmailQueue emailQueue,
+        CancellationToken ct)
+    {
+        var effectiveEmail = await emailSettings.GetEffectiveAsync(db, ct);
+        if (!effectiveEmail.Enabled) return Results.Accepted();
+
+        var user = await userManager.FindByEmailAsync(request.Email.Trim());
+        if (user is null || user.IsBlocked || !user.EmailConfirmed) return Results.Accepted();
+
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        var link = AccountActionLink(effectiveEmail.PublicBaseUrl, "reset-password", user.Id, token);
+        await emailQueue.QueueTemplateAsync(db, "account.password-reset-requested", user.Email!,
+            new Dictionary<string, string> { ["display_name"] = user.DisplayName, ["action_url"] = link }, ct);
+        await db.SaveChangesAsync(ct);
+        return Results.Accepted();
+    }
+
+    private static async Task<IResult> ResendConfirmationAsync(
+        ForgotPasswordRequest request,
+        UserManager<ApplicationUser> userManager,
+        AppDbContext db,
+        IEmailSettingsService emailSettings,
+        IEmailQueue emailQueue,
+        CancellationToken ct)
+    {
+        var effectiveEmail = await emailSettings.GetEffectiveAsync(db, ct);
+        if (!effectiveEmail.Enabled) return Results.Accepted();
+
+        var user = await userManager.FindByEmailAsync(request.Email.Trim());
+        // Keep registered, confirmed, blocked, and unknown addresses indistinguishable.
+        if (user is null || user.IsBlocked || user.EmailConfirmed) return Results.Accepted();
+
+        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+        var link = AccountActionLink(effectiveEmail.PublicBaseUrl, "confirm-email", user.Id, token);
+        await emailQueue.QueueTemplateAsync(db, "account.confirmation", user.Email!,
+            new Dictionary<string, string> { ["display_name"] = user.DisplayName, ["action_url"] = link }, ct);
+        await db.SaveChangesAsync(ct);
+        return Results.Accepted();
+    }
+
+    private static async Task<NoContent> ResetPasswordAsync(
+        ResetPasswordRequest request,
+        UserManager<ApplicationUser> userManager,
+        AppDbContext db,
+        IEmailQueue emailQueue,
+        CancellationToken ct)
+    {
+        var user = await userManager.FindByIdAsync(request.UserId.ToString());
+        if (user is null || user.IsBlocked)
+            throw new ApiException(400, "invalid_password_reset", "The password reset link is invalid or expired.");
+
+        var result = await userManager.ResetPasswordAsync(user, DecodeToken(request.Token), request.Password);
+        if (!result.Succeeded)
+            throw new ApiException(400, "invalid_password_reset", "The password reset link is invalid or expired.");
+
+        var now = DateTime.UtcNow;
+        foreach (var session in await db.RefreshTokens
+            .Where(token => token.UserId == user.Id && token.RevokedAtUtc == null).ToListAsync(ct))
+            session.RevokedAtUtc = now;
+        await emailQueue.QueueTemplateAsync(db, "account.password-changed", user.Email!,
+            new Dictionary<string, string> { ["display_name"] = user.DisplayName }, ct);
+        await db.SaveChangesAsync(ct);
+        return TypedResults.NoContent();
     }
 
     private static async Task<Results<Ok<AuthResponse>, UnauthorizedHttpResult>> LoginAsync(
@@ -121,6 +228,7 @@ public static class AuthEndpoints
         SignInManager<ApplicationUser> signInManager,
         ITokenService tokenService,
         AppDbContext db,
+        IEmailQueue emailQueue,
         HttpContext http,
         IHostEnvironment environment,
         ILogger<Program> logger)
@@ -141,6 +249,14 @@ public static class AuthEndpoints
             http.Items[AuditCapture.ExplicitEvent] = true;
             await http.RequestServices.GetRequiredService<AuditWriter>().WriteAsync(failure);
             return TypedResults.Unauthorized();
+        }
+
+        if (!user.EmailConfirmed)
+        {
+            if (await emailQueue.IsEnabledAsync(db))
+                throw new ApiException(403, "email_not_confirmed", "Confirm your email address before signing in.");
+            user.EmailConfirmed = true;
+            await userManager.UpdateAsync(user);
         }
 
         var (accessToken, accessTokenExpiresAtUtc) = tokenService.GenerateAccessToken(user);
@@ -296,6 +412,8 @@ public static class AuthEndpoints
         ClaimsPrincipal principal,
         UserManager<ApplicationUser> userManager,
         ITokenService tokenService,
+        IEmailSettingsService emailSettings,
+        IEmailQueue emailQueue,
         AppDbContext db,
         HttpContext http,
         IHostEnvironment environment,
@@ -320,10 +438,19 @@ public static class AuthEndpoints
         user.Email = email;
         user.UserName = email;
         user.DisplayName = displayName;
+        var effectiveEmail = await emailSettings.GetEffectiveAsync(db, ct);
+        if (emailChanged) user.EmailConfirmed = !effectiveEmail.Enabled;
         var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded)
             throw new ApiException(422, "invalid_profile", string.Join(" ", result.Errors.Select(error => error.Description)));
 
+        if (emailChanged && effectiveEmail.Enabled)
+        {
+            var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            var link = AccountActionLink(effectiveEmail.PublicBaseUrl, "confirm-email", user.Id, token);
+            await emailQueue.QueueTemplateAsync(db, "account.email-change-confirmation", user.Email!,
+                new Dictionary<string, string> { ["display_name"] = user.DisplayName, ["action_url"] = link }, ct);
+        }
         if (emailChanged)
             await RotateSessionsAsync(user, tokenService, db, http, environment, ct);
         var (accessToken, expiresAtUtc) = tokenService.GenerateAccessToken(user);
@@ -335,6 +462,7 @@ public static class AuthEndpoints
         ClaimsPrincipal principal,
         UserManager<ApplicationUser> userManager,
         ITokenService tokenService,
+        IEmailQueue emailQueue,
         AppDbContext db,
         HttpContext http,
         IHostEnvironment environment,
@@ -346,6 +474,8 @@ public static class AuthEndpoints
         if (!result.Succeeded)
             throw new ApiException(422, "invalid_password", string.Join(" ", result.Errors.Select(error => error.Description)));
 
+        await emailQueue.QueueTemplateAsync(db, "account.password-changed", user.Email!,
+            new Dictionary<string, string> { ["display_name"] = user.DisplayName }, ct);
         await RotateSessionsAsync(user, tokenService, db, http, environment, ct);
         var (accessToken, accessExpiresAtUtc) = tokenService.GenerateAccessToken(user);
         return TypedResults.Ok(CreateAuthResponse(user, accessToken, accessExpiresAtUtc));
@@ -429,6 +559,18 @@ public static class AuthEndpoints
 
     private static UserProfileResponse ToProfile(ApplicationUser user) =>
         new(user.Id, user.Email!, user.DisplayName, user.IsAdmin);
+
+    private static string AccountActionLink(string publicBaseUrl, string action, Guid userId, string token)
+    {
+        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+        return $"{publicBaseUrl}/?action={Uri.EscapeDataString(action)}&userId={userId:D}&token={Uri.EscapeDataString(encodedToken)}";
+    }
+
+    private static string DecodeToken(string encoded)
+    {
+        try { return Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(encoded)); }
+        catch (FormatException) { throw new ApiException(400, "invalid_token", "The link is invalid or expired."); }
+    }
 }
 
 internal static class DefaultThemes

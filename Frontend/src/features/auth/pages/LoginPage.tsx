@@ -11,13 +11,15 @@ export default function LoginPage() {
     acceptSecurityNotice,
     setAcceptSecurityNotice,
     registering,
+    mode,
     registrationAvailable,
-    setRegistering,
+    setMode,
     confirmPassword,
     setConfirmPassword,
     username,
     password,
     error,
+    message,
     submitting,
     setUsername,
     setPassword,
@@ -90,7 +92,17 @@ export default function LoginPage() {
           </span>
 
           <p className="text-sm text-center mt-1" style={{ color: 'var(--color-text-muted)' }}>
-            {registering ? translate('Create your NodexMesh account') : translate('Sign in to open your boards')}
+            {mode === 'register'
+              ? translate('Create your NodexMesh account')
+              : mode === 'forgot'
+                ? translate('Request a password reset')
+                : mode === 'resend'
+                  ? translate('Resend account confirmation')
+                  : mode === 'reset'
+                    ? translate('Choose a new password')
+                    : mode === 'confirming'
+                      ? translate('Confirming your email address…')
+                      : translate('Sign in to open your boards')}
           </p>
         </div>
 
@@ -100,38 +112,42 @@ export default function LoginPage() {
         >
           <div className="flex min-w-0 flex-col gap-3.5">
             {registering && <h2 className="text-sm font-semibold">{translate('Account details')}</h2>}
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-                {isMockDataSource ? translate('Username') : translate('Email')}
-              </span>
+            {mode !== 'reset' && mode !== 'confirming' && (
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                  {isMockDataSource ? translate('Username') : translate('Email')}
+                </span>
 
-              <input
-                autoFocus
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                type={isMockDataSource ? 'text' : 'email'}
-                placeholder={isMockDataSource ? translate('e.g. demo') : 'you@example.com'}
-                className="input-theme text-sm px-3.5 py-2.5"
-                autoComplete="username"
-              />
-            </label>
+                <input
+                  autoFocus
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  type={isMockDataSource ? 'text' : 'email'}
+                  placeholder={isMockDataSource ? translate('e.g. demo') : 'you@example.com'}
+                  className="input-theme text-sm px-3.5 py-2.5"
+                  autoComplete="username"
+                />
+              </label>
+            )}
 
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-                {translate('Password')}
-              </span>
+            {mode !== 'forgot' && mode !== 'resend' && mode !== 'confirming' && (
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                  {translate('Password')}
+                </span>
 
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="input-theme text-sm px-3.5 py-2.5"
-                autoComplete={registering ? 'new-password' : 'current-password'}
-              />
-            </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="input-theme text-sm px-3.5 py-2.5"
+                  autoComplete={mode === 'register' || mode === 'reset' ? 'new-password' : 'current-password'}
+                />
+              </label>
+            )}
 
-            {registering && (
+            {(mode === 'register' || mode === 'reset') && (
               <label className="flex flex-col gap-1.5 text-xs">
                 {translate('Confirm new password')}
                 <input
@@ -144,7 +160,7 @@ export default function LoginPage() {
                 />
               </label>
             )}
-            {registering && (
+            {(mode === 'register' || mode === 'reset') && (
               <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
                 {translate('Use 12+ characters with uppercase, lowercase, a number and a symbol.')}
               </p>
@@ -177,27 +193,77 @@ export default function LoginPage() {
               {error}
             </div>
           )}
+          {message && (
+            <div
+              role="status"
+              className="rounded-xl px-3 py-2 text-xs md:col-span-2"
+              style={{ color: 'var(--color-accent)', backgroundColor: 'var(--color-accent-soft)' }}
+            >
+              {message}
+            </div>
+          )}
 
           <button
             type="submit"
-            disabled={submitting || (registering && !acceptSecurityNotice)}
+            disabled={submitting || mode === 'confirming' || (registering && !acceptSecurityNotice)}
             className="btn-accent mt-1.5 rounded-xl py-3 text-sm font-semibold disabled:opacity-60 md:col-span-2"
           >
-            {submitting ? translate('Please wait…') : registering ? translate('Create account') : translate('Sign in')}
+            {submitting
+              ? translate('Please wait…')
+              : mode === 'register'
+                ? translate('Create account')
+                : mode === 'forgot'
+                  ? translate('Send reset link')
+                  : mode === 'resend'
+                    ? translate('Send confirmation email')
+                    : mode === 'reset'
+                      ? translate('Reset password')
+                      : translate('Sign in')}
           </button>
         </form>
-        {!isMockDataSource && registrationAvailable && (
+        {!isMockDataSource && registrationAvailable && (mode === 'login' || mode === 'register') && (
           <button
             type="button"
             disabled={submitting}
             className="btn-ghost mt-4 w-full rounded-xl px-3 py-2 text-sm"
-            onClick={() => setRegistering(!registering)}
+            onClick={() => setMode(registering ? 'login' : 'register')}
           >
             {registering ? translate('Back to sign in') : translate('Create an account')}
           </button>
         )}
 
-        {!registering && (
+        {!isMockDataSource && mode === 'login' && (
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              disabled={submitting}
+              className="btn-ghost rounded-xl px-3 py-2 text-sm"
+              onClick={() => setMode('forgot')}
+            >
+              {translate('Forgot password?')}
+            </button>
+            <button
+              type="button"
+              disabled={submitting}
+              className="btn-ghost rounded-xl px-3 py-2 text-sm"
+              onClick={() => setMode('resend')}
+            >
+              {translate('Resend confirmation')}
+            </button>
+          </div>
+        )}
+        {!isMockDataSource && (mode === 'forgot' || mode === 'resend' || mode === 'reset') && (
+          <button
+            type="button"
+            disabled={submitting}
+            className="btn-ghost mt-2 w-full rounded-xl px-3 py-2 text-sm"
+            onClick={() => setMode('login')}
+          >
+            {translate('Back to sign in')}
+          </button>
+        )}
+
+        {mode === 'login' && (
           <p className="text-xs text-center mt-6" style={{ color: 'var(--color-text-muted)' }}>
             {isMockDataSource
               ? translate('Sign in with a demo account.')

@@ -1,5 +1,6 @@
 import { authService } from '@/app/services';
 import AdminAuditPanel from './AdminAuditPanel';
+import AdminEmailPanel from './AdminEmailPanel';
 import { locale, displayLabel, translate } from '@/shared/i18n';
 import LanguageSelect from '@/shared/i18n/LanguageSelect';
 import { useTranslation } from 'react-i18next';
@@ -41,7 +42,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
       ),
   );
   const [registration, setRegistration] = useState(true);
-  const [tab, setTab] = useState<'users' | 'projects' | 'audit'>('users');
+  const [tab, setTab] = useState<'users' | 'projects' | 'email' | 'audit'>('users');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [newUser, setNewUser] = useState({ email: '', displayName: '', password: '', isAdmin: false });
@@ -129,11 +130,11 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
         </header>
         <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
           <div
-            className="grid min-w-0 grid-cols-3 gap-2 sm:flex"
+            className="grid min-w-0 grid-cols-4 gap-2 sm:flex"
             role="tablist"
             aria-label={translate('Administration')}
           >
-            {(['users', 'projects', 'audit'] as const).map((value) => (
+            {(['users', 'projects', 'email', 'audit'] as const).map((value) => (
               <button
                 key={value}
                 id={`admin-tab-${value}`}
@@ -142,7 +143,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                 aria-controls="admin-tab-content"
                 tabIndex={tab === value ? 0 : -1}
                 onKeyDown={(event) => {
-                  const tabs = ['users', 'projects', 'audit'] as const;
+                  const tabs = ['users', 'projects', 'email', 'audit'] as const;
                   const index = tabs.indexOf(value);
                   const next =
                     event.key === 'ArrowRight'
@@ -168,7 +169,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                   color: tab === value ? 'var(--color-accent)' : 'var(--color-text-secondary)',
                 }}
               >
-                {value === 'audit' ? translate('Audit') : displayLabel(value)}
+                {value === 'audit' ? translate('Audit') : value === 'email' ? translate('Email') : displayLabel(value)}
               </button>
             ))}
           </div>
@@ -210,6 +211,8 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
           )}
           {tab === 'audit' ? (
             <AdminAuditPanel />
+          ) : tab === 'email' ? (
+            <AdminEmailPanel />
           ) : (
             <>
               <div className="mb-4 flex flex-wrap gap-2">

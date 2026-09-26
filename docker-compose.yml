@@ -48,11 +48,24 @@ services:
       Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:3000}
       Admin__Email: ${ADMIN_EMAIL:-admin@example.com}
       Admin__Password: ${ADMIN_PASSWORD:-}
+      Email__Enabled: ${EMAIL_ENABLED:-false}
+      Email__Host: ${EMAIL_HOST:-}
+      Email__Port: ${EMAIL_PORT:-587}
+      Email__UseSsl: ${EMAIL_USE_SSL:-true}
+      Email__Username: ${EMAIL_USERNAME:-}
+      Email__Password: ${EMAIL_PASSWORD:-}
+      Email__FromAddress: ${EMAIL_FROM_ADDRESS:-}
+      Email__FromName: ${EMAIL_FROM_NAME:-NodexMesh}
+      Email__PublicBaseUrl: ${EMAIL_PUBLIC_BASE_URL:-}
+      Email__UserNotificationsEnabled: ${EMAIL_USER_NOTIFICATIONS_ENABLED:-true}
+      Email__AdminAlertsEnabled: ${EMAIL_ADMIN_ALERTS_ENABLED:-true}
+      DataProtection__KeysPath: /app/keys
     ports:
       - "${API_PORT:-8080}:8080"
 
     volumes:
       - library-data:/app/storage
+      - data-protection-keys:/app/keys
 
   frontend:
     build:
@@ -89,5 +102,6 @@ services:
       - "${ADMINER_PORT:-8081}:8080"
 
 volumes:
+  data-protection-keys:
   library-data:
   postgres-data:
