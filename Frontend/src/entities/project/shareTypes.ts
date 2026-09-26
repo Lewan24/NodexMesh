@@ -30,9 +30,11 @@ export interface ShareLink {
   lastAccessedAt: string | null;
   accessCount: number;
   isActive: boolean;
+  /** Null only for links created before retrievable public URLs were introduced. */
+  token: string | null;
 }
 
-/** Returned only once, at creation — the raw token is unrecoverable afterwards. */
+/** Creation response; the token is also returned by subsequent owner-only list calls. */
 export interface CreatedShareLink {
   link: ShareLink;
   token: string;

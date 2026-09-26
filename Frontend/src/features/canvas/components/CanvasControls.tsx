@@ -1,14 +1,16 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { ZOOM_MAX, ZOOM_MIN } from '@/features/canvas/constants';
-import { Trash2 } from 'lucide-react';
+import { MousePointerClick, Trash2 } from 'lucide-react';
 
 interface CanvasControlsProps {
   zoom: number;
   snapEnabled: boolean;
+  placeOnItems: boolean;
   onZoomChange: (zoom: number) => void;
   onPanChange: (pan: { x: number; y: number }) => void;
   onToggleSnap: () => void;
+  onTogglePlaceOnItems: () => void;
   onFitView: () => void;
   selectionMode: boolean;
   onToggleSelectionMode: () => void;
@@ -20,9 +22,11 @@ interface CanvasControlsProps {
 export default function CanvasControls({
   zoom,
   snapEnabled,
+  placeOnItems,
   onZoomChange,
   onPanChange,
   onToggleSnap,
+  onTogglePlaceOnItems,
   onFitView,
   selectionMode,
   onToggleSelectionMode,
@@ -89,6 +93,23 @@ export default function CanvasControls({
         <span className="hidden sm:inline">{translate('Trash')}</span>
       </button>
       <button
+        type="button"
+        onClick={onTogglePlaceOnItems}
+        className="w-9 h-9 flex items-center justify-center rounded-xl border shadow-md transition-colors"
+        style={{
+          backgroundColor: placeOnItems ? 'var(--color-accent)' : 'var(--color-surface-translucent)',
+          borderColor: placeOnItems ? 'var(--color-accent)' : 'var(--color-border)',
+          color: placeOnItems ? 'white' : 'var(--color-text-secondary)',
+          backdropFilter: 'blur(8px)',
+        }}
+        aria-pressed={placeOnItems}
+        aria-label={translate('Place tools on items')}
+        title={placeOnItems ? translate('Place on items: on') : translate('Place on items: off')}
+      >
+        <MousePointerClick size={15} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
         onClick={onToggleSnap}
         className="w-9 h-9 flex items-center justify-center rounded-xl border shadow-md transition-colors"
         style={{

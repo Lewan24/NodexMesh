@@ -151,6 +151,7 @@ export default function Canvas({
   const [spacePanActive, setSpacePanActive] = useState(false);
   const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
   const [snapEnabled, setSnapEnabled] = useState(true);
+  const [placeOnItems, setPlaceOnItems] = useState(false);
   const [customCssTarget, setCustomCssTarget] = useState<{ itemId: string; columnId?: string } | null>(null);
   const [contextMenu, setContextMenu] = useState<CanvasMenuState | null>(null);
   const [quickConnectMenu, setQuickConnectMenu] = useState<QuickConnectMenuState | null>(null);
@@ -583,6 +584,7 @@ export default function Canvas({
     selectedTool,
     pan,
     spacePanActive,
+    placeOnItems,
     screenToCanvas,
     snapValue,
     pushHistory,
@@ -807,6 +809,12 @@ export default function Canvas({
         return;
       }
 
+      if (event.button === 0 && placeOnItems && selectedTool !== 'select') {
+        event.stopPropagation();
+        handleCanvasMouseDown(event);
+        return;
+      }
+
       handleBlurActiveElement(event);
 
       if (event.button !== 0) return;
@@ -825,7 +833,7 @@ export default function Canvas({
 
       clearColumnSelection();
     },
-    [spacePanActive, handleCanvasMouseDown, handleBlurActiveElement, clearColumnSelection],
+    [spacePanActive, placeOnItems, selectedTool, handleCanvasMouseDown, handleBlurActiveElement, clearColumnSelection],
   );
 
   const safeSelectedIds = selectedIds ?? [];
@@ -1574,6 +1582,7 @@ export default function Canvas({
         }}
         zoom={zoom}
         snapEnabled={snapEnabled}
+        placeOnItems={placeOnItems}
         onZoomChange={(nextZoom) => {
           const centerX = viewportSize.width / 2;
           const centerY = viewportSize.height / 2;
@@ -1589,6 +1598,7 @@ export default function Canvas({
         onToggleSelectionMode={() => setTouchSelectionMode((current) => !current)}
         onUndo={undo}
         onToggleSnap={() => setSnapEnabled((previous) => !previous)}
+        onTogglePlaceOnItems={() => setPlaceOnItems((previous) => !previous)}
       />
     </div>
   );
