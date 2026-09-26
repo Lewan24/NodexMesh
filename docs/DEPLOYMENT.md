@@ -18,7 +18,38 @@ Services:
 - Adminer: <http://localhost:8081>
 - PostgreSQL: private Compose network unless its commented port mapping is enabled
 
-`postgres-data` stores PostgreSQL and `library-data` stores uploaded media. The API applies committed migrations at startup.
+`postgres-data` stores PostgreSQL, `library-data` stores uploaded media, and `data-protection-keys`
+stores the encryption keys needed to decrypt SMTP credentials and queued email. Back up all three.
+The API applies committed migrations at startup.
+
+## Email delivery
+
+Email is disabled by default. While it is disabled, new accounts are confirmed automatically,
+password-reset email requests return a generic accepted response without sending anything, and
+all notification email is skipped. This keeps local, demo, and mock deployments self-contained.
+
+There are two mutually exclusive configuration paths:
+
+- Set `EMAIL_HOST` and the other `EMAIL_*` values in `.env`/Compose (or the equivalent
+  `Email__*` application settings). A non-empty host makes server configuration authoritative
+  and the administration panel read-only.
+- Leave `EMAIL_HOST` empty and configure SMTP in **Administration > Email**. The password is
+  encrypted with ASP.NET Core Data Protection before database storage and is never returned by
+  the API. Changes are effective immediately.
+
+Production `EMAIL_PUBLIC_BASE_URL` must be the public HTTPS frontend origin. Preserve the
+`data-protection-keys` volume across upgrades and restores; losing it makes stored SMTP secrets
+and pending protected messages unreadable. Use an orchestrator secret store for environment-based
+SMTP passwords. The database outbox retries transient delivery failures and exposes pending and
+failed counts in the administration panel.
+
+Default account, project, deletion, security-alert, and test-message templates are created in the
+database during startup. Administrators can edit their subject, plain-text fallback, and HTML
+content under **Administration > Email > Email templates**, preview the rendered branded message,
+or restore an individual template to its application default. Template variables are escaped when
+inserted into HTML, and active content such as scripts, forms, frames, event handlers, and
+executable URLs is rejected. Messages are sent as UTF-8 `multipart/alternative`, with both a plain
+text fallback and an HTML card.
 
 ## Production Docker Hub/Portainer stack
 
@@ -68,7 +99,9 @@ LIBRARY_MAX_PROJECT_BYTES=1073741824
 
 The API validates file signatures/extensions and stores bytes outside the web root. The frontend Nginx upload limit is 50 MiB; update it and the external proxy together if raising the API limit. Multiple API replicas require shared file storage.
 
-Back up both PostgreSQL and `library-data`. Project JSON exports do not contain file bytes. The hourly cleanup removes orphaned files older than one day; trashed projects retain their library until permanent deletion.
+Back up PostgreSQL, `library-data`, and `data-protection-keys`. Project JSON exports do not contain
+file bytes. The hourly cleanup removes orphaned files older than one day; trashed projects retain
+their library until permanent deletion.
 
 ## Production checklist
 

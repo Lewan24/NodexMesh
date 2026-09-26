@@ -16,6 +16,17 @@ public sealed class SystemSettings
 {
     public int Id { get; set; }
     public bool RegistrationEnabled { get; set; } = true;
+    public bool EmailEnabled { get; set; }
+    public string EmailHost { get; set; } = string.Empty;
+    public int EmailPort { get; set; } = 587;
+    public bool EmailUseSsl { get; set; } = true;
+    public string EmailUsername { get; set; } = string.Empty;
+    public string? EmailPasswordProtected { get; set; }
+    public string EmailFromAddress { get; set; } = string.Empty;
+    public string EmailFromName { get; set; } = "NodexMesh";
+    public string EmailPublicBaseUrl { get; set; } = string.Empty;
+    public bool EmailUserNotificationsEnabled { get; set; } = true;
+    public bool EmailAdminAlertsEnabled { get; set; } = true;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
 

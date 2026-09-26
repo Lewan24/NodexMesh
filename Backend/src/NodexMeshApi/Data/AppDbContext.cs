@@ -57,6 +57,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
     public DbSet<ProjectAppearanceOverride> ProjectAppearanceOverrides => Set<ProjectAppearanceOverride>();
     public DbSet<IdempotencyKey> IdempotencyKeys => Set<IdempotencyKey>();
     public DbSet<SystemSettings> SystemSettings => Set<SystemSettings>();
+    public DbSet<EmailOutboxMessage> EmailOutbox => Set<EmailOutboxMessage>();
+    public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -141,7 +143,34 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
             e.Property(x => x.TokenHash).HasMaxLength(128);
         });
 
-        b.Entity<SystemSettings>(e => e.HasKey(x => x.Id));
+        b.Entity<SystemSettings>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.EmailHost).HasMaxLength(255);
+            e.Property(x => x.EmailUsername).HasMaxLength(255);
+            e.Property(x => x.EmailFromAddress).HasMaxLength(256);
+            e.Property(x => x.EmailFromName).HasMaxLength(100);
+            e.Property(x => x.EmailPublicBaseUrl).HasMaxLength(2048);
+        });
+
+        b.Entity<EmailOutboxMessage>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Kind).HasMaxLength(64);
+            e.Property(x => x.LastError).HasMaxLength(512);
+            e.HasIndex(x => new { x.SentAt, x.DeadLetteredAt, x.AvailableAt });
+            e.HasIndex(x => x.LeaseId);
+        });
+
+        b.Entity<EmailTemplate>(e =>
+        {
+            e.HasKey(x => x.Key);
+            e.Property(x => x.Key).HasMaxLength(64);
+            e.Property(x => x.Name).HasMaxLength(100);
+            e.Property(x => x.Description).HasMaxLength(500);
+            e.Property(x => x.SubjectTemplate).HasMaxLength(200);
+            e.Property(x => x.VariablesCsv).HasMaxLength(500);
+        });
 
         // ---------------- Project ----------------
         b.Entity<Project>(e =>

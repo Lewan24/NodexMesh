@@ -7,6 +7,10 @@ import type {
   AdminProject,
   AdminProjectMember,
   AdminUser,
+  EmailSettings,
+  EmailTemplate,
+  EmailTemplateContent,
+  EmailOutboxResponse,
   LoginInput,
 } from '../types';
 import { initialUsers } from '@/entities/user/mockUsers';
@@ -39,7 +43,11 @@ export interface AuthService {
     confirmPassword: string;
     displayName?: string;
     acceptSecurityNotice: boolean;
-  }): Promise<void>;
+  }): Promise<{ confirmationRequired: boolean }>;
+  confirmEmail(userId: string, token: string): Promise<void>;
+  resendConfirmation(email: string): Promise<void>;
+  requestPasswordReset(email: string): Promise<void>;
+  resetPassword(input: { userId: string; token: string; password: string; confirmPassword: string }): Promise<void>;
   me(): Promise<User | null>;
   login(input: LoginInput): Promise<User>;
   logout(): Promise<void>;
@@ -68,6 +76,22 @@ export interface AuthService {
   registrationEnabled(): Promise<boolean>;
   setRegistrationEnabled(enabled: boolean): Promise<boolean>;
   registrationAvailable(): Promise<boolean>;
+  emailSettings(): Promise<EmailSettings>;
+  updateEmailSettings(
+    input: Omit<
+      EmailSettings,
+      'configured' | 'source' | 'editable' | 'hasPassword' | 'pendingMessages' | 'failedMessages'
+    > & { password?: string; clearPassword: boolean },
+  ): Promise<EmailSettings>;
+  testEmailSettings(): Promise<void>;
+  emailTemplates(): Promise<EmailTemplate[]>;
+  updateEmailTemplate(key: string, content: EmailTemplateContent): Promise<EmailTemplate>;
+  resetEmailTemplate(key: string): Promise<EmailTemplate>;
+  previewEmailTemplate(key: string, content: EmailTemplateContent): Promise<EmailTemplateContent>;
+  emailOutbox(status?: string): Promise<EmailOutboxResponse>;
+  retryEmailOutbox(id: string): Promise<void>;
+  retryFailedEmails(): Promise<number>;
+  deleteEmailOutbox(id: string): Promise<void>;
 }
 
 /** Credentials exist only in this mock's memory; never in public User or browser storage. */
@@ -92,6 +116,13 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
     async purgeAccount() {
       return fail(501, 'unsupported', translate('Account deletion is unavailable in demo mode.'));
     },
+    async register() {
+      return { confirmationRequired: false };
+    },
+    async confirmEmail() {},
+    async resendConfirmation() {},
+    async requestPasswordReset() {},
+    async resetPassword() {},
     async me() {
       return current;
     },
@@ -239,5 +270,53 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
     async registrationAvailable() {
       return true;
     },
+    async emailSettings() {
+      requireAdmin();
+      return {
+        enabled: false,
+        configured: false,
+        source: 'database',
+        editable: false,
+        host: '',
+        port: 587,
+        useSsl: true,
+        username: '',
+        hasPassword: false,
+        fromAddress: '',
+        fromName: 'NodexMesh',
+        publicBaseUrl: '',
+        userNotificationsEnabled: false,
+        adminAlertsEnabled: false,
+        pendingMessages: 0,
+        failedMessages: 0,
+      };
+    },
+    async updateEmailSettings() {
+      requireAdmin();
+      return this.emailSettings();
+    },
+    async testEmailSettings() {
+      requireAdmin();
+    },
+    async emailTemplates() {
+      requireAdmin();
+      return [];
+    },
+    async updateEmailTemplate() {
+      requireAdmin();
+      return fail(501, 'unsupported', translate('Email templates are unavailable in demo mode.'));
+    },
+    async resetEmailTemplate() {
+      requireAdmin();
+      return fail(501, 'unsupported', translate('Email templates are unavailable in demo mode.'));
+    },
+    async previewEmailTemplate() {
+      requireAdmin();
+      return fail(501, 'unsupported', translate('Email templates are unavailable in demo mode.'));
+    },
+    async emailOutbox() { requireAdmin(); return { items: [], pendingMessages: 0, failedMessages: 0 }; },
+    async retryEmailOutbox() { requireAdmin(); },
+    async retryFailedEmails() { requireAdmin(); return 0; },
+    async deleteEmailOutbox() { requireAdmin(); },
   };
 }

@@ -1,7 +1,14 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using FluentAssertions;
+using NodexMeshApi.Data;
 using NodexMeshApi.Dtos;
+using NodexMeshApi.Models;
 using NodexMeshApi.Tests.Infrastructure;
 using Xunit;
 
@@ -37,6 +44,155 @@ public class AuthEndpointsTests : IDisposable
         auth!.AccessToken.Should().NotBeNullOrWhiteSpace();
         auth.User.Email.Should().Be(email);
         auth.User.IsAdmin.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Register_WhenEmailIsDisabled_AutoConfirmsAndDoesNotQueueMail()
+    {
+        var client = _factory.CreateClientNoRedirect();
+        var email = $"{Guid.NewGuid():N}@nodexmesh.test";
+
+        var response = await client.PostAsJsonAsync("/api/v1/auth/register",
+            new RegisterRequest(email, "Correct#Horse9Battery", "Correct#Horse9Battery", "No Mail", true));
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        (await response.Content.ReadFromJsonAsync<RegisteredUserResponse>())!.ConfirmationRequired.Should().BeFalse();
+        await using var scope = _factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.Users.SingleAsync(user => user.Email == email)).EmailConfirmed.Should().BeTrue();
+        (await db.EmailOutbox.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task EnabledEmail_EncryptsSecrets_RequiresConfirmation_AndAcceptsAValidToken()
+    {
+        var admin = await _factory.CreateAdminClientAsync();
+        const string smtpPassword = "smtp-secret-that-must-not-leak";
+        var settings = new UpdateEmailSettingsRequest(
+            Enabled: true, Host: "smtp.nodexmesh.test", Port: 587, UseSsl: true,
+            Username: "mailer", Password: smtpPassword, ClearPassword: false,
+            FromAddress: "noreply@nodexmesh.test", FromName: "NodexMesh",
+            PublicBaseUrl: "https://nodexmesh.test", UserNotificationsEnabled: true, AdminAlertsEnabled: true);
+        var update = await admin.PutAsJsonAsync("/api/v1/admin/settings/email", settings);
+        update.EnsureSuccessStatusCode();
+        (await update.Content.ReadAsStringAsync()).Should().NotContain(smtpPassword);
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var stored = await db.SystemSettings.AsNoTracking().SingleAsync();
+            stored.EmailPasswordProtected.Should().NotBeNullOrWhiteSpace().And.NotBe(smtpPassword);
+            stored.EmailPasswordProtected.Should().NotContain(smtpPassword);
+        }
+
+        var client = _factory.CreateClientNoRedirect();
+        var email = $"{Guid.NewGuid():N}@nodexmesh.test";
+        const string password = "Correct#Horse9Battery";
+        var register = await client.PostAsJsonAsync("/api/v1/auth/register",
+            new RegisterRequest(email, password, password, "Confirm Me", true));
+        register.StatusCode.Should().Be(HttpStatusCode.Created);
+        var registered = (await register.Content.ReadFromJsonAsync<RegisteredUserResponse>())!;
+        registered.ConfirmationRequired.Should().BeTrue();
+
+        (await client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, password)))
+            .StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        string token;
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = (await users.FindByIdAsync(registered.Id.ToString()))!;
+            user.EmailConfirmed.Should().BeFalse();
+            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(await users.GenerateEmailConfirmationTokenAsync(user)));
+
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var queued = await db.EmailOutbox.AsNoTracking().SingleAsync(message => message.Kind == "account.confirmation");
+            queued.ProtectedPayload.Should().NotContain(email);
+        }
+
+        (await client.PostAsJsonAsync("/api/v1/auth/confirm-email", new ConfirmEmailRequest(registered.Id, token)))
+            .StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, password)))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task ResetPassword_UsesIdentityToken_RevokesOldPassword_AndQueuesSecurityNotice()
+    {
+        var admin = await _factory.CreateAdminClientAsync();
+        await admin.PutAsJsonAsync("/api/v1/admin/settings/email", new UpdateEmailSettingsRequest(
+            true, "smtp.nodexmesh.test", 587, true, "mailer", "secret", false,
+            "noreply@nodexmesh.test", "NodexMesh", "https://nodexmesh.test", true, true));
+        var (_, userId, email, oldPassword) = await _factory.CreateSeededUserAsync();
+
+        string token;
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = (await users.FindByIdAsync(userId.ToString()))!;
+            user.EmailConfirmed = true;
+            (await users.UpdateAsync(user)).Succeeded.Should().BeTrue();
+            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(await users.GeneratePasswordResetTokenAsync(user)));
+        }
+
+        var client = _factory.CreateClientNoRedirect();
+        const string newPassword = "Br@ndNewPassword9";
+        var reset = await client.PostAsJsonAsync("/api/v1/auth/reset-password",
+            new ResetPasswordRequest(userId, token, newPassword, newPassword));
+        reset.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, oldPassword)))
+            .StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        (await client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, newPassword)))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+
+        await using var verificationScope = _factory.Services.CreateAsyncScope();
+        var verificationDb = verificationScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await verificationDb.EmailOutbox.CountAsync(message => message.Kind == "account.password-changed"))
+            .Should().Be(1);
+    }
+
+    [Fact]
+    public async Task RecoveryRequests_AreEnumerationSafe_AndQueueOnlyEligibleAccounts()
+    {
+        var admin = await _factory.CreateAdminClientAsync();
+        await admin.PutAsJsonAsync("/api/v1/admin/settings/email", new UpdateEmailSettingsRequest(
+            true, "smtp.nodexmesh.test", 587, true, "mailer", "secret", false,
+            "noreply@nodexmesh.test", "NodexMesh", "https://nodexmesh.test", true, true));
+        var (_, confirmedId, confirmedEmail, _) = await _factory.CreateSeededUserAsync();
+        var (_, _, unconfirmedEmail, _) = await _factory.CreateSeededUserAsync();
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var confirmed = (await users.FindByIdAsync(confirmedId.ToString()))!;
+            confirmed.EmailConfirmed = true;
+            (await users.UpdateAsync(confirmed)).Succeeded.Should().BeTrue();
+        }
+
+        var client = _factory.CreateClientNoRedirect();
+        var knownReset = await client.PostAsJsonAsync("/api/v1/auth/forgot-password",
+            new ForgotPasswordRequest(confirmedEmail));
+        var unknownReset = await client.PostAsJsonAsync("/api/v1/auth/forgot-password",
+            new ForgotPasswordRequest($"unknown-{Guid.NewGuid():N}@nodexmesh.test"));
+        knownReset.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        unknownReset.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        (await knownReset.Content.ReadAsStringAsync()).Should().Be(await unknownReset.Content.ReadAsStringAsync());
+
+        var knownConfirmation = await client.PostAsJsonAsync("/api/v1/auth/resend-confirmation",
+            new ForgotPasswordRequest(unconfirmedEmail));
+        var unknownConfirmation = await client.PostAsJsonAsync("/api/v1/auth/resend-confirmation",
+            new ForgotPasswordRequest($"unknown-{Guid.NewGuid():N}@nodexmesh.test"));
+        knownConfirmation.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        unknownConfirmation.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        (await knownConfirmation.Content.ReadAsStringAsync()).Should()
+            .Be(await unknownConfirmation.Content.ReadAsStringAsync());
+
+        await using var verificationScope = _factory.Services.CreateAsyncScope();
+        var db = verificationScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        (await db.EmailOutbox.CountAsync(message => message.Kind == "account.password-reset-requested"))
+            .Should().Be(1);
+        (await db.EmailOutbox.CountAsync(message => message.Kind == "account.confirmation"))
+            .Should().Be(1);
     }
 
     [Fact]

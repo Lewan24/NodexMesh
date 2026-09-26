@@ -32,6 +32,17 @@ public static class AdminEndpoints
         group.MapDelete("/projects/{projectId:guid}/members/{userId:guid}", RemoveMemberAsync);
         group.MapGet("/settings/registration", GetRegistrationAsync);
         group.MapPut("/settings/registration", SetRegistrationAsync);
+        group.MapGet("/settings/email", GetEmailSettingsAsync);
+        group.MapPut("/settings/email", SetEmailSettingsAsync);
+        group.MapPost("/settings/email/test", TestEmailSettingsAsync).RequireRateLimiting("auth-strict");
+        group.MapGet("/settings/email/templates", ListEmailTemplatesAsync);
+        group.MapPut("/settings/email/templates/{key}", UpdateEmailTemplateAsync);
+        group.MapPost("/settings/email/templates/{key}/reset", ResetEmailTemplateAsync);
+        group.MapPost("/settings/email/templates/{key}/preview", PreviewEmailTemplateAsync);
+        group.MapGet("/settings/email/outbox", ListEmailOutboxAsync);
+        group.MapPost("/settings/email/outbox/{messageId:guid}/retry", RetryEmailOutboxAsync);
+        group.MapPost("/settings/email/outbox/retry-failed", RetryFailedEmailOutboxAsync);
+        group.MapDelete("/settings/email/outbox/{messageId:guid}", DeleteEmailOutboxAsync);
     }
 
     private static async Task<Ok<List<AdminUserDto>>> ListUsersAsync(UserManager<ApplicationUser> users, CancellationToken ct)
@@ -51,7 +62,7 @@ public static class AdminEndpoints
         {
             Id = Guid.CreateVersion7(), UserName = email,
             Email = email, DisplayName = request.DisplayName.Trim(),
-            IsAdmin = request.IsAdmin
+            IsAdmin = request.IsAdmin, EmailConfirmed = true
         };
         var result = await users.CreateAsync(user, request.Password);
         if (!result.Succeeded)
@@ -62,7 +73,8 @@ public static class AdminEndpoints
     }
 
     private static async Task<NoContent> ResetPasswordAsync(
-        Guid userId, AdminResetPasswordRequest request, UserManager<ApplicationUser> users, AppDbContext db, CancellationToken ct)
+        Guid userId, AdminResetPasswordRequest request, UserManager<ApplicationUser> users, AppDbContext db,
+        IEmailQueue emailQueue, CancellationToken ct)
     {
         var user = await users.FindByIdAsync(userId.ToString()) ?? throw new ApiException(404, "not_found", "User not found.");
         var token = await users.GeneratePasswordResetTokenAsync(user);
@@ -70,6 +82,9 @@ public static class AdminEndpoints
         if (!result.Succeeded)
             throw new ApiException(422, "invalid_password", string.Join(" ", result.Errors.Select(e => e.Description)));
         await RevokeSessionsAsync(db, userId, ct);
+        await emailQueue.QueueTemplateAsync(db, "account.password-changed", user.Email!,
+            new Dictionary<string, string> { ["display_name"] = user.DisplayName }, ct);
+        await db.SaveChangesAsync(ct);
         return TypedResults.NoContent();
     }
 
@@ -172,7 +187,7 @@ public static class AdminEndpoints
     }
 
     private static async Task<Results<Ok<AdminProjectMemberDto>, Conflict<ErrorResponse>, NotFound<ErrorResponse>>> AddMemberAsync(
-        Guid projectId, AdminAddProjectMemberRequest request, AppDbContext db, CancellationToken ct)
+        Guid projectId, AdminAddProjectMemberRequest request, AppDbContext db, IEmailQueue emailQueue, CancellationToken ct)
     {
         var project = await db.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == projectId, ct);
         if (project is null) return TypedResults.NotFound(new ErrorResponse("Project not found."));
@@ -185,25 +200,38 @@ public static class AdminEndpoints
             return TypedResults.Conflict(new ErrorResponse("That user is already a member."));
         var role = Enum.Parse<ProjectRole>(request.Role);
         db.ProjectMembers.Add(new ProjectMember { ProjectId = projectId, UserId = user.Id, Role = role, CreatedAt = DateTimeOffset.UtcNow, InvitedBy = project.OwnerId });
+        await emailQueue.QueueUserTemplateAsync(db, "project.member-added", user.Email!,
+            ProjectValues(user.DisplayName, project.Name,
+                $"You now have {role} access to the project '{project.Name}'."), ct);
         await db.SaveChangesAsync(ct);
         return TypedResults.Ok(new AdminProjectMemberDto(user.Id, user.Email!, user.DisplayName, role.ToString()));
     }
 
-    private static async Task<NoContent> RemoveMemberAsync(Guid projectId, Guid userId, AppDbContext db, CancellationToken ct)
+    private static async Task<NoContent> RemoveMemberAsync(
+        Guid projectId,
+        Guid userId,
+        AppDbContext db,
+        IEmailQueue emailQueue,
+        CancellationToken ct)
     {
         var project = await db.Projects.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == projectId, ct)
             ?? throw new ApiException(404, "not_found", "Project not found.");
         RequireActive(project);
         var member = await db.ProjectMembers.FirstOrDefaultAsync(m => m.ProjectId == projectId && m.UserId == userId, ct)
             ?? throw new ApiException(404, "not_found", "Project member not found.");
+        var user = await db.Users.Where(entry => entry.Id == userId)
+            .Select(entry => new { entry.Email, entry.DisplayName }).SingleAsync(ct);
         db.ProjectMembers.Remove(member);
+        await emailQueue.QueueUserTemplateAsync(db, "project.member-removed", user.Email!,
+            ProjectValues(user.DisplayName, project.Name,
+                $"Your access to the project '{project.Name}' was removed."), ct);
         await db.SaveChangesAsync(ct);
         return TypedResults.NoContent();
     }
 
     private static async Task<NoContent> TransferProjectOwnerAsync(
         Guid projectId, AdminTransferProjectOwnerRequest request, ClaimsPrincipal principal,
-        AppDbContext db, CancellationToken ct)
+        AppDbContext db, IEmailQueue emailQueue, CancellationToken ct)
     {
         var callerId = principal.GetUserId();
         var project = await db.Projects.IgnoreQueryFilters()
@@ -219,6 +247,8 @@ public static class AdminEndpoints
         if (nextOwner.Id == project.OwnerId) return TypedResults.NoContent();
 
         var previousOwnerId = project.OwnerId;
+        var previousOwner = await db.Users.Where(user => user.Id == previousOwnerId)
+            .Select(user => new { user.Email, user.DisplayName }).SingleAsync(ct);
         var nextOwnerMembership = project.Members.FirstOrDefault(member => member.UserId == nextOwner.Id);
         if (nextOwnerMembership is not null) db.ProjectMembers.Remove(nextOwnerMembership);
 
@@ -240,6 +270,12 @@ public static class AdminEndpoints
         project.Revision++;
         project.UpdatedAt = DateTimeOffset.UtcNow;
         project.UpdatedBy = callerId;
+        await emailQueue.QueueUserTemplateAsync(db, "project.owner-changed", nextOwner.Email!,
+            ProjectValues(nextOwner.DisplayName, project.Name,
+                $"You are now the owner of the project '{project.Name}'."), ct);
+        await emailQueue.QueueUserTemplateAsync(db, "project.owner-changed", previousOwner.Email!,
+            ProjectValues(previousOwner.DisplayName, project.Name,
+                $"Ownership of '{project.Name}' was transferred. You now have Editor access."), ct);
         await db.SaveChangesAsync(ct);
         return TypedResults.NoContent();
     }
@@ -290,6 +326,109 @@ public static class AdminEndpoints
         return TypedResults.Ok<object>(new { enabled = settings.RegistrationEnabled });
     }
 
+    private static async Task<Ok<EmailSettingsDto>> GetEmailSettingsAsync(
+        AppDbContext db,
+        IEmailSettingsService emailSettings,
+        CancellationToken ct) =>
+        TypedResults.Ok(await emailSettings.GetAdminAsync(db, ct));
+
+    private static async Task<Ok<EmailSettingsDto>> SetEmailSettingsAsync(
+        UpdateEmailSettingsRequest request,
+        AppDbContext db,
+        IEmailSettingsService emailSettings,
+        CancellationToken ct) =>
+        TypedResults.Ok(await emailSettings.UpdateAsync(db, request, ct));
+
+    private static async Task<NoContent> TestEmailSettingsAsync(
+        ClaimsPrincipal principal,
+        AppDbContext db,
+        IEmailSettingsService emailSettings,
+        IEmailTemplateService templates,
+        IEmailTransport transport,
+        CancellationToken ct)
+    {
+        var settings = await emailSettings.GetEffectiveAsync(db, ct);
+        if (!settings.Enabled)
+            throw new ApiException(409, "email_disabled", "Configure and enable email before sending a test message.");
+        var recipient = await db.Users.Where(user => user.Id == principal.GetUserId())
+            .Select(user => user.Email).SingleAsync(ct)
+            ?? throw new ApiException(409, "email_unavailable", "The administrator account has no email address.");
+        var message = await templates.RenderAsync(db, "system.test", recipient,
+            new Dictionary<string, string> { ["display_name"] = "Administrator" }, ct);
+        await transport.SendAsync(settings, message, ct);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<IReadOnlyList<EmailTemplateDto>>> ListEmailTemplatesAsync(
+        AppDbContext db, IEmailTemplateService templates, CancellationToken ct) =>
+        TypedResults.Ok(await templates.ListAsync(db, ct));
+
+    private static async Task<Ok<EmailTemplateDto>> UpdateEmailTemplateAsync(
+        string key, UpdateEmailTemplateRequest request, AppDbContext db,
+        IEmailTemplateService templates, CancellationToken ct) =>
+        TypedResults.Ok(await templates.UpdateAsync(db, key, request, ct));
+
+    private static async Task<Ok<EmailTemplateDto>> ResetEmailTemplateAsync(
+        string key, AppDbContext db, IEmailTemplateService templates, CancellationToken ct) =>
+        TypedResults.Ok(await templates.ResetAsync(db, key, ct));
+
+    private static async Task<Ok<EmailTemplatePreviewDto>> PreviewEmailTemplateAsync(
+        string key, UpdateEmailTemplateRequest request, AppDbContext db,
+        IEmailTemplateService templates, CancellationToken ct) =>
+        TypedResults.Ok(await templates.PreviewAsync(db, key, request, ct));
+
+    private static async Task<Ok<EmailOutboxResponse>> ListEmailOutboxAsync(
+        string? status, int? limit, AppDbContext db, IEmailQueue queue, CancellationToken ct)
+    {
+        var query = db.EmailOutbox.AsNoTracking();
+        query = status?.ToLowerInvariant() switch
+        {
+            "sent" => query.Where(x => x.SentAt != null),
+            "failed" => query.Where(x => x.DeadLetteredAt != null),
+            "all" => query,
+            _ => query.Where(x => x.SentAt == null && x.DeadLetteredAt == null)
+        };
+        var rows = await query.OrderByDescending(x => x.CreatedAt).Take(Math.Clamp(limit ?? 100, 1, 200)).ToListAsync(ct);
+        var users = await db.Users.AsNoTracking().Where(x => x.Email != null)
+            .ToDictionaryAsync(x => x.Email!.ToLower(), StringComparer.OrdinalIgnoreCase, ct);
+        var items = rows.Select(row =>
+        {
+            var envelope = queue.TryUnprotect(row.ProtectedPayload);
+            users.TryGetValue(envelope?.Recipient ?? string.Empty, out var user);
+            var state = row.SentAt != null ? "sent" : row.DeadLetteredAt != null ? "failed" : "pending";
+            return new EmailOutboxMessageDto(row.Id, row.Kind, state, envelope?.Recipient ?? "[unavailable]",
+                user?.Id, user?.DisplayName, envelope?.Subject ?? "[unavailable]", row.Attempts, row.CreatedAt,
+                row.AvailableAt, row.SentAt, row.DeadLetteredAt, row.LastError);
+        }).ToList();
+        var pending = await db.EmailOutbox.CountAsync(x => x.SentAt == null && x.DeadLetteredAt == null, ct);
+        var failed = await db.EmailOutbox.CountAsync(x => x.DeadLetteredAt != null, ct);
+        return TypedResults.Ok(new EmailOutboxResponse(items, pending, failed));
+    }
+
+    private static async Task<NoContent> RetryEmailOutboxAsync(Guid messageId, AppDbContext db, CancellationToken ct)
+    {
+        var row = await db.EmailOutbox.SingleOrDefaultAsync(x => x.Id == messageId, ct)
+            ?? throw new ApiException(404, "not_found", "Email message not found.");
+        if (row.SentAt != null) throw new ApiException(409, "already_sent", "This email has already been sent.");
+        row.DeadLetteredAt = null; row.LeaseId = null; row.LockedUntil = null; row.AvailableAt = DateTimeOffset.UtcNow; row.LastError = null;
+        await db.SaveChangesAsync(ct); return TypedResults.NoContent();
+    }
+
+    private static async Task<Ok<object>> RetryFailedEmailOutboxAsync(AppDbContext db, CancellationToken ct)
+    {
+        var rows = await db.EmailOutbox.Where(x => x.DeadLetteredAt != null).ToListAsync(ct);
+        foreach (var row in rows) { row.DeadLetteredAt = null; row.LeaseId = null; row.LockedUntil = null; row.AvailableAt = DateTimeOffset.UtcNow; row.LastError = null; }
+        await db.SaveChangesAsync(ct); return TypedResults.Ok<object>(new { count = rows.Count });
+    }
+
+    private static async Task<NoContent> DeleteEmailOutboxAsync(Guid messageId, AppDbContext db, CancellationToken ct)
+    {
+        var row = await db.EmailOutbox.SingleOrDefaultAsync(x => x.Id == messageId, ct)
+            ?? throw new ApiException(404, "not_found", "Email message not found.");
+        if (row.SentAt != null) throw new ApiException(409, "already_sent", "Sent emails cannot be deleted from the outbox.");
+        db.EmailOutbox.Remove(row); await db.SaveChangesAsync(ct); return TypedResults.NoContent();
+    }
+
     private static async Task<SystemSettings> EnsureSettingsAsync(AppDbContext db, CancellationToken ct)
     {
         var settings = await db.SystemSettings.SingleOrDefaultAsync(ct);
@@ -301,6 +440,13 @@ public static class AdminEndpoints
     }
 
     private static AdminUserDto ToUser(ApplicationUser user) => new(user.Id, user.Email!, user.DisplayName, user.IsAdmin, user.IsBlocked, user.CreatedAt, user.DeletionRequestedAt, user.DeletionRequestedAt + AccountDeletionService.Retention);
+
+    private static Dictionary<string, string> ProjectValues(string displayName, string projectName, string message) => new()
+    {
+        ["display_name"] = displayName,
+        ["project_name"] = projectName,
+        ["message"] = message
+    };
 
     private static async Task RevokeSessionsAsync(AppDbContext db, Guid userId, CancellationToken ct)
     {

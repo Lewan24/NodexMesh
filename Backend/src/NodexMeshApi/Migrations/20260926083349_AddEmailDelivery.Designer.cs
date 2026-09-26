@@ -3,6 +3,7 @@ using System;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodexMeshApi.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NodexMeshApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260926083349_AddEmailDelivery")]
+    partial class AddEmailDelivery
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -774,57 +777,6 @@ namespace NodexMeshApi.Migrations
                         .HasDatabaseName("ix_email_outbox_sent_at_dead_lettered_at_available_at");
 
                     b.ToTable("email_outbox", (string)null);
-                });
-
-            modelBuilder.Entity("NodexMeshApi.Models.EmailTemplate", b =>
-                {
-                    b.Property<string>("Key")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("key");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("description");
-
-                    b.Property<string>("HtmlBodyTemplate")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("html_body_template");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("name");
-
-                    b.Property<string>("SubjectTemplate")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("subject_template");
-
-                    b.Property<string>("TextBodyTemplate")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("text_body_template");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<string>("VariablesCsv")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("variables_csv");
-
-                    b.HasKey("Key")
-                        .HasName("pk_email_templates");
-
-                    b.ToTable("email_templates", (string)null);
                 });
 
             modelBuilder.Entity("NodexMeshApi.Models.IdempotencyKey", b =>

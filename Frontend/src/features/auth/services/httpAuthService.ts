@@ -110,7 +110,21 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
       );
     },
     async register(input) {
-      await anonymous.request('/auth/register', { method: 'POST', body: input });
+      return (await anonymous.request('/auth/register', { method: 'POST', body: input })) as {
+        confirmationRequired: boolean;
+      };
+    },
+    async confirmEmail(userId, token) {
+      await anonymous.request('/auth/confirm-email', { method: 'POST', body: { userId, token } });
+    },
+    async resendConfirmation(email) {
+      await anonymous.request('/auth/resend-confirmation', { method: 'POST', body: { email } });
+    },
+    async requestPasswordReset(email) {
+      await anonymous.request('/auth/forgot-password', { method: 'POST', body: { email } });
+    },
+    async resetPassword(input) {
+      await anonymous.request('/auth/reset-password', { method: 'POST', body: input });
     },
     async logout() {
       await client.request('/auth/revoke', { method: 'POST' });
@@ -198,6 +212,36 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
     async registrationAvailable() {
       return ((await anonymous.request('/auth/registration')) as { enabled: boolean }).enabled;
     },
+    async emailSettings() {
+      return admin('/admin/settings/email');
+    },
+    async updateEmailSettings(input) {
+      return admin('/admin/settings/email', { method: 'PUT', body: input });
+    },
+    async testEmailSettings() {
+      await admin('/admin/settings/email/test', { method: 'POST' });
+    },
+    async emailTemplates() {
+      return admin('/admin/settings/email/templates');
+    },
+    async updateEmailTemplate(key, content) {
+      return admin(`/admin/settings/email/templates/${encodeURIComponent(key)}`, { method: 'PUT', body: content });
+    },
+    async resetEmailTemplate(key) {
+      return admin(`/admin/settings/email/templates/${encodeURIComponent(key)}/reset`, { method: 'POST' });
+    },
+    async previewEmailTemplate(key, content) {
+      return admin(`/admin/settings/email/templates/${encodeURIComponent(key)}/preview`, {
+        method: 'POST',
+        body: content,
+      });
+    },
+    async emailOutbox(status = 'pending') {
+      return admin(`/admin/settings/email/outbox?status=${encodeURIComponent(status)}`);
+    },
+    async retryEmailOutbox(id) { await admin(`/admin/settings/email/outbox/${encodeURIComponent(id)}/retry`, { method: 'POST' }); },
+    async retryFailedEmails() { return (await admin<{ count: number }>('/admin/settings/email/outbox/retry-failed', { method: 'POST' })).count; },
+    async deleteEmailOutbox(id) { await admin(`/admin/settings/email/outbox/${encodeURIComponent(id)}`, { method: 'DELETE' }); },
   };
   return { auth, client, getAccessToken: () => accessToken };
 }
