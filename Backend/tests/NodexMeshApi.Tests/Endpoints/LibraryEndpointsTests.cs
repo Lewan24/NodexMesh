@@ -2,7 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.IO.Compression;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NodexMeshApi.Common;
@@ -101,6 +103,7 @@ public sealed class LibraryEndpointsTests : IDisposable
 
     [Theory]
     [InlineData("bad.png", "<html>not an image</html>")]
+    [InlineData("bad.docx", "not an office package")]
     [InlineData("bad.svg", "<svg xmlns='http://www.w3.org/2000/svg'><script>alert(1)</script></svg>")]
     [InlineData("bad.svg", "<svg xmlns='http://www.w3.org/2000/svg'><use href='https://evil.test/x'/></svg>")]
     [InlineData("bad.svg", "<!DOCTYPE svg [<!ENTITY x SYSTEM 'file:///etc/passwd'>]><svg xmlns='http://www.w3.org/2000/svg'>&x;</svg>")]
@@ -110,6 +113,49 @@ public sealed class LibraryEndpointsTests : IDisposable
         (await client.PostAsync($"/api/v1/projects/{project}/library?name={name}", new ByteArrayContent(Encoding.UTF8.GetBytes(body))))
             .StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
         Directory.GetFiles(directory).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Documents_AreValidatedPreviewedAndDownloadedWithTheirStoredName()
+    {
+        var (client, project) = await Setup();
+        var path = $"/api/v1/projects/{project}/library";
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Model.FindEntityType(typeof(LibraryAsset))!
+                .FindProperty(nameof(LibraryAsset.ContentType))!
+                .GetMaxLength().Should().Be(255);
+        }
+        var text = await client.PostAsync(path + "?name=notes.txt", new ByteArrayContent("hello"u8.ToArray()));
+        text.EnsureSuccessStatusCode();
+        (await text.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("contentType").GetString().Should().Be("text/plain");
+
+        var package = new MemoryStream();
+        using (var archive = new ZipArchive(package, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            archive.CreateEntry("[Content_Types].xml");
+            archive.CreateEntry("word/document.xml");
+        }
+        var docx = await client.PostAsync(path + "?name=proposal.docx", new ByteArrayContent(package.ToArray()));
+        docx.EnsureSuccessStatusCode();
+        var docxAsset = await docx.Content.ReadFromJsonAsync<JsonElement>();
+        docxAsset.GetProperty("contentType").GetString().Should()
+            .Be("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        var id = docxAsset.GetProperty("id").GetGuid();
+        var download = await client.GetAsync($"{path}/{id}/content?download=true");
+        download.Content.Headers.ContentDisposition!.FileNameStar.Should().Be("proposal.docx");
+
+        package = new MemoryStream();
+        using (var archive = new ZipArchive(package, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            archive.CreateEntry("[Content_Types].xml");
+            archive.CreateEntry("xl/workbook.xml");
+        }
+        var xlsx = await client.PostAsync(path + "?name=budget.xlsx", new ByteArrayContent(package.ToArray()));
+        xlsx.EnsureSuccessStatusCode();
+        (await xlsx.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("contentType").GetString().Should()
+            .Be("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     }
 
     [Fact]
@@ -169,6 +215,7 @@ public sealed class LibraryEndpointsTests : IDisposable
     [Theory]
     [InlineData("image")]
     [InlineData("icon")]
+    [InlineData("file")]
     public async Task LibrarySelection_SavesThroughBoardMutation_AndSurvivesAnotherUpdate(string type)
     {
         var (owner, project) = await Setup();
@@ -177,9 +224,12 @@ public sealed class LibraryEndpointsTests : IDisposable
         var source = $"library://{project}/{assetId}";
         var boards = await owner.GetFromJsonAsync<List<BoardRecordDto>>($"/api/v1/projects/{project}/boards");
         var board = boards!.Single();
-        var data = type == "image"
-            ? JsonSerializer.SerializeToElement(new { url = source, caption = "Library image", variant = "card", imgHeight = 150 })
-            : JsonSerializer.SerializeToElement(new { iconMode = "library", source, label = "Library icon" });
+        var data = type switch
+        {
+            "image" => JsonSerializer.SerializeToElement(new { url = source, caption = "Library image", variant = "card", imgHeight = 150 }),
+            "file" => JsonSerializer.SerializeToElement(new { title = "File", source, fileName = "photo.png", contentType = "image/png", size = Png.Length }),
+            _ => JsonSerializer.SerializeToElement(new { iconMode = "library", source, label = "Library icon" })
+        };
         var item = new ItemWriteDto(Guid.NewGuid(), board.Id, null, null, 0, 0, 0, 200, 200, 0, false,
             type, 1, JsonSerializer.SerializeToElement(new { }), data);
         var mutationPath = $"/api/v1/boards/{board.Id}/mutations";

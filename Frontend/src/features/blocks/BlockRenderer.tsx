@@ -12,6 +12,7 @@ import ChecklistBlock from '@/features/blocks/checklist/ChecklistBlock';
 import ColumnBlock from '@/features/blocks/column/ColumnBlock';
 import FrameBlock from '@/features/blocks/frame/FrameBlock';
 import ImageBlock from '@/features/blocks/image/ImageBlock';
+import FileBlock from '@/features/blocks/file/FileBlock';
 const KanbanBlock = lazy(() => import('./kanban/KanbanBlock'));
 import LineBlock from '@/features/blocks/line/LineBlock';
 import LinkBlock from '@/features/blocks/link/LinkBlock';
@@ -176,6 +177,9 @@ function BlockContent({
 
     case 'image':
       return <ImageBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;
+
+    case 'file':
+      return <FileBlock item={item} readOnly={readOnly} onUpdate={onUpdate} onDelete={onDelete} />;
 
     case 'link':
       return <LinkBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;

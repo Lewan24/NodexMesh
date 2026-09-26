@@ -281,6 +281,7 @@ export default function ColumnBlock({
       case 'checklist':
       case 'link':
       case 'image':
+      case 'file':
       case 'text':
         return { ...nestedItem, width };
 

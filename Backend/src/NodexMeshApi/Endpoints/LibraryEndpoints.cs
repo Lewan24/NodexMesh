@@ -38,7 +38,7 @@ public static class LibraryEndpoints
         {
             await access.RequireAsync(projectId, context.User.GetUserId(), ProjectRole.Viewer, ct);
             var asset = await Find(db, projectId, id, ct);
-            return Content(asset, storage, context);
+            return Content(asset, storage, context, context.Request.Query.ContainsKey("download"));
         });
         group.MapPatch("/{id:guid}", async (Guid projectId, Guid id, RenameRequest request, HttpContext context, IProjectAccessService access, AppDbContext db, CancellationToken ct) =>
         {
@@ -101,7 +101,7 @@ public static class LibraryEndpoints
             if (token.Length != 64) return Results.NotFound();
             var hash = Hash(token);
             var asset = await db.LibraryAssets.FirstOrDefaultAsync(a => (a.ShareTokenHash == hash || a.ShareToken == token) && db.Projects.Any(p => p.Id == a.ProjectId), ct);
-            return asset is null ? Results.NotFound() : Content(asset, storage, context);
+            return asset is null ? Results.NotFound() : Content(asset, storage, context, false);
         }).AllowAnonymous().RequireRateLimiting("public-share");
     }
 
@@ -112,7 +112,7 @@ public static class LibraryEndpoints
         await db.LibraryAssets.FirstOrDefaultAsync(a => a.ProjectId == projectId && a.Id == id, ct)
         ?? throw new ApiException(404, "not_found", "Library file not found.");
 
-    private static IResult Content(LibraryAsset asset, LibraryStorage storage, HttpContext context)
+    private static IResult Content(LibraryAsset asset, LibraryStorage storage, HttpContext context, bool download)
     {
         var path = storage.FilePath(asset.Id);
         if (!File.Exists(path)) return Results.NotFound();
@@ -120,7 +120,7 @@ public static class LibraryEndpoints
         context.Response.Headers.ContentSecurityPolicy = "sandbox; default-src 'none'; style-src 'none'";
         context.Response.Headers.XContentTypeOptions = "nosniff";
         context.Response.Headers["Cross-Origin-Resource-Policy"] = asset.ShareTokenHash is null && asset.ShareToken is null ? "same-origin" : "cross-origin";
-        return Results.File(path, asset.ContentType, enableRangeProcessing: true);
+        return Results.File(path, asset.ContentType, download ? asset.Name : null, enableRangeProcessing: true);
     }
 
     private static async Task<IResult> UploadAsync(Guid projectId, string name, HttpContext context,
@@ -150,9 +150,9 @@ public static class LibraryEndpoints
                     if (asset.Size > limit) throw new ApiException(413, "file_too_large", "File exceeds the upload limit.");
                     await file.WriteAsync(buffer.AsMemory(0, read), ct);
                 }
-                if (asset.Size < 12) throw new ApiException(422, "invalid_media", "File is empty or invalid.");
+                if (asset.Size < 1) throw new ApiException(422, "invalid_file", "File is empty or invalid.");
                 file.Position = 0;
-                var header = new byte[12];
+                var header = new byte[Math.Min(12, (int)asset.Size)];
                 await file.ReadExactlyAsync(header, ct);
                 asset.ContentType = LibraryStorage.Validate(header, System.IO.Path.GetExtension(name), file);
             }

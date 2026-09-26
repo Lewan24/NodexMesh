@@ -89,6 +89,10 @@ Comment batches contain 1–100 changes. Commenters may alter only their own com
 | POST/DELETE  | `/projects/{projectId}/library/{id}/share`   | Owner; create/retrieve or revoke stable public link |
 | GET          | `/library/shared/{token}`                    | Anonymous public media, range requests supported    |
 
+Library uploads are streamed and signature-validated. Supported files are PNG, JPEG, GIF, WebP, SVG, MP4, WebM,
+PDF, DOC/DOCX, XLS/XLSX, PPTX, RTF, UTF-8 TXT/CSV, and Markdown. Add `?download=true` to the authenticated content
+endpoint to request the stored file name as a download.
+
 Accepted uploads are PNG, JPEG, GIF, WebP, restricted static SVG, MP4, and WebM. Defaults are 50 MiB/file and 1 GiB/project. Authorization is checked on every private read.
 
 ### Public, administration, version, and health
@@ -136,7 +140,7 @@ SignalR clients call `JoinProject`, `LeaveProject`, `UpdatePresence`, and `Clear
 
 The server checks authorization, project state, board/item revisions, schema/type constraints, references, limits, and graph integrity in a transaction. It increments revisions, writes an idempotency receipt, commits, then publishes a SignalR `BoardChanged` hint. A duplicate ID with the same body returns the prior result; the same ID with a different body returns 409. Notification failure does not undo a committed database mutation.
 
-The 21 item discriminators are `board`, `section-title`, `note`, `text`, `document`, `code`, `icon`, `image`, `link`, `embed`, `checklist`, `kanban`, `timeline`, `column`, `frame`, `dispenser`, `line`, `drawing`, `mindmap`, `diagram`, and `database`. Current `schemaVersion` is 1. Exact field contracts live in `Backend/src/NodexMeshApi/Models/BoardItemData.cs` and the matching frontend `itemSchema.ts`.
+The 22 item discriminators are `board`, `section-title`, `note`, `text`, `document`, `code`, `icon`, `image`, `file`, `link`, `embed`, `checklist`, `kanban`, `timeline`, `column`, `frame`, `dispenser`, `line`, `drawing`, `mindmap`, `diagram`, and `database`. Current `schemaVersion` is 1. Exact field contracts live in `Backend/src/NodexMeshApi/Models/BoardItemData.cs` and the matching frontend `itemSchema.ts`.
 
 ## Limits
 

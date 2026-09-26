@@ -21,7 +21,7 @@ public sealed record TextSectionsDto(
     TextSectionStyleDto? Title, TextSectionStyleDto? Description, TextSectionStyleDto? Body,
     TextSectionStyleDto? Links, TextSectionStyleDto? Caption, TextSectionStyleDto? Labels);
 
-// ---- the 20 item types, matching itemSchema.ts field-for-field --------
+// ---- item types, matching itemSchema.ts field-for-field ---------------
 public sealed record SectionTitleData(string Content);
 public sealed record BoardBlockData(Guid? BoardId, string Title, string Description, string Icon);
 public sealed record NoteData(string Content);
@@ -30,6 +30,7 @@ public sealed record DocumentData(string Title, string Content, string ContentFo
 public sealed record CodeData(string Content, string Language, bool? AutoHeight);
 public sealed record IconData(string IconMode, string Source, string Label); // preset|emoji|svg|url
 public sealed record ImageData(string Url, string Caption, string? Variant, double? ImgHeight);
+public sealed record FileData(string Title, string Source, string FileName, string ContentType, long Size);
 public sealed record LinkData(string Url, string Title, string Description);
 public sealed record EmbedData(string Url, string Title, bool ShowLabel);
 public sealed record ChecklistData(string Title, IReadOnlyList<Entry> Entries);
@@ -72,7 +73,7 @@ public static class BoardItemTypes
         ["section-title"] = typeof(SectionTitleData), ["note"] = typeof(NoteData),
         ["text"] = typeof(TextData), ["document"] = typeof(DocumentData),
         ["code"] = typeof(CodeData), ["icon"] = typeof(IconData),
-        ["image"] = typeof(ImageData), ["link"] = typeof(LinkData),
+        ["image"] = typeof(ImageData), ["file"] = typeof(FileData), ["link"] = typeof(LinkData),
         ["embed"] = typeof(EmbedData), ["checklist"] = typeof(ChecklistData),
         ["kanban"] = typeof(KanbanData), ["timeline"] = typeof(TimelineData),
         ["column"] = typeof(ColumnData), ["frame"] = typeof(FrameData),
@@ -84,7 +85,7 @@ public static class BoardItemTypes
     // Matches itemSchema.ts's canNest flags exactly.
     public static readonly IReadOnlySet<string> Nestable = new HashSet<string>
     {
-        "note", "text", "document", "code", "image", "link", "embed", "checklist"
+        "note", "text", "document", "code", "image", "file", "link", "embed", "checklist"
     };
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(DataTypes.Keys);

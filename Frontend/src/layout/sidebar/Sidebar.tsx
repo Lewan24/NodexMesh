@@ -39,7 +39,7 @@ const groups = [
       return translate('Media');
     },
     icon: Play,
-    tools: ['image', 'link', 'embed'],
+    tools: ['image', 'file', 'link', 'embed'],
   },
 ] satisfies { id: string; label: string; icon: typeof LayoutGrid; tools: ToolType[] }[];
 

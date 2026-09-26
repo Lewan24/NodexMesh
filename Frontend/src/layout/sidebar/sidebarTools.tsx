@@ -4,6 +4,7 @@ import type { ToolType } from '@/entities/board/toolTypes';
 import {
   Smile,
   FileText,
+  File,
   Code,
   PanelsTopLeft,
   Layers,
@@ -87,6 +88,13 @@ export const SIDEBAR_TOOLS: SidebarTool[] = [
       return translate('Document');
     },
     icon: <FileText size={TOOL_ICON_SIZE} />,
+  },
+  {
+    id: 'file',
+    get label() {
+      return translate('File');
+    },
+    icon: <File size={TOOL_ICON_SIZE} />,
   },
   {
     id: 'code',

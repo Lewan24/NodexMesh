@@ -148,6 +148,19 @@ export function createCanvasItem(
     case 'image':
       return { ...base, type: 'image', url: '', caption: '', width: ITEM_WIDTH.image, imgHeight: 192 } as ImageItem;
 
+    case 'file':
+      return {
+        ...base,
+        type: 'file',
+        title: translate('File'),
+        source: '',
+        fileName: '',
+        contentType: '',
+        size: 0,
+        width: ITEM_WIDTH.file,
+        height: 176,
+      };
+
     case 'link':
       return {
         ...base,

@@ -19,6 +19,7 @@ export type BoardItem =
   | KanbanItem
   | IconItem
   | ImageItem
+  | FileItem
   | LinkItem
   | TextItem
   | FrameItem
@@ -273,6 +274,16 @@ export interface ImageItem extends BaseItem {
   imgHeight?: number; // temporary legacy field
   color?: string;
   variant?: 'card' | 'sticker';
+}
+
+export interface FileItem extends BaseItem {
+  type: 'file';
+  title: string;
+  source: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+  color?: string;
 }
 
 export interface LinkItem extends BaseItem {

@@ -1,0 +1,170 @@
+.file-preview-dialog {
+  width: min(1100px, calc(100vw - 32px));
+  height: min(820px, 90dvh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 24px 70px #0005;
+}
+.file-preview-dialog > header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.file-preview-dialog > header > div {
+  flex: 1;
+}
+.file-preview-dialog h2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
+}
+.file-preview-dialog header span {
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+.file-preview-dialog header button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--color-text-muted);
+}
+.file-preview-dialog header button:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
+}
+.file-preview-dialog > nav {
+  display: flex;
+  gap: 5px;
+  padding: 8px 12px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-border);
+}
+.file-preview-dialog > nav button {
+  padding: 6px 10px;
+  border-radius: 7px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.file-preview-dialog > nav button[aria-pressed='true'] {
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  font-weight: 700;
+}
+.file-preview-dialog > main {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: color-mix(in srgb, var(--color-surface-alt) 70%, #111827);
+}
+.file-preview-dialog iframe,
+.file-preview-dialog video {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.file-preview-dialog main > img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  margin: auto;
+  padding: 20px;
+  object-fit: contain;
+}
+.file-preview-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+.file-preview-state button {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--color-accent);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+}
+.file-docx-host {
+  min-height: 100%;
+  padding: 22px;
+  overflow: auto;
+  background: #e5e7eb;
+  color: #111827;
+}
+.file-docx-host .docx-wrapper {
+  background: transparent;
+  padding: 0;
+}
+.file-docx-host .docx-wrapper > section.docx {
+  margin: 0 auto 18px;
+  box-shadow: 0 8px 28px #0002;
+}
+.file-text-preview {
+  min-height: 100%;
+  padding: 20px;
+  background: #101820;
+  color: #d9e6ea;
+}
+.file-text-preview pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font:
+    12px/1.65 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+}
+.file-text-preview p {
+  position: sticky;
+  bottom: 0;
+  margin-top: 16px;
+  padding: 8px;
+  border-radius: 7px;
+  background: #f59e0b;
+  color: #111827;
+  font-size: 11px;
+}
+.file-sheet-preview {
+  min-width: max-content;
+  padding: 16px;
+  background: white;
+  color: #17202a;
+}
+.file-sheet-preview table {
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.file-sheet-preview td {
+  min-width: 90px;
+  max-width: 280px;
+  padding: 6px 8px;
+  border: 1px solid #d9e0e7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-sheet-preview tr:first-child td {
+  position: sticky;
+  top: 0;
+  background: #eef3f8;
+  font-weight: 700;
+}

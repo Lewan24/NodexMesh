@@ -19,6 +19,7 @@ export function hasLibraryMedia(project: Project): boolean {
     items.some((item) => {
       if (item.type === 'column') return contains(item.items);
       if (item.type === 'image') return !!parseLibrarySource(item.url);
+      if (item.type === 'file') return !!parseLibrarySource(item.source);
       if (item.type === 'icon') return !!parseLibrarySource(item.source);
       return false;
     });

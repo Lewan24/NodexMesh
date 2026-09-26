@@ -32,6 +32,15 @@ interface UseLineDragOptions {
   onDeleteItem: (id: string) => void;
 
   onSelectItems: (ids: string[]) => void;
+
+  onOpenQuickCreate: (menu: {
+    x: number;
+    y: number;
+    canvasX: number;
+    canvasY: number;
+    lineId: string;
+    endpoint: 1 | 2;
+  }) => void;
 }
 
 function hasConnection(items: BoardItem[], firstId: string, secondId: string, excludedLineId?: string): boolean {
@@ -55,6 +64,7 @@ export function useLineDrag({
   onAddItem,
   onDeleteItem,
   onSelectItems,
+  onOpenQuickCreate,
 }: UseLineDragOptions) {
   const [attachHoverId, setAttachHoverId] = useState<string | null>(null);
 
@@ -176,6 +186,7 @@ export function useLineDrag({
 
         const targetId = attachHoverIdRef.current;
 
+        let attached = false;
         if (
           !item.divider &&
           targetId &&
@@ -199,7 +210,21 @@ export function useLineDrag({
                 ? { ...current, startItemId: target.id, x: point.x, y: point.y }
                 : { ...current, endItemId: target.id, x2: point.x, y2: point.y };
             });
+            attached = true;
           }
+        }
+
+        if (!item.divider && !attached) {
+          const dx = (mouseEvent.clientX - startX) / currentZoom;
+          const dy = (mouseEvent.clientY - startY) / currentZoom;
+          onOpenQuickCreate({
+            x: mouseEvent.clientX,
+            y: mouseEvent.clientY,
+            canvasX: originalX + dx,
+            canvasY: originalY + dy,
+            lineId: id,
+            endpoint,
+          });
         }
 
         setAttachHover(null);
@@ -208,7 +233,16 @@ export function useLineDrag({
       document.addEventListener('mousemove', handleMove);
       document.addEventListener('mouseup', handleUp);
     },
-    [projectRef, zoomRef, measuredSizes, pushHistory, onUpdateItem, setAttachHover, findAttachTarget],
+    [
+      projectRef,
+      zoomRef,
+      measuredSizes,
+      pushHistory,
+      onUpdateItem,
+      onOpenQuickCreate,
+      setAttachHover,
+      findAttachTarget,
+    ],
   );
 
   const handleQuickConnectStart = useCallback(
@@ -366,6 +400,7 @@ export function useLineDrag({
           return;
         }
 
+        let attached = false;
         if (targetId) {
           const target = projectRef.current.items.find((item) => item.id === targetId);
 
@@ -394,6 +429,7 @@ export function useLineDrag({
                 y2: point.y,
               };
             });
+            attached = true;
           } else if (target) {
             onDeleteItem(lineId);
             setAttachHover(null);
@@ -404,6 +440,19 @@ export function useLineDrag({
         setAttachHover(null);
 
         onSelectItems([lineId]);
+
+        if (!attached) {
+          const dx = (mouseEvent.clientX - startClientX) / zoom;
+          const dy = (mouseEvent.clientY - startClientY) / zoom;
+          onOpenQuickCreate({
+            x: mouseEvent.clientX,
+            y: mouseEvent.clientY,
+            canvasX: startPoint.x + dx,
+            canvasY: startPoint.y + dy,
+            lineId,
+            endpoint: 2,
+          });
+        }
       };
 
       document.addEventListener('mousemove', handleMove);
@@ -419,6 +468,7 @@ export function useLineDrag({
       onDeleteItem,
       onUpdateItem,
       onSelectItems,
+      onOpenQuickCreate,
       findAttachTarget,
       setAttachHover,
     ],

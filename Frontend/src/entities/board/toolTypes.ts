@@ -16,6 +16,7 @@ export type ToolType =
   | 'kanban'
   | 'icon'
   | 'image'
+  | 'file'
   | 'link'
   | 'text'
   | 'frame'

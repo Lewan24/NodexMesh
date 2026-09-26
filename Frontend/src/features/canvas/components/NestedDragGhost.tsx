@@ -122,6 +122,9 @@ function getBoardItemText(item: BoardItem): string {
     case 'image':
       return item.caption || translate('Image');
 
+    case 'file':
+      return item.title || item.fileName || translate('File');
+
     default:
       return translate('Item');
   }

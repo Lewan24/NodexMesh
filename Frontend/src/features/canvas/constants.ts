@@ -1,4 +1,14 @@
-export const DROPPABLE_ON_COLUMN = new Set(['note', 'text', 'image', 'link', 'checklist', 'document', 'code', 'embed']);
+export const DROPPABLE_ON_COLUMN = new Set([
+  'note',
+  'text',
+  'image',
+  'file',
+  'link',
+  'checklist',
+  'document',
+  'code',
+  'embed',
+]);
 
 export const ZOOM_MIN = 0.1;
 export const ZOOM_MAX = 3;
@@ -34,6 +44,7 @@ export const ITEM_WIDTH = {
   link: 320,
   icon: 96,
   image: 320,
+  file: 320,
   text: 320,
   column: 416,
   frame: 512,

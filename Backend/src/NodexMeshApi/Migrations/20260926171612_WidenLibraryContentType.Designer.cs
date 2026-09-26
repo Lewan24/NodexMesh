@@ -3,6 +3,7 @@ using System;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodexMeshApi.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NodexMeshApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260926171612_WidenLibraryContentType")]
+    partial class WidenLibraryContentType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -647,7 +650,7 @@ namespace NodexMeshApi.Migrations
                         {
                             t.HasCheckConstraint("ck_board_items_height", "height IS NULL OR height > 0");
 
-                            t.HasCheckConstraint("ck_board_items_type", "type IN ('board','section-title','note','text','document','code','icon','image','file','link','embed','checklist','kanban','timeline','column','frame','dispenser','line','drawing','mindmap','diagram','database')");
+                            t.HasCheckConstraint("ck_board_items_type", "type IN ('board','section-title','note','text','document','code','icon','image','link','embed','checklist','kanban','timeline','column','frame','dispenser','line','drawing','mindmap','diagram','database')");
 
                             t.HasCheckConstraint("ck_board_items_width", "width IS NULL OR width > 0");
                         });

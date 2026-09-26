@@ -37,6 +37,7 @@ function getBackgroundColor(item: BoardItem): string | undefined {
     case 'checklist':
     case 'link':
     case 'image':
+    case 'file':
     case 'kanban':
     case 'column':
     case 'text':
@@ -64,6 +65,7 @@ function updateBackgroundColor(item: BoardItem, color: string | undefined): Boar
     case 'checklist':
     case 'link':
     case 'image':
+    case 'file':
     case 'kanban':
     case 'column':
       return color ? { ...item, color } : item;

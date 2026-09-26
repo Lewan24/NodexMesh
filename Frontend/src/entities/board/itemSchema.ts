@@ -135,6 +135,17 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
       imgHeight: optional(number),
     }),
   },
+  file: {
+    version: 1,
+    canNest: true,
+    validate: object({
+      ...title,
+      source: (value) => value === '' || (typeof value === 'string' && !!parseLibrarySource(value)),
+      fileName: text,
+      contentType: text,
+      size: (value) => number(value) && (value as number) >= 0,
+    }),
+  },
   link: { version: 1, canNest: true, validate: object({ url, ...title, description: text }) },
   embed: { version: 1, canNest: true, validate: object({ url, ...title, showLabel: bool }) },
   checklist: { version: 1, canNest: true, validate: object({ ...title, entries: list(entry) }) },

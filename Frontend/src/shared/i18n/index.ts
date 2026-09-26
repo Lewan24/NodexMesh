@@ -120,6 +120,7 @@ const displayLabels: Record<string, string> = {
   kanban: 'Kanban',
   icon: 'Icon',
   image: 'Image',
+  file: 'File',
   link: 'Link',
   'section-title': 'Section title',
   text: 'Text',

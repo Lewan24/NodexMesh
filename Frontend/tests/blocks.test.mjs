@@ -1266,12 +1266,32 @@ test('mind map validation rejects disconnected cycles and empty identities', () 
   );
 });
 
-test('private library references persist for image and icon blocks without becoming general-purpose URLs', () => {
+test('private library references persist for image, icon and file blocks without becoming general-purpose URLs', () => {
   const source = 'library://11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222';
   assert.ok(parseLibrarySource(source));
   assert.equal(parseLibrarySource(source + '/../../secret'), null);
   assert.equal(itemSchemas.image.validate({ url: source, caption: '' }), true);
   assert.equal(itemSchemas.icon.validate({ iconMode: 'library', source, label: 'Logo' }), true);
+  assert.equal(
+    itemSchemas.file.validate({
+      title: 'Proposal',
+      source,
+      fileName: 'proposal.docx',
+      contentType: 'application/test',
+      size: 12,
+    }),
+    true,
+  );
+  assert.equal(
+    itemSchemas.file.validate({
+      title: 'Proposal',
+      source: 'https://example.com/a.docx',
+      fileName: 'a.docx',
+      contentType: 'application/test',
+      size: 12,
+    }),
+    false,
+  );
   assert.equal(itemSchemas.link.validate({ url: source, title: '', description: '' }), false);
   assert.equal(itemSchemas.image.validate({ url: 'javascript:alert(1)', caption: '' }), false);
   const icon = { ...createCanvasItem('icon', 10, 20), iconMode: 'library', source };

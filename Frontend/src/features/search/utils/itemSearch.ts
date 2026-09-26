@@ -63,6 +63,8 @@ export function getSearchableText(item: BoardItem): string {
       return `${item.label} ${item.iconMode === 'svg' ? '' : item.source}`;
     case 'image':
       return item.caption;
+    case 'file':
+      return `${item.title} ${item.fileName} ${item.contentType}`;
 
     case 'link':
       return [item.title, item.description, item.url].join(' ');
