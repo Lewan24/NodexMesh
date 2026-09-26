@@ -146,6 +146,7 @@ export default function Canvas({
   useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
+  const [spacePanActive, setSpacePanActive] = useState(false);
   const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [customCssTarget, setCustomCssTarget] = useState<{ itemId: string; columnId?: string } | null>(null);
@@ -179,6 +180,45 @@ export default function Canvas({
 
   const zoomRef = useRef(zoom);
   zoomRef.current = zoom;
+
+  useEffect(() => {
+    const isInteractiveTarget = (target: EventTarget | null) =>
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLSelectElement ||
+      target instanceof HTMLButtonElement ||
+      (target instanceof HTMLElement && target.isContentEditable);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.code !== 'Space' ||
+        event.defaultPrevented ||
+        isInteractiveTarget(event.target) ||
+        (event.target instanceof Element && event.target.closest('dialog, [role="dialog"], [role="menu"]'))
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      setSpacePanActive(true);
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.code === 'Space') setSpacePanActive(false);
+    };
+
+    const handleBlur = () => setSpacePanActive(false);
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, []);
 
   useCanvasTouch({
     containerRef,
@@ -525,7 +565,7 @@ export default function Canvas({
     };
   }, [screenToCanvas, snapValue, pushHistory, onAddItem, triggerEnterAnimation, onSelectItems, onSelectTool]);
 
-  const { drawingDraft, frameDraft, lasso, handleCanvasMouseDown } = useCanvasMouse({
+  const { drawingDraft, frameDraft, lasso, isPanning, handleCanvasMouseDown } = useCanvasMouse({
     containerRef,
     projectRef,
     selectedIdsRef,
@@ -533,6 +573,7 @@ export default function Canvas({
     measuredSizes,
     selectedTool,
     pan,
+    spacePanActive,
     screenToCanvas,
     snapValue,
     pushHistory,
@@ -751,6 +792,12 @@ export default function Canvas({
 
   const handleCanvasMouseDownCapture = useCallback(
     (event: React.MouseEvent) => {
+      if (event.button === 0 && spacePanActive) {
+        event.stopPropagation();
+        handleCanvasMouseDown(event);
+        return;
+      }
+
       handleBlurActiveElement(event);
 
       if (event.button !== 0) return;
@@ -769,7 +816,7 @@ export default function Canvas({
 
       clearColumnSelection();
     },
-    [handleBlurActiveElement, clearColumnSelection],
+    [spacePanActive, handleCanvasMouseDown, handleBlurActiveElement, clearColumnSelection],
   );
 
   const safeSelectedIds = selectedIds ?? [];
@@ -955,7 +1002,13 @@ export default function Canvas({
 
   const majorBackgroundY = ((pan.y % majorGridInterval) + majorGridInterval) % majorGridInterval;
 
-  const cursorClass = selectedTool !== 'select' ? 'cursor-crosshair' : 'cursor-default';
+  const cursorClass = isPanning
+    ? 'cursor-grabbing'
+    : spacePanActive
+      ? 'cursor-grab'
+      : selectedTool !== 'select'
+        ? 'cursor-crosshair'
+        : 'cursor-default';
 
   const customCssParent = project.items.find((item) => item.id === customCssTarget?.columnId);
   const customCssItem = customCssTarget?.columnId
