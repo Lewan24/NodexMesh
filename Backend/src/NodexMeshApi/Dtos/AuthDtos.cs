@@ -12,7 +12,7 @@ public record UserProfileResponse(Guid Id, string Email, string DisplayName, boo
 
 public record AuthResponse(string AccessToken, DateTime ExpiresAtUtc, UserProfileResponse User);
 
-public record RegisteredUserResponse(Guid Id, string Email);
+public record RegisteredUserResponse(Guid Id, string Email, bool ConfirmationRequired = false);
 
 public record LoginRequest(
     [property: Required, EmailAddress] string Email,

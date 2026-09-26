@@ -34,7 +34,11 @@ public static class AccountDeletionEndpoints
         });
         group.MapPost("", DeleteAsync).RequireRateLimiting("auth-strict");
         var admin = app.MapGroup("/api/v1/admin/users").RequireAuthorization("AdminOnly").WithTags("Administration");
-        admin.MapPost("/{userId:guid}/restore", async (Guid userId, AppDbContext db, CancellationToken ct) =>
+        admin.MapPost("/{userId:guid}/restore", async (
+            Guid userId,
+            AppDbContext db,
+            IEmailQueue emailQueue,
+            CancellationToken ct) =>
         {
             await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
             {
@@ -46,6 +50,8 @@ public static class AccountDeletionEndpoints
                     throw new ApiException(409, "not_pending_deletion", "This account is not pending deletion.");
                 user.DeletionRequestedAt = null;
                 user.IsBlocked = false;
+                await emailQueue.QueueTemplateAsync(db, "account.restored", user.Email!,
+                    new Dictionary<string, string> { ["display_name"] = user.DisplayName }, ct);
                 await db.SaveChangesAsync(ct);
                 await transaction.CommitAsync(ct);
             });
@@ -69,19 +75,19 @@ public static class AccountDeletionEndpoints
     }
 
     private static async Task<IResult> DeleteAsync(DeleteAccountRequest request, ClaimsPrincipal principal,
-        UserManager<ApplicationUser> users, AppDbContext db, HttpContext http, CancellationToken ct)
+        UserManager<ApplicationUser> users, AppDbContext db, IEmailQueue emailQueue, HttpContext http, CancellationToken ct)
     {
         await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
             db.ChangeTracker.Clear();
-            await DeleteOnceAsync(request, principal.GetUserId(), users, db, ct);
+            await DeleteOnceAsync(request, principal.GetUserId(), users, db, emailQueue, ct);
         });
         http.Response.Cookies.Delete("nodexmesh_refresh_token", new CookieOptions { Path = "/api/v1/auth" });
         return Results.NoContent();
     }
 
     private static async Task DeleteOnceAsync(DeleteAccountRequest request, Guid id,
-        UserManager<ApplicationUser> users, AppDbContext db, CancellationToken ct)
+        UserManager<ApplicationUser> users, AppDbContext db, IEmailQueue emailQueue, CancellationToken ct)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
         var user = await db.Users.SingleAsync(u => u.Id == id, ct);
@@ -104,11 +110,19 @@ public static class AccountDeletionEndpoints
                 project.Members.Any(m => m.UserId == nextId) &&
                 await db.Users.AnyAsync(u => u.Id == nextId && !u.IsBlocked && u.DeletionRequestedAt == null, ct))
             {
+                var nextOwner = await db.Users.SingleAsync(u => u.Id == nextId, ct);
                 db.ProjectMembers.Remove(project.Members.Single(m => m.UserId == nextId));
                 project.OwnerId = nextId;
                 project.Revision++;
                 project.UpdatedAt = now;
                 project.UpdatedBy = id;
+                await emailQueue.QueueUserTemplateAsync(db, "project.owner-changed", nextOwner.Email!,
+                    new Dictionary<string, string>
+                    {
+                        ["display_name"] = nextOwner.DisplayName,
+                        ["project_name"] = project.Name,
+                        ["message"] = $"You are now the owner of the project '{project.Name}'."
+                    }, ct);
             }
             else throw new ApiException(409, "invalid_project_decision", "Select delete or transfer to an active collaborator for every project.");
         }
@@ -120,6 +134,12 @@ public static class AccountDeletionEndpoints
         user.IsBlocked = true;
         user.DeletionRequestedAt = now;
         user.SecurityStamp = Guid.NewGuid().ToString();
+        await emailQueue.QueueTemplateAsync(db, "account.deletion-requested", user.Email!,
+            new Dictionary<string, string>
+            {
+                ["display_name"] = user.DisplayName,
+                ["retention_days"] = ((int)AccountDeletionService.Retention.TotalDays).ToString()
+            }, ct);
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
     }

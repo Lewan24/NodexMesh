@@ -46,3 +46,42 @@ export interface AdminProject {
   deletedAt: string | null;
   members: AdminProjectMember[];
 }
+
+export interface EmailSettings {
+  enabled: boolean;
+  configured: boolean;
+  source: 'configuration' | 'database';
+  editable: boolean;
+  host: string;
+  port: number;
+  useSsl: boolean;
+  username: string;
+  hasPassword: boolean;
+  fromAddress: string;
+  fromName: string;
+  publicBaseUrl: string;
+  userNotificationsEnabled: boolean;
+  adminAlertsEnabled: boolean;
+  pendingMessages: number;
+  failedMessages: number;
+}
+
+export interface EmailTemplate {
+  key: string;
+  name: string;
+  description: string;
+  subject: string;
+  textBody: string;
+  htmlBody: string;
+  variables: string[];
+  updatedAt: string;
+}
+
+export interface EmailTemplateContent {
+  subject: string;
+  textBody: string;
+  htmlBody: string;
+}
+
+export interface EmailOutboxMessage { id: string; kind: string; status: 'pending'|'failed'|'sent'; recipient: string; userId?: string|null; userDisplayName?: string|null; subject: string; attempts: number; createdAt: string; availableAt: string; sentAt?: string|null; deadLetteredAt?: string|null; lastError?: string|null; }
+export interface EmailOutboxResponse { items: EmailOutboxMessage[]; pendingMessages: number; failedMessages: number; }

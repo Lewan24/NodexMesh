@@ -49,6 +49,19 @@ services:
       Admin__Email: admin@nodexmesh.pl
       # Supply securely before first startup; passwords are never generated into logs.
       Admin__Password: ''
+      # Optional SMTP override. Leave Email__Host empty to configure encrypted settings in the admin panel.
+      Email__Enabled: ${EMAIL_ENABLED:-false}
+      Email__Host: ${EMAIL_HOST:-}
+      Email__Port: ${EMAIL_PORT:-587}
+      Email__UseSsl: ${EMAIL_USE_SSL:-true}
+      Email__Username: ${EMAIL_USERNAME:-}
+      Email__Password: ${EMAIL_PASSWORD:-}
+      Email__FromAddress: ${EMAIL_FROM_ADDRESS:-}
+      Email__FromName: ${EMAIL_FROM_NAME:-NodexMesh}
+      Email__PublicBaseUrl: ${EMAIL_PUBLIC_BASE_URL:-https://nodexmesh.example.com}
+      Email__UserNotificationsEnabled: ${EMAIL_USER_NOTIFICATIONS_ENABLED:-true}
+      Email__AdminAlertsEnabled: ${EMAIL_ADMIN_ALERTS_ENABLED:-true}
+      DataProtection__KeysPath: /app/keys
       # The API receives requests from the frontend Nginx container only.
       # Keep this address stable; do not replace it with 0.0.0.0/0.
       ReverseProxy__KnownProxies__0: 172.30.0.10
@@ -56,6 +69,7 @@ services:
 
     volumes:
       - library-data:/app/storage
+      - data-protection-keys:/app/keys
     networks:
       nodexmesh_app:
         ipv4_address: 172.30.0.11
@@ -83,6 +97,7 @@ services:
         ipv4_address: 172.30.0.10
 
 volumes:
+  data-protection-keys:
   library-data:
   postgres-data:
 

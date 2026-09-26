@@ -1,5 +1,6 @@
 using NodexMeshApi.Auditing;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.DataProtection;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -58,6 +59,13 @@ try
         ?? throw new InvalidOperationException("ConnectionStrings:Default is required.");
 
     builder.Services.AddHttpContextAccessor();
+    var dataProtection = builder.Services.AddDataProtection().SetApplicationName("NodexMesh");
+    if (!builder.Environment.IsEnvironment("Testing"))
+    {
+        var keysPath = builder.Configuration["DataProtection:KeysPath"] ?? "App_Data/keys";
+        Directory.CreateDirectory(keysPath);
+        dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+    }
     builder.Services.Configure<ForwardedHeadersOptions>(options => ClientIpResolver.Configure(options, builder.Configuration));
     builder.Services.AddOptions<AuditOptions>().Bind(builder.Configuration.GetSection("Audit"))
         .Validate(o => o.SecurityRetentionDays > 0 && o.ActivityRetentionDays > 0 && o.DiagnosticRetentionDays > 0
@@ -273,6 +281,7 @@ try
     // revocation logic in ShareLinkService is testable without waiting in real time.
     builder.Services.AddSingleton(TimeProvider.System);
     builder.Services.Configure<AppVersionOptions>(builder.Configuration.GetSection(AppVersionOptions.SectionName));
+    builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
     builder.Services.AddOptions<LibraryOptions>().Bind(builder.Configuration.GetSection("Library"))
         .Validate(o => !string.IsNullOrWhiteSpace(o.Path) && o.MaxFileBytes > 0 && o.MaxProjectBytes >= o.MaxFileBytes)
         .ValidateOnStart();
@@ -289,12 +298,17 @@ try
     builder.Services.AddScoped<IProjectAccessService, ProjectAccessService>();
     builder.Services.AddScoped<IBoardMutationService, BoardMutationService>();
     builder.Services.AddScoped<IShareLinkService, ShareLinkService>();
+    builder.Services.AddScoped<IEmailSettingsService, EmailSettingsService>();
+    builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+    builder.Services.AddScoped<IEmailQueue, EmailQueue>();
+    builder.Services.AddSingleton<IEmailTransport, SmtpEmailTransport>();
     builder.Services.AddScoped<TagService>();
     builder.Services.AddSingleton<IGitHubReleaseService, GitHubReleaseService>();
 
     // idempotency_keys and refresh_tokens grow on every save and every token refresh;
     // nothing else deletes them.
     builder.Services.AddHostedService<ExpiredDataCleanupService>();
+    builder.Services.AddHostedService<EmailOutboxWorker>();
 
     // .NET 10 built-in Minimal API validation: DataAnnotations / IValidatableObject on
     // request DTOs are enforced automatically for query/header/body-bound parameters.

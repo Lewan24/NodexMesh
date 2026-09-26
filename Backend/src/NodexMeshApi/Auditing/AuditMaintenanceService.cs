@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NodexMeshApi.Data;
+using NodexMeshApi.Services;
 
 namespace NodexMeshApi.Auditing;
 
@@ -30,7 +31,8 @@ public sealed class AuditMaintenanceService(IServiceScopeFactory scopes, IOption
                 {
                     var through = checkpoint.ProcessedThrough.AddMinutes(1);
                     if (through > now) through = now;
-                    await DetectAsync(db, settings.Value, through, stoppingToken, logger);
+                    var emailQueue = scope.ServiceProvider.GetRequiredService<IEmailQueue>();
+                    await DetectAsync(db, settings.Value, through, stoppingToken, logger, emailQueue);
                     checkpoint.ProcessedThrough = through;
                     await db.SaveChangesAsync(stoppingToken);
                 }
@@ -45,7 +47,13 @@ public sealed class AuditMaintenanceService(IServiceScopeFactory scopes, IOption
         }
     }
 
-    public static async Task DetectAsync(AppDbContext db, AuditOptions options, DateTime now, CancellationToken ct, ILogger? logger = null)
+    public static async Task DetectAsync(
+        AppDbContext db,
+        AuditOptions options,
+        DateTime now,
+        CancellationToken ct,
+        ILogger? logger = null,
+        IEmailQueue? emailQueue = null)
     {
         var since = now.AddMinutes(-options.WindowMinutes);
         var recent = db.AuditEvents.AsNoTracking().Where(e => e.OccurredAt >= since && e.OccurredAt <= now);
@@ -61,6 +69,22 @@ public sealed class AuditMaintenanceService(IServiceScopeFactory scopes, IOption
                 await db.SaveChangesAsync(ct);
                 logger?.Log(severity == "Critical" ? LogLevel.Critical : severity == "Warning" ? LogLevel.Warning : LogLevel.Information,
                     new EventId(4200, "security.incident_created"), "Security incident {IncidentId}: {Rule}, evidence {AuditId}", incident.Id, rule, eventId);
+                if (severity == "Critical" && emailQueue is not null)
+                {
+                    var administrators = await db.Users.AsNoTracking()
+                        .Where(user => user.IsAdmin && !user.IsBlocked && user.DeletionRequestedAt == null)
+                        .Select(user => new { user.Email, user.DisplayName })
+                        .ToListAsync(ct);
+                    foreach (var administrator in administrators)
+                        await emailQueue.QueueAdminTemplateAsync(db, "admin.security-incident", administrator.Email!,
+                            new Dictionary<string, string>
+                            {
+                                ["display_name"] = administrator.DisplayName,
+                                ["rule"] = rule,
+                                ["severity"] = severity
+                            }, ct);
+                    if (administrators.Count > 0) await db.SaveChangesAsync(ct);
+                }
             }
             catch (DbUpdateException)
             {

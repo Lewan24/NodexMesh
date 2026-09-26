@@ -324,10 +324,12 @@ public static class ProjectEndpoints
     private static async Task<Results<Ok<ProjectMemberDto>, NotFound<ErrorResponse>>> InviteMemberAsync(
         Guid projectId, InviteMemberRequest request, ClaimsPrincipal principal,
         AppDbContext db, UserManager<ApplicationUser> userManager,
-        IProjectAccessService access, CancellationToken ct)
+        IProjectAccessService access, IEmailQueue emailQueue, CancellationToken ct)
     {
         var userId = CurrentUserId(principal);
         await access.RequireAsync(projectId, userId, ProjectRole.Owner, ct);
+        var projectName = await db.Projects.Where(project => project.Id == projectId)
+            .Select(project => project.Name).SingleAsync(ct);
 
         var invitee = await userManager.FindByEmailAsync(request.Email);
         if (invitee is null)
@@ -360,6 +362,9 @@ public static class ProjectEndpoints
             });
         }
 
+        await emailQueue.QueueUserTemplateAsync(db, "project.member-added", invitee.Email!,
+            EmailValues(invitee.DisplayName, projectName,
+                $"You now have {role} access to the project '{projectName}'."), ct);
         await db.SaveChangesAsync(ct);
 
         return TypedResults.Ok(new ProjectMemberDto(
@@ -368,7 +373,7 @@ public static class ProjectEndpoints
 
     private static async Task<NoContent> UpdateMemberRoleAsync(
         Guid projectId, Guid userId, UpdateMemberRoleRequest request, ClaimsPrincipal principal,
-        AppDbContext db, IProjectAccessService access, CancellationToken ct)
+        AppDbContext db, IProjectAccessService access, IEmailQueue emailQueue, CancellationToken ct)
     {
         var callerId = CurrentUserId(principal);
         await access.RequireAsync(projectId, callerId, ProjectRole.Owner, ct);
@@ -378,6 +383,13 @@ public static class ProjectEndpoints
             ?? throw new ApiException(404, "not_found", "Member not found.");
 
         member.Role = Enum.Parse<ProjectRole>(request.Role);
+        var notification = await db.Users.Where(user => user.Id == userId)
+            .Select(user => new { user.Email, user.DisplayName }).SingleAsync(ct);
+        var projectName = await db.Projects.Where(project => project.Id == projectId)
+            .Select(project => project.Name).SingleAsync(ct);
+        await emailQueue.QueueUserTemplateAsync(db, "project.member-role-changed", notification.Email!,
+            EmailValues(notification.DisplayName, projectName,
+                $"Your access to '{projectName}' changed to {member.Role}."), ct);
         await db.SaveChangesAsync(ct);
 
         return TypedResults.NoContent();
@@ -386,7 +398,7 @@ public static class ProjectEndpoints
     /// <summary>The owner may remove anyone; a member may remove themselves (leave).</summary>
     private static async Task<NoContent> RemoveMemberAsync(
         Guid projectId, Guid userId, ClaimsPrincipal principal,
-        AppDbContext db, IProjectAccessService access, CancellationToken ct)
+        AppDbContext db, IProjectAccessService access, IEmailQueue emailQueue, CancellationToken ct)
     {
         var callerId = CurrentUserId(principal);
         var callerRole = await access.GetRoleAsync(projectId, callerId, ct);
@@ -402,7 +414,14 @@ public static class ProjectEndpoints
 
         if (member is not null)
         {
+            var notification = await db.Users.Where(user => user.Id == userId)
+                .Select(user => new { user.Email, user.DisplayName }).SingleAsync(ct);
+            var projectName = await db.Projects.Where(project => project.Id == projectId)
+                .Select(project => project.Name).SingleAsync(ct);
             db.ProjectMembers.Remove(member);
+            await emailQueue.QueueUserTemplateAsync(db, "project.member-removed", notification.Email!,
+                EmailValues(notification.DisplayName, projectName,
+                    $"Your access to the project '{projectName}' was removed."), ct);
             await db.SaveChangesAsync(ct);
         }
 
@@ -412,6 +431,13 @@ public static class ProjectEndpoints
     private static ProjectRecordDto ToDto(Project p, ProjectRole role, int itemCount = 0) => new(
         p.Id, p.OwnerId, p.Name, p.Color, p.Revision,
         p.CreatedAt, p.UpdatedAt, p.CreatedBy, p.UpdatedBy, p.DeletedAt, role.ToString(), itemCount);
+
+    private static Dictionary<string, string> EmailValues(string displayName, string projectName, string message) => new()
+    {
+        ["display_name"] = displayName,
+        ["project_name"] = projectName,
+        ["message"] = message
+    };
 
     private static Task<int> ProjectItemCountAsync(AppDbContext db, Guid projectId, CancellationToken ct) =>
         db.BoardItems.AsNoTracking()

@@ -427,6 +427,16 @@ test('public auth profiles exclude passwords and mock administrative operations 
   await auth.logout();
   await auth.login({ username: 'admin', password: 'admin123' });
   assert.ok((await auth.listUsers()).every((user) => !('password' in user)));
+  const email = await auth.emailSettings();
+  assert.equal(email.enabled, false);
+  assert.equal(email.configured, false);
+  assert.equal(email.editable, false);
+  assert.equal(email.pendingMessages, 0);
+  assert.deepEqual(await auth.emailTemplates(), []);
+  assert.deepEqual(await auth.register({ email: 'mock@example.test', password: 'ignored' }), {
+    confirmationRequired: false,
+  });
+  await auth.requestPasswordReset('mock@example.test');
 });
 
 test('HTTP transport uses included cookies, bearer token and CSRF guard', async () => {

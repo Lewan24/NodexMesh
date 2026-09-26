@@ -24,6 +24,7 @@ interface UseCanvasMouseOptions {
 
   selectedTool: ToolType;
   pan: CanvasPoint;
+  spacePanActive: boolean;
 
   measuredSizes: SizeMap;
   onFramePreviewChange: (ids: string[]) => void;
@@ -46,6 +47,7 @@ export function useCanvasMouse({
   panRef,
   selectedTool,
   pan,
+  spacePanActive,
   measuredSizes,
   onFramePreviewChange,
   screenToCanvas,
@@ -58,6 +60,7 @@ export function useCanvasMouse({
   triggerEnterAnimation,
 }: UseCanvasMouseOptions) {
   const [frameDraft, setFrameDraft] = useState<FrameDraft | null>(null);
+  const [isPanning, setIsPanning] = useState(false);
 
   const [lasso, setLasso] = useState<SelectionBox | null>(null);
   const [drawingDraft, setDrawingDraft] = useState<DrawingPoint[] | null>(null);
@@ -72,8 +75,9 @@ export function useCanvasMouse({
 
   const handleCanvasMouseDown = useCallback(
     (event: React.MouseEvent) => {
-      if (event.button === 1) {
+      if (event.button === 1 || (event.button === 0 && spacePanActive)) {
         event.preventDefault();
+        setIsPanning(true);
 
         const startX = event.clientX;
         const startY = event.clientY;
@@ -102,6 +106,7 @@ export function useCanvasMouse({
           if (frame !== null) cancelAnimationFrame(frame);
           frame = null;
           flushPan();
+          setIsPanning(false);
         };
 
         document.addEventListener('mousemove', handleMove);
@@ -366,6 +371,7 @@ export function useCanvasMouse({
       panRef,
       selectedTool,
       pan,
+      spacePanActive,
       screenToCanvas,
       snapValue,
       pushHistory,
@@ -377,5 +383,5 @@ export function useCanvasMouse({
     ],
   );
 
-  return { drawingDraft, frameDraft, lasso, handleCanvasMouseDown, measuredSizes, onFramePreviewChange };
+  return { drawingDraft, frameDraft, lasso, isPanning, handleCanvasMouseDown, measuredSizes, onFramePreviewChange };
 }

@@ -43,7 +43,7 @@ export default function CanvasHints({ selectedTool, hasSelection }: CanvasHintsP
               backdropFilter: 'blur(4px)',
             }}
           >
-            {translate('Middle-click drag to pan · Scroll to zoom')}
+            {translate('Hold Space + left-drag or middle-drag to pan · Scroll to zoom')}
           </div>
         </div>
       )}
