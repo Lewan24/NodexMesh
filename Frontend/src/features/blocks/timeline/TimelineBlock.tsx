@@ -5,6 +5,8 @@ import { getSectionStyle } from '@/features/blocks/typography/sectionTypography'
 import { createId } from '@/shared/lib/createId';
 import TimelineTaskDialog from './TimelineTaskDialog';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import type { ReactNode } from 'react';
 import { CalendarDays, Check, LayoutList, Pencil, Plus, Rows3 } from 'lucide-react';
 import type { TimelineItem, TimelineTask } from '@/entities/board/types';
 import type { ProjectParticipant } from '@/entities/project/shareTypes';
@@ -18,6 +20,7 @@ import {
   taskRange,
   todayDate,
   reorderTasks,
+  startOfMondayWeek,
   tasksInWindow,
 } from './timelineUtils';
 import '../shared/planning.css';
@@ -40,6 +43,48 @@ function AssigneeBadge({ participant, compact = false }: { participant?: Project
       </span>
       {!compact && <span className="truncate">{participant.displayName}</span>}
     </span>
+  );
+}
+
+function ChecklistPreview({ task, children }: { task: TimelineTask; children: ReactNode }) {
+  const anchor = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
+  const show = () => {
+    const rect = anchor.current?.getBoundingClientRect();
+    if (!rect) return;
+    const width = Math.min(260, window.innerWidth - 16);
+    const left = rect.right + 8 + width <= window.innerWidth - 8 ? rect.right + 8 : Math.max(8, rect.left - width - 8);
+    setPosition({ left, top: Math.max(8, Math.min(rect.top, window.innerHeight - 248)) });
+  };
+
+  if (!task.checklist.length) return <div className="min-w-0 flex-1">{children}</div>;
+
+  return (
+    <div
+      ref={anchor}
+      className="timeline-row-details min-w-0 flex-1"
+      onMouseEnter={show}
+      onMouseLeave={() => setPosition(null)}
+      onFocusCapture={show}
+      onBlurCapture={() => setPosition(null)}
+    >
+      {children}
+      {position &&
+        createPortal(
+          <div className="timeline-checklist-popover timeline-checklist-popover-fixed" role="tooltip" style={position}>
+            <strong>{task.title || translate('Untitled task')}</strong>
+            <span className="timeline-popover-progress">
+              {task.checklist.filter((entry) => entry.done).length}/{task.checklist.length} {translate('completed')}
+            </span>
+            {task.checklist.map((entry) => (
+              <span key={entry.id} className={entry.done ? 'is-done' : ''}>
+                {entry.done ? '✓' : '○'} {entry.text || translate('Checklist item')}
+              </span>
+            ))}
+          </div>,
+          document.body,
+        )}
+    </div>
   );
 }
 
@@ -73,13 +118,15 @@ export default function TimelineBlock({
 
   const [requestedDay, setRequestedDay] = useState<number | null>(null);
   const fullRange = scheduleRange(item.tasks);
-  const range = { start: Math.min(fullRange.start, requestedDay ?? fullRange.start), days: 0 };
-  range.days = Math.max(fullRange.start + fullRange.days, (requestedDay ?? fullRange.start) + 28) - range.start;
+  const requestedWeek = requestedDay === null ? fullRange.start : startOfMondayWeek(requestedDay);
+  const range = { start: Math.min(fullRange.start, requestedWeek), days: 0 };
+  range.days = Math.max(fullRange.start + fullRange.days, requestedWeek + 28) - range.start;
   const dayWidth = 28;
   const viewport = useRef<HTMLDivElement>(null);
   const [windowSize, setWindowSize] = useState({ left: 0, width: 600 });
   const columnWidth = item.taskColumnWidth ?? 180;
-  const windowStart = range.start + Math.floor(windowSize.left / dayWidth);
+  const rawWindowStart = range.start + Math.floor(windowSize.left / dayWidth);
+  const windowStart = startOfMondayWeek(rawWindowStart);
   const windowEnd =
     range.start + Math.ceil((windowSize.left + Math.max(dayWidth, windowSize.width - columnWidth)) / dayWidth) - 1;
   const visibleTasks = tasksInWindow(item.tasks, windowStart, windowEnd);
@@ -97,8 +144,9 @@ export default function TimelineBlock({
       viewport.current?.scrollTo({ left: Math.max(0, (requestedDay - range.start) * dayWidth), behavior: 'smooth' });
   }, [requestedDay, range.start]);
   const scrollToDay = (day: number) => {
-    setRequestedDay(day);
-    viewport.current?.scrollTo({ left: Math.max(0, (day - range.start) * dayWidth), behavior: 'smooth' });
+    const monday = startOfMondayWeek(day);
+    setRequestedDay(monday);
+    viewport.current?.scrollTo({ left: Math.max(0, (monday - range.start) * dayWidth), behavior: 'smooth' });
   };
   const addTask = () => {
     const id = createId();
@@ -419,7 +467,7 @@ export default function TimelineBlock({
                 return (
                   <div className="contents" key={task.id}>
                     <div
-                      className="timeline-label flex items-center gap-1 !p-1"
+                      className="timeline-label timeline-task-label flex items-center gap-1 !p-1"
                       style={{ boxShadow: dropRow === task.id ? 'inset 0 2px var(--color-accent)' : undefined }}
                       onMouseDown={(event) => event.stopPropagation()}
                       onDragOver={(event) => {
@@ -475,17 +523,27 @@ export default function TimelineBlock({
                       >
                         ⠿
                       </button>
-                      <button
-                        className="timeline-row-title flex-1 text-left py-2"
-                        onClick={() => {
-                          setDraft({ ...task, checklist: task.checklist.map((entry) => ({ ...entry })) });
-                          setEditing(true);
-                        }}
-                        style={getSectionStyle(item.typography, 'body')}
-                      >
-                        {task.done ? '✓ ' : ''}
-                        {task.title}
-                      </button>
+                      <ChecklistPreview task={task}>
+                        <button
+                          className="timeline-row-title block w-full text-left py-1"
+                          onClick={() => {
+                            setDraft({ ...task, checklist: task.checklist.map((entry) => ({ ...entry })) });
+                            setEditing(true);
+                          }}
+                          style={getSectionStyle(item.typography, 'body')}
+                        >
+                          <span className="block truncate">
+                            {task.done ? '✓ ' : ''}
+                            {task.title}
+                          </span>
+                          {!!task.checklist.length && (
+                            <span className="timeline-schedule-progress">
+                              <Check size={10} /> {task.checklist.filter((entry) => entry.done).length}/
+                              {task.checklist.length}
+                            </span>
+                          )}
+                        </button>
+                      </ChecklistPreview>
                       <AssigneeBadge participant={participantsById.get(task.assigneeUserId ?? '')} compact />
                       <div className="flex flex-col text-[10px]" style={getSectionStyle(item.typography, 'labels')}>
                         {([-1, 1] as const).map((direction) => (

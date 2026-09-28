@@ -21,7 +21,7 @@ There is no MFA, email verification, invitation acceptance flow, or self-service
 - Project access is centralized in `ProjectAccessService` and re-read from PostgreSQL rather than trusted from JWT claims.
 - Owner, Editor, Commenter, and Viewer checks apply at route and service boundaries. Comments have a dedicated Commenter endpoint with own-comment enforcement.
 - Board/project/library/share identifiers are resolved and scoped server-side. No-access resources generally return 404 to reduce existence probing.
-- Public project DTOs omit comments and user identifiers. Public library access requires an explicit owner-created media token.
+- Public project DTOs omit comments and user identifiers. Public library access requires an explicit owner-created file token.
 - Administrator routes require an admin claim that is also checked against current database state. Admin operations are audited.
 
 ### Input, integrity, and resource controls

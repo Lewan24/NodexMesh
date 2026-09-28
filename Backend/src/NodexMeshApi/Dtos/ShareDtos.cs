@@ -10,16 +10,15 @@ public sealed record CreateShareLinkRequest(
     [property: MaxLength(100)] string? Label,
     DateTimeOffset? ExpiresAt);
 
-/// <summary>Share link metadata. Deliberately contains no token — see CreatedShareLinkDto.</summary>
+/// <summary>Owner-facing share link metadata, including its retrievable capability token.</summary>
 public sealed record ShareLinkDto(
     Guid Id, Guid ProjectId, string? Label,
     DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt,
-    DateTimeOffset? LastAccessedAt, long AccessCount, bool IsActive);
+    DateTimeOffset? LastAccessedAt, long AccessCount, bool IsActive,
+    string? Token);
 
 /// <summary>
-/// Returned ONLY from the create call. <paramref name="Token"/> is the raw credential and
-/// is unrecoverable afterwards (only its hash is stored), so the UI must surface it
-/// immediately with a copy button and a "you won't see this again" note.
+/// Creation response. The token is also available in subsequent owner-only list responses.
 /// </summary>
 public sealed record CreatedShareLinkDto(ShareLinkDto Link, string Token);
 

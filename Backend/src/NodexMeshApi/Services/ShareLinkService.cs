@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using NodexMeshApi.Common;
 using NodexMeshApi.Data;
@@ -22,9 +23,17 @@ public interface IShareLinkService
     Task<Guid> ResolveProjectIdAsync(string token, CancellationToken ct = default);
 }
 
-public sealed class ShareLinkService(AppDbContext db, IProjectAccessService access, TimeProvider clock)
+public sealed class ShareLinkService(
+    AppDbContext db,
+    IProjectAccessService access,
+    TimeProvider clock,
+    IDataProtectionProvider? dataProtection = null)
     : IShareLinkService
 {
+    private readonly IDataProtector tokenProtector =
+        (dataProtection ?? new EphemeralDataProtectionProvider())
+        .CreateProtector("NodexMesh.ProjectShareLinkToken.v1");
+
     /// <summary>Max links per project — an unbounded list is both a UX mess and a DoS vector.</summary>
     private const int MaxActiveLinksPerProject = 20;
 
@@ -61,6 +70,7 @@ public sealed class ShareLinkService(AppDbContext db, IProjectAccessService acce
             Id = Guid.CreateVersion7(),
             ProjectId = projectId,
             TokenHash = hash,
+            TokenProtected = tokenProtector.Protect(token),
             Label = string.IsNullOrWhiteSpace(request.Label) ? null : request.Label.Trim(),
             CreatedAt = now,
             CreatedBy = userId,
@@ -70,7 +80,6 @@ public sealed class ShareLinkService(AppDbContext db, IProjectAccessService acce
         db.ProjectShareLinks.Add(link);
         await db.SaveChangesAsync(ct);
 
-        // `token` is returned here and never again — it isn't recoverable from the hash.
         return new CreatedShareLinkDto(ToDto(link, now), token);
     }
 
@@ -160,7 +169,23 @@ public sealed class ShareLinkService(AppDbContext db, IProjectAccessService acce
     private static string HashToken(string token) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
-    private static ShareLinkDto ToDto(ProjectShareLink l, DateTimeOffset now) => new(
+    private ShareLinkDto ToDto(ProjectShareLink l, DateTimeOffset now) => new(
         l.Id, l.ProjectId, l.Label, l.CreatedAt, l.ExpiresAt,
-        l.LastAccessedAt, l.AccessCount, l.IsActive(now));
+        l.LastAccessedAt, l.AccessCount, l.IsActive(now), UnprotectToken(l.TokenProtected));
+
+    private string? UnprotectToken(string? protectedToken)
+    {
+        if (protectedToken is null) return null;
+
+        try
+        {
+            return tokenProtector.Unprotect(protectedToken);
+        }
+        catch (CryptographicException)
+        {
+            // A missing/rotated key should not prevent the owner from managing or revoking
+            // the link. Treat it like a legacy link whose raw token cannot be recovered.
+            return null;
+        }
+    }
 }

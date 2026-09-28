@@ -26,22 +26,13 @@ import Modal from '@/shared/components/dialogs/Modal';
 import { errorMessage } from '@/shared/api/errors';
 import { librarySource } from './librarySource';
 import MediaPreview from './MediaPreview';
+import FilePreviewDialog from './FilePreviewDialog';
+import FileTypeIcon from './FileTypeIcon';
+import { fileExtension, filePreviewKind } from './filePreview';
+import type { LibraryAsset, ProjectLibrary } from './libraryTypes';
 import './library.css';
 
-interface Asset {
-  id: string;
-  name: string;
-  contentType: string;
-  size: number;
-  shared: boolean;
-  sharePath?: string | null;
-}
-interface Library {
-  assets: Asset[];
-  canManage: boolean;
-  canShare: boolean;
-}
-const FILTERS = ['All files', 'Images', 'GIFs', 'Videos', 'SVG icons'] as const;
+const FILTERS = ['All files', 'Documents', 'Images', 'GIFs', 'Videos', 'SVG icons'] as const;
 type Filter = (typeof FILTERS)[number];
 const formatSize = (bytes: number) =>
   bytes === 0
@@ -60,11 +51,11 @@ export default function LibraryDialog({
 }: {
   projectId: string;
   onClose: () => void;
-  onSelect?: (source: string, name: string) => void;
+  onSelect?: (source: string, name: string, asset: LibraryAsset) => void;
   iconsOnly?: boolean;
 }) {
   useTranslation();
-  const [library, setLibrary] = useState<Library>();
+  const [library, setLibrary] = useState<ProjectLibrary>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [query, setQuery] = useState('');
@@ -76,6 +67,7 @@ export default function LibraryDialog({
   const [confirm, setConfirm] = useState<'delete' | 'revoke' | null>(null);
   const [copied, setCopied] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const detailsPanel = useRef<HTMLElement>(null);
   const path = `/projects/${projectId}/library`;
@@ -87,7 +79,7 @@ export default function LibraryDialog({
     void httpClient
       .request(path, { signal: controller.signal })
       .then((value) => {
-        if (!controller.signal.aborted) setLibrary(value as Library);
+        if (!controller.signal.aborted) setLibrary(value as ProjectLibrary);
       })
       .catch((error) => {
         if (!controller.signal.aborted) setError(errorMessage(error));
@@ -111,7 +103,7 @@ export default function LibraryDialog({
       setError(errorMessage(error));
     } finally {
       try {
-        setLibrary((await httpClient.request(path)) as Library);
+        setLibrary((await httpClient.request(path)) as ProjectLibrary);
       } catch (error) {
         setError(errorMessage(error));
       }
@@ -125,7 +117,7 @@ export default function LibraryDialog({
         await httpClient!.request(`${path}?name=${encodeURIComponent(file.name)}`, { method: 'POST', rawBody: file });
     });
   };
-  const select = (asset: Asset) => {
+  const select = (asset: LibraryAsset) => {
     setSelectedId(asset.id);
     setRename(asset.name);
     setConfirm(null);
@@ -148,12 +140,14 @@ export default function LibraryDialog({
     if (filter === 'GIFs') return asset.contentType === 'image/gif';
     if (filter === 'Videos') return asset.contentType.startsWith('video/');
     if (filter === 'SVG icons') return asset.contentType === 'image/svg+xml';
+    if (filter === 'Documents')
+      return !asset.contentType.startsWith('image/') && !asset.contentType.startsWith('video/');
     return true;
   });
   if (sort === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name));
   if (sort === 'size') filtered.sort((a, b) => b.size - a.size);
   const currentPage = Math.min(page, Math.max(0, Math.ceil(filtered.length / 12) - 1));
-  const visibleFilters = iconsOnly ? FILTERS.filter((value) => value !== 'Videos') : FILTERS;
+  const visibleFilters = iconsOnly ? FILTERS.filter((value) => value !== 'Videos' && value !== 'Documents') : FILTERS;
 
   return (
     <Modal onClose={onClose} centered label={translate('Project library')}>
@@ -206,7 +200,7 @@ export default function LibraryDialog({
           type="file"
           hidden
           multiple
-          accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.mp4,.webm"
+          accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.mp4,.webm,.pdf,.doc,.docx,.xls,.xlsx,.pptx,.rtf,.txt,.csv,.md"
           onChange={(event) => {
             upload(Array.from(event.target.files ?? []));
             event.target.value = '';
@@ -250,7 +244,9 @@ export default function LibraryDialog({
                 </span>
                 <span>
                   <strong>{translate('Drop something inspiring')}</strong>
-                  <small>{translate('Drag files here or click to browse. Images, GIFs, videos & SVG.')}</small>
+                  <small>
+                    {translate('Drag files here or click to browse. Documents, spreadsheets, media and text.')}
+                  </small>
                 </span>
                 <span className="library-drop-plus">+</span>
               </button>
@@ -338,12 +334,15 @@ export default function LibraryDialog({
                           <Film size={34} />
                           <span>{translate('Video')}</span>
                         </div>
-                      ) : (
+                      ) : asset.contentType.startsWith('image/') ? (
                         <MediaPreview source={librarySource(projectId, asset.id)} name={asset.name} />
+                      ) : (
+                        <div className="library-file-tile">
+                          <FileTypeIcon name={asset.name} contentType={asset.contentType} size={38} />
+                          <span>{fileExtension(asset.name, asset.contentType)}</span>
+                        </div>
                       )}
-                      <span className="library-format">
-                        {(asset.contentType.split('/')[1] ?? 'file').replace('svg+xml', 'svg').toUpperCase()}
-                      </span>
+                      <span className="library-format">{fileExtension(asset.name, asset.contentType)}</span>
                       <span
                         className={`library-access ${asset.shared ? 'is-public' : ''}`}
                         title={translate(asset.shared ? 'Public link enabled' : 'Private')}
@@ -406,20 +405,34 @@ export default function LibraryDialog({
                   </button>
                 </div>
                 <div className="library-detail-preview">
-                  <MediaPreview key={selected.id} source={librarySource(projectId, selected.id)} name={selected.name} />
+                  {selected.contentType.startsWith('image/') || selected.contentType.startsWith('video/') ? (
+                    <MediaPreview
+                      key={selected.id}
+                      source={librarySource(projectId, selected.id)}
+                      name={selected.name}
+                    />
+                  ) : (
+                    <button type="button" className="library-file-detail" onClick={() => setPreviewOpen(true)}>
+                      <FileTypeIcon name={selected.name} contentType={selected.contentType} size={42} />
+                      <span>
+                        {translate(
+                          filePreviewKind(selected.name, selected.contentType) === 'other' ? 'File' : 'Open preview',
+                        )}
+                      </span>
+                    </button>
+                  )}
                 </div>
                 <div className="library-detail-title">
                   <h3>{selected.name}</h3>
                   <span>
-                    {(selected.contentType.split('/')[1] ?? 'file').replace('svg+xml', 'SVG').toUpperCase()} ·{' '}
-                    {formatSize(selected.size)}
+                    {fileExtension(selected.name, selected.contentType)} · {formatSize(selected.size)}
                   </span>
                 </div>
                 {onSelect && (
                   <button
                     type="button"
                     className="library-primary library-full"
-                    onClick={() => onSelect(librarySource(projectId, selected.id), selected.name)}
+                    onClick={() => onSelect(librarySource(projectId, selected.id), selected.name, selected)}
                   >
                     <Check size={16} />
                     {translate('Use file')}
@@ -566,6 +579,15 @@ export default function LibraryDialog({
           </aside>
         </div>
       </div>
+      {previewOpen && selected && (
+        <FilePreviewDialog
+          source={librarySource(projectId, selected.id)}
+          name={selected.name}
+          contentType={selected.contentType}
+          size={selected.size}
+          onClose={() => setPreviewOpen(false)}
+        />
+      )}
     </Modal>
   );
 }

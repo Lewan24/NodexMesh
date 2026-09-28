@@ -10,7 +10,7 @@ function notifyLibraryReferences(text: string) {
   if (hasLibraryMedia(version === 1 ? { ...project, boards: undefined } : project))
     toast.info(
       translate(
-        'JSON contains library references, not files. Images and icons still require access to the original library.',
+        'JSON contains library references, not files. Media, icons and file blocks still require access to the original library.',
       ),
     );
 }

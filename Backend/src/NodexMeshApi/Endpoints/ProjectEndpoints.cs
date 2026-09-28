@@ -303,8 +303,8 @@ public static class ProjectEndpoints
     }
 
     /// <summary>
-    /// Mints a new anonymous read-only link. The raw token is in the response exactly once
-    /// and cannot be retrieved later — only its hash is stored.
+    /// Mints a new anonymous read-only link. Its raw token is returned only through
+    /// owner-authorized share-link management responses.
     /// </summary>
     private static async Task<Ok<CreatedShareLinkDto>> CreateShareLinkAsync(
         Guid projectId, CreateShareLinkRequest request, ClaimsPrincipal principal,

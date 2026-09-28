@@ -14,7 +14,7 @@ export const COLUMN_BG_COLORS = [
   '#fce7f3',
 ] as const;
 
-export type ColumnChildType = 'note' | 'checklist' | 'link' | 'text' | 'image' | 'document' | 'code' | 'embed';
+export type ColumnChildType = 'note' | 'checklist' | 'link' | 'text' | 'image' | 'file' | 'document' | 'code' | 'embed';
 
 export const COLUMN_ADD_TYPES: { kind: ColumnChildType; label: string; icon: string }[] = [
   {
@@ -72,6 +72,13 @@ export const COLUMN_ADD_TYPES: { kind: ColumnChildType; label: string; icon: str
       return translate('Image');
     },
     icon: '🖼',
+  },
+  {
+    kind: 'file',
+    get label() {
+      return translate('File');
+    },
+    icon: 'F',
   },
 ];
 

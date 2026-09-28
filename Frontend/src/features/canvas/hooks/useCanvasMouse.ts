@@ -25,6 +25,7 @@ interface UseCanvasMouseOptions {
   selectedTool: ToolType;
   pan: CanvasPoint;
   spacePanActive: boolean;
+  placeOnItems: boolean;
 
   measuredSizes: SizeMap;
   onFramePreviewChange: (ids: string[]) => void;
@@ -48,6 +49,7 @@ export function useCanvasMouse({
   selectedTool,
   pan,
   spacePanActive,
+  placeOnItems,
   measuredSizes,
   onFramePreviewChange,
   screenToCanvas,
@@ -122,7 +124,8 @@ export function useCanvasMouse({
 
       const target = event.target as Element;
 
-      if (target.closest('[data-board-item], [data-canvas-ui], dialog, [role="dialog"], [role="menu"]')) {
+      const blockedByItem = !placeOnItems && target.closest('[data-board-item]');
+      if (blockedByItem || target.closest('[data-canvas-ui], dialog, [role="dialog"], [role="menu"]')) {
         return;
       }
 
@@ -372,6 +375,7 @@ export function useCanvasMouse({
       selectedTool,
       pan,
       spacePanActive,
+      placeOnItems,
       screenToCanvas,
       snapValue,
       pushHistory,

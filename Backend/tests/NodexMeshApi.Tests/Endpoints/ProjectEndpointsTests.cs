@@ -294,6 +294,21 @@ public class ProjectEndpointsTests : IDisposable
     }
 
     [Fact]
+    public async Task ListShareLinks_ReturnsTheExistingTokenToTheOwner()
+    {
+        var (owner, _, _, _) = await _factory.CreateSeededUserAsync();
+        var project = await CreateProjectAsync(owner);
+        var created = await owner.PostAsJsonAsync($"/api/v1/projects/{project.Id}/share-links",
+            new CreateShareLinkRequest("Reusable", null));
+        var newLink = await created.Content.ReadFromJsonAsync<CreatedShareLinkDto>();
+
+        var links = await owner.GetFromJsonAsync<List<ShareLinkDto>>($"/api/v1/projects/{project.Id}/share-links");
+
+        links.Should().ContainSingle();
+        links![0].Token.Should().Be(newLink!.Token);
+    }
+
+    [Fact]
     public async Task RevokeShareLink_ThenAccessingIt_Returns404()
     {
         var (owner, _, _, _) = await _factory.CreateSeededUserAsync();

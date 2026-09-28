@@ -45,7 +45,7 @@ export default function TimelineTaskDialog({
         role="dialog"
         aria-modal="true"
         aria-label={isNew ? translate('Add timeline task') : translate('Edit timeline task')}
-        className="timeline-task-dialog w-full max-w-xl max-h-[90dvh] overflow-auto shadow-2xl"
+        className="timeline-task-dialog flex w-full max-w-xl max-h-[90dvh] flex-col shadow-2xl"
         data-wheel-scroll="true"
         style={{ background: 'var(--color-surface)', color: 'var(--color-text-primary)', borderRadius: 2 }}
         onSubmit={(event) => {

@@ -50,6 +50,9 @@ export function getApproxItemSize(item: BoardItem): ItemSize {
     case 'image':
       return { width: item.width ?? ITEM_WIDTH.image, height: (item.imgHeight ?? 178) + 56 };
 
+    case 'file':
+      return { width: item.width ?? ITEM_WIDTH.file, height: item.height ?? 176 };
+
     case 'link':
       return { width: item.width ?? ITEM_WIDTH.link, height: 150 };
 
@@ -141,6 +144,9 @@ export function getToolDefaultSize(type: ToolType): ItemSize {
       return { width: ITEM_WIDTH.icon, height: ITEM_WIDTH.icon };
     case 'image':
       return { width: ITEM_WIDTH.image, height: 248 };
+
+    case 'file':
+      return { width: ITEM_WIDTH.file, height: 176 };
 
     case 'link':
       return { width: ITEM_WIDTH.link, height: 144 };

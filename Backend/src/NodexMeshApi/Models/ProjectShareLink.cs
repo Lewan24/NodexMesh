@@ -4,10 +4,8 @@ namespace NodexMeshApi.Models;
 /// A capability token granting anonymous, read-only access to one project's boards.
 /// </summary>
 /// <remarks>
-/// Only the SHA-256 hash of the token is stored. The raw token is returned exactly once,
-/// at creation, and is unrecoverable afterwards — so a database read (backup leak, SQL
-/// injection, a curious DBA) cannot be turned into working share URLs. This is the same
-/// reasoning as <see cref="RefreshToken"/>.
+/// The SHA-256 hash remains the anonymous lookup key. An encrypted copy is retained so the
+/// project owner can retrieve an existing URL from the owner-authorized sharing dialog.
 ///
 /// The token IS the credential: anyone holding the URL gets in. That makes three things
 /// non-negotiable, all enforced in ShareLinkService — high entropy (256 bits), the ability
@@ -21,6 +19,9 @@ public sealed class ProjectShareLink
 
     /// <summary>SHA-256 (hex) of the raw token. Unique index — this is the lookup key.</summary>
     public string TokenHash { get; set; } = string.Empty;
+
+    /// <summary>Data-protected capability. Null for legacy links.</summary>
+    public string? TokenProtected { get; set; }
 
     /// <summary>Optional owner-facing label ("Link for the client review").</summary>
     public string? Label { get; set; }

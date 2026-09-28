@@ -33,13 +33,6 @@
 .sharing-dialog button:disabled {
   opacity: 0.5;
 }
-.sharing-created {
-  display: grid;
-  gap: 8px;
-  padding: 12px;
-  background: var(--color-accent-soft);
-  border-radius: 12px;
-}
 .read-only-block button[title^='Delete'],
 .read-only-block button[title^='Drag'],
 .read-only-block .planning-button {
