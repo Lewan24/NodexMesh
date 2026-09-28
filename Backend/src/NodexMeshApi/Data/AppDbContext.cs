@@ -111,7 +111,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(200);
-            e.Property(x => x.ContentType).HasMaxLength(64);
+            e.Property(x => x.ContentType).HasMaxLength(255);
             e.Property(x => x.ShareToken).HasMaxLength(64);
             e.HasIndex(x => x.ShareToken).IsUnique();
             e.Property(x => x.ShareTokenHash).HasMaxLength(64);
@@ -124,7 +124,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(200);
-            e.Property(x => x.ContentType).HasMaxLength(64);
+            e.Property(x => x.ContentType).HasMaxLength(255);
             e.Property(x => x.ShareToken).HasMaxLength(64);
             e.HasIndex(x => x.ShareToken).IsUnique();
             e.Property(x => x.ShareTokenHash).HasMaxLength(64);
@@ -247,7 +247,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
             e.ToTable(t =>
             {
                 t.HasCheckConstraint("ck_board_items_type",
-                    "type IN ('board','section-title','note','text','document','code','icon','image','link'," +
+                    "type IN ('board','section-title','note','text','document','code','icon','image','file','link'," +
                     "'embed','checklist','kanban','timeline','column','frame','dispenser','line'," +
                     "'drawing','mindmap','diagram','database')");
                 t.HasCheckConstraint("ck_board_items_width", "width IS NULL OR width > 0");

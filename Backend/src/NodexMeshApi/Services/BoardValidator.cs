@@ -63,7 +63,10 @@ public static class BoardValidator
             throw new ApiException(422, "invalid_item", $"Invalid {item.Type} content or geometry.");
 
         // Strict deserialization: unknown/missing/wrong-typed fields throw (mass-assignment guard).
-        BoardItemTypes.Deserialize(item.Type, item.Data.GetRawText());
+        var data = BoardItemTypes.Deserialize(item.Type, item.Data.GetRawText());
+        if (data is FileData file &&
+            (file.Size < 0 || !IsText(file.Title) || !IsText(file.FileName) || !IsText(file.ContentType)))
+            throw new ApiException(422, "invalid_item", "Invalid file content.");
 
         try
         {
@@ -94,12 +97,16 @@ public static class BoardValidator
         var url = item.Type switch
         {
             "image" => JsonSerializer.Deserialize<ImageData>(raw, BoardItemTypes.StrictOptions)?.Url,
+            "file" => JsonSerializer.Deserialize<FileData>(raw, BoardItemTypes.StrictOptions)?.Source,
             "link" => JsonSerializer.Deserialize<LinkData>(raw, BoardItemTypes.StrictOptions)?.Url,
             "embed" => JsonSerializer.Deserialize<EmbedData>(raw, BoardItemTypes.StrictOptions)?.Url,
             _ => null
         };
 
-        if (url is not null && !IsUrl(url) && !(item.Type == "image" && IsLibrarySource(url)))
+        var invalid = item.Type == "file"
+            ? url is not null && url.Length > 0 && !IsLibrarySource(url)
+            : url is not null && !IsUrl(url) && !(item.Type == "image" && IsLibrarySource(url));
+        if (invalid)
             throw new ApiException(422, "invalid_item", $"Invalid {item.Type} URL.");
     }
 

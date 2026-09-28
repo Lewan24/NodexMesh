@@ -233,6 +233,52 @@
   min-width: 0;
   font-weight: 650;
 }
+.timeline-task-label {
+  overflow: visible;
+}
+.timeline-row-details {
+  position: relative;
+}
+.timeline-schedule-progress {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+.timeline-checklist-popover {
+  position: fixed;
+  z-index: 210000;
+  display: grid;
+  width: min(260px, 70vw);
+  max-height: 240px;
+  overflow: auto;
+  gap: 6px;
+  padding: 11px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  box-shadow: 0 12px 32px #0003;
+  color: var(--color-text-primary);
+  white-space: normal;
+}
+.timeline-checklist-popover-fixed {
+  pointer-events: none;
+}
+.timeline-checklist-popover > span {
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.timeline-checklist-popover .timeline-popover-progress {
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+.timeline-checklist-popover .is-done {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
 .timeline-track {
   position: relative;
   height: 54px;
@@ -312,6 +358,8 @@
 }
 .timeline-dialog-body {
   display: grid;
+  min-height: 0;
+  overflow-y: auto;
   gap: 16px;
   padding: 20px 22px;
 }
@@ -363,6 +411,7 @@
 }
 .timeline-dialog-footer {
   display: flex;
+  flex: none;
   gap: 8px;
   padding: 14px 22px;
   border-top: 1px solid var(--color-border);

@@ -1,6 +1,9 @@
 import type { TimelineTask } from '@/entities/board/types';
 
 const DAY = 86400000;
+export function startOfMondayWeek(day: number): number {
+  return day - ((new Date(day * DAY).getUTCDay() + 6) % 7);
+}
 export function reorderTasks(tasks: TimelineTask[], sourceId: string, targetId: string): TimelineTask[] {
   const from = tasks.findIndex((task) => task.id === sourceId);
   const to = tasks.findIndex((task) => task.id === targetId);
@@ -43,7 +46,7 @@ export function scheduleRange(tasks: TimelineTask[]) {
   });
   const first = ranges.length ? Math.min(...ranges.map((range) => range.start)) : dateDay(todayDate())!;
   // Monday-aligned weeks; calculation uses UTC days to avoid DST shifts.
-  const start = first - ((new Date(first * DAY).getUTCDay() + 6) % 7);
+  const start = startOfMondayWeek(first);
   const last = ranges.length ? Math.max(...ranges.map((range) => range.end)) : start + 27;
   return { start, days: Math.max(28, Math.ceil((last - start + 1) / 7) * 7) };
 }

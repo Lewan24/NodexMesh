@@ -23,6 +23,7 @@ export const ITEM_TEXT_SECTIONS: Record<BoardItem['type'], TextSection[]> = {
   code: ['body'],
   icon: [],
   image: ['caption'],
+  file: ['title', 'labels'],
   link: ['title', 'description', 'links'],
   embed: ['title'],
   checklist: ['title', 'body'],

@@ -63,6 +63,8 @@ function getMinSize(item: BoardItem): MinSize {
 
     case 'image':
       return { width: MIN_BLOCK_WIDTH, height: MIN_IMAGE_HEIGHT };
+    case 'file':
+      return { width: 224, height: 144 };
 
     default:
       return { width: MIN_BLOCK_WIDTH, height: 60 };

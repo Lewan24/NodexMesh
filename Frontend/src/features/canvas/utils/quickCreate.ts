@@ -43,6 +43,8 @@ export function createEmptySibling(source: BoardItem): BoardItem | null {
       return { ...base, iconMode: 'preset', source: 'star', label: translate('Star') };
     case 'image':
       return { ...base, url: '', caption: '' };
+    case 'file':
+      return { ...base, title: translate('File'), source: '', fileName: '', contentType: '', size: 0 };
     case 'embed':
       return { ...base, url: '', title: '' };
     case 'link':

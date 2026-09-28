@@ -109,6 +109,13 @@ const GHOST_CONFIG: Partial<Record<ToolType, GhostConfig>> = {
     width: 200,
     height: 125,
   },
+  file: {
+    get label() {
+      return translate('File');
+    },
+    width: 200,
+    height: 110,
+  },
   link: {
     get label() {
       return translate('Link');
@@ -271,6 +278,17 @@ function GhostContent({ tool }: { tool: ToolType }) {
           className="mt-2 rounded-lg"
           style={{ height: 65, backgroundColor: 'var(--color-surface-alt)', border: '1px solid var(--color-border)' }}
         />
+      );
+
+    case 'file':
+      return (
+        <div className="mt-3 flex items-center gap-3">
+          <div className="h-12 w-10 rounded-lg" style={{ background: 'var(--color-accent-soft)' }} />
+          <div className="flex-1 space-y-2">
+            <GhostLine width="80%" />
+            <GhostLine width="55%" />
+          </div>
+        </div>
       );
 
     case 'link':

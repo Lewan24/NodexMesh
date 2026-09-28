@@ -77,15 +77,22 @@ test('the checked-in export is valid and supplies the complete portable demo', a
   demo.boards.forEach((board) => visit(board.items));
 });
 
-test('nested images and additional-board icons retain original library references during transfer', async () => {
+test('nested images and additional-board icons and files retain original library references during transfer', async () => {
   const reference = 'library://00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002';
   const image = { ...createCanvasItem('image', 0, 0), url: reference };
   const icon = { ...createCanvasItem('icon', 0, 0), iconMode: 'library', source: reference };
+  const file = {
+    ...createCanvasItem('file', 0, 0),
+    source: reference,
+    fileName: 'plan.pdf',
+    contentType: 'application/pdf',
+    size: 10,
+  };
   const column = { ...createCanvasItem('column', 0, 0), items: [image] };
   const imported = await read(
     archive([
       { id: 'main', name: 'Main', items: [column] },
-      { id: 'icons', name: 'Icons', items: [icon] },
+      { id: 'icons', name: 'Icons', items: [icon, file] },
     ]),
   );
   assert.equal(hasLibraryMedia(imported), true);
@@ -97,6 +104,7 @@ test('nested images and additional-board icons retain original library reference
   assert.equal(exported.project.boards[0].items[0].items[0].url, reference);
   assert.equal(exported.project.boards[1].items[0].source, reference);
   assert.equal(exported.project.boards[1].items[0].iconMode, 'library');
+  assert.equal(exported.project.boards[1].items[1].source, reference);
 });
 
 function comparable(items) {

@@ -1,4 +1,5 @@
 using System.Text;
+using System.IO.Compression;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Extensions.Options;
@@ -26,13 +27,56 @@ public sealed class LibraryStorage(IOptions<LibraryOptions> options, IWebHostEnv
             ".png" when bytes.StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }) => "image/png",
             ".jpg" or ".jpeg" when bytes.StartsWith(new byte[] { 255, 216, 255 }) => "image/jpeg",
             ".gif" when bytes.StartsWith("GIF87a"u8) || bytes.StartsWith("GIF89a"u8) => "image/gif",
-            ".webp" when bytes.StartsWith("RIFF"u8) && bytes[8..].StartsWith("WEBP"u8) => "image/webp",
-            ".mp4" when bytes[4..].StartsWith("ftyp"u8) => "video/mp4",
+            ".webp" when bytes.Length >= 12 && bytes.StartsWith("RIFF"u8) && bytes[8..].StartsWith("WEBP"u8) => "image/webp",
+            ".mp4" when bytes.Length >= 8 && bytes[4..].StartsWith("ftyp"u8) => "video/mp4",
             ".webm" when bytes.StartsWith(new byte[] { 26, 69, 223, 163 }) => "video/webm",
+            ".pdf" when bytes.StartsWith("%PDF-"u8) => "application/pdf",
+            ".docx" when IsOpenXml(stream, "word/document.xml") => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xlsx" when IsOpenXml(stream, "xl/workbook.xml") => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".pptx" when IsOpenXml(stream, "ppt/presentation.xml") => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            ".doc" when IsCompoundDocument(bytes) => "application/msword",
+            ".xls" when IsCompoundDocument(bytes) => "application/vnd.ms-excel",
+            ".rtf" when bytes.StartsWith("{\\rtf"u8) => "application/rtf",
+            ".txt" when IsUtf8Text(stream) => "text/plain",
+            ".csv" when IsUtf8Text(stream) => "text/csv",
+            ".md" when IsUtf8Text(stream) => "text/markdown",
             ".svg" => ValidateSvg(stream),
             _ => null
         };
-        return type ?? throw new ApiException(422, "invalid_media", "Unsupported file or file signature. Use PNG, JPEG, GIF, WebP, SVG, MP4 or WebM.");
+        return type ?? throw new ApiException(422, "invalid_file", "Unsupported file or file signature.");
+    }
+
+    private static bool IsCompoundDocument(ReadOnlySpan<byte> bytes) =>
+        bytes.StartsWith(new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 });
+
+    private static bool IsOpenXml(Stream stream, string requiredEntry)
+    {
+        stream.Position = 0;
+        try
+        {
+            using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
+            return archive.GetEntry("[Content_Types].xml") is not null && archive.GetEntry(requiredEntry) is not null;
+        }
+        catch (InvalidDataException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsUtf8Text(Stream stream)
+    {
+        stream.Position = 0;
+        try
+        {
+            using var reader = new StreamReader(stream, new UTF8Encoding(false, true), false, 4096, leaveOpen: true);
+            var buffer = new char[4096];
+            while (reader.Read(buffer, 0, buffer.Length) > 0) { }
+            return true;
+        }
+        catch (DecoderFallbackException)
+        {
+            return false;
+        }
     }
 
     private static string ValidateSvg(Stream stream)

@@ -65,6 +65,8 @@ import ItemInspector from '@/features/inspector/ItemInspector';
 import { useCanvasClipboard } from '../hooks/useCanvasClipboard';
 import CanvasContextMenu from './CanvasContextMenu';
 import type { CanvasMenuState } from './CanvasContextMenu';
+import QuickConnectMenu from './QuickConnectMenu';
+import type { QuickConnectMenuState } from './QuickConnectMenu';
 import './contextMenu.css';
 
 interface ToolDragGhostState extends ToolDragDetail {
@@ -149,10 +151,17 @@ export default function Canvas({
   const [spacePanActive, setSpacePanActive] = useState(false);
   const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
   const [snapEnabled, setSnapEnabled] = useState(true);
+  const [placeOnItems, setPlaceOnItems] = useState(false);
   const [customCssTarget, setCustomCssTarget] = useState<{ itemId: string; columnId?: string } | null>(null);
   const [contextMenu, setContextMenu] = useState<CanvasMenuState | null>(null);
+  const [quickConnectMenu, setQuickConnectMenu] = useState<QuickConnectMenuState | null>(null);
   const pointerPosition = useRef<{ x: number; y: number } | null>(null);
   const closeContextMenu = useCallback(() => setContextMenu(null), []);
+  const closeQuickConnectMenu = useCallback(() => setQuickConnectMenu(null), []);
+  const openQuickConnectMenu = useCallback((menu: QuickConnectMenuState) => {
+    setContextMenu(null);
+    setQuickConnectMenu(menu);
+  }, []);
   const [frameCapturePreviewIds, setFrameCapturePreviewIds] = useState<string[]>([]);
 
   const [toolDragGhost, setToolDragGhost] = useState<ToolDragGhostState | null>(null);
@@ -368,6 +377,7 @@ export default function Canvas({
     onSelectItems,
 
     onUpdateItem,
+    onOpenQuickCreate: openQuickConnectMenu,
   });
 
   const { screenToCanvas } = useCanvasZoom({ containerRef, panRef, zoomRef, onPanChange, onZoomChange });
@@ -574,6 +584,7 @@ export default function Canvas({
     selectedTool,
     pan,
     spacePanActive,
+    placeOnItems,
     screenToCanvas,
     snapValue,
     pushHistory,
@@ -798,6 +809,12 @@ export default function Canvas({
         return;
       }
 
+      if (event.button === 0 && placeOnItems && selectedTool !== 'select') {
+        event.stopPropagation();
+        handleCanvasMouseDown(event);
+        return;
+      }
+
       handleBlurActiveElement(event);
 
       if (event.button !== 0) return;
@@ -816,7 +833,7 @@ export default function Canvas({
 
       clearColumnSelection();
     },
-    [spacePanActive, handleCanvasMouseDown, handleBlurActiveElement, clearColumnSelection],
+    [spacePanActive, placeOnItems, selectedTool, handleCanvasMouseDown, handleBlurActiveElement, clearColumnSelection],
   );
 
   const safeSelectedIds = selectedIds ?? [];
@@ -1248,6 +1265,33 @@ export default function Canvas({
           onGroup={onGroupSelected}
         />
       )}
+      {quickConnectMenu && (
+        <QuickConnectMenu
+          menu={quickConnectMenu}
+          onClose={closeQuickConnectMenu}
+          onCreate={(type) => {
+            const size = getToolDefaultSize(type);
+            const created = createCanvasItem(
+              type,
+              snapValue(quickConnectMenu.canvasX - size.width / 2),
+              snapValue(quickConnectMenu.canvasY - size.height / 2),
+            );
+            if (!created) return;
+
+            onAddItem(created);
+            onUpdateItem(quickConnectMenu.lineId, (current) => {
+              if (current.type !== 'line') return current;
+              const centerX = created.x + size.width / 2;
+              const centerY = created.y + size.height / 2;
+              return quickConnectMenu.endpoint === 1
+                ? { ...current, startItemId: created.id, x: centerX, y: centerY }
+                : { ...current, endItemId: created.id, x2: centerX, y2: centerY };
+            });
+            onSelectItems([created.id]);
+            closeQuickConnectMenu();
+          }}
+        />
+      )}
       <CanvasLostPrompt
         visible={isLost && project.items.length > 0 && draggingIds.length === 0 && !toolDragGhost}
         onReturnToBoard={handleReturnToBoard}
@@ -1538,6 +1582,7 @@ export default function Canvas({
         }}
         zoom={zoom}
         snapEnabled={snapEnabled}
+        placeOnItems={placeOnItems}
         onZoomChange={(nextZoom) => {
           const centerX = viewportSize.width / 2;
           const centerY = viewportSize.height / 2;
@@ -1553,6 +1598,7 @@ export default function Canvas({
         onToggleSelectionMode={() => setTouchSelectionMode((current) => !current)}
         onUndo={undo}
         onToggleSnap={() => setSnapEnabled((previous) => !previous)}
+        onTogglePlaceOnItems={() => setPlaceOnItems((previous) => !previous)}
       />
     </div>
   );

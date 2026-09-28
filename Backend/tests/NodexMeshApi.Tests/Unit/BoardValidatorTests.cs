@@ -206,6 +206,22 @@ public class BoardValidatorTests
         act.Should().NotThrow();
     }
 
+    [Theory]
+    [InlineData("library://11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222", true)]
+    [InlineData("https://example.com/private.docx", false)]
+    [InlineData("javascript:alert(1)", false)]
+    public void ValidateItem_FileBlocksOnlyAcceptPrivateLibraryReferences(string source, bool valid)
+    {
+        var item = NoteItem(type: "file", data: Json(new
+        {
+            title = "Proposal", source, fileName = "proposal.docx",
+            contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document", size = 120L
+        }));
+        var act = () => BoardValidator.ValidateItem(item);
+        if (valid) act.Should().NotThrow();
+        else act.Should().Throw<ApiException>().Where(e => e.Code == "invalid_item");
+    }
+
     [Fact]
     public void ValidateItem_RejectsSsrfStyleUrlWithCredentialsInLink()
     {

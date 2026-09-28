@@ -30,7 +30,6 @@ export default function SharingDialog({
   const [role, setRole] = useState<MemberRole>('Editor');
   const [label, setLabel] = useState('');
   const [expiry, setExpiry] = useState('');
-  const [created, setCreated] = useState<{ id: string; url: string } | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -68,6 +67,13 @@ export default function SharingDialog({
       setBusy(false);
     }
   }
+  const publicUrl = (token: string) =>
+    new URL(`${import.meta.env.BASE_URL}shared/${encodeURIComponent(token)}`, window.location.origin).href;
+
+  const copyLink = async (token: string) => {
+    await navigator.clipboard.writeText(publicUrl(token));
+    setMessage(translate('Link copied.'));
+  };
   return (
     <Modal
       onClose={() => {
@@ -224,13 +230,6 @@ export default function SharingDialog({
                     expiry ? new Date(expiry).toISOString() : null,
                   );
                   setLinks((previous) => [result.link, ...previous]);
-                  setCreated({
-                    id: result.link.id,
-                    url: new URL(
-                      `${import.meta.env.BASE_URL}shared/${encodeURIComponent(result.token)}`,
-                      window.location.origin,
-                    ).href,
-                  });
                   setLabel('');
                   setExpiry('');
                 });
@@ -254,30 +253,6 @@ export default function SharingDialog({
               </label>
               <button disabled={busy}>{translate('Create link')}</button>
             </form>
-            {created && (
-              <div className="sharing-created">
-                <p>{translate('Copy this link now. It cannot be retrieved after closing this dialog.')}</p>
-                <input
-                  aria-label={translate('New public link')}
-                  readOnly
-                  value={created.url}
-                  onFocus={(event) => event.target.select()}
-                />
-                <button
-                  onClick={() =>
-                    void run(async () => {
-                      await navigator.clipboard.writeText(created.url);
-                      setMessage(translate('Link copied.'));
-                    })
-                  }
-                >
-                  {translate('Copy link')}
-                </button>
-                <a href={created.url} target="_blank" rel="noreferrer">
-                  {translate('Open link')}
-                </a>
-              </div>
-            )}
             {!busy && !links.length && <p>{translate('No public links.')}</p>}
             {links.map((link) => (
               <div className="sharing-row" key={link.id}>
@@ -295,13 +270,26 @@ export default function SharingDialog({
                       : ' ' + translate('/ Not used yet')}
                   </small>
                 </span>
+                {link.token ? (
+                  <>
+                    <button disabled={busy} onClick={() => void run(() => copyLink(link.token!))}>
+                      {translate('Copy link')}
+                    </button>
+                    <a href={publicUrl(link.token)} target="_blank" rel="noreferrer">
+                      {translate('Open link')}
+                    </a>
+                  </>
+                ) : (
+                  <small title={translate('Create a new link to make it available for copying at any time.')}>
+                    {translate('Legacy link')}
+                  </small>
+                )}
                 <button
                   disabled={busy}
                   onClick={() =>
                     void run(async () => {
                       await sharingApi!.revoke(project.id, link.id);
                       setLinks((previous) => previous.filter((entry) => entry.id !== link.id));
-                      if (created?.id === link.id) setCreated(null);
                     })
                   }
                 >
