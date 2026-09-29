@@ -10,6 +10,8 @@ export interface CssDeclaration {
 export interface CustomCssRule {
   /** Missing for the backwards-compatible declaration-only root style. */
   selector?: string;
+  keyframes?: string;
+  frames?: CustomCssRule[];
   declarations: CssDeclaration[];
 }
 
@@ -123,12 +125,14 @@ export function parseCustomCssRules(source: string): CustomCssRule[] {
     const open = cleaned.indexOf('{', index);
     if (open < 0) throw new Error(translate('Add declarations inside selector braces.'));
     const selector = cleaned.slice(index, open).trim();
-    if (!selector || selector.includes('}') || selector.includes('@'))
+    const keyframes = selector.match(/^@keyframes\s+([a-zA-Z_][\w-]*)$/)?.[1];
+    if (!selector || selector.includes('}') || (selector.includes('@') && !keyframes))
       throw new Error(translate('Use selectors such as button a, without at-rules.'));
     splitSelectorList(selector);
 
     let quote = '';
     let bracketDepth = 0;
+    let braceDepth = 0;
     let close = -1;
     for (let cursor = open + 1; cursor < cleaned.length; cursor++) {
       const character = cleaned[cursor]!;
@@ -140,7 +144,10 @@ export function parseCustomCssRules(source: string): CustomCssRule[] {
       if (character === '"' || character === "'") quote = character;
       else if (character === '(' || character === '[') bracketDepth++;
       else if (character === ')' || character === ']') bracketDepth--;
-      else if (character === '{') throw new Error(translate('Nested CSS rules and at-rules are not supported.'));
+      else if (character === '{') {
+        if (!keyframes) throw new Error(translate('Nested CSS rules and at-rules are not supported.'));
+        braceDepth++;
+      } else if (character === '}' && braceDepth > 0) braceDepth--;
       else if (character === '}' && bracketDepth === 0) {
         close = cursor;
         break;
@@ -148,6 +155,27 @@ export function parseCustomCssRules(source: string): CustomCssRule[] {
       if (bracketDepth < 0) throw new Error(translate('Unbalanced CSS parentheses or brackets.'));
     }
     if (close < 0 || quote || bracketDepth) throw new Error(translate('Close every CSS rule with }.'));
+    if (keyframes) {
+      const frames = parseCustomCssRules(cleaned.slice(open + 1, close));
+      if (
+        !frames.length ||
+        frames.some(
+          (frame) =>
+            !frame.selector ||
+            frame.keyframes ||
+            !splitSelectorList(frame.selector).every(
+              (step) =>
+                /^(from|to|(?:100|[0-9]{1,2})(?:\.\d+)?%)$/.test(step) &&
+                (!step.endsWith('%') || parseFloat(step) <= 100),
+            ),
+        )
+      ) {
+        throw new Error(translate('Use from, to or percentages inside @keyframes.'));
+      }
+      rules.push({ keyframes, frames, declarations: [] });
+      index = close + 1;
+      continue;
+    }
     const declarations = parseCustomCss(cleaned.slice(open + 1, close));
     if (!declarations.length) throw new Error(translate('Add at least one declaration to each CSS rule.'));
     rules.push({ selector, declarations });
@@ -240,8 +268,31 @@ export function customCssRule(customCss: BaseItem['customCss'], scope: string): 
   if (!customCss?.enabled || !/^[\w-]+$/.test(scope)) return '';
   try {
     const anchor = `[data-item-css-scope="${scope}"]`;
-    return parseCustomCssRules(customCss.source)
-      .map(({ selector, declarations }) => {
+    const rules = parseCustomCssRules(customCss.source);
+    const names = new Map(
+      rules.filter((rule) => rule.keyframes).map((rule) => [rule.keyframes!, `item-${scope}-${rule.keyframes}`]),
+    );
+    const animationValue = (value: string) =>
+      value.replace(
+        /"[^"\n]*"|'[^'\n]*'|(?<![\w-])[a-zA-Z_][\w-]*(?![\w(-])/g,
+        (token) => names.get(token.replace(/^['"]|['"]$/g, '')) ?? token,
+      );
+    return rules
+      .map(({ selector, declarations, keyframes, frames }) => {
+        if (keyframes)
+          return `@keyframes ${names.get(keyframes)} {${frames!
+            .map(
+              (frame) =>
+                `${frame.selector} {${frame.declarations.map(({ property, value }) => `${property}: ${value};`).join('\n')}}`,
+            )
+            .join('\n')}}`;
+        declarations = declarations.map(({ property, value }) => ({
+          property,
+          value:
+            /^(?:-webkit-)?animation(?:-name)?$/i.test(property) || property.startsWith('--')
+              ? animationValue(value)
+              : value,
+        }));
         const target = selector ? scopeSelector(selector, anchor) : `${anchor} > :not(style)`;
         return `${target} {${declarations.map(({ property, value }) => `${property}: ${value} !important;`).join('\n')}}`;
       })

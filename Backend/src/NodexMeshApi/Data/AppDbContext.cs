@@ -73,7 +73,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
             e.Property(x => x.Severity).HasMaxLength(16);
             e.Property(x => x.Outcome).HasMaxLength(16);
             e.Property(x => x.UserAgent).HasMaxLength(256);
-            e.Property(x => x.Route).HasMaxLength(256);
+            e.Property(x => x.Route).HasMaxLength(8192);
             e.Property(x => x.Method).HasMaxLength(16);
             e.Property(x => x.ResourceType).HasMaxLength(64);
             e.Property(x => x.ResourceId).HasMaxLength(128);
