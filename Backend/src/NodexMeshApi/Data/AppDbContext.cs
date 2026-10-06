@@ -15,6 +15,8 @@ namespace NodexMeshApi.Data;
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor? httpAccessor = null)
     : IdentityUserContext<ApplicationUser, Guid>(options)
 {
+    public DbSet<IpAccessState> IpAccessStates => Set<IpAccessState>();
+
     public DbSet<AuditDetectionCheckpoint> AuditDetectionCheckpoints => Set<AuditDetectionCheckpoint>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
     public DbSet<SecurityIncident> SecurityIncidents => Set<SecurityIncident>();
@@ -81,6 +83,15 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
             e.HasIndex(x => new { x.UserId, x.CodeHash }).IsUnique();
             e.Property(x => x.Consumed).IsConcurrencyToken();
             e.HasOne<ApplicationUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+        b.Entity<IpAccessState>(e =>
+        {
+            e.HasKey(x => x.Ip);
+            e.Property(x => x.Ip).HasMaxLength(45);
+            e.Property(x => x.Reason).HasMaxLength(64);
+            e.Property(x => x.Version).IsConcurrencyToken();
+            e.HasIndex(x => x.BannedUntil);
+            e.HasIndex(x => x.LastSeen);
         });
         b.Entity<AuditDetectionCheckpoint>().HasKey(x => x.Id);
         b.Entity<AuditEvent>(e =>

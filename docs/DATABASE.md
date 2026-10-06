@@ -61,3 +61,8 @@ Migration `20261006071013_SidebarWidthAndMfa` adds `appearance_profiles.sidebar_
 Migration `20261006073236_BindRefreshTokensToSecurityStamp` adds nullable `refresh_tokens.security_stamp`. New sessions populate it; pre-migration sessions remain compatible for non-MFA accounts, while MFA-enabled accounts must sign in again.
 
 Migration `20261006075102_DefaultSidebarWidth235` sets the database sidebar-width default to `235` and upgrades stored widths equal to the former `184` default. Other saved widths are preserved.
+
+
+## Persistent IP protection
+
+Migration `AddIpProtection` creates `ip_access_states`, keyed by a normalized IPv4/IPv6 string (45 characters). It stores a fixed failure window, four counters, last-seen time, optional ban expiry/reason and release timestamp/administrator. Indexes cover ban expiry and last-seen cleanup. A UUID `version` is an EF concurrency token for cross-instance counter updates and administrator release. Audit `security.ip_banned` is committed with the ban. Active bans survive restarts and remain until expiry/release; no in-memory cache is authoritative. Unbanned inactive states are removed under security audit retention.

@@ -31,6 +31,7 @@ public sealed class AuditWriter(IServiceScopeFactory scopes, ILogger<AuditWriter
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             db.AuditEvents.Add(audit);
             await db.SaveChangesAsync(timeout.Token);
+            await scope.ServiceProvider.GetRequiredService<IpProtectionService>().RecordAsync(audit, timeout.Token);
         }
         catch (Exception ex)
         {
@@ -63,7 +64,7 @@ public sealed class AuditMiddleware(RequestDelegate next)
             await writer.WriteAsync(failure);
             throw;
         }
-        if (http.Request.Path == "/health") return;
+        if (http.Request.Path == "/health" || http.Request.Path == "/api/v1/security/ip-check") return;
         var status = http.Response.StatusCode;
         if (status < 500 && http.Items.ContainsKey(AuditCapture.ExplicitEvent)) return;
         string? type = status switch

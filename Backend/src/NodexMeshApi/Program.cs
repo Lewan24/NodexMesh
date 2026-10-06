@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.SignalR;
 using NodexMeshApi.Auditing;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.DataProtection;
@@ -73,6 +74,14 @@ try
             && o.FailedLoginThreshold > 0 && o.DistinctAccountsThreshold > 0 && o.DistinctIpsThreshold > 0
             && o.ForbiddenThreshold > 0 && o.NotFoundThreshold > 0 && o.RateLimitThreshold > 0)
         .ValidateOnStart();
+    builder.Services.AddOptions<IpProtectionOptions>().Bind(builder.Configuration.GetSection("IpProtection"))
+        .Validate(o => o.WindowMinutes is >= 1 and <= 1440 && o.BanMinutes is >= 1 and <= 43200
+            && o.FailedLoginThreshold > 0 && o.UnauthorizedThreshold > 0 && o.NotFoundThreshold > 0
+            && o.RateLimitThreshold > 0 && o.Allowlist.All(ip => System.Net.IPAddress.TryParse(ip, out _)))
+        .ValidateOnStart();
+    builder.Services.AddSingleton<IpConnectionRegistry>();
+    builder.Services.AddHostedService<IpConnectionMonitor>();
+    builder.Services.AddScoped<IpProtectionService>();
     builder.Services.AddSingleton<AuditHealth>();
     builder.Services.AddScoped<AuditWriter>();
     builder.Services.AddHostedService<AuditMaintenanceService>();
@@ -174,6 +183,7 @@ try
 
     builder.Services.AddSignalR(options =>
     {
+        options.AddFilter<IpProtectionHubFilter>();
         options.EnableDetailedErrors = false;
         options.MaximumReceiveMessageSize = 32 * 1024;
     });
@@ -360,9 +370,10 @@ try
 
     app.UseForwardedHeaders();
     app.UseRouting();
-    app.UseMiddleware<AuditMiddleware>();
     app.UseSecurityHeaders();
     app.UseExceptionHandler();
+    app.UseMiddleware<IpProtectionMiddleware>();
+    app.UseMiddleware<AuditMiddleware>();
 
     app.UseApiTransportSecurity();
 
@@ -382,9 +393,11 @@ try
        .AllowAnonymous()
        .WithTags("Health");
 
+    app.MapGet("/api/v1/security/ip-check", () => Results.NoContent()).AllowAnonymous();
     app.MapAuthEndpoints();
     app.MapAccountDeletionEndpoints();
     app.MapAdminEndpoints();
+    app.MapAdminSecurityEndpoints();
     app.MapAuditEndpoints();
     app.MapProjectEndpoints();
     app.MapLibraryEndpoints();

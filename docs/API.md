@@ -179,3 +179,24 @@ For an MFA-enabled account, `code` proves the current factor (or recovery code).
 Email MFA can only be enabled when effective global email delivery is enabled. Email codes use the mandatory `account.mfa-code` template and are independent of optional user notifications. Settings changes use `account.mfa-changed`. Changing an email address while MFA is enabled returns `409 mfa_email_change`; verify and disable MFA, change/confirm the address, then re-enable MFA. Password resets do not disable MFA.
 
 `GET /api/v1/appearance` adds `sidebarWidth` (default `235`). The existing `PUT /appearance` accepts optional integer `sidebarWidth`, from `160` through `400`; omitted values use `235` for older-client compatibility. Width is private to the authenticated user's appearance profile and is not exposed through public project appearance.
+
+
+## Administrator MFA recovery and IP protection
+
+All `/api/v1/admin` routes require a current, active administrator session.
+
+| Method | Route (relative to `/api/v1`) | Behavior |
+| --- | --- | --- |
+| POST | `/admin/users/{userId}/mfa/reset/start` | `{ currentPassword }`; verify administrator password and return `{ mfaRequired: false }` or a standard MFA challenge for the administrator. |
+| POST | `/admin/users/{userId}/mfa/reset` | `{ currentPassword, reason, challengeToken?, code? }`; verify current administrator factor when enabled, disable the target’s MFA, invalidate credentials/sessions and notify target; 204. |
+| GET | `/admin/security/ips?status=banned&search=192.0.2&page=1` | `{ items, total }`; 50 per page. `status` is `banned`, `suspicious` (not currently banned), or `all`; optional substring IP search. |
+| POST | `/admin/security/ips` | `{ ip, reason, durationMinutes? }`; add a manual IPv4/IPv6 ban (default 60 minutes; range 1–43,200); 204. |
+| POST | `/admin/security/ips/{ip}/release` | `{ reason }`; clear ban/failure counters and record releasing administrator; 204. URL-encode IPv6 addresses. |
+| GET | `/security/ip-check` | Anonymous 204 when allowed; 403 when banned. Used by Nginx’s internal gate, contains no IP data and accepts no caller-supplied IP parameter. |
+
+Reset/release reasons are required (5–500 characters). Passwords are limited to 256 characters. Reset/start/release use the strict IP rate limiter. Self-reset returns 409 `self_mfa_reset`; unknown targets/records return 404; failed password/factor proofs return 401. Reset challenges use the existing five-minute expiry, attempt limits and replay protections and cannot be used for another target. Recovery codes can prove the administrator’s existing factor if SMTP is unavailable. A reset does not unblock a blocked account or cancel pending deletion. Invalid IP syntax returns 422. Concurrent release changes return 409 and require refresh/retry.
+
+IP records include `ip`, `windowStart`, `lastSeen`, per-rule counters (`failedLogins`, `unauthorized`, `notFound`, `rateLimited`), `bannedUntil`, `reason`, `releasedAt` and `releasedBy`. Timestamps are UTC. Active bans reject all HTTP routes with 403 `ip_banned`, including admin and login routes; no authenticated bypass exists. The frontend gate emits Nginx’s own 403 page. Expired/suspicious records remain available until retention cleanup.
+
+
+Manual bans normalize IPv6 and mapped IPv4 addresses, persist in the existing IP state table and use the same site/API/live-socket enforcement as automatic bans. Supply a complete address without a port, CIDR prefix or IPv6 scope suffix. Malformed addresses return 422; invalid duration/reason fields return 400. A current-IP ban returns 409 `self_ip_ban`, an allowlisted address returns 409 `ip_allowlisted`, disabled protection returns 409 `ip_protection_disabled`, and an active duplicate ban returns 409 `ip_already_banned`. Release an active ban before replacing its duration. Successful manual bans record `admin.ip_banned` with the actor, normalized IP, reason and expiry. Manual ban creation uses the strict rate limiter.

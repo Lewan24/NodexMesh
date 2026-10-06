@@ -130,6 +130,12 @@ public sealed class AuditMaintenanceService(IServiceScopeFactory scopes, IOption
 
     public static async Task PruneAsync(AppDbContext db, AuditOptions options, DateTime now, CancellationToken ct)
     {
+        var ipCutoff = now.AddDays(-options.SecurityRetentionDays);
+        var staleIpStates = await db.IpAccessStates.Where(x => x.LastSeen < ipCutoff
+            && (x.BannedUntil == null || x.BannedUntil <= now)).Take(1000).ToListAsync(ct);
+        db.IpAccessStates.RemoveRange(staleIpStates);
+        await db.SaveChangesAsync(ct);
+
         var processedThrough = await db.AuditDetectionCheckpoints.Select(c => (DateTime?)c.ProcessedThrough).SingleOrDefaultAsync(ct);
         var detectedCutoff = (processedThrough ?? now).AddMinutes(-options.WindowMinutes);
         foreach (var (category, days) in new[] { ("security", options.SecurityRetentionDays),
