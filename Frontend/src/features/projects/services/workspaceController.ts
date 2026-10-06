@@ -22,6 +22,8 @@ function countBoardItems(items: Project['items']): number {
 /** Serializes writes, retaining the exact failed request for idempotent retry. */
 export class WorkspaceController {
   private state: WorkspaceState = { projects: [], status: 'loading', error: '' };
+  private opening = new Map<string, Promise<void>>();
+  private lifetimeSignal?: AbortSignal;
   private confirmed = new Map<string, ProjectSnapshot>();
   private listeners = new Set<() => void>();
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -82,7 +84,7 @@ export class WorkspaceController {
   syncProject = (id: string, signal?: AbortSignal): Promise<void> => {
     if (this.syncing) return this.syncing;
     const previous = this.confirmed.get(id);
-    if (!previous || this.running || previous.project.deletedAt || this.state.status === 'loading')
+    if (!previous || previous.unloaded || this.running || previous.project.deletedAt || this.state.status === 'loading')
       return Promise.resolve();
     const generation = this.generation;
     this.syncing = (async () => {
@@ -133,10 +135,12 @@ export class WorkspaceController {
   private async recoverUnavailable(previous: ProjectSnapshot, signal?: AbortSignal) {
     const generation = this.generation;
     const id = previous.project.id;
-    const snapshots = await this.services.projects.list(signal);
+    const snapshots = await (this.services.projects.listSummaries?.(signal) ?? this.services.projects.list(signal));
     let available = snapshots.find(
       (entry) => entry.project.id === id && !entry.project.deletedAt && !entry.project.userDeletedAt,
     );
+    if (available?.unloaded && !available.project.deletedAt && this.services.projects.open)
+      available = await this.services.projects.open(available.project, signal);
     if (available && available.board.board.id !== previous.board.board.id) {
       try {
         available = { ...available, board: await this.services.boards.get(id, previous.board.board.id, signal) };
@@ -364,10 +368,12 @@ export class WorkspaceController {
   }
 
   async load(signal?: AbortSignal): Promise<void> {
+    if (signal) this.lifetimeSignal = signal;
     const generation = ++this.generation;
+    this.opening.clear();
     this.publish({ status: 'loading', error: '' });
     try {
-      const snapshots = await this.services.projects.list(signal);
+      const snapshots = await (this.services.projects.listSummaries?.(signal) ?? this.services.projects.list(signal));
       if (signal?.aborted || generation !== this.generation) return;
       const projects = snapshots.map(toProjectView);
       this.confirmed = new Map(snapshots.map((s) => [s.project.id, s]));
@@ -378,9 +384,72 @@ export class WorkspaceController {
     }
   }
 
+  openProject = (id: string, signal = this.lifetimeSignal): Promise<void> => {
+    const pending = this.opening.get(id);
+    if (pending) return pending;
+    const previous = this.confirmed.get(id);
+    if (!previous?.unloaded || previous.project.deletedAt || !this.services.projects.open) return Promise.resolve();
+    const generation = this.generation;
+    const publishProgress = (
+      snapshot: ProjectSnapshot,
+      skeletons: import('@/entities/project/types').ItemSkeleton[],
+    ) => {
+      if (signal?.aborted || generation !== this.generation || this.confirmed.get(id) !== previous) return;
+      // Relations may point to items in later batches. Resolve them only on the complete snapshot.
+      const view = toProjectView({ ...snapshot, board: { ...snapshot.board, links: [] } });
+      this.publish({
+        projects: this.state.projects.map((project) =>
+          project.id === id
+            ? {
+                ...project,
+                boardId: view.boardId,
+                items: view.items,
+                skeletons,
+                itemsLoading: true,
+                loadingError: undefined,
+              }
+            : project,
+        ),
+      });
+    };
+    const operation = (async () => {
+      try {
+        const snapshot = await this.services.projects.open!(previous.project, signal, publishProgress);
+        if (signal?.aborted || generation !== this.generation || this.confirmed.get(id) !== previous) return;
+        // Metadata edits made during loading keep their confirmed revision and local values.
+        snapshot.project = previous.project;
+        this.confirmed.set(id, snapshot);
+        const view = toProjectView(snapshot);
+        this.publish({
+          projects: this.state.projects.map((project) =>
+            project.id === id
+              ? { ...view, name: project.name, color: project.color, deletedAt: project.deletedAt }
+              : project,
+          ),
+        });
+      } catch (error) {
+        if (!signal?.aborted && generation === this.generation)
+          this.publish({
+            projects: this.state.projects.map((project) =>
+              project.id === id ? { ...project, loadingError: errorMessage(error) } : project,
+            ),
+          });
+      }
+    })().finally(() => {
+      if (this.opening.get(id) === operation) this.opening.delete(id);
+    });
+    this.opening.set(id, operation);
+    return operation;
+  };
+
   update = (action: Project[] | ((previous: Project[]) => Project[])) => {
     if (this.state.status === 'loading') return;
-    const next = typeof action === 'function' ? action(this.state.projects) : action;
+    const requested = typeof action === 'function' ? action(this.state.projects) : action;
+    const next = requested.map((project) => {
+      const previous = this.state.projects.find((entry) => entry.id === project.id);
+      // Loading projections are never authoritative for board writes.
+      return previous?.itemsLoading ? { ...project, items: previous.items } : project;
+    });
     for (const previous of this.state.projects) {
       const role = this.confirmed.get(previous.id)?.project.role;
       const desired = next.find((project) => project.id === previous.id);
@@ -508,7 +577,7 @@ export class WorkspaceController {
         previous.project.name !== desired.name ||
         previous.project.color !== desired.color ||
         Boolean(previous.project.deletedAt) !== Boolean(desired.deletedAt);
-      const boardMutation = diffBoard(previous.board, desired.items);
+      const boardMutation = previous.unloaded ? null : diffBoard(previous.board, desired.items);
       if (metadataChanged && (previous.project.deletedAt || !boardMutation)) {
         const input = {
           name: desired.name,
@@ -519,8 +588,10 @@ export class WorkspaceController {
         };
         return async () => {
           try {
+            const restoring = Boolean(previous.project.deletedAt) && !input.deletedAt;
             previous.project = await this.services.projects.update(desired.id, input);
-            if (previous.board.board.id === previous.project.id && !previous.project.deletedAt) {
+            if (previous.unloaded && restoring) await this.openProject(desired.id);
+            if (!previous.unloaded && previous.board.board.id === previous.project.id && !previous.project.deletedAt) {
               const boards = await this.services.boards.list(desired.id);
               const first = boards.find((board) => !board.deletedAt);
               if (!first) throw new Error(translate('Restored project has no active board.'));

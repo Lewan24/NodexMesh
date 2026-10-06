@@ -19,9 +19,9 @@ export default function DispenserBlock({
 }) {
   useTranslation();
   const { background, solid, textColor } = useCardAppearance(
-    item.color,
-    item.gradient,
-    item.colorRole,
+    item.paperColor ?? item.color,
+    item.paperColor ? undefined : item.gradient,
+    item.paperColor ? undefined : item.colorRole,
     item.backgroundOpacity,
   );
   const [editingLabel, setEditingLabel] = useState(false);
@@ -64,12 +64,10 @@ export default function DispenserBlock({
           <input
             aria-label={translate('Paper color')}
             type="color"
-            value={item.color}
+            value={item.paperColor ?? item.color}
             onChange={(e) =>
               onUpdate((current) =>
-                current.type === 'dispenser'
-                  ? { ...current, color: e.target.value, colorRole: undefined, gradient: undefined }
-                  : current,
+                current.type === 'dispenser' ? { ...current, paperColor: e.target.value } : current,
               )
             }
           />
@@ -88,9 +86,9 @@ export default function DispenserBlock({
             e.stopPropagation();
             e.preventDefault();
             startToolDrag('note', e, {
-              color: item.color,
-              colorRole: item.colorRole,
-              gradient: item.gradient,
+              color: item.paperColor ?? item.color,
+              colorRole: item.paperColor ? undefined : item.colorRole,
+              gradient: item.paperColor ? undefined : item.gradient,
               dispenserId: item.id,
             });
           }}

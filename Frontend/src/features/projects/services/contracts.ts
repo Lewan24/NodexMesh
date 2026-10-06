@@ -3,6 +3,12 @@ import type { ProjectRecord, ProjectSnapshot } from '@/entities/project/types';
 
 export interface ProjectRepository {
   list(signal?: AbortSignal): Promise<ProjectSnapshot[]>;
+  listSummaries?(signal?: AbortSignal): Promise<ProjectSnapshot[]>;
+  open?(
+    project: ProjectRecord,
+    signal?: AbortSignal,
+    onProgress?: (snapshot: ProjectSnapshot, skeletons: import('@/entities/project/types').ItemSkeleton[]) => void,
+  ): Promise<ProjectSnapshot>;
   create(input: { id: string; name: string; color: string; clientMutationId: string }): Promise<ProjectSnapshot>;
   update(
     id: string,

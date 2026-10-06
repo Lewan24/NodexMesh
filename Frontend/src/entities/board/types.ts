@@ -149,6 +149,7 @@ export interface CodeItem extends BaseItem {
 }
 
 export interface DispenserItem extends BaseItem {
+  paperColor?: string;
   type: 'dispenser';
   title: string;
   color: string;

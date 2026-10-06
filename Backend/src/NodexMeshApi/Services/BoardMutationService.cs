@@ -12,6 +12,7 @@ namespace NodexMeshApi.Services;
 public interface IBoardMutationService
 {
     Task<BoardSnapshotDto> GetSnapshotAsync(Guid boardId, CancellationToken ct = default);
+    Task<BoardSnapshotDto> GetPageAsync(Guid boardId, Guid[] itemIds, CancellationToken ct = default);
     Task<(int Status, BoardMutationResultDto Result)> ApplyAsync(
         Guid boardId, Guid userId, BoardMutationDto mutation, CancellationToken ct = default);
 }
@@ -29,17 +30,26 @@ public sealed class BoardMutationService(
 {
     private static readonly TimeSpan IdempotencyTtl = TimeSpan.FromHours(24);
 
-    public async Task<BoardSnapshotDto> GetSnapshotAsync(Guid boardId, CancellationToken ct = default)
+    public Task<BoardSnapshotDto> GetSnapshotAsync(Guid boardId, CancellationToken ct = default) =>
+        ReadSnapshotAsync(boardId, null, ct);
+
+    public Task<BoardSnapshotDto> GetPageAsync(Guid boardId, Guid[] itemIds, CancellationToken ct = default) =>
+        ReadSnapshotAsync(boardId, itemIds, ct);
+
+    private async Task<BoardSnapshotDto> ReadSnapshotAsync(Guid boardId, Guid[]? selectedIds, CancellationToken ct)
     {
         var board = await db.Boards.AsNoTracking().FirstOrDefaultAsync(b => b.Id == boardId, ct)
             ?? throw new ApiException(404, "not_found", "Board not found.");
 
-        var items = await db.BoardItems.AsNoTracking().Where(i => i.BoardId == boardId).ToListAsync(ct);
+        var query = db.BoardItems.AsNoTracking().Where(i => i.BoardId == boardId);
+        if (selectedIds is not null) query = query.Where(i => selectedIds.Contains(i.Id));
+        var items = await query.ToListAsync(ct);
         // Keep relation filtering in SQL instead of sending every item ID back as a parameter.
-        var itemIds = db.BoardItems.Where(i => i.BoardId == boardId).Select(i => i.Id);
+        var itemIds = query.Select(i => i.Id);
+        var boardItemIds = db.BoardItems.Where(i => i.BoardId == boardId).Select(i => i.Id);
 
         var links = await db.ItemLinks.AsNoTracking()
-            .Where(l => itemIds.Contains(l.SourceItemId) && itemIds.Contains(l.TargetItemId)).ToListAsync(ct);
+            .Where(l => itemIds.Contains(l.SourceItemId) && boardItemIds.Contains(l.TargetItemId)).ToListAsync(ct);
         var comments = await db.Comments.AsNoTracking()
             .Where(c => itemIds.Contains(c.ItemId)).ToListAsync(ct);
         var itemTags = await db.ItemTags.AsNoTracking()

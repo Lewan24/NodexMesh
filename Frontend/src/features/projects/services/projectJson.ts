@@ -43,7 +43,9 @@ export function exportProjectJson(project: Project): string {
 }
 
 export async function exportWorkspaceProject(api: WorkspaceServices, projectId: string): Promise<string> {
-  const project = (await api.projects.list()).find((entry) => entry.project.id === projectId);
+  const project = (await (api.projects.listSummaries?.() ?? api.projects.list())).find(
+    (entry) => entry.project.id === projectId,
+  );
   if (!project || project.project.deletedAt || project.project.userDeletedAt)
     throw new Error(translate('Project is unavailable.'));
   const records = (await api.boards.list(projectId))
@@ -62,7 +64,12 @@ export async function exportWorkspaceProject(api: WorkspaceServices, projectId: 
       };
     }),
   );
-  return exportProjectJson({ ...toProjectView(project), boards });
+  return exportProjectJson({
+    ...toProjectView({ ...project, unloaded: false }),
+    boardId: records[0]!.id,
+    items: boards[0]!.items,
+    boards,
+  });
 }
 
 function remapBoardLinks(items: BoardItem[], ids: Map<string, string>, detachMissing = false): BoardItem[] {

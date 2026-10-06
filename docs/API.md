@@ -67,12 +67,16 @@ Project share-link tokens are returned only when created and stored hashed. A pr
 | POST         | `/projects/{projectId}/boards`                      | Editor                                      |
 | PATCH/DELETE | `/boards/{boardId}`                                 | Editor; rename/delete                       |
 | GET          | `/boards/{boardId}`                                 | Viewer; complete normalized snapshot        |
+| GET          | `/boards/{boardId}/loading-manifest`                | Viewer; layout and revision without item content |
+| POST         | `/boards/{boardId}/item-page`                       | Viewer; 1–50 distinct IDs and expected board revision |
 | POST         | `/boards/{boardId}/mutations`                       | Editor; transactional mutation protocol     |
 | PUT          | `/boards/{boardId}/items/{itemId}/comments`         | Commenter; board revision + upserts/deletes |
 | GET          | `/projects/{projectId}/item-trash`                  | Viewer                                      |
 | POST         | `/projects/{projectId}/item-trash/{itemId}/restore` | Editor; optional target board/position      |
 | DELETE       | `/projects/{projectId}/item-trash/{itemId}`         | Editor; permanently delete item             |
 | DELETE       | `/projects/{projectId}/item-trash`                  | Editor; empty item trash                    |
+
+`GET /projects` supplies metadata and item counts without board content. Opening a project fetches its main board layout, then downloads item pages with up to three concurrent requests. Item pages include the selected items and their comments, tags, and outgoing links. Item-page reads have a separate 120/minute quota from mutation writes; the frontend respects Retry-After and retries transient read failures. Each page enforces board membership and the manifest revision; revision changes return 409 and trigger a bounded reload. The frontend validates cross-item relations after assembling all pages and keeps the loading board read-only to prevent incomplete projections from generating deletions. Existing complete-snapshot routes remain available for exports, collaboration refreshes, and child-board navigation.
 
 Comment batches contain 1–100 changes. Commenters may alter only their own comments; Editors/Owners may manage all comments. Status values are `open`, `todo`, `in-progress`, and `resolved`.
 

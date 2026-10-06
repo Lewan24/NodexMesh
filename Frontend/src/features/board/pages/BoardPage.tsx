@@ -708,9 +708,23 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
               <ChevronDown size={17} aria-hidden="true" />
             </button>
           )}
-          {!readOnly && <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />}
+          {!readOnly && !activeProject.itemsLoading && (
+            <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />
+          )}
 
-          {readOnly ? (
+          {activeProject.itemsLoading ? (
+            <div className="relative flex flex-1 min-w-0 min-h-0 flex-col" aria-busy={!activeProject.loadingError}>
+              <div role="status" className="px-4 py-2 text-sm">
+                {activeProject.loadingError || translate('Loading items...')}
+                {activeProject.loadingError && (
+                  <button type="button" className="ml-3 underline" onClick={() => void retry()}>
+                    {translate('Retry')}
+                  </button>
+                )}
+              </div>
+              <ReadOnlyBoard key={activeProjectId} items={activeProject.items} skeletons={activeProject.skeletons} />
+            </div>
+          ) : readOnly ? (
             <ReadOnlyBoard
               key={`${activeProjectId}:${activeProject.boardId}`}
               items={activeProject.items}

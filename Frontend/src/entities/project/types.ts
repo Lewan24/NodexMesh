@@ -11,7 +11,17 @@ export interface ProjectRecord extends AuditFields {
   itemCount?: number;
 }
 
+export interface ItemSkeleton {
+  id: string;
+  x: number;
+  y: number;
+  width: number | null;
+  height: number | null;
+  parentItemId: string | null;
+}
+
 export interface ProjectSnapshot {
+  unloaded?: boolean;
   project: ProjectRecord;
   board: BoardSnapshot;
 }
@@ -26,6 +36,9 @@ export interface ProjectBoard {
 
 /** Canvas projection. Persistence uses ProjectRecord + BoardSnapshot, never this tree. */
 export interface Project {
+  itemsLoading?: boolean;
+  loadingError?: string;
+  skeletons?: ItemSkeleton[];
   boards?: ProjectBoard[];
   boardId?: string;
   role?: ProjectRecord['role'];

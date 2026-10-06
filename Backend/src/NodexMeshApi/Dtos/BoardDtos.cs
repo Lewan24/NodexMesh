@@ -154,3 +154,9 @@ public sealed record BoardMutationResultDto(
     [property: JsonConverter(typeof(RevisionJsonConverter))] long BoardRevision,
     IReadOnlyList<ItemRecordDto> Items,
     IReadOnlyList<ConflictDto> Conflicts);
+
+public sealed record ItemSkeletonDto(Guid Id, double X, double Y, double? Width, double? Height, Guid? ParentItemId);
+public sealed record BoardLoadingManifestDto(BoardRecordDto Board, IReadOnlyList<ItemSkeletonDto> Items);
+public sealed record BoardPageRequest(
+    [property: Required, MinLength(1), MaxLength(50)] Guid[] ItemIds,
+    [property: JsonConverter(typeof(RevisionJsonConverter))] long ExpectedRevision);

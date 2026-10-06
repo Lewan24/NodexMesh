@@ -83,5 +83,23 @@ export interface EmailTemplateContent {
   htmlBody: string;
 }
 
-export interface EmailOutboxMessage { id: string; kind: string; status: 'pending'|'failed'|'sent'; recipient: string; userId?: string|null; userDisplayName?: string|null; subject: string; attempts: number; createdAt: string; availableAt: string; sentAt?: string|null; deadLetteredAt?: string|null; lastError?: string|null; }
-export interface EmailOutboxResponse { items: EmailOutboxMessage[]; pendingMessages: number; failedMessages: number; }
+export interface EmailOutboxMessage {
+  id: string;
+  kind: string;
+  status: 'pending' | 'failed' | 'sent';
+  recipient: string;
+  userId?: string | null;
+  userDisplayName?: string | null;
+  subject: string;
+  attempts: number;
+  createdAt: string;
+  availableAt: string;
+  sentAt?: string | null;
+  deadLetteredAt?: string | null;
+  lastError?: string | null;
+}
+export interface EmailOutboxResponse {
+  items: EmailOutboxMessage[];
+  pendingMessages: number;
+  failedMessages: number;
+}

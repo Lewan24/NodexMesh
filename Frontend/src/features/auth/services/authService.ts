@@ -314,9 +314,19 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
       requireAdmin();
       return fail(501, 'unsupported', translate('Email templates are unavailable in demo mode.'));
     },
-    async emailOutbox() { requireAdmin(); return { items: [], pendingMessages: 0, failedMessages: 0 }; },
-    async retryEmailOutbox() { requireAdmin(); },
-    async retryFailedEmails() { requireAdmin(); return 0; },
-    async deleteEmailOutbox() { requireAdmin(); },
+    async emailOutbox() {
+      requireAdmin();
+      return { items: [], pendingMessages: 0, failedMessages: 0 };
+    },
+    async retryEmailOutbox() {
+      requireAdmin();
+    },
+    async retryFailedEmails() {
+      requireAdmin();
+      return 0;
+    },
+    async deleteEmailOutbox() {
+      requireAdmin();
+    },
   };
 }

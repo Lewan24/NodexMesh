@@ -149,6 +149,7 @@ test('HTTP workspace composes project records and boards and reloads mutation sn
       if (path === '/projects/project/permanent' && options.method === 'DELETE') return null;
       if (path === '/boards/board/mutations') return { boardRevision: audit.revision, items: [], conflicts: [] };
       if (path === '/boards/board') return snapshot;
+      if (path === '/boards/board/loading-manifest') return { board: snapshot.board, items: [] };
       throw new Error(path);
     },
   });
@@ -306,6 +307,7 @@ test('HTTP project trash reloads without fetching inaccessible boards and restor
       assert.equal(project.deletedAt, null, 'trashed project boards must not be requested');
       if (path === '/projects/project/boards') return [snapshot.board];
       if (path === '/boards/board') return snapshot;
+      if (path === '/boards/board/loading-manifest') return { board: snapshot.board, items: [] };
       throw new Error(path);
     },
   });

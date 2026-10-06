@@ -239,9 +239,15 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
     async emailOutbox(status = 'pending') {
       return admin(`/admin/settings/email/outbox?status=${encodeURIComponent(status)}`);
     },
-    async retryEmailOutbox(id) { await admin(`/admin/settings/email/outbox/${encodeURIComponent(id)}/retry`, { method: 'POST' }); },
-    async retryFailedEmails() { return (await admin<{ count: number }>('/admin/settings/email/outbox/retry-failed', { method: 'POST' })).count; },
-    async deleteEmailOutbox(id) { await admin(`/admin/settings/email/outbox/${encodeURIComponent(id)}`, { method: 'DELETE' }); },
+    async retryEmailOutbox(id) {
+      await admin(`/admin/settings/email/outbox/${encodeURIComponent(id)}/retry`, { method: 'POST' });
+    },
+    async retryFailedEmails() {
+      return (await admin<{ count: number }>('/admin/settings/email/outbox/retry-failed', { method: 'POST' })).count;
+    },
+    async deleteEmailOutbox(id) {
+      await admin(`/admin/settings/email/outbox/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    },
   };
   return { auth, client, getAccessToken: () => accessToken };
 }

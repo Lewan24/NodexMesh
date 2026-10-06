@@ -288,4 +288,69 @@ public class BoardEndpointsTests : IDisposable
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound); // no access at all -> 404, not 403
     }
+    [Fact]
+    public async Task LoadingPages_EnforceAccessScopeBatchSizeAndRevision()
+    {
+        var (owner, _, _, _) = await _factory.CreateSeededUserAsync();
+        var (outsider, _, _, _) = await _factory.CreateSeededUserAsync();
+        var (_, board) = await CreateProjectWithBoardAsync(owner);
+        var insert = NoteInsert(board.Id);
+        (await owner.PostAsJsonAsync($"/api/v1/boards/{board.Id}/mutations",
+            new BoardMutationDto(Guid.NewGuid(), board.Revision, [insert], []))).EnsureSuccessStatusCode();
+        var manifestPath = $"/api/v1/boards/{board.Id}/loading-manifest";
+        var pagePath = $"/api/v1/boards/{board.Id}/item-page";
+        var manifest = (await owner.GetFromJsonAsync<BoardLoadingManifestDto>(manifestPath))!;
+        manifest.Items.Should().ContainSingle().Which.Id.Should().Be(insert.Item.Id);
+        var page = await owner.PostAsJsonAsync(pagePath, new BoardPageRequest([insert.Item.Id], manifest.Board.Revision));
+        page.EnsureSuccessStatusCode();
+        (await page.Content.ReadFromJsonAsync<BoardSnapshotDto>())!.Items.Should().ContainSingle();
+        (await outsider.GetAsync(manifestPath)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await outsider.PostAsJsonAsync(pagePath, new BoardPageRequest([insert.Item.Id], manifest.Board.Revision)))
+            .StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await owner.PostAsJsonAsync(pagePath, new BoardPageRequest([Guid.NewGuid()], manifest.Board.Revision)))
+            .StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await owner.PostAsJsonAsync(pagePath, new BoardPageRequest([insert.Item.Id], board.Revision)))
+            .StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var oversized = Enumerable.Range(0, 51).Select(_ => Guid.NewGuid()).ToArray();
+        var rejected = await owner.PostAsJsonAsync(pagePath, new BoardPageRequest(oversized, manifest.Board.Revision));
+        rejected.IsSuccessStatusCode.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Dispenser_PersistsPaperColorSeparatelyAndRejectsInvalidColors()
+    {
+        var (owner, _, _, _) = await _factory.CreateSeededUserAsync();
+        var (_, board) = await CreateProjectWithBoardAsync(owner);
+        var dispenser = NoteInsert(board.Id);
+        dispenser = dispenser with
+        {
+            Item = dispenser.Item with
+            {
+                Type = "dispenser",
+                Appearance = JsonSerializer.SerializeToElement(new { color = "#112233" }),
+                Data = JsonSerializer.SerializeToElement(new { title = "Paper", paperColor = "#abcdef" })
+            }
+        };
+        (await owner.PostAsJsonAsync($"/api/v1/boards/{board.Id}/mutations",
+            new BoardMutationDto(Guid.NewGuid(), board.Revision, [dispenser], []))).EnsureSuccessStatusCode();
+        var snapshot = (await owner.GetFromJsonAsync<BoardSnapshotDto>($"/api/v1/boards/{board.Id}"))!;
+        var saved = snapshot.Items.Single();
+        saved.Appearance.GetProperty("color").GetString().Should().Be("#112233");
+        saved.Data.GetProperty("paperColor").GetString().Should().Be("#abcdef");
+        foreach (var color in new string?[] { "red", null, "#bad" })
+        {
+            var invalid = dispenser with
+            {
+                Item = dispenser.Item with
+                {
+                    Id = Guid.NewGuid(),
+                    Data = JsonSerializer.SerializeToElement(new { title = "Paper", paperColor = color })
+                }
+            };
+            (await owner.PostAsJsonAsync($"/api/v1/boards/{board.Id}/mutations",
+                new BoardMutationDto(Guid.NewGuid(), snapshot.Board.Revision, [invalid], [])))
+                .StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        }
+    }
+
 }

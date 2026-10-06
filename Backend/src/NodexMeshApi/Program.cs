@@ -248,6 +248,19 @@ try
             });
         });
 
+        // Progressive board reads have their own quota so loading does not consume write capacity.
+        options.AddPolicy("board-load", httpContext =>
+        {
+            var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anon";
+            return RateLimitPartition.GetSlidingWindowLimiter($"user:{userId}", _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 120,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,
+                QueueLimit = 0
+            });
+        });
+
         // Anonymous share links. Two distinct risks, both handled by one per-IP limit:
         // brute-forcing the 256-bit token (hopeless anyway, but no reason to allow the
         // attempts), and a popular public board being used to hammer the read path since

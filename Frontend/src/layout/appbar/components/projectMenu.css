@@ -12,6 +12,7 @@
   background: var(--color-chrome-hover);
 }
 .project-panel {
+  z-index: 20;
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
