@@ -7,6 +7,8 @@ import { sharingApi } from '@/app/services';
 import { errorMessage } from '@/shared/api/errors';
 import Modal from '@/shared/components/dialogs/Modal';
 import './sharing.css';
+import '@/shared/components/dialogs/settingsDialog.css';
+import { Share2, Users, Link2, X } from 'lucide-react';
 
 const roles: MemberRole[] = ['Editor', 'Viewer', 'Commenter'];
 const roleLabel = (role: MemberRole) => displayLabel(role);
@@ -82,100 +84,87 @@ export default function SharingDialog({
       centered
       label={translate('Share {{value1}}', { value1: project.name })}
     >
-      <section className="sharing-dialog">
-        <header className="flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold">
-            {translate('Share') + ' '}
-            {project.name}
-          </h2>
-          <button onClick={onClose} disabled={busy} aria-label={translate('Close sharing')}>
-            {translate('Close')}
+      <section className="settings-dialog sharing-dialog">
+        <header className="settings-dialog-header">
+          <div className="settings-dialog-icon">
+            <Share2 size={22} aria-hidden="true" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="settings-eyebrow">{translate('Share project')}</p>
+            <h2 className="break-words">{project.name}</h2>
+            <p className="settings-description">
+              {translate('Your access:') + ' '}
+              {displayLabel(project.role ?? (owner ? 'Owner' : 'Viewer'))}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="settings-close"
+            onClick={onClose}
+            disabled={busy}
+            aria-label={translate('Close sharing')}
+          >
+            <X size={19} aria-hidden="true" />
           </button>
         </header>
-        <p>
-          {translate('Your access:') + ' '}
-          {displayLabel(project.role ?? (owner ? 'Owner' : 'Viewer'))}
-        </p>
-        {error && (
-          <div role="alert">
-            <p>{error}</p>
-            <button
-              disabled={busy}
-              onClick={() => {
-                setBusy(true);
-                setError('');
-                setAttempt(attempt + 1);
-              }}
-            >
-              {translate('Reload sharing')}
-            </button>
-          </div>
-        )}
-        {message && <p role="status">{message}</p>}
-        {busy && <p role="status">{translate('Updating sharing...')}</p>}
-        <h3 className="font-semibold">{translate('Collaborators')}</h3>
-        <p>
-          {translate(
-            "Share with an existing user's email. Editors can change the board. Viewers and Commenters can read it.",
+        <div className="settings-dialog-body">
+          {error && (
+            <div role="alert" className="settings-notice settings-notice-error">
+              <p>{error}</p>
+              <button
+                disabled={busy}
+                onClick={() => {
+                  setBusy(true);
+                  setError('');
+                  setAttempt(attempt + 1);
+                }}
+              >
+                {translate('Reload sharing')}
+              </button>
+            </div>
           )}
-        </p>
-        {owner && (
-          <form
-            className="sharing-row"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void run(async () => {
-                const member = await sharingApi!.invite(project.id, email.trim(), role);
-                setMembers((previous) => [...previous.filter((entry) => entry.userId !== member.userId), member]);
-                setEmail('');
-                setMessage(translate('Project shared. It will appear in their project list.'));
-              });
-            }}
-          >
-            <input
-              aria-label={translate('Collaborator email')}
-              type="email"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder={translate('Email address')}
-            />
-            <select
-              aria-label={translate('Collaborator role')}
-              value={role}
-              onChange={(event) => setRole(event.target.value as MemberRole)}
-            >
-              {roles.map((value) => (
-                <option key={value} value={value}>
-                  {roleLabel(value)}
-                </option>
-              ))}
-            </select>
-            <button disabled={busy || !email.trim()}>{translate('Share project')}</button>
-          </form>
-        )}
-        {!busy && !members.length && <p>{translate('No collaborators yet.')}</p>}
-        {members.map((member) => (
-          <div key={member.userId} className="sharing-row">
-            <span className="flex-1 min-w-0 break-words">
-              {member.displayName || member.email}
-              <small className="block">{member.displayName ? member.email : ''}</small>
-            </span>
-            {owner ? (
-              <>
+          {message && (
+            <p role="status" className="settings-notice">
+              {message}
+            </p>
+          )}
+          {busy && <p role="status">{translate('Updating sharing...')}</p>}
+          <section className="sharing-section">
+            <h3>
+              <Users size={18} aria-hidden="true" />
+              {translate('Collaborators')}
+              <span className="sharing-count">{members.length}</span>
+            </h3>
+            <p>
+              {translate(
+                "Share with an existing user's email. Editors can change the board. Viewers and Commenters can read it.",
+              )}
+            </p>
+            {owner && (
+              <form
+                className="sharing-row sharing-invite"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void run(async () => {
+                    const member = await sharingApi!.invite(project.id, email.trim(), role);
+                    setMembers((previous) => [...previous.filter((entry) => entry.userId !== member.userId), member]);
+                    setEmail('');
+                    setMessage(translate('Project shared. It will appear in their project list.'));
+                  });
+                }}
+              >
+                <input
+                  aria-label={translate('Collaborator email')}
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder={translate('Email address')}
+                />
                 <select
-                  aria-label={translate('Role for {{value1}}', { value1: member.email })}
-                  disabled={busy}
-                  value={member.role}
-                  onChange={(event) => {
-                    const next = event.target.value as MemberRole;
-                    void run(async () => {
-                      await sharingApi!.changeRole(project.id, member.userId, next);
-                      setMembers((previous) =>
-                        previous.map((entry) => (entry.userId === member.userId ? { ...entry, role: next } : entry)),
-                      );
-                    });
-                  }}
+                  aria-label={translate('Collaborator role')}
+                  value={role}
+                  onChange={(event) => setRole(event.target.value as MemberRole)}
                 >
                   {roles.map((value) => (
                     <option key={value} value={value}>
@@ -183,122 +172,176 @@ export default function SharingDialog({
                     </option>
                   ))}
                 </select>
-                <button
-                  disabled={busy}
-                  onClick={() =>
-                    void run(async () => {
-                      await sharingApi!.remove(project.id, member.userId);
-                      setMembers((previous) => previous.filter((entry) => entry.userId !== member.userId));
-                    })
-                  }
-                >
-                  {translate('Remove')}
+                <button className="settings-primary" disabled={busy || !email.trim()}>
+                  {translate('Share project')}
                 </button>
-              </>
-            ) : (
-              <span>{roleLabel(member.role)}</span>
+              </form>
             )}
-          </div>
-        ))}
-        {!owner && (
-          <button
-            disabled={busy}
-            onClick={() =>
-              void run(async () => {
-                await sharingApi!.remove(project.id, userId);
-                onLeave();
-              })
-            }
-          >
-            {translate('Leave project')}
-          </button>
-        )}
-        {owner && (
-          <>
-            <h3 className="font-semibold">{translate('Public read-only links')}</h3>
-            <p>
-              {translate('Anyone with the link can view this project without an account. Comments are not published.')}
-            </p>
-            <form
-              className="sharing-row"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void run(async () => {
-                  const result = await sharingApi!.createLink(
-                    project.id,
-                    label.trim(),
-                    expiry ? new Date(expiry).toISOString() : null,
-                  );
-                  setLinks((previous) => [result.link, ...previous]);
-                  setLabel('');
-                  setExpiry('');
-                });
-              }}
-            >
-              <input
-                aria-label={translate('Link label')}
-                maxLength={100}
-                placeholder={translate('Label (optional)')}
-                value={label}
-                onChange={(event) => setLabel(event.target.value)}
-              />
-              <label>
-                {translate('Expires (optional)')}
-                <input
-                  aria-label={translate('Link expiry')}
-                  type="datetime-local"
-                  value={expiry}
-                  onChange={(event) => setExpiry(event.target.value)}
-                />
-              </label>
-              <button disabled={busy}>{translate('Create link')}</button>
-            </form>
-            {!busy && !links.length && <p>{translate('No public links.')}</p>}
-            {links.map((link) => (
-              <div className="sharing-row" key={link.id}>
-                <span className="flex-1">
-                  {link.label || translate('Public link')}
-                  <small className="block">
-                    {link.expiresAt
-                      ? translate('Expires {{value1}}', { value1: new Date(link.expiresAt).toLocaleString(locale()) })
-                      : translate('No expiry')}
-                    {link.expiresAt && Date.parse(link.expiresAt) <= Date.now() ? ' ' + translate('/ Expired') : ''}
-                    {link.lastAccessedAt
-                      ? translate(' / Last used {{value1}}', {
-                          value1: new Date(link.lastAccessedAt).toLocaleString(locale()),
-                        })
-                      : ' ' + translate('/ Not used yet')}
-                  </small>
+            {!busy && !members.length && <p>{translate('No collaborators yet.')}</p>}
+            {members.map((member) => (
+              <div key={member.userId} className="sharing-row sharing-member">
+                <span className="sharing-avatar" aria-hidden="true">
+                  {(member.displayName || member.email).slice(0, 1).toUpperCase()}
                 </span>
-                {link.token ? (
+                <span className="flex-1 min-w-0 break-all">
+                  {member.displayName || member.email}
+                  <small className="block">{member.displayName ? member.email : ''}</small>
+                </span>
+                {owner ? (
                   <>
-                    <button disabled={busy} onClick={() => void run(() => copyLink(link.token!))}>
-                      {translate('Copy link')}
+                    <select
+                      aria-label={translate('Role for {{value1}}', { value1: member.email })}
+                      disabled={busy}
+                      value={member.role}
+                      onChange={(event) => {
+                        const next = event.target.value as MemberRole;
+                        void run(async () => {
+                          await sharingApi!.changeRole(project.id, member.userId, next);
+                          setMembers((previous) =>
+                            previous.map((entry) =>
+                              entry.userId === member.userId ? { ...entry, role: next } : entry,
+                            ),
+                          );
+                        });
+                      }}
+                    >
+                      {roles.map((value) => (
+                        <option key={value} value={value}>
+                          {roleLabel(value)}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      disabled={busy}
+                      onClick={() =>
+                        void run(async () => {
+                          await sharingApi!.remove(project.id, member.userId);
+                          setMembers((previous) => previous.filter((entry) => entry.userId !== member.userId));
+                        })
+                      }
+                    >
+                      {translate('Remove')}
                     </button>
-                    <a href={publicUrl(link.token)} target="_blank" rel="noreferrer">
-                      {translate('Open link')}
-                    </a>
                   </>
                 ) : (
-                  <small title={translate('Create a new link to make it available for copying at any time.')}>
-                    {translate('Legacy link')}
-                  </small>
+                  <span>{roleLabel(member.role)}</span>
                 )}
-                <button
-                  disabled={busy}
-                  onClick={() =>
-                    void run(async () => {
-                      await sharingApi!.revoke(project.id, link.id);
-                      setLinks((previous) => previous.filter((entry) => entry.id !== link.id));
-                    })
-                  }
-                >
-                  {translate('Revoke')}
-                </button>
               </div>
             ))}
-          </>
-        )}
+            {!owner && (
+              <button
+                disabled={busy}
+                onClick={() =>
+                  void run(async () => {
+                    await sharingApi!.remove(project.id, userId);
+                    onLeave();
+                  })
+                }
+              >
+                {translate('Leave project')}
+              </button>
+            )}
+          </section>
+          {owner && (
+            <section className="sharing-section">
+              <h3>
+                <Link2 size={18} aria-hidden="true" />
+                {translate('Public read-only links')}
+                <span className="sharing-count">{links.length}</span>
+              </h3>
+              <p>
+                {translate(
+                  'Anyone with the link can view this project without an account. Comments are not published.',
+                )}
+              </p>
+              <form
+                className="sharing-row sharing-link-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void run(async () => {
+                    const result = await sharingApi!.createLink(
+                      project.id,
+                      label.trim(),
+                      expiry ? new Date(expiry).toISOString() : null,
+                    );
+                    setLinks((previous) => [result.link, ...previous]);
+                    setLabel('');
+                    setExpiry('');
+                  });
+                }}
+              >
+                <input
+                  aria-label={translate('Link label')}
+                  maxLength={100}
+                  placeholder={translate('Label (optional)')}
+                  value={label}
+                  onChange={(event) => setLabel(event.target.value)}
+                />
+                <label>
+                  {translate('Expires (optional)')}
+                  <input
+                    aria-label={translate('Link expiry')}
+                    type="datetime-local"
+                    value={expiry}
+                    onChange={(event) => setExpiry(event.target.value)}
+                  />
+                </label>
+                <button className="settings-primary" disabled={busy}>
+                  {translate('Create link')}
+                </button>
+              </form>
+              {!busy && !links.length && <p>{translate('No public links.')}</p>}
+              {links.map((link) => (
+                <div className="sharing-row sharing-link" key={link.id}>
+                  <span className="min-w-0 flex-1 break-words">
+                    {link.label || translate('Public link')}
+                    <small className="block">
+                      {link.expiresAt
+                        ? translate('Expires {{value1}}', { value1: new Date(link.expiresAt).toLocaleString(locale()) })
+                        : translate('No expiry')}
+                      {link.expiresAt && Date.parse(link.expiresAt) <= Date.now() ? ' ' + translate('/ Expired') : ''}
+                      {link.lastAccessedAt
+                        ? translate(' / Last used {{value1}}', {
+                            value1: new Date(link.lastAccessedAt).toLocaleString(locale()),
+                          })
+                        : ' ' + translate('/ Not used yet')}
+                    </small>
+                  </span>
+                  {link.token ? (
+                    <>
+                      <button disabled={busy} onClick={() => void run(() => copyLink(link.token!))}>
+                        {translate('Copy link')}
+                      </button>
+                      <a href={publicUrl(link.token)} target="_blank" rel="noreferrer">
+                        {translate('Open link')}
+                      </a>
+                    </>
+                  ) : (
+                    <small title={translate('Create a new link to make it available for copying at any time.')}>
+                      {translate('Legacy link')}
+                    </small>
+                  )}
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      void run(async () => {
+                        await sharingApi!.revoke(project.id, link.id);
+                        setLinks((previous) => previous.filter((entry) => entry.id !== link.id));
+                      })
+                    }
+                  >
+                    {translate('Revoke')}
+                  </button>
+                </div>
+              ))}
+            </section>
+          )}
+        </div>
+        <footer className="settings-dialog-footer">
+          <button type="button" className="settings-secondary" disabled={busy} onClick={onClose}>
+            {translate('Done')}
+          </button>
+        </footer>
       </section>
     </Modal>
   );

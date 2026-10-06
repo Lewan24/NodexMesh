@@ -210,6 +210,13 @@ export default function AppBar({
           </div>
         </div>
 
+        {liveStatus && (
+          <span className="app-bar-live-status" role="status" title={translate('Collaboration status')}>
+            <span className="app-bar-live-dot" aria-hidden="true" />
+            {liveStatus}
+          </span>
+        )}
+
         <button
           type="button"
           onClick={onShare}
@@ -280,11 +287,6 @@ export default function AppBar({
                   onExport={onExportProject}
                 />
               </div>
-              {liveStatus && (
-                <p className="app-bar-menu-status" role="status">
-                  {liveStatus}
-                </p>
-              )}
             </div>
           )}
         </div>

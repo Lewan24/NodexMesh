@@ -117,7 +117,7 @@ Authenticator enrollment displays a locally rendered, black-on-white QR code wit
 
 ## Workspace navigation
 
-The app bar keeps project selection, project search, sharing, and account access visible. Project tools (appearance, library, refresh, JSON import/export, and collaboration status) are grouped under the ellipsis button. Account settings and administration remain in the account menu. On mobile, search occupies its own row.
+The app bar keeps project selection, project search, sharing, and account access visible. Live-update status stays visible in the app bar, including on mobile. Project tools (appearance, library, refresh, JSON import/export) are grouped under the ellipsis button. Account settings and administration remain in the account menu. On mobile, search occupies its own row.
 
 Administration user rows show full, wrapping names and email addresses. Expand User actions to edit accounts, reset credentials or appearance, manage MFA, block accounts, or access the existing restore/deletion confirmations. Actions expand below the identity rather than overlapping it.
 
