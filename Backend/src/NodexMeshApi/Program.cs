@@ -75,6 +75,7 @@ try
             && o.ForbiddenThreshold > 0 && o.NotFoundThreshold > 0 && o.RateLimitThreshold > 0)
         .ValidateOnStart();
     builder.Services.AddOptions<IpProtectionOptions>().Bind(builder.Configuration.GetSection("IpProtection"))
+        .PostConfigure(o => o.Allowlist = o.Allowlist.Where(ip => !string.IsNullOrWhiteSpace(ip)).Select(ip => ip.Trim()).ToArray())
         .Validate(o => o.WindowMinutes is >= 1 and <= 1440 && o.BanMinutes is >= 1 and <= 43200
             && o.FailedLoginThreshold > 0 && o.UnauthorizedThreshold > 0 && o.NotFoundThreshold > 0
             && o.RateLimitThreshold > 0 && o.Allowlist.All(ip => System.Net.IPAddress.TryParse(ip, out _)))
@@ -192,6 +193,11 @@ try
     // ---------------------------------------------------------------------
     // Rate limiting (OWASP API4: Unrestricted Resource Consumption)
     // ---------------------------------------------------------------------
+    builder.Services.AddOptions<RateLimitingOptions>().Bind(builder.Configuration.GetSection("RateLimiting"))
+        .Validate(o => o.IpRequestsPerMinute > 0 && o.UserRequestsPerMinute > 0 && o.AuthRequestsPerMinute > 0
+            && o.RefreshRequestsPerMinute > 0 && o.GateRequestsPerMinute > 0,
+            "RateLimiting values must be positive requests per minute.")
+        .ValidateOnStart();
     builder.Services.AddRateLimiter(options =>
     {
         options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -205,6 +211,13 @@ try
 
         options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
         {
+            var rateLimits = httpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<RateLimitingOptions>>().Value;
+            // The gate protects every page and asset. Its quota must not consume the browsing quota.
+            if (httpContext.GetEndpoint()?.Metadata.GetMetadata<IpGateMetadata>() is not null)
+                return RateLimitPartition.GetNoLimiter("ip-gate-global-exempt");
+            var ip = ClientIpResolver.Resolve(httpContext);
+            if (ip is not null && httpContext.RequestServices.GetRequiredService<IpProtectionService>().IsExempt(ip))
+                return RateLimitPartition.GetNoLimiter("friendly-ip-global-exempt");
             var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var key = !string.IsNullOrWhiteSpace(userId)
                 ? $"user:{userId}"
@@ -212,7 +225,7 @@ try
 
             return RateLimitPartition.GetSlidingWindowLimiter(key, _ => new SlidingWindowRateLimiterOptions
             {
-                PermitLimit = 300,
+                PermitLimit = string.IsNullOrWhiteSpace(userId) ? rateLimits.IpRequestsPerMinute : rateLimits.UserRequestsPerMinute,
                 Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 6,
                 QueueLimit = 0
@@ -221,10 +234,11 @@ try
 
         options.AddPolicy("auth-strict", httpContext =>
         {
+            var rateLimits = httpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<RateLimitingOptions>>().Value;
             var ip = ClientIpResolver.Resolve(httpContext) ?? "unknown";
             return RateLimitPartition.GetSlidingWindowLimiter($"ip:{ip}", _ => new SlidingWindowRateLimiterOptions
             {
-                PermitLimit = 5,
+                PermitLimit = rateLimits.AuthRequestsPerMinute,
                 Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 6,
                 QueueLimit = 0
@@ -233,19 +247,33 @@ try
 
         options.AddPolicy("auth-refresh", httpContext =>
         {
+            var rateLimits = httpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<RateLimitingOptions>>().Value;
             var ip = ClientIpResolver.Resolve(httpContext) ?? "unknown";
             return RateLimitPartition.GetTokenBucketLimiter($"ip:{ip}", _ => new TokenBucketRateLimiterOptions
             {
-                TokenLimit = 30,
-                TokensPerPeriod = 30,
+                TokenLimit = rateLimits.RefreshRequestsPerMinute,
+                TokensPerPeriod = rateLimits.RefreshRequestsPerMinute,
                 ReplenishmentPeriod = TimeSpan.FromMinutes(1),
                 AutoReplenishment = true,
                 QueueLimit = 0
             });
         });
 
+        options.AddPolicy("ip-gate", httpContext =>
+        {
+            var rateLimits = httpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<RateLimitingOptions>>().Value;
+            var ip = ClientIpResolver.Resolve(httpContext) ?? "unknown";
+            if (httpContext.RequestServices.GetRequiredService<IpProtectionService>().IsExempt(ip))
+                return RateLimitPartition.GetNoLimiter("friendly-ip-gate-exempt");
+            return RateLimitPartition.GetSlidingWindowLimiter($"gate:{ip}", _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = rateLimits.GateRequestsPerMinute,
+                Window = TimeSpan.FromMinutes(1), SegmentsPerWindow = 6, QueueLimit = 0
+            });
+        });
+
         // The board-mutation endpoint is the heaviest write path (up to 2,000,000 bytes
-        // of JSON per item, batched) — keep it well under the 300/min global limit.
+        // of JSON per item, batched) — retain its separate write quota when browsing limits are raised.
         options.AddPolicy("board-mutation", httpContext =>
         {
             var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anon";
@@ -393,7 +421,8 @@ try
        .AllowAnonymous()
        .WithTags("Health");
 
-    app.MapGet("/api/v1/security/ip-check", () => Results.NoContent()).AllowAnonymous();
+    app.MapGet("/api/v1/security/ip-check", () => Results.NoContent())
+        .AllowAnonymous().WithMetadata(new IpGateMetadata()).RequireRateLimiting("ip-gate");
     app.MapAuthEndpoints();
     app.MapAccountDeletionEndpoints();
     app.MapAdminEndpoints();

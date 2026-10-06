@@ -120,7 +120,7 @@ public sealed class AdminSecurityEndpointsTests : IDisposable
     [Fact]
     public async Task ScannerTrafficTriggersBanInRealPipelineAndForgedHeadersCannotChooseVictimIp()
     {
-        _ = factory.Services;
+        factory.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<IpProtectionOptions>>().Value.NotFoundThreshold = 40;
         for (var i = 0; i < 40; i++)
         {
             var response = await factory.Server.SendAsync(http =>

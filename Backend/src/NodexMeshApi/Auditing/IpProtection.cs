@@ -6,6 +6,8 @@ using NodexMeshApi.Data;
 
 namespace NodexMeshApi.Auditing;
 
+public sealed class IpGateMetadata { }
+
 public sealed class IpAccessState
 {
     public string Ip { get; set; } = "";
@@ -28,9 +30,10 @@ public sealed class IpProtectionOptions
     public int WindowMinutes { get; set; } = 10;
     public int BanMinutes { get; set; } = 60;
     public int FailedLoginThreshold { get; set; } = 10;
-    public int UnauthorizedThreshold { get; set; } = 30;
-    public int NotFoundThreshold { get; set; } = 40;
-    public int RateLimitThreshold { get; set; } = 20;
+    public int UnauthorizedThreshold { get; set; } = 100;
+    public int NotFoundThreshold { get; set; } = 100;
+    public int RateLimitThreshold { get; set; } = 100;
+    public bool BanOnRateLimit { get; set; } = false;
     public string[] Allowlist { get; set; } = [];
 }
 
@@ -51,6 +54,14 @@ public sealed class IpProtectionService(AppDbContext db, IOptions<IpProtectionOp
         return await db.IpAccessStates.AsNoTracking().AnyAsync(x => x.Ip == ip && x.BannedUntil > now, ct);
     }
 
+    private static bool IsSessionBootstrap(string? route, string? method) =>
+        (route?.TrimEnd('/').Equals("/api/v1/auth/refresh", StringComparison.OrdinalIgnoreCase) == true && method is null or "POST")
+        || (route?.TrimEnd('/').Equals("/api/v1/auth/profile", StringComparison.OrdinalIgnoreCase) == true && method is null or "GET");
+
+    private static bool IsBrowserAsset(string? route) => route is not null &&
+        (route.StartsWith("/assets/", StringComparison.OrdinalIgnoreCase)
+            || route.ToLowerInvariant() is "/favicon.ico" or "/robots.txt" or "/manifest.webmanifest");
+
     // Only explicit failures count; successful requests and blocked traffic never extend a ban.
     // Optimistic concurrency gives each committed failure exactly one increment across API replicas.
     public async Task RecordAsync(AuditEvent audit, CancellationToken ct)
@@ -58,8 +69,9 @@ public sealed class IpProtectionService(AppDbContext db, IOptions<IpProtectionOp
         var kind = audit.EventType switch
         {
             "auth.login_failed" or "auth.login_locked" or "auth.mfa_failed" => 1,
+            "http.unauthenticated" when IsSessionBootstrap(audit.Route, audit.Method) => 0,
             "http.unauthenticated" or "http.forbidden" => 2,
-            "http.unmatched" or "http.not_found" => 3,
+            "http.unmatched" when !IsBrowserAsset(audit.Route) => 3,
             "http.rate_limited" => 4,
             _ => 0
         };
@@ -92,7 +104,7 @@ public sealed class IpProtectionService(AppDbContext db, IOptions<IpProtectionOp
             var reason = state.FailedLogins >= settings.FailedLoginThreshold ? "failed_logins"
                 : state.Unauthorized >= settings.UnauthorizedThreshold ? "unauthorized_requests"
                 : state.NotFound >= settings.NotFoundThreshold ? "not_found_requests"
-                : state.RateLimited >= settings.RateLimitThreshold ? "rate_limited_requests" : null;
+                : settings.BanOnRateLimit && state.RateLimited >= settings.RateLimitThreshold ? "rate_limited_requests" : null;
             if (reason is not null)
             {
                 state.BannedUntil = DateTime.UtcNow.AddMinutes(settings.BanMinutes);

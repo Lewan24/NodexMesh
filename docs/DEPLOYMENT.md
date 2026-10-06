@@ -70,6 +70,8 @@ docker compose -f docker-compose.production.yml logs api
 
 The frontend image is compiled with `VITE_DATA_SOURCE=http` and `VITE_API_BASE_URL=/api/v1`; those are build-time settings. The frontend Nginx container proxies `/api/` and `/hubs/` to the private API.
 
+For the exact **Nginx Proxy Manager → frontend → API** configuration, fixed-network example, proxy headers, forward limit and friendly IPs, follow [REVERSE_PROXY.md](REVERSE_PROXY.md).
+
 ## TLS and trusted proxy
 
 Terminate TLS at an external reverse proxy and forward to host port 3000 with WebSocket support. Production refresh cookies require HTTPS. Restrict port 3000 so only the trusted edge can reach it.
@@ -130,7 +132,7 @@ Rebuild/redeploy **both** API and frontend images for this change. API startup a
 
 Set `TRUSTED_EDGE_CIDR` in the frontend environment to the **exact immediate edge proxy** address as seen inside Docker. Nginx trusts forwarded client IP/scheme only from that peer and sends one sanitized client IP to the API. Keep `ReverseProxy__KnownProxies__0` aligned with the frontend container. The production Compose network uses frontend `172.30.0.10`; local Compose now uses `172.31.0.10`. If either subnet overlaps your infrastructure, change the subnet, fixed addresses and trust settings together. Never trust `0.0.0.0/0`, `::/0`, or an entire public/client network. Verify real and forged-header requests after deploying. The TLS edge must replace, rather than preserve, browser forwarding headers.
 
-API options use `IpProtection__Enabled` (default true), `WindowMinutes` (10), `BanMinutes` (60), `FailedLoginThreshold` (10), `UnauthorizedThreshold` (30), `NotFoundThreshold` (40), `RateLimitThreshold` (20), and `Allowlist__0`, `Allowlist__1`, etc. Prefix each with `IpProtection__` for environment variables. Durations and positive thresholds are validated on startup; allowlist entries must be exact IP addresses. Admin releases reset evidence instead of creating a permanent allowlist entry.
+API options use `IpProtection__Enabled` (default true), `WindowMinutes` (10), `BanMinutes` (60), `FailedLoginThreshold` (10), `UnauthorizedThreshold` (100), `NotFoundThreshold` (100), `BanOnRateLimit` (false), `RateLimitThreshold` (100; used for bans only if explicitly enabled), and `Allowlist__0`, `Allowlist__1`, etc. Prefix each with `IpProtection__` for environment variables. Durations and positive thresholds are validated on startup; allowlist entries must be exact IP addresses; empty optional Compose entries are ignored. Admin releases reset evidence instead of creating a permanent allowlist entry.
 
 The Security tab in Administration lists banned and suspicious IPs, supports release with a reason, and includes **Ban IP** for manually adding an IPv4/IPv6 address with a reason and duration (1–43,200 minutes; default 60). Manual bans persist in the existing table and require no additional migration. If all administrators share a banned IP, use another authorized network or a narrow operations allowlist configured through deployment. For an emergency database recovery, stop traffic first and update only the verified IP’s `ip_access_states` row, clear `banned_until` and counters, set `released_at`/`window_start` to current UTC and rotate `version`; document the intervention. Do not delete broad security evidence or expose an unauthenticated unban endpoint.
 
