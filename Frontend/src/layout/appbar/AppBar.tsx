@@ -2,14 +2,17 @@ import LibraryDialog from '@/features/library/LibraryDialog';
 import { isMockDataSource } from '@/app/services';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronDown, ChevronUp, Ellipsis, Palette, Library, RefreshCw, Share2 } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 import type { Project } from '@/entities/project/types';
 
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
+
+import { useOutsideClick } from './hooks/useOutsideClick';
+import './appBar.css';
 
 import AppLogo from './components/AppLogo';
 import AccountMenu from './components/AccountMenu';
@@ -41,7 +44,7 @@ interface AppBarProps {
   onSearchQueryChange: (value: string) => void;
 }
 
-type OpenMenu = 'projects' | 'account' | null;
+type OpenMenu = 'projects' | 'account' | 'tools' | null;
 
 export default function AppBar({
   onOpenAdminPanel,
@@ -75,6 +78,9 @@ export default function AppBar({
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [mobileCollapsed, setMobileCollapsed] = useState(false);
+
+  const toolsRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(openMenu === 'tools', [toolsRef], () => setOpenMenu(null));
 
   const toggleMenu = (menu: Exclude<OpenMenu, null>) => {
     setOpenMenu((current) => (current === menu ? null : menu));
@@ -111,7 +117,13 @@ export default function AppBar({
       )}
       <header
         data-app-bar="true"
-        className="h-14 min-h-14 flex items-center shrink-0 relative z-50"
+        className="workspace-app-bar h-16 min-h-16 flex items-center shrink-0 relative z-50 gap-2"
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') {
+            setOpenMenu(null);
+            if (openMenu === 'tools') toolsRef.current?.querySelector('button')?.focus();
+          }
+        }}
         style={{ backgroundColor: 'var(--color-chrome-bg)', borderBottom: '1px solid var(--color-chrome-border)' }}
       >
         <AppLogo />
@@ -125,22 +137,6 @@ export default function AppBar({
           }}
         >
           <ChevronUp size={16} aria-hidden="true" />
-        </button>
-        <button
-          onClick={onAppearance}
-          className="px-3 py-2 text-sm text-white/90 hover:text-white"
-          title={translate('Personal project appearance')}
-        >
-          {translate('Appearance')}
-        </button>
-
-        <button
-          type="button"
-          className="px-3 py-2 text-sm text-white disabled:opacity-40"
-          disabled={isMockDataSource || !activeProjectId}
-          onClick={() => setLibraryOpen(true)}
-        >
-          {translate('Library')}
         </button>
         <ProjectMenu
           projects={projects}
@@ -157,41 +153,6 @@ export default function AppBar({
           onPurgeProject={onPurgeProject}
           defaultProjectId={defaultProjectId}
           onSetDefaultProject={onSetDefaultProject}
-        />
-
-        <button
-          onClick={onShare}
-          disabled={!onShare}
-          title={
-            onShare
-              ? translate('Manage project sharing')
-              : translate('Sharing requires a saved project connected to the API')
-          }
-          className="px-3 py-2 text-sm text-white disabled:opacity-40"
-        >
-          {translate('Share')}
-        </button>
-        <button
-          onClick={() => void onRefresh()}
-          className="px-3 py-2 text-sm text-white"
-          title={translate('Save your changes and reload projects')}
-        >
-          {translate('Refresh')}
-        </button>
-        {liveStatus && (
-          <span
-            className="hidden lg:inline-flex items-center rounded-full px-2 py-1 text-[11px]"
-            style={{ background: 'var(--color-chrome-bg-alt)', color: 'var(--color-chrome-text-faint)' }}
-            role="status"
-            title={translate('Collaboration status')}
-          >
-            {liveStatus}
-          </span>
-        )}
-        <ProjectTransfer
-          project={projects.find((project) => project.id === activeProjectId)}
-          onImport={onImportProject}
-          onExport={onExportProject}
         />
 
         <div className="app-search flex-1 flex justify-center px-4">
@@ -225,7 +186,9 @@ export default function AppBar({
                     event.currentTarget.blur();
                   }
                 }}
-                placeholder={translate('Search text or #tag or status:xxxx...')}
+                aria-label={translate('Search project')}
+                title={translate('Search text or #tag or status:xxxx...')}
+                placeholder={translate('Search project')}
                 className="flex-1 min-w-0 bg-transparent outline-none text-xs"
                 style={{ color: 'var(--color-chrome-text)' }}
               />
@@ -245,6 +208,85 @@ export default function AppBar({
               )}
             </div>
           </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onShare}
+          disabled={!onShare}
+          className="app-bar-share"
+          title={
+            onShare
+              ? translate('Manage project sharing')
+              : translate('Sharing requires a saved project connected to the API')
+          }
+          aria-label={translate('Share')}
+        >
+          <Share2 size={15} aria-hidden="true" />
+          <span>{translate('Share')}</span>
+        </button>
+        <div ref={toolsRef} className="app-bar-tools relative">
+          <button
+            type="button"
+            className="app-bar-tools-trigger"
+            onClick={() => toggleMenu('tools')}
+            aria-expanded={openMenu === 'tools'}
+            aria-controls="workspace-tools"
+            aria-label={translate('Project tools')}
+            title={translate('Project tools')}
+          >
+            <Ellipsis size={20} aria-hidden="true" />
+          </button>
+          {openMenu === 'tools' && (
+            <div id="workspace-tools" className="app-bar-tools-panel" aria-label={translate('Project tools')}>
+              <p className="app-bar-menu-label">{translate('Project tools')}</p>
+              <button
+                type="button"
+                disabled={!activeProjectId}
+                onClick={() => {
+                  setOpenMenu(null);
+                  onAppearance();
+                }}
+              >
+                <Palette size={16} aria-hidden="true" />
+                {translate('Appearance')}
+              </button>
+              <button
+                type="button"
+                disabled={isMockDataSource || !activeProjectId}
+                onClick={() => {
+                  setOpenMenu(null);
+                  setLibraryOpen(true);
+                }}
+              >
+                <Library size={16} aria-hidden="true" />
+                {translate('Library')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpenMenu(null);
+                  void onRefresh();
+                }}
+                title={translate('Save your changes and reload projects')}
+              >
+                <RefreshCw size={16} aria-hidden="true" />
+                {translate('Refresh')}
+              </button>
+              <div className="app-bar-transfer">
+                <ProjectTransfer
+                  project={projects.find((project) => project.id === activeProjectId)}
+                  onImport={onImportProject}
+                  onExport={onExportProject}
+                />
+              </div>
+              {liveStatus && (
+                <p className="app-bar-menu-status" role="status">
+                  {liveStatus}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <AccountMenu

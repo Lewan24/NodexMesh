@@ -114,3 +114,11 @@ Diagram, database, and mind-map editors persist edits through their existing upd
 MFA tests cover RFC test vectors, expiry, replay, attempts, account lockout, purpose/user/stamp binding, recovery codes, enrollment, method changes, and session rotation. Frontend HTTP integration tests cover the two-stage login and session acceptance. Apply committed EF migrations before deploying the API and frontend together. Perform a real SMTP delivery and authenticator enrollment smoke test against the target deployment; test fixtures do not send live mail.
 
 Authenticator enrollment displays a locally rendered, black-on-white QR code with a four-module quiet zone, plus the manual key and app link. QR regression tests decode the rendered SVG with an independent decoder to verify the provisioning URI. No external QR service receives MFA secrets.
+
+## Workspace navigation
+
+The app bar keeps project selection, project search, sharing, and account access visible. Project tools (appearance, library, refresh, JSON import/export, and collaboration status) are grouped under the ellipsis button. Account settings and administration remain in the account menu. On mobile, search occupies its own row.
+
+Administration user rows show full, wrapping names and email addresses. Expand User actions to edit accounts, reset credentials or appearance, manage MFA, block accounts, or access the existing restore/deletion confirmations. Actions expand below the identity rather than overlapping it.
+
+Opening an unloaded project shows a loading status instead of a partial read-only board. Loading failures retain a Retry button; validated snapshots and session caching still control when the board becomes available.

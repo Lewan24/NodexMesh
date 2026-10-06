@@ -388,3 +388,16 @@ textarea {
   background: var(--edit-bar-control);
   color: var(--color-text-primary);
 }
+
+.user-actions > summary {
+  list-style: none;
+}
+.user-actions > summary::-webkit-details-marker {
+  display: none;
+}
+.user-actions > summary::after {
+  content: ' +';
+}
+.user-actions[open] > summary::after {
+  content: ' −';
+}

@@ -1413,5 +1413,9 @@
   "Ban duration (minutes)": "Ban duration (minutes)",
   "Confirm ban": "Confirm ban",
   "Unable to ban IP.": "Unable to ban IP.",
-  "Block an IPv4 or IPv6 address across the site and API. You can release the ban at any time.": "Block an IPv4 or IPv6 address across the site and API. You can release the ban at any time."
+  "Block an IPv4 or IPv6 address across the site and API. You can release the ban at any time.": "Block an IPv4 or IPv6 address across the site and API. You can release the ban at any time.",
+  "User actions": "User actions",
+  "Project tools": "Project tools",
+  "Search project": "Search project",
+  "Project is loading, please wait.": "Project is loading, please wait."
 }

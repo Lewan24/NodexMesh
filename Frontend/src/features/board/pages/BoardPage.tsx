@@ -713,16 +713,34 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
           )}
 
           {activeProject.itemsLoading ? (
-            <div className="relative flex flex-1 min-w-0 min-h-0 flex-col" aria-busy={!activeProject.loadingError}>
-              <div role="status" className="px-4 py-2 text-sm">
-                {activeProject.loadingError || translate('Loading items...')}
+            <div
+              className="flex flex-1 min-w-0 min-h-0 items-center justify-center p-6"
+              aria-busy={!activeProject.loadingError}
+            >
+              <div role="status" className="max-w-md text-center">
+                {!activeProject.loadingError && (
+                  <div
+                    className="mx-auto mb-5 size-9 animate-spin rounded-full border-[3px] border-t-transparent motion-reduce:animate-none"
+                    style={{ borderColor: 'var(--color-border)', borderTopColor: 'var(--color-accent)' }}
+                    aria-hidden="true"
+                  />
+                )}
+                <p className="text-lg font-semibold">
+                  {activeProject.loadingError || translate('Project is loading, please wait.')}
+                </p>
+                <p className="mt-2 break-all text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                  {activeProject.name}
+                </p>
                 {activeProject.loadingError && (
-                  <button type="button" className="ml-3 underline" onClick={() => void retry()}>
+                  <button
+                    type="button"
+                    className="btn-accent mt-4 rounded-xl px-4 py-2 text-sm"
+                    onClick={() => void retry()}
+                  >
                     {translate('Retry')}
                   </button>
                 )}
               </div>
-              <ReadOnlyBoard key={activeProjectId} items={activeProject.items} skeletons={activeProject.skeletons} />
             </div>
           ) : readOnly ? (
             <ReadOnlyBoard
