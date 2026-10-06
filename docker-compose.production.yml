@@ -84,6 +84,9 @@ services:
     depends_on:
       api:
         condition: service_started
+    environment:
+      # Set to the exact IP/CIDR of your edge proxy, not the public internet.
+      TRUSTED_EDGE_CIDR: ${TRUSTED_EDGE_CIDR:-127.0.0.1/32}
     ports:
       - "3000:8080"
     healthcheck:

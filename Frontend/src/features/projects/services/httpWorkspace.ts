@@ -1,6 +1,8 @@
 import { translate } from '@/shared/i18n';
 import type { HttpClient } from '@/shared/api/httpClient';
-import { fail } from '@/shared/api/errors';
+import type { BoardSnapshot } from '@/entities/board/records';
+import type { ItemSkeleton } from '@/entities/project/types';
+import { ApiError, fail } from '@/shared/api/errors';
 import type { WorkspaceServices } from './contracts';
 import type { ProjectRecord, ProjectSnapshot } from '@/entities/project/types';
 import { parseBoardRecord, parseBoardSnapshot, parseProjectRecord, parseTrashedItem } from './responseValidation';
@@ -60,6 +62,117 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
         : null;
     },
     projects: {
+      async listSummaries(signal) {
+        const value = await client.request('/projects', { signal });
+        if (!Array.isArray(value)) fail(422, 'invalid_response', translate('Invalid project collection.'));
+        return value.map((entry) => {
+          const project = parseProjectRecord(entry);
+          projects.set(project.id, project);
+          return {
+            unloaded: true,
+            project,
+            board: {
+              board: { ...project, projectId: project.id, sortOrder: 0 },
+              items: [],
+              links: [],
+              comments: [],
+              tags: [],
+              itemTags: [],
+            },
+          };
+        });
+      },
+      async open(project, signal, onProgress) {
+        const value = await client.request(`/projects/${segment(project.id)}/boards`, { signal });
+        if (!Array.isArray(value)) fail(422, 'invalid_response', translate('Invalid board collection.'));
+        const first = value.map(parseBoardRecord).find((board) => !board.deletedAt);
+        if (!first) fail(422, 'invalid_response', translate('Project has no default board.'));
+        for (let attempt = 0; ; attempt++) {
+          try {
+            const manifest = (await client.request(`/boards/${segment(first.id)}/loading-manifest`, { signal })) as {
+              board: unknown;
+              items: ItemSkeleton[];
+            };
+            const board = parseBoardRecord(manifest.board);
+            if (board.id !== first.id || board.projectId !== project.id || !Array.isArray(manifest.items))
+              fail(422, 'invalid_scope', translate('Invalid board project.'));
+            const ids = new Set<string>();
+            for (const item of manifest.items) {
+              if (
+                typeof item.id !== 'string' ||
+                ids.has(item.id) ||
+                ![item.x, item.y].every(Number.isFinite) ||
+                ![item.width, item.height].every((v) => v === null || (Number.isFinite(v) && v > 0)) ||
+                (item.parentItemId !== null && typeof item.parentItemId !== 'string')
+              )
+                fail(422, 'invalid_response', translate('Invalid item scope or ID.'));
+              ids.add(item.id);
+            }
+            const accumulated: BoardSnapshot = { board, items: [], links: [], comments: [], tags: [], itemTags: [] };
+            const publish = () => {
+              const loadedIds = new Set(accumulated.items.map((item) => item.id));
+              onProgress?.(
+                { project, board: accumulated },
+                manifest.items.filter((item) => !loadedIds.has(item.id)),
+              );
+            };
+            publish();
+            // Three bounded concurrent downloads keep slow connections responsive without a request per item.
+            const batches: ItemSkeleton[][] = [];
+            for (let offset = 0; offset < manifest.items.length; offset += 50)
+              batches.push(manifest.items.slice(offset, offset + 50));
+            let cursor = 0;
+            let stopped = false;
+            const workers = Array.from({ length: Math.min(3, batches.length) }, async () => {
+              try {
+                while (!stopped && cursor < batches.length) {
+                  const batch = batches[cursor++]!;
+                  const page = parseBoardSnapshot(
+                    await retryRead(
+                      () =>
+                        client.request(`/boards/${segment(board.id)}/item-page`, {
+                          method: 'POST',
+                          signal,
+                          body: { itemIds: batch.map((item) => item.id), expectedRevision: board.revision },
+                        }),
+                      signal,
+                    ),
+                    true,
+                  );
+                  if (stopped || signal?.aborted) return;
+                  if (
+                    page.board.id !== board.id ||
+                    page.board.projectId !== project.id ||
+                    page.board.revision !== board.revision ||
+                    page.items.length !== batch.length ||
+                    page.items.some((item) => !batch.some((expected) => expected.id === item.id))
+                  )
+                    fail(422, 'invalid_scope', translate('Invalid item scope or ID.'));
+                  accumulated.items.push(...page.items);
+                  accumulated.links.push(...page.links);
+                  accumulated.comments.push(...page.comments);
+                  accumulated.itemTags.push(...page.itemTags);
+                  accumulated.tags = [
+                    ...new Map([...accumulated.tags, ...page.tags].map((tag) => [tag.id, tag])).values(),
+                  ];
+                  publish();
+                }
+              } catch (error) {
+                stopped = true;
+                throw error;
+              }
+            });
+            const results = await Promise.allSettled(workers);
+            const failed = results.find((result) => result.status === 'rejected');
+            if (failed?.status === 'rejected') throw failed.reason;
+            if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+            return { project, board: parseBoardSnapshot(accumulated) };
+          } catch (error) {
+            if (!(error instanceof ApiError) || error.problem.status !== 409 || attempt >= 2 || signal?.aborted)
+              throw error;
+          }
+        }
+      },
       async list(signal) {
         const value = await client.request('/projects', { signal });
         if (!Array.isArray(value)) fail(422, 'invalid_response', translate('Invalid project collection.'));
@@ -243,4 +356,37 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
       },
     },
   };
+}
+
+/** Item-page POSTs are read-only, so retrying never repeats a mutation. */
+async function retryRead(operation: () => Promise<unknown>, signal?: AbortSignal): Promise<unknown> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+      return await operation();
+    } catch (error) {
+      const retryable =
+        error instanceof TypeError ||
+        (error instanceof DOMException && error.name === 'TimeoutError') ||
+        (error instanceof ApiError && [429, 502, 503, 504].includes(error.problem.status));
+      if (!retryable || signal?.aborted || attempt >= 3) throw error;
+      const delay =
+        error instanceof ApiError && error.problem.status === 429
+          ? Math.min(60000, Math.max(300, error.problem.retryAfterMs ?? 1000))
+          : 300 * 2 ** attempt;
+      await new Promise<void>((resolve, reject) => {
+        const abort = () => {
+          signal?.removeEventListener('abort', abort);
+          clearTimeout(timer);
+          reject(new DOMException('Aborted', 'AbortError'));
+        };
+        const timer = setTimeout(() => {
+          signal?.removeEventListener('abort', abort);
+          resolve();
+        }, delay);
+        signal?.addEventListener('abort', abort, { once: true });
+        if (signal?.aborted) abort();
+      });
+    }
+  }
 }

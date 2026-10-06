@@ -189,7 +189,11 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
     }),
   },
   frame: { version: 1, canNest: false, validate: object({ ...title, opacity: optional(number) }) },
-  dispenser: { version: 1, canNest: false, validate: object(title) },
+  dispenser: {
+    version: 1,
+    canNest: false,
+    validate: object({ ...title, paperColor: optional((v) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v)) }),
+  },
   line: {
     version: 1,
     canNest: false,

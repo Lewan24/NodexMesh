@@ -4,6 +4,7 @@ namespace NodexMeshApi.Models;
 public sealed class AppearanceProfile
 {
     public Guid UserId { get; set; }
+    public int SidebarWidth { get; set; } = 235;
     public string? Mode { get; set; }
     public string Font { get; set; } = "short-stack";
     public string UiFont { get; set; } = "sans";

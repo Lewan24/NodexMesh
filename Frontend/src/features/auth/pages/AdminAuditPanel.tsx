@@ -8,6 +8,8 @@ type AuditRow = {
   occurredAt: string;
   eventType: string;
   severity: string;
+  route?: string;
+  method?: string;
   outcome: string;
   actorId: string | null;
   targetUserId: string | null;
@@ -74,8 +76,8 @@ function SeverityBadge({ severity }: { severity: string }) {
 }
 
 export default function AdminAuditPanel() {
-  const [filters, setFilters] = useState<Record<string, string>>({});
-  const [query, setQuery] = useState('');
+  const [filters, setFilters] = useState<Record<string, string>>({ severity: 'WarningAndAbove' });
+  const [query, setQuery] = useState('severity=WarningAndAbove');
   const [page, setPage] = useState(1);
   const [mode, setMode] = useState<'events' | 'incidents'>('events');
   const [events, setEvents] = useState<Page<AuditRow>>({ items: [], total: 0 });
@@ -221,7 +223,8 @@ export default function AdminAuditPanel() {
           onClick={() => {
             setMode('events');
             setPage(1);
-            setQuery('');
+            setFilters({ severity: 'WarningAndAbove' });
+            setQuery('severity=WarningAndAbove');
           }}
         >
           {translate('Events')}
@@ -255,13 +258,29 @@ export default function AdminAuditPanel() {
           {fields.map((field) => (
             <label key={field} className="min-w-0 text-xs">
               {translate(labels[field])}
-              <input
-                className="input-theme min-w-0 max-w-full block w-full px-3 py-2 text-sm"
-                type={field === 'from' || field === 'to' ? 'datetime-local' : 'text'}
-                maxLength={128}
-                value={filters[field] ?? ''}
-                onChange={(event) => setFilters({ ...filters, [field]: event.target.value })}
-              />
+              {field === 'severity' ? (
+                <select
+                  className="input-theme block w-full px-3 py-2"
+                  value={filters.severity ?? ''}
+                  onChange={(event) => setFilters({ ...filters, severity: event.target.value })}
+                >
+                  <option value="WarningAndAbove">{translate('Warnings and errors')}</option>
+                  <option value="">{translate('All')}</option>
+                  {['Information', 'Warning', 'Error', 'Critical'].map((severity) => (
+                    <option key={severity} value={severity}>
+                      {translate(severity)}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  className="input-theme min-w-0 max-w-full block w-full px-3 py-2 text-sm"
+                  type={field === 'from' || field === 'to' ? 'datetime-local' : 'text'}
+                  maxLength={128}
+                  value={filters[field] ?? ''}
+                  onChange={(event) => setFilters({ ...filters, [field]: event.target.value })}
+                />
+              )}
             </label>
           ))}
           <label className="min-w-0 text-xs">
@@ -313,7 +332,7 @@ export default function AdminAuditPanel() {
         <>
           {total === 0 && <p>{translate('No audit records match these filters.')}</p>}
           {mode === 'events' ? (
-            <div className="min-w-0 overflow-hidden rounded-2xl border" style={{ borderColor: 'var(--color-border)' }}>
+            <div className="min-w-0 overflow-x-auto rounded-2xl border" style={{ borderColor: 'var(--color-border)' }}>
               <table className="w-full min-w-[40rem] text-left text-sm">
                 <thead>
                   <tr>
@@ -321,6 +340,7 @@ export default function AdminAuditPanel() {
                     <th>{translate('Event type')}</th>
                     <th>{translate('Severity')}</th>
                     <th>{translate('Outcome')}</th>
+                    <th>{translate('Route')}</th>
                     <th>{translate('Details')}</th>
                   </tr>
                 </thead>
@@ -346,6 +366,9 @@ export default function AdminAuditPanel() {
                         >
                           {entry.outcome}
                         </span>
+                      </td>
+                      <td className="max-w-xs break-all p-3 font-mono text-xs">
+                        {entry.method} {entry.route}
                       </td>
                       <td className="text-right pr-3">
                         <button

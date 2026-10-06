@@ -9,7 +9,14 @@ import { FONT_FAMILIES } from '@/features/blocks/typography/typographyUtils';
 import type { FontFamily } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
 import type { Appearance } from './appearanceModel';
-import { activeAppearance, defaultAppearance } from './appearanceModel';
+import {
+  activeAppearance,
+  defaultAppearance,
+  normalizeSidebarWidth,
+  DEFAULT_SIDEBAR_WIDTH,
+  MIN_SIDEBAR_WIDTH,
+  MAX_SIDEBAR_WIDTH,
+} from './appearanceModel';
 
 export default function AppearanceDialog({ onClose, projects }: { onClose: () => void; projects: Project[] }) {
   useTranslation();
@@ -125,6 +132,26 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
                 value={settings.uiSecondary}
                 onChange={(event) => setSettings({ ...settings, uiSecondary: event.target.value })}
               />
+            </label>
+            <label className="block">
+              {translate('Sidebar width')}
+              <input
+                type="range"
+                aria-label={translate('Sidebar width')}
+                min={MIN_SIDEBAR_WIDTH}
+                max={MAX_SIDEBAR_WIDTH}
+                value={normalizeSidebarWidth(settings.sidebarWidth)}
+                onChange={(event) => setSettings({ ...settings, sidebarWidth: Number(event.target.value) })}
+                className="w-full"
+              />
+              <span>{normalizeSidebarWidth(settings.sidebarWidth)} px</span>
+              <button
+                type="button"
+                className="planning-button"
+                onClick={() => setSettings({ ...settings, sidebarWidth: DEFAULT_SIDEBAR_WIDTH })}
+              >
+                {translate('Reset sidebar width')}
+              </button>
             </label>
             <label className="block">
               {translate('Interface font')}

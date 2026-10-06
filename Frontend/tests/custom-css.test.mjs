@@ -140,3 +140,22 @@ test('custom CSS travels as appearance data through board persistence', () => {
   });
   assert.deepEqual(restored.items[0].customCss, item.customCss);
 });
+
+test('keyframes are scoped per item and animation references follow the scoped name', () => {
+  const source =
+    '@keyframes pulse { from { opacity: .3; } 50%, to { opacity: 1; } } & { animation: pulse 2s ease infinite; }';
+  const one = customCssRule({ enabled: true, source }, 'one');
+  const two = customCssRule({ enabled: true, source }, 'two');
+  assert.match(one, /@keyframes item-one-pulse/);
+  assert.match(one, /animation: item-one-pulse 2s ease infinite !important/);
+  assert.match(one, /from \{opacity: .3;\}/);
+  assert.match(two, /@keyframes item-two-pulse/);
+  assert.doesNotMatch(two, /item-one/);
+  for (const source of [
+    '@keyframes pulse { body { opacity: 0; } }',
+    '@keyframes pulse { 101% { opacity: 0; } }',
+    '@keyframes pulse {}',
+  ]) {
+    assert.throws(() => parseCustomCssRules(source));
+  }
+});

@@ -611,7 +611,10 @@ export default function DiagramBlock({
               className="fixed inset-0 flex items-center justify-center bg-black/45 p-4"
               style={{ zIndex: 200000 }}
               onMouseDown={(event) => event.stopPropagation()}
-              onClick={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (event.target === event.currentTarget) setEditing(false);
+              }}
             >
               <div
                 ref={dialogRef}

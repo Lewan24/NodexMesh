@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { memo, useCallback, useMemo, useRef, useState, type SyntheticEvent } from 'react';
 import { useReadOnlyNavigation } from '../hooks/useReadOnlyNavigation';
 import ItemInspector from '@/features/inspector/ItemInspector';
+import type { ItemSkeleton } from '@/entities/project/types';
 import type { BoardItem } from '@/entities/board/types';
 import type { ProjectParticipant } from '@/entities/project/shareTypes';
 import BlockRenderer from '@/features/blocks/BlockRenderer';
@@ -16,6 +17,7 @@ import './sharing.css';
 import { copyBoardItems } from '@/features/canvas/hooks/useCanvasClipboard';
 
 const noop = () => {};
+const emptySkeletons: ItemSkeleton[] = [];
 
 /** Render existing block visuals without mounting any canvas mutation or history hooks. */
 const ReadOnlyBlock = memo(function ReadOnlyBlock({
@@ -122,6 +124,7 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({
 
 export default function ReadOnlyBoard({
   items,
+  skeletons = emptySkeletons,
   inspect = false,
   canComment = false,
   currentUserId,
@@ -133,6 +136,7 @@ export default function ReadOnlyBoard({
   projectParticipants = [],
 }: {
   items: BoardItem[];
+  skeletons?: ItemSkeleton[];
   inspect?: boolean;
   canComment?: boolean;
   currentUserId?: string;
@@ -187,8 +191,14 @@ export default function ReadOnlyBoard({
       right = Math.max(right, item.type === 'line' ? Math.max(item.x, item.x2) : item.x + size.width);
       bottom = Math.max(bottom, item.type === 'line' ? Math.max(item.y, item.y2) : item.y + size.height);
     }
+    for (const item of skeletons.filter((item) => !item.parentItemId)) {
+      left = Math.min(left, item.x);
+      top = Math.min(top, item.y);
+      right = Math.max(right, item.x + (item.width ?? 240));
+      bottom = Math.max(bottom, item.y + (item.height ?? 160));
+    }
     return { minX: left - 40, minY: top - 40, width: right - left + 120, height: bottom - top + 120 };
-  }, [rendered]);
+  }, [rendered, skeletons]);
   // Incoming items must not move the desktop camera's coordinate origin.
   const origin = useRef({ x: minX, y: minY });
   const offsetX = touchMode ? minX : origin.current.x;
@@ -283,6 +293,27 @@ export default function ReadOnlyBoard({
                 position: 'relative',
               }}
             >
+              {skeletons
+                .filter((item) => !item.parentItemId)
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    aria-hidden="true"
+                    className="rounded-xl border shadow-sm"
+                    style={{
+                      position: 'absolute',
+                      left: item.x - offsetX,
+                      top: item.y - offsetY,
+                      width: item.width ?? 240,
+                      height: item.height ?? 160,
+                      background: 'var(--color-surface)',
+                      borderColor: 'var(--color-border)',
+                    }}
+                  >
+                    <div className="m-4 h-3 w-2/3 rounded bg-current opacity-10" />
+                    <div className="m-4 h-3 w-1/2 rounded bg-current opacity-10" />
+                  </div>
+                ))}
               {rendered.map((item) => (
                 <div
                   key={item.id}

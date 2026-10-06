@@ -19,6 +19,9 @@ services:
       timeout: 5s
       retries: 10
 
+    networks:
+      - nodexmesh_app
+
   api:
     build:
       context: ./Backend
@@ -60,12 +63,18 @@ services:
       Email__UserNotificationsEnabled: ${EMAIL_USER_NOTIFICATIONS_ENABLED:-true}
       Email__AdminAlertsEnabled: ${EMAIL_ADMIN_ALERTS_ENABLED:-true}
       DataProtection__KeysPath: /app/keys
+      ReverseProxy__KnownProxies__0: 172.31.0.10
+      ReverseProxy__ForwardLimit: 1
     ports:
       - "${API_PORT:-8080}:8080"
 
     volumes:
       - library-data:/app/storage
       - data-protection-keys:/app/keys
+
+    networks:
+      nodexmesh_app:
+        ipv4_address: 172.31.0.11
 
   frontend:
     build:
@@ -88,6 +97,12 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:8080"
 
+    environment:
+      TRUSTED_EDGE_CIDR: ${TRUSTED_EDGE_CIDR:-127.0.0.1/32}
+    networks:
+      nodexmesh_app:
+        ipv4_address: 172.31.0.10
+
   adminer:
     image: adminer:4.8.1-standalone
     restart: unless-stopped
@@ -100,8 +115,16 @@ services:
         condition: service_healthy
     ports:
       - "${ADMINER_PORT:-8081}:8080"
+    networks:
+      - nodexmesh_app
 
 volumes:
   data-protection-keys:
   library-data:
   postgres-data:
+
+networks:
+  nodexmesh_app:
+    ipam:
+      config:
+        - subnet: 172.31.0.0/24

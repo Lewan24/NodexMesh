@@ -40,3 +40,13 @@ Defaults:
 Configure the corresponding `Audit__*RetentionDays` values and detection thresholds. Cleanup deletes bounded batches each minute; monitor table growth, checkpoint lag, `persistenceFailuresSinceStartup`, console event 4199, disk capacity, and vacuum health. Open incidents retain the event they reference.
 
 For stronger integrity, export to immutable external storage, use durable container logging, restrict audit table UPDATE/TRUNCATE, separate migration/runtime/retention principals, and grant read access only to investigators. The repository does not configure those database roles, archive export, proxy-log ingestion, or PostgreSQL server auditing.
+
+
+## IP enforcement and recovery events
+
+`IpProtectionService` consumes committed failure events immediately, independently of the minute-based incident detector. `auth.login_failed`, `auth.login_locked` and `auth.mfa_failed` increment login failures; `http.unauthenticated`/`http.forbidden`, `http.unmatched`/`http.not_found`, and `http.rate_limited` have separate counters. Their configured thresholds create a persistent ban and `security.ip_banned` event atomically. Ban rejection and Nginx gate checks are not re-counted. Existing incident detection remains available for investigation.
+
+`admin.mfa_reset` records administrator, target and sanitized recovery reason. `admin.ip_released` records administrator, IP resource and sanitized release reason. Reasons must not contain passwords, codes, seeds or recovery credentials. Both operations are transactional with their audit record; MFA reset also queues the `account.mfa-reset` mandatory email notice when mail is enabled. The Security tab provides filtered, paginated IP records; the Audit tab provides the event history. Inactive IP records follow `Audit:SecurityRetentionDays` retention and cleanup is bounded to 1,000 records per cycle.
+
+
+Administrators can manually add IPv4/IPv6 bans from the Security tab. `admin.ip_banned` records actor, normalized IP resource, sanitized reason, selected duration and expiry atomically with the ban. The live-connection registry aborts matching local sockets after commit; other replicas detect the stored ban through the existing monitor. Manual bans appear with reason `manual_admin` in the IP table; the full reason is available in the audit record.

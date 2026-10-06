@@ -31,7 +31,16 @@ export interface Appearance {
   font: FontFamily;
   mode?: 'light' | 'dark';
 }
+export const DEFAULT_SIDEBAR_WIDTH = 235;
+export const MIN_SIDEBAR_WIDTH = 160;
+export const MAX_SIDEBAR_WIDTH = 400;
+export function normalizeSidebarWidth(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.round(Math.max(MIN_SIDEBAR_WIDTH, Math.min(MAX_SIDEBAR_WIDTH, value)))
+    : DEFAULT_SIDEBAR_WIDTH;
+}
 export interface AppearancePreferences {
+  sidebarWidth?: number;
   defaults: Appearance;
   projects: Record<string, Partial<Appearance>>;
   uiFont: FontFamily;
@@ -70,6 +79,7 @@ export const defaultAppearance: Appearance = {
 export const preferenceKey = (userId: string) => 'nodexmesh_appearance_' + userId;
 export function newPreferences(): AppearancePreferences {
   return {
+    sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
     defaults: structuredClone(defaultAppearance),
     projects: {},
     uiFont: 'sans',

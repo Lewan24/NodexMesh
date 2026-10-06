@@ -1,7 +1,7 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
-import type { ReactNode, CSSProperties } from 'react';
+import { useEffect, useRef, type ReactNode, type CSSProperties } from 'react';
 import type { BaseItem } from '@/entities/board/types';
 import { getFontFamilyCss } from '../typography/typographyUtils';
 import { useCardAppearance } from './cardAppearance';
@@ -13,6 +13,7 @@ export default function ContentBlockShell({
   onDelete,
   autoHeight = false,
   minHeight = 120,
+  onOutsideClick,
 }: {
   item: BaseItem;
   title: ReactNode;
@@ -20,8 +21,24 @@ export default function ContentBlockShell({
   onDelete: () => void;
   autoHeight?: boolean;
   minHeight?: number;
+  onOutsideClick?: () => void;
 }) {
   useTranslation();
+  const shellRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!onOutsideClick) return;
+    const outside = (event: PointerEvent) => {
+      const target = event.target;
+      if (
+        target instanceof Element &&
+        !shellRef.current?.contains(target) &&
+        !target.closest('[role="dialog"], dialog')
+      )
+        onOutsideClick();
+    };
+    document.addEventListener('pointerdown', outside, true);
+    return () => document.removeEventListener('pointerdown', outside, true);
+  }, [onOutsideClick]);
   const { background, textColor } = useCardAppearance(
     item.color,
     item.gradient,
@@ -30,6 +47,7 @@ export default function ContentBlockShell({
   );
   return (
     <section
+      ref={shellRef}
       className="content-block-shell item-rounded shadow-xl flex flex-col overflow-hidden"
       style={
         {

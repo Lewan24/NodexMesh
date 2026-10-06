@@ -201,6 +201,7 @@ export default function TimelineBlock({
   };
   return (
     <ContentBlockShell
+      onOutsideClick={editing ? () => setEditing(false) : undefined}
       item={item}
       onDelete={onDelete}
       title={

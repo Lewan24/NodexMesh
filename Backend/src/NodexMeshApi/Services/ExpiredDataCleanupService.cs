@@ -93,6 +93,7 @@ public sealed class ExpiredDataCleanupService(
         // Cut-offs are computed here rather than inside the predicates: EF translates a
         // captured constant cleanly, but `now - someTimeSpan` inside an expression tree
         // is not reliably translatable to SQL.
+        await db.MfaChallenges.Where(x => x.ExpiresAt < now).ExecuteDeleteAsync(ct);
         var nowUtc = now.UtcDateTime;
         var revokedTokenCutoff = nowUtc - RevokedTokenRetention;
         var deadLinkCutoff = now - DeadShareLinkRetention;

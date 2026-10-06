@@ -10,12 +10,14 @@ export default function Modal({
   centered = false,
   label = translate('Dialog'),
   boardHistory = false,
+  closeOnBackdrop = false,
 }: {
   children: ReactNode;
   onClose: () => void;
   centered?: boolean;
   label?: string;
   boardHistory?: boolean;
+  closeOnBackdrop?: boolean;
 }) {
   useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -38,6 +40,10 @@ export default function Modal({
         onClose();
       }}
       onMouseDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        if (!closeOnBackdrop || event.target !== event.currentTarget) return;
+        onClose();
+      }}
       onKeyDown={(event) => event.stopPropagation()}
     >
       {children}

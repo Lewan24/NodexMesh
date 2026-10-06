@@ -42,7 +42,10 @@ export default function CustomCssDialog({ item, onUpdate, onClose }: Props & { o
             translate('This browser does not support the selector: {{value1}}', { value1: unsupportedSelector }),
           );
         const unsupported = rules
-          .flatMap(({ declarations }) => declarations)
+          .flatMap(({ declarations, frames }) => [
+            ...declarations,
+            ...(frames?.flatMap((frame) => frame.declarations) ?? []),
+          ])
           .find(({ property, value }) => !CSS.supports(property, value));
         if (unsupported)
           throw new Error(
@@ -108,7 +111,7 @@ export default function CustomCssDialog({ item, onUpdate, onClose }: Props & { o
         </label>
         <p id={helpId} className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
           {translate(
-            'Write normal CSS selectors to style elements inside this item. Use & to target the item root. Declaration-only CSS remains supported and targets the root.',
+            'Write normal CSS selectors to style elements inside this item. Use & to target the item root. Declaration-only CSS remains supported and targets the root. Define @keyframes and use animation to animate this item.',
           )}
         </p>
         <label className="flex flex-col gap-2 text-sm">

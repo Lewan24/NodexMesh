@@ -13,7 +13,8 @@ public sealed record AppearanceUpdateDto(
     int InheritanceVersion, int PaletteVersion,
     [SkipValidation] [property: SkipValidation] JsonElement Light,
     [SkipValidation] [property: SkipValidation] JsonElement Dark,
-    [RegularExpression("^(light|dark)$")] string? Mode = null);
+    [RegularExpression("^(light|dark)$")] string? Mode = null,
+    [Range(160, 400)] int SidebarWidth = 235);
 
 public sealed record ProjectAppearanceUpdateDto(
     string? Font,

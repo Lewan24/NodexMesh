@@ -21,6 +21,8 @@ test('audit investigation renders accessible filters and explicit UTC display in
   const english = renderToStaticMarkup(createElement(AdminAuditPanel));
   assert.match(english, /Audit and security monitoring/);
   assert.match(english, /Target account ID/);
+  assert.match(english, /value="WarningAndAbove" selected=""/);
+  assert.match(english, /value="Information"/);
   assert.match(english, /Client IP/);
   assert.match(english, /Times are displayed in UTC/);
   assert.match(english, /No audit records match these filters/);

@@ -95,7 +95,8 @@ public static class AuditEndpoints
         if (filter.From is { } from) query = query.Where(e => e.OccurredAt >= from.ToUniversalTime());
         if (filter.To is { } to) query = query.Where(e => e.OccurredAt <= to.ToUniversalTime());
         if (!string.IsNullOrEmpty(filter.Category)) query = query.Where(e => e.Category == filter.Category);
-        if (!string.IsNullOrEmpty(filter.Severity)) query = query.Where(e => e.Severity == filter.Severity);
+        if (filter.Severity == "WarningAndAbove") query = query.Where(e => e.Severity == "Warning" || e.Severity == "Error" || e.Severity == "Critical");
+        else if (!string.IsNullOrEmpty(filter.Severity)) query = query.Where(e => e.Severity == filter.Severity);
         if (!string.IsNullOrEmpty(filter.EventType)) query = query.Where(e => e.EventType == filter.EventType);
         if (!string.IsNullOrEmpty(filter.Outcome)) query = query.Where(e => e.Outcome == filter.Outcome);
         if (filter.ActorId.HasValue) query = query.Where(e => e.ActorId == filter.ActorId);
@@ -113,7 +114,7 @@ public static class AuditEndpoints
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var term = AuditCapture.Clean(filter.Search.Trim(), 100)!;
-            query = query.Where(e => e.EventType.Contains(term) || (e.ResourceId != null && e.ResourceId.Contains(term)));
+            query = query.Where(e => e.EventType.Contains(term) || (e.Route != null && e.Route.Contains(term)) || (e.ResourceId != null && e.ResourceId.Contains(term)));
         }
         return query;
     }
