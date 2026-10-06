@@ -1,5 +1,5 @@
 .tool-sidebar {
-  width: 184px;
+  width: 235px;
   height: 100%;
   flex-shrink: 0;
   display: flex;
@@ -198,4 +198,17 @@
   .tool-sidebar *::before {
     transition: none !important;
   }
+}
+
+.sidebar-resize-handle {
+  position: absolute;
+  inset: 0 -4px 0 auto;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+}
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle:focus-visible {
+  background: var(--color-accent);
+  outline: none;
 }

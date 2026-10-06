@@ -3,11 +3,12 @@ import { authService } from '@/app/services';
 import { errorMessage } from '@/shared/api/errors';
 import { useEffect, useState } from 'react';
 
+import type { MfaChallenge } from '../types';
 import type { FormEvent } from 'react';
 
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
-export type LoginMode = 'login' | 'register' | 'forgot' | 'resend' | 'reset' | 'confirming';
+export type LoginMode = 'login' | 'register' | 'forgot' | 'resend' | 'reset' | 'confirming' | 'mfa';
 
 function initialAction() {
   const query = new URLSearchParams(window.location.search);
@@ -24,6 +25,8 @@ export function useLoginForm() {
   const { login } = useAuth();
   const [action] = useState(initialAction);
   const [mode, setModeState] = useState<LoginMode>(action.mode ?? 'login');
+  const [challenge, setChallenge] = useState<MfaChallenge | null>(null);
+  const [code, setCode] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [acceptSecurityNotice, setAcceptSecurityNotice] = useState(false);
@@ -35,6 +38,8 @@ export function useLoginForm() {
 
   const setMode = (next: LoginMode) => {
     setModeState(next);
+    setChallenge(null);
+    setCode('');
     setError('');
     setMessage('');
     setPassword('');
@@ -71,6 +76,14 @@ export function useLoginForm() {
     if (submitting || mode === 'confirming') return;
     setError('');
     setMessage('');
+
+    if (mode === 'mfa' && challenge) {
+      setSubmitting(true);
+      const result = await login('', '', { challengeToken: challenge.challengeToken, code });
+      if (!result.ok) setError(result.error);
+      setSubmitting(false);
+      return;
+    }
 
     if (mode === 'forgot' || mode === 'resend') {
       if (!username.trim()) {
@@ -150,11 +163,28 @@ export function useLoginForm() {
     }
     const result = await login(username, password);
 
-    if (!result.ok) setError(result.error);
+    if (!result.ok) {
+      if (result.challenge) {
+        setChallenge(result.challenge);
+        setModeState('mfa');
+        setPassword('');
+        setMessage(
+          translate(
+            result.challenge.method === 'email'
+              ? 'Enter the code sent to your email.'
+              : result.challenge.method === 'recovery'
+                ? 'Email is unavailable. Enter a recovery code.'
+                : 'Enter a code from your authenticator app or a recovery code.',
+          ),
+        );
+      } else setError(result.error);
+    }
     setSubmitting(false);
   };
 
   return {
+    code,
+    setCode,
     acceptSecurityNotice,
     setAcceptSecurityNotice,
     mode,

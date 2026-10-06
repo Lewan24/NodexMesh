@@ -103,3 +103,14 @@ dotnet ef migrations has-pending-model-changes --project Backend/src/NodexMeshAp
 ```
 
 PostgreSQL-specific tests use `AUDIT_TEST_POSTGRES` and/or `NodexMesh_PersistenceTestConnection`. Point them only at a disposable database where the test user may create and drop schemas. Tests do not use application tables.
+
+
+## Sidebar resizing and editor completion
+
+Desktop toolbars start at 235px and can be resized from 160–400px by dragging the right edge. The focused resize separator supports Left/Right arrows (8px), Home, and double-click to restore the default. Appearance settings also provide a width slider and reset button. Width persists through the existing appearance save queue; mobile panels retain their responsive layout.
+
+Diagram, database, and mind-map editors persist edits through their existing update handlers. Clicking the editor backdrop closes editing mode. Timeline editing exits when clicking outside its block; task and Kanban-column dialogs save their valid drafts on backdrop click. Inside-dialog clicks and nested dialogs do not trigger outside-block closure.
+
+MFA tests cover RFC test vectors, expiry, replay, attempts, account lockout, purpose/user/stamp binding, recovery codes, enrollment, method changes, and session rotation. Frontend HTTP integration tests cover the two-stage login and session acceptance. Apply committed EF migrations before deploying the API and frontend together. Perform a real SMTP delivery and authenticator enrollment smoke test against the target deployment; test fixtures do not send live mail.
+
+Authenticator enrollment displays a locally rendered, black-on-white QR code with a four-module quiet zone, plus the manual key and app link. QR regression tests decode the rendered SVG with an independent decoder to verify the provisioning URI. No external QR service receives MFA secrets.

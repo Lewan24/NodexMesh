@@ -8,6 +8,8 @@ import { useLoginForm } from '@/features/auth/hooks/useLoginForm';
 export default function LoginPage() {
   useTranslation();
   const {
+    code,
+    setCode,
     acceptSecurityNotice,
     setAcceptSecurityNotice,
     registering,
@@ -111,8 +113,22 @@ export default function LoginPage() {
           className={registering ? 'grid gap-5 md:grid-cols-2 md:gap-x-8' : 'flex flex-col gap-3.5'}
         >
           <div className="flex min-w-0 flex-col gap-3.5">
+            {mode === 'mfa' && (
+              <label className="flex flex-col gap-1.5 text-xs">
+                {translate('Verification or recovery code')}
+                <input
+                  required
+                  autoFocus
+                  autoComplete="one-time-code"
+                  maxLength={64}
+                  value={code}
+                  onChange={(event) => setCode(event.target.value)}
+                  className="input-theme text-sm px-3.5 py-2.5"
+                />
+              </label>
+            )}
             {registering && <h2 className="text-sm font-semibold">{translate('Account details')}</h2>}
-            {mode !== 'reset' && mode !== 'confirming' && (
+            {mode !== 'mfa' && mode !== 'reset' && mode !== 'confirming' && (
               <label className="flex flex-col gap-1.5">
                 <span className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
                   {isMockDataSource ? translate('Username') : translate('Email')}
@@ -130,7 +146,7 @@ export default function LoginPage() {
               </label>
             )}
 
-            {mode !== 'forgot' && mode !== 'resend' && mode !== 'confirming' && (
+            {mode !== 'mfa' && mode !== 'forgot' && mode !== 'resend' && mode !== 'confirming' && (
               <label className="flex flex-col gap-1.5">
                 <span className="text-xs font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
                   {translate('Password')}
@@ -252,7 +268,7 @@ export default function LoginPage() {
             </button>
           </div>
         )}
-        {!isMockDataSource && (mode === 'forgot' || mode === 'resend' || mode === 'reset') && (
+        {!isMockDataSource && (mode === 'mfa' || mode === 'forgot' || mode === 'resend' || mode === 'reset') && (
           <button
             type="button"
             disabled={submitting}

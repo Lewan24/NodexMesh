@@ -19,7 +19,7 @@ Services:
 - PostgreSQL: private Compose network unless its commented port mapping is enabled
 
 `postgres-data` stores PostgreSQL, `library-data` stores uploaded media, and `data-protection-keys`
-stores the encryption keys needed to decrypt SMTP credentials and queued email. Back up all three.
+stores the encryption keys needed to decrypt SMTP credentials, queued email, and authenticator MFA secrets. Back up all three.
 The API applies committed migrations at startup.
 
 ## Email delivery
@@ -112,3 +112,12 @@ their library until permanent deletion.
 - Add a SignalR backplane and distributed presence store before scaling the API horizontally.
 - Add edge request limits/WAF controls appropriate to the exposure.
 - Monitor `/health`, audit persistence failures/checkpoint lag, storage quotas, 429s, and database capacity.
+
+
+## MFA rollout
+
+Deploy API and frontend together: an MFA-enabled login now returns a challenge before it returns a session. The committed MFA/sidebar migrations apply at API startup. Existing accounts keep MFA disabled; sidebar widths default to 235px. The default-width migration upgrades stored 184px widths to 235px and preserves other saved widths. The new editable email templates are provisioned by bootstrap.
+
+Keep the Data Protection key volume persistent and shared between API replicas, and synchronize host clocks. Authenticator enrollment works without SMTP. Before enabling email MFA, verify delivery of the MFA-code template in Administration. Turning off global email delivery requires email-only MFA users to use saved recovery codes; enrolled authenticators remain available. Do not automatically disable users' MFA when disabling SMTP.
+
+Release checks: enroll an authenticator, verify a code and recovery code, switch preferred methods with both factors, disable MFA, and confirm old access/refresh sessions fail after settings changes. Verify a real emailed code arrives before its five-minute expiry. Automated API tests use a protected outbox and do not contact a live SMTP provider.

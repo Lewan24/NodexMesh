@@ -3,6 +3,7 @@ using System;
 using System.Net;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodexMeshApi.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NodexMeshApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261006071013_SidebarWidthAndMfa")]
+    partial class SidebarWidthAndMfa
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -354,9 +357,7 @@ namespace NodexMeshApi.Migrations
                         .HasColumnName("palette_version");
 
                     b.Property<int>("SidebarWidth")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasDefaultValue(235)
                         .HasColumnName("sidebar_width");
 
                     b.Property<string>("UiFont")
@@ -1356,10 +1357,6 @@ namespace NodexMeshApi.Migrations
                     b.Property<string>("RevokedByIp")
                         .HasColumnType("text")
                         .HasColumnName("revoked_by_ip");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("text")
-                        .HasColumnName("security_stamp");
 
                     b.Property<string>("TokenHash")
                         .IsRequired()

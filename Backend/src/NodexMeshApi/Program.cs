@@ -307,6 +307,7 @@ try
         client.Timeout = TimeSpan.FromSeconds(10);
     });
 
+    builder.Services.AddScoped<MfaService>();
     builder.Services.AddScoped<ITokenService, TokenService>();
     builder.Services.AddScoped<IProjectAccessService, ProjectAccessService>();
     builder.Services.AddScoped<IBoardMutationService, BoardMutationService>();

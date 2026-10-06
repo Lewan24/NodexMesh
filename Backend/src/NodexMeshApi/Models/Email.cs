@@ -33,6 +33,16 @@ public static class EmailTemplateDefaults
 
     public static EmailTemplate[] All =>
     [
+        Create("account.mfa-code", "MFA verification code", "Short-lived verification code for sign-in and MFA settings.",
+            "Your NodexMesh verification code",
+            "Hello {{display_name}},\n\nYour verification code is {{code}}. It expires in {{expires_minutes}} minutes and can only be used once. Never share this code.",
+            "<h1>Verification code</h1><p>Hello {{display_name}},</p><p>Your code is <strong>{{code}}</strong>.</p><p>Expires in {{expires_minutes}} minutes. Never share this code.</p>",
+            "display_name,code,expires_minutes"),
+        Create("account.mfa-changed", "MFA settings changed", "Security notification after MFA settings change.",
+            "Your NodexMesh MFA settings changed",
+            "Hello {{display_name}},\n\nYour MFA settings changed. If this was not you, contact your administrator immediately.",
+            "<h1>MFA settings changed</h1><p>Hello {{display_name}},</p><p>If this was not you, contact your administrator immediately.</p>",
+            "display_name"),
         Create("account.confirmation", "Account confirmation", "Sent after registration or a confirmation resend.",
             "Confirm your NodexMesh account",
             "Hello {{display_name}},\n\nConfirm your email address to activate your NodexMesh account.\n\nConfirm account: {{action_url}}\n\nThis link is time-limited.",

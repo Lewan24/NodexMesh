@@ -1,4 +1,5 @@
 import { ArrowLeft, KeyRound, Moon, Sun, UserRound, ShieldCheck } from 'lucide-react';
+import MfaSettingsSection from '../components/MfaSettingsSection';
 import SecurityNotice from '../components/SecurityNotice';
 import DeleteAccountSection from '../components/DeleteAccountSection';
 import { translate } from '@/shared/i18n';
@@ -134,6 +135,7 @@ export default function ProfilePage({ onClose }: { onClose: () => void }) {
             {[
               { id: 'account-details', label: translate('Account details'), icon: UserRound },
               { id: 'account-password', label: translate('Change password'), icon: KeyRound },
+              { id: 'account-mfa', label: translate('Multi-factor authentication'), icon: ShieldCheck },
               { id: 'account-security', label: translate('Security data collection'), icon: ShieldCheck },
             ].map(({ id, label, icon: Icon }) => (
               <a
@@ -251,6 +253,7 @@ export default function ProfilePage({ onClose }: { onClose: () => void }) {
                 </button>
               </form>
             </div>
+            <MfaSettingsSection />
             <div id="account-security" className="scroll-mt-6">
               <SecurityNotice />
             </div>

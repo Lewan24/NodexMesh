@@ -89,6 +89,8 @@ public static class AuditCapture
                 security ? "security" : "activity");
             if (entity is ApplicationUser && entry.State == EntityState.Modified && changes.Any(p => p.Metadata.Name == "PasswordHash"))
                 audit.EventType = http?.Request.Path.StartsWithSegments("/api/v1/admin") == true ? "admin.password_reset" : "auth.password_changed";
+            if (entity is ApplicationUser && changes.Any(p => p.Metadata.Name is "TwoFactorEnabled" or "MfaPreferredMethod" or "MfaSecretProtected"))
+                audit.EventType = "auth.mfa_changed";
             if (entity is RefreshToken) audit.EventType = "auth.session_revoked";
             if (entity is Project && changes.Any(p => p.Metadata.Name == "OwnerId")) audit.EventType = "project.ownership_changed";
             if (entity is ApplicationUser && changes.Any(p => p.Metadata.Name == "IsAdmin")) audit.EventType = "admin.role_changed";

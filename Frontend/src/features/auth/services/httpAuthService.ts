@@ -1,4 +1,5 @@
 import { translate } from '@/shared/i18n';
+import type { MfaChallenge } from '../types';
 import type { User } from '@/entities/user/types';
 import type { AuthService } from './authService';
 import { ApiError, fail } from '@/shared/api/errors';
@@ -102,12 +103,27 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
       }
     },
     async login(input) {
-      return acceptToken(
-        await anonymous.request('/auth/login', {
-          method: 'POST',
-          body: { email: input.username.trim(), password: input.password },
-        }),
-      );
+      const value = await anonymous.request(input.proof ? '/auth/mfa/verify' : '/auth/login', {
+        method: 'POST',
+        body: input.proof ?? { email: input.username.trim(), password: input.password },
+      });
+      if (value && typeof value === 'object' && 'mfaRequired' in value && value.mfaRequired === true)
+        return value as MfaChallenge;
+      return acceptToken(value);
+    },
+    async mfaSettings() {
+      return admin('/auth/mfa');
+    },
+    async startMfaChange(input) {
+      return admin('/auth/mfa/start', { method: 'POST', body: input });
+    },
+    async completeMfaChange(input) {
+      const result = await admin<{ auth: unknown; recoveryCodes: string[] }>('/auth/mfa/complete', {
+        method: 'POST',
+        body: input,
+      });
+      acceptToken(result.auth);
+      return { recoveryCodes: result.recoveryCodes };
     },
     async register(input) {
       return (await anonymous.request('/auth/register', { method: 'POST', body: input })) as {

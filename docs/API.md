@@ -31,7 +31,11 @@ Paths in the HTTP tables are relative to `/api/v1` unless a row explicitly says 
 | ------- | ----------------------- | --------------------------------------------------------------- |
 | POST    | `/auth/register`        | Anonymous; only when registration is enabled                    |
 | GET     | `/auth/registration`    | Anonymous registration status                                   |
-| POST    | `/auth/login`           | Anonymous; returns access token/profile and sets refresh cookie |
+| POST    | `/auth/login`           | Anonymous; returns a session or an MFA challenge |
+| GET     | `/auth/mfa`             | Authenticated MFA settings and available methods                 |
+| POST    | `/auth/mfa/start`       | Authenticated; password verification and settings challenge      |
+| POST    | `/auth/mfa/complete`    | Authenticated; verify factors and save MFA settings               |
+| POST    | `/auth/mfa/verify`      | Anonymous; verify login challenge and issue a session             |
 | POST    | `/auth/refresh`         | Refresh cookie + custom header; rotates token                   |
 | POST    | `/auth/revoke`          | Authenticated logout/session revocation                         |
 | GET/PUT | `/auth/default-project` | Read/set the caller's accessible default project                |
@@ -154,3 +158,24 @@ The 22 item discriminators are `board`, `section-title`, `note`, `text`, `docume
 - board mutations: 60/minute per user;
 - anonymous public reads: 60/minute per IP;
 - SignalR receive message: 32 KiB; presence additionally has server-side caps/throttling.
+
+
+## MFA and appearance width
+
+`POST /api/v1/auth/login` still accepts `{ email, password }`. With MFA disabled it returns the existing `AuthResponse`. With MFA enabled it returns `{ mfaRequired: true, challengeToken, method, expiresAt }`, with no access token or refresh cookie. `method` is `email`, `authenticator`, or `recovery` when mail is disabled and no authenticator is enrolled.
+
+`POST /api/v1/auth/mfa/verify` accepts `{ challengeToken, code }`; success returns the existing `AuthResponse` and rotating refresh cookie. The code is the selected factor's six-digit code, or a single-use recovery code. A challenge expires after five minutes, permits five attempts, is bound to the user's security stamp and purpose, and is superseded by the next challenge of the same purpose. Invalid proofs return generic `401 invalid_mfa`. Failed MFA attempts also count toward the configured account lockout.
+
+Authenticated settings endpoints:
+
+| Endpoint | Body / result |
+| --- | --- |
+| `GET /auth/mfa` | `{ enabled, preferredMethod, authenticatorConfigured, emailAvailable, recoveryCodesRemaining }` |
+| `POST /auth/mfa/start` | `{ currentPassword, enabled, preferredMethod: "email" \| "authenticator" }`; returns a management challenge. For first authenticator enrollment, also returns `setupSecret` and `setupUri`; the frontend encodes `setupUri` locally as a scannable QR code. |
+| `POST /auth/mfa/complete` | `{ challengeToken, code, setupCode? }`; returns `{ auth: AuthResponse, recoveryCodes: string[] }`. Accept the new authentication response immediately. |
+
+For an MFA-enabled account, `code` proves the current factor (or recovery code). Switching to a new authenticator also requires `setupCode` from that app. Switching from authenticator to email requires the emailed `setupCode`. First enrollment proves the selected new factor in `code`. Existing enrolled authenticators are retained when email becomes preferred, so they remain available if email is globally disabled. Each enabled-settings change replaces all recovery codes; disabling removes the secret and recovery codes. Ten recovery codes are shown only in the completion response. All settings changes invalidate old access tokens and refresh sessions and issue a fresh session.
+
+Email MFA can only be enabled when effective global email delivery is enabled. Email codes use the mandatory `account.mfa-code` template and are independent of optional user notifications. Settings changes use `account.mfa-changed`. Changing an email address while MFA is enabled returns `409 mfa_email_change`; verify and disable MFA, change/confirm the address, then re-enable MFA. Password resets do not disable MFA.
+
+`GET /api/v1/appearance` adds `sidebarWidth` (default `235`). The existing `PUT /appearance` accepts optional integer `sidebarWidth`, from `160` through `400`; omitted values use `235` for older-client compatibility. Width is private to the authenticated user's appearance profile and is not exposed through public project appearance.

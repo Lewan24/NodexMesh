@@ -1,6 +1,32 @@
 import type { Role } from '@/entities/user/types';
 
+export interface MfaChallenge {
+  mfaRequired: true;
+  challengeToken: string;
+  method: 'email' | 'authenticator' | 'recovery';
+  expiresAt: string;
+  setupSecret?: string | null;
+  setupUri?: string | null;
+}
+export interface MfaSettings {
+  enabled: boolean;
+  preferredMethod: 'email' | 'authenticator';
+  authenticatorConfigured: boolean;
+  emailAvailable: boolean;
+  recoveryCodesRemaining: number;
+}
+export interface MfaProof {
+  challengeToken: string;
+  code: string;
+  setupCode?: string;
+}
+export interface MfaChange {
+  currentPassword: string;
+  enabled: boolean;
+  preferredMethod: 'email' | 'authenticator';
+}
 export interface LoginInput {
+  proof?: MfaProof;
   username: string;
   password: string;
 }
@@ -12,7 +38,7 @@ export interface AddUserInput {
   role: Role;
 }
 
-export type AuthResult = { ok: true } | { ok: false; error: string };
+export type AuthResult = { ok: true } | { ok: false; error: string; challenge?: MfaChallenge };
 
 export interface AdminUser {
   deletionRequestedAt?: string | null;

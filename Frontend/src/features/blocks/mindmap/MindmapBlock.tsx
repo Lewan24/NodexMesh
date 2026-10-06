@@ -242,6 +242,7 @@ export default function MindmapBlock({
       </div>
       {editing && (
         <Modal
+          closeOnBackdrop
           boardHistory
           label={translate('Edit {{value1}}', { value1: item.title })}
           onClose={() => setEditing(false)}

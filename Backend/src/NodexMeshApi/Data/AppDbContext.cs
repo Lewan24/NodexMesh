@@ -43,6 +43,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
     }
 
     public DbSet<LibraryAsset> LibraryAssets => Set<LibraryAsset>();
+    public DbSet<MfaChallenge> MfaChallenges => Set<MfaChallenge>();
+    public DbSet<MfaRecoveryCode> MfaRecoveryCodes => Set<MfaRecoveryCode>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
@@ -63,6 +65,23 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
+        b.Entity<ApplicationUser>().Property(x => x.MfaLastAcceptedStep).IsConcurrencyToken();
+        b.Entity<MfaChallenge>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.TokenHash).IsUnique();
+            e.HasIndex(x => x.ExpiresAt);
+            e.Property(x => x.Consumed).IsConcurrencyToken();
+            e.Property(x => x.Attempts).IsConcurrencyToken();
+            e.HasOne<ApplicationUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+        b.Entity<MfaRecoveryCode>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.UserId, x.CodeHash }).IsUnique();
+            e.Property(x => x.Consumed).IsConcurrencyToken();
+            e.HasOne<ApplicationUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
         b.Entity<AuditDetectionCheckpoint>().HasKey(x => x.Id);
         b.Entity<AuditEvent>(e =>
         {
@@ -308,6 +327,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
         b.Entity<AppearanceProfile>(e =>
         {
             e.HasKey(x => x.UserId);
+            e.Property(x => x.SidebarWidth).HasDefaultValue(235);
             e.Property(x => x.LightTheme).HasColumnType("jsonb");
             e.Property(x => x.DarkTheme).HasColumnType("jsonb");
         });

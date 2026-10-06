@@ -14,7 +14,8 @@ The demo runs in browser-local mock mode. It includes the editor and bundled sam
 
 - 21 persisted board item types: board links, section titles, notes, text, documents, code, icons, images, links, embeds, checklists, Kanban, timelines, columns, frames, dispensers, lines, drawings, mind maps, diagrams, and database diagrams.
 - Multi-board projects, search, tags, comments, item/project trash, JSON import/export, undo/redo, clipboard operations, alignment guides, custom appearance, custom block CSS, and English/Polish UI.
-- JWT access tokens, rotating HttpOnly refresh cookies, registration control, profiles, password changes, blocked-account checks, and a bootstrap administrator.
+- JWT access tokens, rotating HttpOnly refresh cookies, opt-in authenticator/email MFA with recovery codes, registration control, profiles, password changes, blocked-account checks, and a bootstrap administrator.
+- Resizable desktop sidebar with database-backed appearance preferences, plus automatic save and outside-click completion for planning editors.
 - Project roles: Owner, Editor, Commenter, and Viewer. Commenters can manage their own comments; Editors can change boards; Owners manage membership, public links, and project lifecycle.
 - Optimistic revisions, idempotent board mutations, recovery drafts, polling fallback, SignalR board invalidation, collaborator selection/editing presence, and remote cursors.
 - Public read-only project links and explicitly shared public media links.

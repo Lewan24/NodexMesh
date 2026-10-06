@@ -32,6 +32,10 @@ public static class AuthEndpoints
         group.MapPost("/forgot-password", ForgotPasswordAsync).RequireRateLimiting("auth-strict");
         group.MapPost("/reset-password", ResetPasswordAsync).RequireRateLimiting("auth-strict");
         group.MapGet("/registration", RegistrationStatusAsync);
+        group.MapGet("/mfa", MfaStatusAsync).RequireAuthorization();
+        group.MapPost("/mfa/start", MfaStartAsync).RequireAuthorization().RequireRateLimiting("auth-strict");
+        group.MapPost("/mfa/complete", MfaCompleteAsync).RequireAuthorization().RequireRateLimiting("auth-strict");
+        group.MapPost("/mfa/verify", MfaLoginAsync).RequireRateLimiting("auth-strict");
         group.MapPost("/login", LoginAsync).RequireRateLimiting("auth-strict");
         group.MapPost("/refresh", RefreshAsync).RequireRateLimiting("auth-refresh");
         group.MapPost("/revoke", RevokeAsync).RequireAuthorization().RequireRateLimiting("auth-strict");
@@ -222,10 +226,11 @@ public static class AuthEndpoints
         return TypedResults.NoContent();
     }
 
-    private static async Task<Results<Ok<AuthResponse>, UnauthorizedHttpResult>> LoginAsync(
+    private static async Task<IResult> LoginAsync(
         LoginRequest request,
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
+        MfaService mfa,
         ITokenService tokenService,
         AppDbContext db,
         IEmailQueue emailQueue,
@@ -259,14 +264,24 @@ public static class AuthEndpoints
             await userManager.UpdateAsync(user);
         }
 
+        if (user.TwoFactorEnabled)
+            return Results.Ok(await mfa.StartAsync(user, "login", ct: http.RequestAborted));
+        return await IssueSessionAsync(user, tokenService, db, http, environment, logger, "password");
+    }
+
+    private static async Task<IResult> IssueSessionAsync(ApplicationUser user, ITokenService tokenService,
+        AppDbContext db, HttpContext http, IHostEnvironment environment, ILogger<Program> logger, string method)
+    {
         var (accessToken, accessTokenExpiresAtUtc) = tokenService.GenerateAccessToken(user);
         var (refreshToken, hash, expiresAtUtc) = tokenService.GenerateRefreshToken();
 
+        user.ConcurrencyStamp = Guid.NewGuid().ToString();
         var sessionId = Guid.CreateVersion7();
         db.RefreshTokens.Add(new RefreshToken
         {
             Id = sessionId,
             UserId = user.Id,
+            SecurityStamp = user.SecurityStamp,
             TokenHash = hash,
             ExpiresAtUtc = expiresAtUtc,
             CreatedAtUtc = DateTime.UtcNow,
@@ -275,16 +290,104 @@ public static class AuthEndpoints
         var login = AuditCapture.Create(http, "auth.login_succeeded", target: user.Id);
         login.ActorId = user.Id;
         login.ResourceId = sessionId.ToString();
-        login.Metadata = "{\"authenticationMethod\":\"password\"}";
-        login.AccountKey = AuditCapture.AccountKey(request.Email);
+        login.Metadata = System.Text.Json.JsonSerializer.Serialize(new { authenticationMethod = method });
+        login.AccountKey = AuditCapture.AccountKey(user.Email!);
         login.StatusCode = 200;
         db.AuditEvents.Add(login);
-        await db.SaveChangesAsync();
+        try { await db.SaveChangesAsync(); }
+        catch (DbUpdateConcurrencyException) { throw MfaService.Invalid(); }
 
         http.Items[AuditCapture.ExplicitEvent] = true;
         AuditWriter.Log(logger, login);
         SetRefreshTokenCookie(http, refreshToken, expiresAtUtc, environment);
         return TypedResults.Ok(CreateAuthResponse(user, accessToken, accessTokenExpiresAtUtc));
+    }
+
+    private static async Task<IResult> MfaStatusAsync(ClaimsPrincipal principal, AppDbContext db,
+        IEmailQueue email, CancellationToken ct)
+    {
+        var user = await db.Users.SingleAsync(x => x.Id == principal.GetUserId(), ct);
+        return Results.Ok(new { enabled = user.TwoFactorEnabled, preferredMethod = user.MfaPreferredMethod,
+            authenticatorConfigured = user.MfaSecretProtected is not null,
+            emailAvailable = await email.IsEnabledAsync(db, ct),
+            recoveryCodesRemaining = await db.MfaRecoveryCodes.CountAsync(x => x.UserId == user.Id && !x.Consumed, ct) });
+    }
+
+    private static async Task<IResult> MfaStartAsync(MfaStartRequest request, ClaimsPrincipal principal,
+        UserManager<ApplicationUser> users, SignInManager<ApplicationUser> signIn, MfaService mfa, CancellationToken ct)
+    {
+        var user = await users.FindByIdAsync(principal.GetUserId().ToString());
+        if (user is null || user.IsBlocked || !(await signIn.CheckPasswordSignInAsync(user, request.CurrentPassword, true)).Succeeded)
+            throw MfaService.Invalid();
+        return Results.Ok(await mfa.StartAsync(user, "manage", request.Enabled, request.PreferredMethod, ct));
+    }
+
+    private static async Task<IResult> MfaLoginAsync(MfaCompleteRequest request, MfaService mfa,
+        AppDbContext db, ITokenService tokens, HttpContext http, IHostEnvironment environment, ILogger<Program> logger)
+    {
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            var (user, challenge) = await VerifyMfaAsync(request, "login", mfa, db, http, ct: http.RequestAborted);
+            await using var transaction = await db.Database.BeginTransactionAsync(http.RequestAborted);
+            var response = await IssueSessionAsync(user, tokens, db, http, environment, logger, challenge.Method);
+            await transaction.CommitAsync(http.RequestAborted);
+            return response;
+        });
+    }
+
+    private static async Task<(ApplicationUser User, MfaChallenge Challenge)> VerifyMfaAsync(
+        MfaCompleteRequest request, string purpose, MfaService mfa, AppDbContext db, HttpContext http,
+        Guid? userId = null, CancellationToken ct = default)
+    {
+        try { return await mfa.VerifyAsync(request, purpose, userId, ct); }
+        catch (ApiException)
+        {
+            var hash = MfaService.Hash(request.ChallengeToken);
+            var target = await db.MfaChallenges.AsNoTracking().Where(x => x.TokenHash == hash)
+                .Select(x => (Guid?)x.UserId).SingleOrDefaultAsync(ct);
+            var failure = AuditCapture.Create(http, "auth.mfa_failed", outcome: "failure", target: target);
+            failure.StatusCode = 401;
+            http.Items[AuditCapture.ExplicitEvent] = true;
+            await http.RequestServices.GetRequiredService<AuditWriter>().WriteAsync(failure);
+            throw;
+        }
+    }
+
+    private static async Task<IResult> MfaCompleteAsync(MfaCompleteRequest request, ClaimsPrincipal principal,
+        MfaService mfa, AppDbContext db, ITokenService tokens,
+        IEmailQueue email, HttpContext http, IHostEnvironment environment, CancellationToken ct)
+    {
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            var (user, challenge) = await VerifyMfaAsync(request, "manage", mfa, db, http, principal.GetUserId(), ct);
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            user.TwoFactorEnabled = challenge.TargetEnabled;
+            user.MfaPreferredMethod = challenge.TargetMethod;
+            if (challenge.TargetEnabled && challenge.TargetMethod == "email") user.EmailConfirmed = true;
+            if (challenge.TargetEnabled && challenge.SetupSecretProtected is not null)
+                user.MfaSecretProtected = challenge.SetupSecretProtected;
+            if (!challenge.TargetEnabled)
+            {
+                user.MfaSecretProtected = null;
+                user.MfaLastAcceptedStep = null;
+            }
+            var codes = await mfa.ReplaceRecoveryCodesAsync(user, ct);
+            if (!challenge.TargetEnabled)
+            {
+                db.MfaRecoveryCodes.RemoveRange(db.MfaRecoveryCodes.Local.Where(x => x.UserId == user.Id));
+                codes = [];
+            }
+            // Keep EF's original TOTP step for its concurrency predicate. Identity's
+            // Attach/Update path resets original values before the step is cleared.
+            user.SecurityStamp = Guid.NewGuid().ToString();
+            user.ConcurrencyStamp = Guid.NewGuid().ToString();
+            await email.QueueTemplateAsync(db, "account.mfa-changed", user.Email!,
+                new Dictionary<string, string> { ["display_name"] = user.DisplayName }, ct);
+            await RotateSessionsAsync(user, tokens, db, http, environment, ct);
+            var (token, expires) = tokens.GenerateAccessToken(user);
+            await transaction.CommitAsync(ct);
+            return Results.Ok(new { auth = CreateAuthResponse(user, token, expires), recoveryCodes = codes });
+        });
     }
 
     private static async Task<Results<Ok<AuthResponse>, UnauthorizedHttpResult>> RefreshAsync(
@@ -349,7 +452,9 @@ public static class AuthEndpoints
         }
 
         var user = await userManager.FindByIdAsync(existing.UserId.ToString());
-        if (user is null || user.IsBlocked)
+        if (user is null || user.IsBlocked ||
+            (existing.SecurityStamp is not null && existing.SecurityStamp != user.SecurityStamp) ||
+            (user.TwoFactorEnabled && existing.SecurityStamp is null))
         {
             ClearRefreshTokenCookie(http, environment);
             return TypedResults.Unauthorized();
@@ -367,6 +472,7 @@ public static class AuthEndpoints
         {
             Id = Guid.CreateVersion7(),
             UserId = user.Id,
+            SecurityStamp = user.SecurityStamp,
             TokenHash = newHash,
             ExpiresAtUtc = newExpiresAtUtc,
             CreatedAtUtc = DateTime.UtcNow,
@@ -426,6 +532,9 @@ public static class AuthEndpoints
         if (displayName.Length == 0)
             throw new ApiException(422, "invalid_profile", "Display name is required.");
         var emailChanged = !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase);
+
+        if (emailChanged && user.TwoFactorEnabled)
+            throw new ApiException(409, "mfa_email_change", "Verify and disable MFA before changing your email address, then enable it again.");
 
         if (emailChanged && (string.IsNullOrEmpty(request.CurrentPassword)
             || !await userManager.CheckPasswordAsync(user, request.CurrentPassword)))
@@ -500,6 +609,7 @@ public static class AuthEndpoints
         {
             Id = Guid.CreateVersion7(),
             UserId = user.Id,
+            SecurityStamp = user.SecurityStamp,
             TokenHash = hash,
             ExpiresAtUtc = refreshExpiresAtUtc,
             CreatedAtUtc = now,

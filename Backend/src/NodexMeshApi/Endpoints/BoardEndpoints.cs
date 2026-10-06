@@ -417,6 +417,7 @@ public static class BoardEndpoints
                     light = o.LightTheme is null ? null : (object)System.Text.Json.JsonDocument.Parse(o.LightTheme).RootElement,
                     dark = o.DarkTheme is null ? null : (object)System.Text.Json.JsonDocument.Parse(o.DarkTheme).RootElement
                 }),
+            sidebarWidth = profile?.SidebarWidth ?? 235,
             uiFont = profile?.UiFont,
             uiPrimary = profile?.UiPrimary,
             uiSecondary = profile?.UiSecondary,
@@ -437,6 +438,7 @@ public static class BoardEndpoints
             db.AppearanceProfiles.Add(profile);
         }
 
+        profile.SidebarWidth = request.SidebarWidth;
         profile.Font = request.Font;
         profile.Mode = request.Mode;
         profile.UiFont = request.UiFont;
