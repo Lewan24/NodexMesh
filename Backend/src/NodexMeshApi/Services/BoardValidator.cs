@@ -64,6 +64,10 @@ public static class BoardValidator
 
         // Strict deserialization: unknown/missing/wrong-typed fields throw (mass-assignment guard).
         var data = BoardItemTypes.Deserialize(item.Type, item.Data.GetRawText());
+        if (item.Type == "dispenser" && item.Data.TryGetProperty("paperColor", out var paperColor) &&
+            (paperColor.ValueKind != JsonValueKind.String ||
+             !System.Text.RegularExpressions.Regex.IsMatch(paperColor.GetString()!, "^#[0-9a-fA-F]{6}$")))
+            throw new ApiException(422, "invalid_item", "Invalid dispenser paper color.");
         if (data is FileData file &&
             (file.Size < 0 || !IsText(file.Title) || !IsText(file.FileName) || !IsText(file.ContentType)))
             throw new ApiException(422, "invalid_item", "Invalid file content.");

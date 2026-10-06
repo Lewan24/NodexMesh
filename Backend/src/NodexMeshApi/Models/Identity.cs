@@ -4,6 +4,9 @@ namespace NodexMeshApi.Models;
 
 public sealed class ApplicationUser : IdentityUser<Guid>
 {
+    public string MfaPreferredMethod { get; set; } = "email";
+    public string? MfaSecretProtected { get; set; }
+    public long? MfaLastAcceptedStep { get; set; }
     public string DisplayName { get; set; } = string.Empty;
     public bool IsAdmin { get; set; }
     public bool IsBlocked { get; set; }
@@ -39,6 +42,7 @@ public sealed class RefreshToken
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
+    public string? SecurityStamp { get; set; }
     public string TokenHash { get; set; } = string.Empty;
     public DateTime ExpiresAtUtc { get; set; }
     public DateTime CreatedAtUtc { get; set; }

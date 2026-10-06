@@ -565,7 +565,10 @@ export default function DatabaseDiagramBlock({
               className="fixed inset-0 bg-black/45 flex items-center justify-center p-4"
               style={{ zIndex: 200000 }}
               onMouseDown={(event) => event.stopPropagation()}
-              onClick={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (event.target === event.currentTarget) setEditing(false);
+              }}
             >
               <div
                 ref={dialog}

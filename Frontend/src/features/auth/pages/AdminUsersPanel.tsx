@@ -1,5 +1,7 @@
 import { authService } from '@/app/services';
 import AdminAuditPanel from './AdminAuditPanel';
+import AdminIpPanel from './AdminIpPanel';
+import AdminMfaReset from './AdminMfaReset';
 import AdminEmailPanel from './AdminEmailPanel';
 import { locale, displayLabel, translate } from '@/shared/i18n';
 import LanguageSelect from '@/shared/i18n/LanguageSelect';
@@ -42,7 +44,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
       ),
   );
   const [registration, setRegistration] = useState(true);
-  const [tab, setTab] = useState<'users' | 'projects' | 'email' | 'audit'>('users');
+  const [tab, setTab] = useState<'users' | 'projects' | 'email' | 'audit' | 'security'>('users');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [newUser, setNewUser] = useState({ email: '', displayName: '', password: '', isAdmin: false });
@@ -130,11 +132,11 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
         </header>
         <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
           <div
-            className="grid min-w-0 grid-cols-4 gap-2 sm:flex"
+            className="grid min-w-0 grid-cols-5 gap-2 sm:flex"
             role="tablist"
             aria-label={translate('Administration')}
           >
-            {(['users', 'projects', 'email', 'audit'] as const).map((value) => (
+            {(['users', 'projects', 'email', 'audit', 'security'] as const).map((value) => (
               <button
                 key={value}
                 id={`admin-tab-${value}`}
@@ -143,7 +145,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                 aria-controls="admin-tab-content"
                 tabIndex={tab === value ? 0 : -1}
                 onKeyDown={(event) => {
-                  const tabs = ['users', 'projects', 'email', 'audit'] as const;
+                  const tabs = ['users', 'projects', 'email', 'audit', 'security'] as const;
                   const index = tabs.indexOf(value);
                   const next =
                     event.key === 'ArrowRight'
@@ -209,7 +211,9 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
               {error || message}
             </p>
           )}
-          {tab === 'audit' ? (
+          {tab === 'security' ? (
+            <AdminIpPanel />
+          ) : tab === 'audit' ? (
             <AdminAuditPanel />
           ) : tab === 'email' ? (
             <AdminEmailPanel />
@@ -459,6 +463,7 @@ function AdminUserRow({
           <button className="btn-ghost rounded-lg px-2.5 py-1.5 text-xs" onClick={() => setDialog('appearance')}>
             {translate('Reset appearance')}
           </button>
+          {user.id !== currentUserId && <AdminMfaReset userId={user.id} email={user.email} />}
           {user.deletionRequestedAt && (
             <div className="w-full space-y-2 text-xs">
               <p>

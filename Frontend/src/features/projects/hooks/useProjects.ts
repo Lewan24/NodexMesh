@@ -114,6 +114,11 @@ export function useProjects(userId: string): UseProjectsResult {
     projects.find((project) => project.id === controller.resolveProjectId(activeProjectId) && !project.deletedAt) ??
     projects.find((project) => !project.deletedAt);
 
+  useEffect(() => {
+    if (!activeProject?.itemsLoading || activeProject.loadingError) return;
+    void controller.openProject(activeProject.id);
+  }, [controller, activeProject?.id, activeProject?.itemsLoading, activeProject?.loadingError]);
+
   const [liveStatus, setLiveStatus] = useState('Connecting live updates...');
   const viewedProjectId = activeProject?.id ?? '';
   useEffect(() => {
@@ -314,7 +319,7 @@ export function useProjects(userId: string): UseProjectsResult {
     error,
     recoveryDrafts,
     clearRecoveryDrafts: controller.clearRecoveryDrafts,
-    retry: controller.retry,
+    retry: () => (activeProject?.itemsLoading ? controller.openProject(activeProject.id) : controller.retry()),
     reload: () => controller.load(),
     projects,
     activeProject,

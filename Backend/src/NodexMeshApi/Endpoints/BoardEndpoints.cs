@@ -21,6 +21,9 @@ public static class BoardEndpoints
         group.MapPatch("/boards/{boardId:guid}", RenameBoardAsync);
         group.MapDelete("/boards/{boardId:guid}", DeleteBoardAsync);
         group.MapGet("/boards/{boardId:guid}", GetSnapshotAsync);
+        group.MapGet("/boards/{boardId:guid}/loading-manifest", GetLoadingManifestAsync);
+        group.MapPost("/boards/{boardId:guid}/item-page", GetItemPageAsync)
+            .RequireRateLimiting("board-load");
         group.MapPost("/boards/{boardId:guid}/mutations", ApplyMutationAsync)
             .RequireRateLimiting("board-mutation");
         group.MapGet("/projects/{projectId:guid}/item-trash", ListItemTrashAsync);
@@ -120,6 +123,41 @@ public static class BoardEndpoints
         await access.RequireForBoardAsync(boardId, userId, ProjectRole.Viewer, ct);
 
         return TypedResults.Ok(await boards.GetSnapshotAsync(boardId, ct));
+    }
+
+    private static async Task<Ok<BoardLoadingManifestDto>> GetLoadingManifestAsync(
+        Guid boardId, ClaimsPrincipal principal, AppDbContext db,
+        IProjectAccessService access, CancellationToken ct)
+    {
+        await access.RequireForBoardAsync(boardId, CurrentUserId(principal), ProjectRole.Viewer, ct);
+        var board = await db.Boards.AsNoTracking().FirstAsync(b => b.Id == boardId, ct);
+        var items = await db.BoardItems.AsNoTracking().Where(i => i.BoardId == boardId)
+            .OrderBy(i => i.ParentItemId != null).ThenBy(i => i.SortOrder).ThenBy(i => i.Id)
+            .Select(i => new ItemSkeletonDto(i.Id, i.PosX, i.PosY, i.Width, i.Height, i.ParentItemId)).ToListAsync(ct);
+        // Recheck after the read so clients never combine layouts from different revisions.
+        var revision = await db.Boards.Where(b => b.Id == boardId).Select(b => b.Revision).SingleAsync(ct);
+        if (revision != board.Revision)
+            throw new ApiException(409, "revision_mismatch", "Board changed while loading.");
+        return TypedResults.Ok(new BoardLoadingManifestDto(
+            new BoardRecordDto(board.Id, board.ProjectId, board.Name, board.SortOrder, board.Revision,
+                board.CreatedAt, board.UpdatedAt, board.CreatedBy, board.UpdatedBy, board.DeletedAt), items));
+    }
+
+    private static async Task<Ok<BoardSnapshotDto>> GetItemPageAsync(
+        Guid boardId, BoardPageRequest request, ClaimsPrincipal principal, AppDbContext db,
+        IProjectAccessService access, IBoardMutationService boards, CancellationToken ct)
+    {
+        await access.RequireForBoardAsync(boardId, CurrentUserId(principal), ProjectRole.Viewer, ct);
+        if (request.ItemIds is null || request.ItemIds.Length is < 1 or > 50 ||
+            request.ItemIds.Distinct().Count() != request.ItemIds.Length)
+            throw new ApiException(422, "invalid_page", "Supply between 1 and 50 distinct item IDs.");
+        var snapshot = await boards.GetPageAsync(boardId, request.ItemIds, ct);
+        var revision = await db.Boards.Where(b => b.Id == boardId).Select(b => b.Revision).SingleAsync(ct);
+        if (snapshot.Board.Revision != request.ExpectedRevision || revision != request.ExpectedRevision)
+            throw new ApiException(409, "revision_mismatch", "Board changed while loading.");
+        if (snapshot.Items.Count != request.ItemIds.Length)
+            throw new ApiException(422, "invalid_scope", "Items must belong to this board.");
+        return TypedResults.Ok(snapshot);
     }
 
     /// <summary>
@@ -379,6 +417,7 @@ public static class BoardEndpoints
                     light = o.LightTheme is null ? null : (object)System.Text.Json.JsonDocument.Parse(o.LightTheme).RootElement,
                     dark = o.DarkTheme is null ? null : (object)System.Text.Json.JsonDocument.Parse(o.DarkTheme).RootElement
                 }),
+            sidebarWidth = profile?.SidebarWidth ?? 235,
             uiFont = profile?.UiFont,
             uiPrimary = profile?.UiPrimary,
             uiSecondary = profile?.UiSecondary,
@@ -399,6 +438,7 @@ public static class BoardEndpoints
             db.AppearanceProfiles.Add(profile);
         }
 
+        profile.SidebarWidth = request.SidebarWidth;
         profile.Font = request.Font;
         profile.Mode = request.Mode;
         profile.UiFont = request.UiFont;

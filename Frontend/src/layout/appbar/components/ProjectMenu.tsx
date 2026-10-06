@@ -58,7 +58,7 @@ export default function ProjectMenu(props: ProjectMenuProps) {
     setEditing(null);
   };
   return (
-    <div className="relative ml-3">
+    <div className="relative ml-3 z-20">
       <button ref={buttonRef} onClick={onToggle} aria-expanded={open} className="project-trigger">
         <Folder size={16} style={{ color: active?.color }} />
         <span className="truncate max-w-48">{active?.name ?? translate('Projects')}</span>

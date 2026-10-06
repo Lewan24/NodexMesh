@@ -49,7 +49,7 @@ public static class AuditCapture
     public static AuditEvent Create(HttpContext? http, string type, string category = "security",
         string outcome = "success", Guid? target = null)
     {
-        var route = (http?.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText ?? http?.Items["audit.route"] as string;
+        var route = http is null ? null : http.Request.PathBase.Add(http.Request.Path).Value;
         return new AuditEvent
         {
             EventType = type, Category = category, Outcome = outcome,
@@ -59,7 +59,7 @@ public static class AuditCapture
             ResourceId = Guid.TryParse((http?.Request.RouteValues["id"] ?? http?.Items["audit.id"])?.ToString(), out var resource) ? resource.ToString() : null,
             ProjectId = Guid.TryParse((http?.Request.RouteValues["projectId"] ?? http?.Items["audit.projectId"])?.ToString(), out var project) ? project : null,
             ClientIp = ClientIpResolver.Resolve(http), UserAgent = Clean(http?.Request.Headers.UserAgent, 256),
-            Method = Clean(http?.Request.Method, 16), Route = Clean(route ?? "[unmatched]", 256),
+            Method = Clean(http?.Request.Method, 16), Route = Clean(route ?? "[unmatched]", 8192),
             TraceId = Activity.Current?.TraceId.ToString(), RequestId = Clean(http?.TraceIdentifier, 128)
         };
     }
@@ -89,6 +89,8 @@ public static class AuditCapture
                 security ? "security" : "activity");
             if (entity is ApplicationUser && entry.State == EntityState.Modified && changes.Any(p => p.Metadata.Name == "PasswordHash"))
                 audit.EventType = http?.Request.Path.StartsWithSegments("/api/v1/admin") == true ? "admin.password_reset" : "auth.password_changed";
+            if (entity is ApplicationUser && changes.Any(p => p.Metadata.Name is "TwoFactorEnabled" or "MfaPreferredMethod" or "MfaSecretProtected"))
+                audit.EventType = "auth.mfa_changed";
             if (entity is RefreshToken) audit.EventType = "auth.session_revoked";
             if (entity is Project && changes.Any(p => p.Metadata.Name == "OwnerId")) audit.EventType = "project.ownership_changed";
             if (entity is ApplicationUser && changes.Any(p => p.Metadata.Name == "IsAdmin")) audit.EventType = "admin.role_changed";

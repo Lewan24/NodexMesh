@@ -11,6 +11,7 @@ import type {
   AdminProjectMember,
   AdminUser,
   AuthResult,
+  MfaProof,
 } from '@/features/auth/types';
 import { authService } from '@/app/services';
 import { errorMessage } from '@/shared/api/errors';
@@ -20,7 +21,7 @@ interface AuthContextValue {
   currentUser: User | null;
   users: User[];
   isAdmin: boolean;
-  login: (username: string, password: string) => Promise<AuthResult>;
+  login: (username: string, password: string, proof?: MfaProof) => Promise<AuthResult>;
   logout: () => Promise<void>;
   updateProfile: (input: { email: string; displayName: string; currentPassword?: string }) => Promise<User>;
   changePassword: (input: { currentPassword: string; newPassword: string; confirmPassword: string }) => Promise<User>;
@@ -85,9 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const login = useCallback(async (username: string, password: string): Promise<AuthResult> => {
+  const login = useCallback(async (username: string, password: string, proof?: MfaProof): Promise<AuthResult> => {
     try {
-      const user = await authService.login({ username, password });
+      const user = await authService.login({ username, password, proof });
+      if ('mfaRequired' in user) return { ok: false, error: '', challenge: user };
       const accounts = user.role === 'admin' ? await authService.listUsers() : [];
       setUsers(accounts);
       setCurrentUser(user);

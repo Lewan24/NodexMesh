@@ -31,7 +31,11 @@ Paths in the HTTP tables are relative to `/api/v1` unless a row explicitly says 
 | ------- | ----------------------- | --------------------------------------------------------------- |
 | POST    | `/auth/register`        | Anonymous; only when registration is enabled                    |
 | GET     | `/auth/registration`    | Anonymous registration status                                   |
-| POST    | `/auth/login`           | Anonymous; returns access token/profile and sets refresh cookie |
+| POST    | `/auth/login`           | Anonymous; returns a session or an MFA challenge |
+| GET     | `/auth/mfa`             | Authenticated MFA settings and available methods                 |
+| POST    | `/auth/mfa/start`       | Authenticated; password verification and settings challenge      |
+| POST    | `/auth/mfa/complete`    | Authenticated; verify factors and save MFA settings               |
+| POST    | `/auth/mfa/verify`      | Anonymous; verify login challenge and issue a session             |
 | POST    | `/auth/refresh`         | Refresh cookie + custom header; rotates token                   |
 | POST    | `/auth/revoke`          | Authenticated logout/session revocation                         |
 | GET/PUT | `/auth/default-project` | Read/set the caller's accessible default project                |
@@ -67,12 +71,16 @@ Project share-link tokens are returned only when created and stored hashed. A pr
 | POST         | `/projects/{projectId}/boards`                      | Editor                                      |
 | PATCH/DELETE | `/boards/{boardId}`                                 | Editor; rename/delete                       |
 | GET          | `/boards/{boardId}`                                 | Viewer; complete normalized snapshot        |
+| GET          | `/boards/{boardId}/loading-manifest`                | Viewer; layout and revision without item content |
+| POST         | `/boards/{boardId}/item-page`                       | Viewer; 1–50 distinct IDs and expected board revision |
 | POST         | `/boards/{boardId}/mutations`                       | Editor; transactional mutation protocol     |
 | PUT          | `/boards/{boardId}/items/{itemId}/comments`         | Commenter; board revision + upserts/deletes |
 | GET          | `/projects/{projectId}/item-trash`                  | Viewer                                      |
 | POST         | `/projects/{projectId}/item-trash/{itemId}/restore` | Editor; optional target board/position      |
 | DELETE       | `/projects/{projectId}/item-trash/{itemId}`         | Editor; permanently delete item             |
 | DELETE       | `/projects/{projectId}/item-trash`                  | Editor; empty item trash                    |
+
+`GET /projects` supplies metadata and item counts without board content. Opening a project fetches its main board layout, then downloads item pages with up to three concurrent requests. Item pages include the selected items and their comments, tags, and outgoing links. Item-page reads have a separate 120/minute quota from mutation writes; the frontend respects Retry-After and retries transient read failures. Each page enforces board membership and the manifest revision; revision changes return 409 and trigger a bounded reload. The frontend validates cross-item relations after assembling all pages and keeps the loading board read-only to prevent incomplete projections from generating deletions. Existing complete-snapshot routes remain available for exports, collaboration refreshes, and child-board navigation.
 
 Comment batches contain 1–100 changes. Commenters may alter only their own comments; Editors/Owners may manage all comments. Status values are `open`, `todo`, `in-progress`, and `resolved`.
 
@@ -150,3 +158,45 @@ The 22 item discriminators are `board`, `section-title`, `note`, `text`, `docume
 - board mutations: 60/minute per user;
 - anonymous public reads: 60/minute per IP;
 - SignalR receive message: 32 KiB; presence additionally has server-side caps/throttling.
+
+
+## MFA and appearance width
+
+`POST /api/v1/auth/login` still accepts `{ email, password }`. With MFA disabled it returns the existing `AuthResponse`. With MFA enabled it returns `{ mfaRequired: true, challengeToken, method, expiresAt }`, with no access token or refresh cookie. `method` is `email`, `authenticator`, or `recovery` when mail is disabled and no authenticator is enrolled.
+
+`POST /api/v1/auth/mfa/verify` accepts `{ challengeToken, code }`; success returns the existing `AuthResponse` and rotating refresh cookie. The code is the selected factor's six-digit code, or a single-use recovery code. A challenge expires after five minutes, permits five attempts, is bound to the user's security stamp and purpose, and is superseded by the next challenge of the same purpose. Invalid proofs return generic `401 invalid_mfa`. Failed MFA attempts also count toward the configured account lockout.
+
+Authenticated settings endpoints:
+
+| Endpoint | Body / result |
+| --- | --- |
+| `GET /auth/mfa` | `{ enabled, preferredMethod, authenticatorConfigured, emailAvailable, recoveryCodesRemaining }` |
+| `POST /auth/mfa/start` | `{ currentPassword, enabled, preferredMethod: "email" \| "authenticator" }`; returns a management challenge. For first authenticator enrollment, also returns `setupSecret` and `setupUri`; the frontend encodes `setupUri` locally as a scannable QR code. |
+| `POST /auth/mfa/complete` | `{ challengeToken, code, setupCode? }`; returns `{ auth: AuthResponse, recoveryCodes: string[] }`. Accept the new authentication response immediately. |
+
+For an MFA-enabled account, `code` proves the current factor (or recovery code). Switching to a new authenticator also requires `setupCode` from that app. Switching from authenticator to email requires the emailed `setupCode`. First enrollment proves the selected new factor in `code`. Existing enrolled authenticators are retained when email becomes preferred, so they remain available if email is globally disabled. Each enabled-settings change replaces all recovery codes; disabling removes the secret and recovery codes. Ten recovery codes are shown only in the completion response. All settings changes invalidate old access tokens and refresh sessions and issue a fresh session.
+
+Email MFA can only be enabled when effective global email delivery is enabled. Email codes use the mandatory `account.mfa-code` template and are independent of optional user notifications. Settings changes use `account.mfa-changed`. Changing an email address while MFA is enabled returns `409 mfa_email_change`; verify and disable MFA, change/confirm the address, then re-enable MFA. Password resets do not disable MFA.
+
+`GET /api/v1/appearance` adds `sidebarWidth` (default `235`). The existing `PUT /appearance` accepts optional integer `sidebarWidth`, from `160` through `400`; omitted values use `235` for older-client compatibility. Width is private to the authenticated user's appearance profile and is not exposed through public project appearance.
+
+
+## Administrator MFA recovery and IP protection
+
+All `/api/v1/admin` routes require a current, active administrator session.
+
+| Method | Route (relative to `/api/v1`) | Behavior |
+| --- | --- | --- |
+| POST | `/admin/users/{userId}/mfa/reset/start` | `{ currentPassword }`; verify administrator password and return `{ mfaRequired: false }` or a standard MFA challenge for the administrator. |
+| POST | `/admin/users/{userId}/mfa/reset` | `{ currentPassword, reason, challengeToken?, code? }`; verify current administrator factor when enabled, disable the target’s MFA, invalidate credentials/sessions and notify target; 204. |
+| GET | `/admin/security/ips?status=banned&search=192.0.2&page=1` | `{ items, total }`; 50 per page. `status` is `banned`, `suspicious` (not currently banned), or `all`; optional substring IP search. |
+| POST | `/admin/security/ips` | `{ ip, reason, durationMinutes? }`; add a manual IPv4/IPv6 ban (default 60 minutes; range 1–43,200); 204. |
+| POST | `/admin/security/ips/{ip}/release` | `{ reason }`; clear ban/failure counters and record releasing administrator; 204. URL-encode IPv6 addresses. |
+| GET | `/security/ip-check` | Anonymous 204 when allowed; 403 when banned. Used by Nginx’s internal gate, contains no IP data and accepts no caller-supplied IP parameter. |
+
+Reset/release reasons are required (5–500 characters). Passwords are limited to 256 characters. Reset/start/release use the strict IP rate limiter. Self-reset returns 409 `self_mfa_reset`; unknown targets/records return 404; failed password/factor proofs return 401. Reset challenges use the existing five-minute expiry, attempt limits and replay protections and cannot be used for another target. Recovery codes can prove the administrator’s existing factor if SMTP is unavailable. A reset does not unblock a blocked account or cancel pending deletion. Invalid IP syntax returns 422. Concurrent release changes return 409 and require refresh/retry.
+
+IP records include `ip`, `windowStart`, `lastSeen`, per-rule counters (`failedLogins`, `unauthorized`, `notFound`, `rateLimited`), `bannedUntil`, `reason`, `releasedAt` and `releasedBy`. Timestamps are UTC. Active bans reject all HTTP routes with 403 `ip_banned`, including admin and login routes; no authenticated bypass exists. The frontend gate emits Nginx’s own 403 page. Expired/suspicious records remain available until retention cleanup.
+
+
+Manual bans normalize IPv6 and mapped IPv4 addresses, persist in the existing IP state table and use the same site/API/live-socket enforcement as automatic bans. Supply a complete address without a port, CIDR prefix or IPv6 scope suffix. Malformed addresses return 422; invalid duration/reason fields return 400. A current-IP ban returns 409 `self_ip_ban`, an allowlisted address returns 409 `ip_allowlisted`, disabled protection returns 409 `ip_protection_disabled`, and an active duplicate ban returns 409 `ip_already_banned`. Release an active ban before replacing its duration. Successful manual bans record `admin.ip_banned` with the actor, normalized IP, reason and expiry. Manual ban creation uses the strict rate limiter.

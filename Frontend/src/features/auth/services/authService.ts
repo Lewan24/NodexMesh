@@ -2,6 +2,10 @@ import { translate } from '@/shared/i18n';
 import { createId } from '@/shared/lib/createId';
 import type { User } from '@/entities/user/types';
 import type {
+  MfaChallenge,
+  MfaSettings,
+  MfaProof,
+  MfaChange,
   AddUserInput,
   AdminAppearanceResetScope,
   AdminProject,
@@ -49,7 +53,10 @@ export interface AuthService {
   requestPasswordReset(email: string): Promise<void>;
   resetPassword(input: { userId: string; token: string; password: string; confirmPassword: string }): Promise<void>;
   me(): Promise<User | null>;
-  login(input: LoginInput): Promise<User>;
+  login(input: LoginInput): Promise<User | MfaChallenge>;
+  mfaSettings(): Promise<MfaSettings>;
+  startMfaChange(input: MfaChange): Promise<MfaChallenge>;
+  completeMfaChange(input: MfaProof): Promise<{ recoveryCodes: string[] }>;
   logout(): Promise<void>;
   updateProfile(input: { email: string; displayName: string; currentPassword?: string }): Promise<User>;
   changePassword(input: { currentPassword: string; newPassword: string; confirmPassword: string }): Promise<User>;
@@ -104,6 +111,15 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
   };
   return {
     currentUserId: () => current?.id ?? null,
+    async mfaSettings() {
+      return fail(501, 'unsupported', translate('MFA is unavailable in demo mode.'));
+    },
+    async startMfaChange() {
+      return fail(501, 'unsupported', translate('MFA is unavailable in demo mode.'));
+    },
+    async completeMfaChange() {
+      return fail(501, 'unsupported', translate('MFA is unavailable in demo mode.'));
+    },
     async accountDeletionPlan() {
       return fail(501, 'unsupported', translate('Account deletion is unavailable in demo mode.'));
     },
@@ -314,9 +330,19 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
       requireAdmin();
       return fail(501, 'unsupported', translate('Email templates are unavailable in demo mode.'));
     },
-    async emailOutbox() { requireAdmin(); return { items: [], pendingMessages: 0, failedMessages: 0 }; },
-    async retryEmailOutbox() { requireAdmin(); },
-    async retryFailedEmails() { requireAdmin(); return 0; },
-    async deleteEmailOutbox() { requireAdmin(); },
+    async emailOutbox() {
+      requireAdmin();
+      return { items: [], pendingMessages: 0, failedMessages: 0 };
+    },
+    async retryEmailOutbox() {
+      requireAdmin();
+    },
+    async retryFailedEmails() {
+      requireAdmin();
+      return 0;
+    },
+    async deleteEmailOutbox() {
+      requireAdmin();
+    },
   };
 }

@@ -134,12 +134,13 @@ export function toProjectView(snapshot: ProjectSnapshot): Project {
   }
   return {
     id: project.id,
-    boardId: board.board.id,
+    boardId: snapshot.unloaded ? undefined : board.board.id,
     ownerId: project.ownerId,
     role: project.role,
     name: project.name,
     color: project.color,
     itemCount: project.itemCount,
+    ...(snapshot.unloaded ? { itemsLoading: true } : {}),
     deletedAt: project.deletedAt ?? undefined,
     items: roots,
   };

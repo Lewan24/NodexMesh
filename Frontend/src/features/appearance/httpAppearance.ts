@@ -32,6 +32,7 @@ export function createHttpAppearance(client: HttpClient) {
             mode: next.defaults.mode ?? null,
             light: next.defaults.light,
             dark: next.defaults.dark,
+            sidebarWidth: next.sidebarWidth ?? 235,
             uiFont: next.uiFont,
             uiPrimary: next.uiPrimary,
             uiSecondary: next.uiSecondary,

@@ -8,7 +8,7 @@
     "role": "Owner",
     "name": "NodexMesh",
     "color": "#059669",
-    "itemCount": 73,
+    "itemCount": 72,
     "items": [
       {
         "title": "Plans for Upcoming Work",
@@ -52,6 +52,11 @@
             "id": "c4baff33-9669-4869-82f0-f1fab3c77ac0",
             "cards": [
               {
+                "id": "47e88d48-d5a8-4a3c-8134-fcb9cf0b3489",
+                "done": false,
+                "text": "Change default dark canvas color and card to a bit lighter"
+              },
+              {
                 "id": "a2f75308-c7be-4b9b-b601-b5f9414814b1",
                 "done": false,
                 "text": "Prepare code audit and suggestions"
@@ -75,6 +80,11 @@
                 "id": "68e60fc5-7b13-479a-82f9-11491f7e12c8",
                 "done": true,
                 "text": "Implement MindMapBlock"
+              },
+              {
+                "id": "1ec1e23b-1320-4a58-8fb6-2d4fbcab760c",
+                "done": true,
+                "text": "Manually adjust width of sidebar"
               },
               {
                 "id": "64991e48-aa7f-413c-a4f0-bb7ba76ec2c5",
@@ -175,14 +185,69 @@
             "id": "438980c4-7e52-4d14-9c9b-05eca4ba2581",
             "cards": [
               {
-                "id": "6961cb1c-a5c0-4cee-bc9b-49346df89a03",
+                "id": "2936b781-5c9e-4452-a19e-890b96a81a3d",
+                "done": false,
+                "text": "Implement toggle button to work like now with space holding, so it will allow to change middle mouse to left"
+              },
+              {
+                "id": "efeb86fe-6c91-43a0-971e-42be50378ae1",
                 "done": true,
-                "text": "Implement storing data on disk, add matching path and settings to be compatible and configurable with docker"
+                "text": "clicking outside diagrams, mind map etc saves changes and leaves"
+              },
+              {
+                "id": "77d2558f-fe69-4061-84b4-49e753c5ef4a",
+                "done": true,
+                "text": "Implement MFA like via email when enabled in settings and set in user profile"
+              },
+              {
+                "id": "07e9dcd8-e30a-4d96-8da0-fc2692eeb0f4",
+                "done": true,
+                "text": "In dispenser card color should change only card color instead of all item"
+              },
+              {
+                "id": "cea17429-fe0b-47c1-8d21-8ae6a1517557",
+                "done": true,
+                "text": "Implement copying existing public share link instead of creating new one"
+              },
+              {
+                "id": "39f309a3-42d3-468e-a5c2-0c01b48e1b05",
+                "done": true,
+                "text": "Implement storing files like word, pdf, excel and preview for them like in FileBlock that just oppens the documetn"
+              },
+              {
+                "id": "931f2e4b-81f8-4943-81a5-4564c6fe7652",
+                "done": true,
+                "text": "Implement context menu of items to create while dropping arrow somewhere from other item"
+              },
+              {
+                "id": "dcda2b5d-a632-42bd-b279-370af7d882d9",
+                "done": true,
+                "text": "Change timeline schedule first day from saturday to monday"
+              },
+              {
+                "id": "59d69769-0c1b-47e6-942d-5267005de4fb",
+                "done": true,
+                "text": "Fix timeline tasks adding checklist is not scrollable if many tasks"
+              },
+              {
+                "id": "16b9374e-f156-4930-be96-b1a13f5d2185",
+                "done": true,
+                "text": "Add to timeline task on schedule the count of how many tasks are inside of main task and how many are complete like in checklist"
+              },
+              {
+                "id": "b3112610-d41a-4b16-a6b5-9020c17faa0b",
+                "done": true,
+                "text": "Implement popup with tasks list when hover the main task on timeline"
               },
               {
                 "id": "894559da-3c69-48c0-84c9-539e4a5b0fe4",
                 "done": true,
                 "text": "Implement holding space changing LMB to move instead of MMB"
+              },
+              {
+                "id": "6961cb1c-a5c0-4cee-bc9b-49346df89a03",
+                "done": true,
+                "text": "Implement storing data on disk, add matching path and settings to be compatible and configurable with docker"
               },
               {
                 "id": "a75060c7-6e4b-485f-8466-634a223de0b9",
@@ -483,6 +548,26 @@
             "id": "b968584e-e538-4873-965a-bc121662d6fa",
             "cards": [
               {
+                "id": "dec94b4d-2c69-429c-bff8-3f8f34aafa16",
+                "done": true,
+                "text": "Implement fail to ban on ip."
+              },
+              {
+                "id": "f545224b-b07a-4fe1-ba21-770c6359e1ff",
+                "done": true,
+                "text": "App loading change to lazy loading so app loads instantly, but downloads in background items etc."
+              },
+              {
+                "id": "1a9811fb-5fbb-4621-b42b-c75e32a72f13",
+                "done": true,
+                "text": "Naprawić wyświetlanie projektów na urządzeniach mobilnych, jako popup, może dialog, aby był widoczny na wierzchu, aktualnie search bar zasłania i ciężko np wejść w śmietnik lub dodać nowy projekt"
+              },
+              {
+                "id": "b9e1b55e-41d5-484d-b6d7-fccfa387dc75",
+                "done": true,
+                "text": "In admin panel audit logs change \"route\": \"[unmatched]\", to real route for better debugging and knowledge"
+              },
+              {
                 "id": "203b5139-4d51-40e9-9efa-4460a2f347b1",
                 "done": true,
                 "text": "Implement email service configurable in admin panel to enable email registration verification, password resets etc, or notifications"
@@ -650,8 +735,8 @@
         ],
         "color": "#2E2E2E",
         "gradient": {
-          "to": "#2d006b",
-          "from": "#000000",
+          "to": "#20004D",
+          "from": "#240000",
           "kind": "radial",
           "angle": 135
         },
@@ -663,6 +748,7 @@
         "typography": {
           "fontSize": 14
         },
+        "backgroundOpacity": 45,
         "id": "3c22133c-08c0-4445-bcb5-3c89189dc057",
         "type": "kanban",
         "x": 1884,
@@ -919,8 +1005,8 @@
         "tags": []
       },
       {
-        "x2": 2818,
-        "y2": 986,
+        "x2": 2815,
+        "y2": 992,
         "curve": 0.1,
         "label": "TODO Lists",
         "lineCap": "round",
@@ -1323,7 +1409,7 @@
           },
           {
             "id": "1b3fe8bd-4761-470e-bb91-945755174c18",
-            "end": "2026-09-27",
+            "end": "2026-10-08",
             "done": true,
             "color": "#ed4040",
             "start": "2026-09-18",
@@ -1368,10 +1454,10 @@
           },
           {
             "id": "f90f4fad-ab92-4da1-aa50-f9970729a8bb",
-            "end": "2026-10-11",
+            "end": "2026-10-30",
             "done": false,
             "color": "#000000",
-            "start": "2026-09-23",
+            "start": "2026-10-12",
             "title": "Implement keyboard compability and functionallities while editing, moving etc",
             "checklist": []
           },
@@ -1386,10 +1472,10 @@
           },
           {
             "id": "64f61a94-3eea-4f2c-9c54-a08f305a2af8",
-            "end": "2026-10-11",
+            "end": "2026-10-19",
             "done": false,
             "color": "#000000",
-            "start": "2026-09-25",
+            "start": "2026-10-03",
             "title": "Implement oath or some kind of google and socials login / register methods",
             "checklist": []
           },
@@ -1413,7 +1499,7 @@
           },
           {
             "id": "4b40dc69-4e48-4faa-9e22-24d692567ec8",
-            "end": "2026-10-16",
+            "end": "2026-10-18",
             "done": false,
             "color": "#ff0000",
             "start": "2026-10-09",
@@ -1423,7 +1509,7 @@
           {
             "id": "2b2ae8ac-cfd3-4f19-b682-791f7da7cce7",
             "end": "2026-10-04",
-            "done": false,
+            "done": true,
             "color": "#00ff91",
             "start": "2026-09-23",
             "title": "Tests #2 fixes",
@@ -1431,11 +1517,20 @@
           },
           {
             "id": "0f28f044-5f7a-419f-bf21-c7ed09b05391",
-            "end": "2026-10-18",
-            "done": false,
+            "end": "2026-10-11",
+            "done": true,
             "color": "#ff7300",
             "start": "2026-09-24",
             "title": "Security and logs implementations, improvements etc",
+            "checklist": []
+          },
+          {
+            "id": "0581df13-5912-4465-b51a-a100f1cb9e84",
+            "end": "2026-09-27",
+            "done": true,
+            "color": "#000000",
+            "start": "2026-09-25",
+            "title": "Implement email service with templates, notifications etc",
             "checklist": []
           }
         ],
@@ -1477,7 +1572,7 @@
         "zIndex": 25,
         "width": 480,
         "frameId": null,
-        "locked": true,
+        "locked": false,
         "comments": [],
         "tags": []
       },
@@ -1743,8 +1838,8 @@
         "locked": false,
         "comments": [],
         "tags": [],
-        "endItemId": "c3d0a6d5-3cb8-42f0-9895-ac94d8f68032",
-        "startItemId": "25e95fea-49ef-4aab-82e9-80423778eadf"
+        "startItemId": "25e95fea-49ef-4aab-82e9-80423778eadf",
+        "endItemId": "c3d0a6d5-3cb8-42f0-9895-ac94d8f68032"
       },
       {
         "icon": "layout-dashboard",
@@ -1804,8 +1899,8 @@
         "locked": false,
         "comments": [],
         "tags": [],
-        "endItemId": "6f6472e2-8fb2-463b-9ccb-0ee51a76b01b",
-        "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451"
+        "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451",
+        "endItemId": "6f6472e2-8fb2-463b-9ccb-0ee51a76b01b"
       },
       {
         "icon": "layout-dashboard",
@@ -1849,8 +1944,8 @@
         "locked": false,
         "comments": [],
         "tags": [],
-        "endItemId": "b7ae5ada-810d-466f-a90e-3435f762ee25",
-        "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451"
+        "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451",
+        "endItemId": "b7ae5ada-810d-466f-a90e-3435f762ee25"
       },
       {
         "x2": 3724,
@@ -1922,7 +2017,7 @@
       },
       {
         "size": "lg",
-        "content": "Project version actual for 24.09.2026",
+        "content": "Project version actual for 06.10.2026",
         "topColor": "#e11d48",
         "colorRole": "default",
         "typography": {
@@ -1955,7 +2050,7 @@
             "cards": [
               {
                 "id": "48be2f5c-6f2c-458c-b9f9-8b77c96ea880",
-                "done": false,
+                "done": true,
                 "text": "To think about - click and create item on other item instead of selectin (Maybe some kind of option for user to personal setting)"
               },
               {
@@ -2099,7 +2194,7 @@
         "width": 1176,
         "height": 740,
         "frameId": null,
-        "locked": false,
+        "locked": true,
         "comments": [],
         "tags": [
           "todo"
@@ -2157,36 +2252,34 @@
         "tags": []
       },
       {
-        "url": "library://01a0cae4-0df7-7b60-ac54-eb9b4687e06b/58ea3a3b-3400-4586-963d-94b39c3394d0",
-        "caption": "",
-        "variant": "sticker",
-        "imgHeight": 592,
+        "url": "https://github.com/sponsors/Lewan24",
+        "title": "Sponsor me :D",
+        "description": "",
         "color": "#ffffff",
-        "id": "9a9206a4-549c-4165-b07a-1ca1f63f9ee0",
-        "type": "image",
-        "x": 4656,
-        "y": 2120,
-        "zIndex": 94,
-        "width": 624,
-        "height": 608,
-        "frameId": null,
-        "locked": false,
-        "comments": [],
-        "tags": []
-      },
-      {
-        "url": "library://01a0cae4-0df7-7b60-ac54-eb9b4687e06b/f4e44444-dd04-490e-8e1a-2e5231669e92",
-        "caption": "",
-        "variant": "sticker",
-        "imgHeight": 496,
-        "color": "#ffffff",
-        "id": "60d9d4d0-d6a4-4f3c-b3aa-47735dfd92fa",
-        "type": "image",
-        "x": 48,
-        "y": 2120,
-        "zIndex": 95,
-        "width": 320,
-        "height": 496,
+        "customCss": {
+          "source": "",
+          "enabled": false
+        },
+        "typography": {
+          "sections": {
+            "links": {
+              "fontSize": 20
+            },
+            "title": {
+              "fontSize": 20
+            },
+            "description": {
+              "fontSize": 20
+            }
+          }
+        },
+        "id": "03a41e02-395e-4703-9a59-89b78ca17f79",
+        "type": "link",
+        "x": 1728,
+        "y": -190,
+        "zIndex": 99,
+        "width": 208,
+        "height": 134,
         "frameId": null,
         "locked": false,
         "comments": [],
@@ -2240,6 +2333,11 @@
                 "id": "c4baff33-9669-4869-82f0-f1fab3c77ac0",
                 "cards": [
                   {
+                    "id": "47e88d48-d5a8-4a3c-8134-fcb9cf0b3489",
+                    "done": false,
+                    "text": "Change default dark canvas color and card to a bit lighter"
+                  },
+                  {
                     "id": "a2f75308-c7be-4b9b-b601-b5f9414814b1",
                     "done": false,
                     "text": "Prepare code audit and suggestions"
@@ -2263,6 +2361,11 @@
                     "id": "68e60fc5-7b13-479a-82f9-11491f7e12c8",
                     "done": true,
                     "text": "Implement MindMapBlock"
+                  },
+                  {
+                    "id": "1ec1e23b-1320-4a58-8fb6-2d4fbcab760c",
+                    "done": true,
+                    "text": "Manually adjust width of sidebar"
                   },
                   {
                     "id": "64991e48-aa7f-413c-a4f0-bb7ba76ec2c5",
@@ -2363,14 +2466,69 @@
                 "id": "438980c4-7e52-4d14-9c9b-05eca4ba2581",
                 "cards": [
                   {
-                    "id": "6961cb1c-a5c0-4cee-bc9b-49346df89a03",
+                    "id": "2936b781-5c9e-4452-a19e-890b96a81a3d",
+                    "done": false,
+                    "text": "Implement toggle button to work like now with space holding, so it will allow to change middle mouse to left"
+                  },
+                  {
+                    "id": "efeb86fe-6c91-43a0-971e-42be50378ae1",
                     "done": true,
-                    "text": "Implement storing data on disk, add matching path and settings to be compatible and configurable with docker"
+                    "text": "clicking outside diagrams, mind map etc saves changes and leaves"
+                  },
+                  {
+                    "id": "77d2558f-fe69-4061-84b4-49e753c5ef4a",
+                    "done": true,
+                    "text": "Implement MFA like via email when enabled in settings and set in user profile"
+                  },
+                  {
+                    "id": "07e9dcd8-e30a-4d96-8da0-fc2692eeb0f4",
+                    "done": true,
+                    "text": "In dispenser card color should change only card color instead of all item"
+                  },
+                  {
+                    "id": "cea17429-fe0b-47c1-8d21-8ae6a1517557",
+                    "done": true,
+                    "text": "Implement copying existing public share link instead of creating new one"
+                  },
+                  {
+                    "id": "39f309a3-42d3-468e-a5c2-0c01b48e1b05",
+                    "done": true,
+                    "text": "Implement storing files like word, pdf, excel and preview for them like in FileBlock that just oppens the documetn"
+                  },
+                  {
+                    "id": "931f2e4b-81f8-4943-81a5-4564c6fe7652",
+                    "done": true,
+                    "text": "Implement context menu of items to create while dropping arrow somewhere from other item"
+                  },
+                  {
+                    "id": "dcda2b5d-a632-42bd-b279-370af7d882d9",
+                    "done": true,
+                    "text": "Change timeline schedule first day from saturday to monday"
+                  },
+                  {
+                    "id": "59d69769-0c1b-47e6-942d-5267005de4fb",
+                    "done": true,
+                    "text": "Fix timeline tasks adding checklist is not scrollable if many tasks"
+                  },
+                  {
+                    "id": "16b9374e-f156-4930-be96-b1a13f5d2185",
+                    "done": true,
+                    "text": "Add to timeline task on schedule the count of how many tasks are inside of main task and how many are complete like in checklist"
+                  },
+                  {
+                    "id": "b3112610-d41a-4b16-a6b5-9020c17faa0b",
+                    "done": true,
+                    "text": "Implement popup with tasks list when hover the main task on timeline"
                   },
                   {
                     "id": "894559da-3c69-48c0-84c9-539e4a5b0fe4",
                     "done": true,
                     "text": "Implement holding space changing LMB to move instead of MMB"
+                  },
+                  {
+                    "id": "6961cb1c-a5c0-4cee-bc9b-49346df89a03",
+                    "done": true,
+                    "text": "Implement storing data on disk, add matching path and settings to be compatible and configurable with docker"
                   },
                   {
                     "id": "a75060c7-6e4b-485f-8466-634a223de0b9",
@@ -2671,6 +2829,26 @@
                 "id": "b968584e-e538-4873-965a-bc121662d6fa",
                 "cards": [
                   {
+                    "id": "dec94b4d-2c69-429c-bff8-3f8f34aafa16",
+                    "done": true,
+                    "text": "Implement fail to ban on ip."
+                  },
+                  {
+                    "id": "f545224b-b07a-4fe1-ba21-770c6359e1ff",
+                    "done": true,
+                    "text": "App loading change to lazy loading so app loads instantly, but downloads in background items etc."
+                  },
+                  {
+                    "id": "1a9811fb-5fbb-4621-b42b-c75e32a72f13",
+                    "done": true,
+                    "text": "Naprawić wyświetlanie projektów na urządzeniach mobilnych, jako popup, może dialog, aby był widoczny na wierzchu, aktualnie search bar zasłania i ciężko np wejść w śmietnik lub dodać nowy projekt"
+                  },
+                  {
+                    "id": "b9e1b55e-41d5-484d-b6d7-fccfa387dc75",
+                    "done": true,
+                    "text": "In admin panel audit logs change \"route\": \"[unmatched]\", to real route for better debugging and knowledge"
+                  },
+                  {
                     "id": "203b5139-4d51-40e9-9efa-4460a2f347b1",
                     "done": true,
                     "text": "Implement email service configurable in admin panel to enable email registration verification, password resets etc, or notifications"
@@ -2838,8 +3016,8 @@
             ],
             "color": "#2E2E2E",
             "gradient": {
-              "to": "#2d006b",
-              "from": "#000000",
+              "to": "#20004D",
+              "from": "#240000",
               "kind": "radial",
               "angle": 135
             },
@@ -2851,6 +3029,7 @@
             "typography": {
               "fontSize": 14
             },
+            "backgroundOpacity": 45,
             "id": "3c22133c-08c0-4445-bcb5-3c89189dc057",
             "type": "kanban",
             "x": 1884,
@@ -3107,8 +3286,8 @@
             "tags": []
           },
           {
-            "x2": 2818,
-            "y2": 986,
+            "x2": 2815,
+            "y2": 992,
             "curve": 0.1,
             "label": "TODO Lists",
             "lineCap": "round",
@@ -3511,7 +3690,7 @@
               },
               {
                 "id": "1b3fe8bd-4761-470e-bb91-945755174c18",
-                "end": "2026-09-27",
+                "end": "2026-10-08",
                 "done": true,
                 "color": "#ed4040",
                 "start": "2026-09-18",
@@ -3556,10 +3735,10 @@
               },
               {
                 "id": "f90f4fad-ab92-4da1-aa50-f9970729a8bb",
-                "end": "2026-10-11",
+                "end": "2026-10-30",
                 "done": false,
                 "color": "#000000",
-                "start": "2026-09-23",
+                "start": "2026-10-12",
                 "title": "Implement keyboard compability and functionallities while editing, moving etc",
                 "checklist": []
               },
@@ -3574,10 +3753,10 @@
               },
               {
                 "id": "64f61a94-3eea-4f2c-9c54-a08f305a2af8",
-                "end": "2026-10-11",
+                "end": "2026-10-19",
                 "done": false,
                 "color": "#000000",
-                "start": "2026-09-25",
+                "start": "2026-10-03",
                 "title": "Implement oath or some kind of google and socials login / register methods",
                 "checklist": []
               },
@@ -3601,7 +3780,7 @@
               },
               {
                 "id": "4b40dc69-4e48-4faa-9e22-24d692567ec8",
-                "end": "2026-10-16",
+                "end": "2026-10-18",
                 "done": false,
                 "color": "#ff0000",
                 "start": "2026-10-09",
@@ -3611,7 +3790,7 @@
               {
                 "id": "2b2ae8ac-cfd3-4f19-b682-791f7da7cce7",
                 "end": "2026-10-04",
-                "done": false,
+                "done": true,
                 "color": "#00ff91",
                 "start": "2026-09-23",
                 "title": "Tests #2 fixes",
@@ -3619,11 +3798,20 @@
               },
               {
                 "id": "0f28f044-5f7a-419f-bf21-c7ed09b05391",
-                "end": "2026-10-18",
-                "done": false,
+                "end": "2026-10-11",
+                "done": true,
                 "color": "#ff7300",
                 "start": "2026-09-24",
                 "title": "Security and logs implementations, improvements etc",
+                "checklist": []
+              },
+              {
+                "id": "0581df13-5912-4465-b51a-a100f1cb9e84",
+                "end": "2026-09-27",
+                "done": true,
+                "color": "#000000",
+                "start": "2026-09-25",
+                "title": "Implement email service with templates, notifications etc",
                 "checklist": []
               }
             ],
@@ -3665,7 +3853,7 @@
             "zIndex": 25,
             "width": 480,
             "frameId": null,
-            "locked": true,
+            "locked": false,
             "comments": [],
             "tags": []
           },
@@ -3931,8 +4119,8 @@
             "locked": false,
             "comments": [],
             "tags": [],
-            "endItemId": "c3d0a6d5-3cb8-42f0-9895-ac94d8f68032",
-            "startItemId": "25e95fea-49ef-4aab-82e9-80423778eadf"
+            "startItemId": "25e95fea-49ef-4aab-82e9-80423778eadf",
+            "endItemId": "c3d0a6d5-3cb8-42f0-9895-ac94d8f68032"
           },
           {
             "icon": "layout-dashboard",
@@ -3992,8 +4180,8 @@
             "locked": false,
             "comments": [],
             "tags": [],
-            "endItemId": "6f6472e2-8fb2-463b-9ccb-0ee51a76b01b",
-            "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451"
+            "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451",
+            "endItemId": "6f6472e2-8fb2-463b-9ccb-0ee51a76b01b"
           },
           {
             "icon": "layout-dashboard",
@@ -4037,8 +4225,8 @@
             "locked": false,
             "comments": [],
             "tags": [],
-            "endItemId": "b7ae5ada-810d-466f-a90e-3435f762ee25",
-            "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451"
+            "startItemId": "d13ff994-c4e6-49a8-8e86-a773b1012451",
+            "endItemId": "b7ae5ada-810d-466f-a90e-3435f762ee25"
           },
           {
             "x2": 3724,
@@ -4110,7 +4298,7 @@
           },
           {
             "size": "lg",
-            "content": "Project version actual for 24.09.2026",
+            "content": "Project version actual for 06.10.2026",
             "topColor": "#e11d48",
             "colorRole": "default",
             "typography": {
@@ -4143,7 +4331,7 @@
                 "cards": [
                   {
                     "id": "48be2f5c-6f2c-458c-b9f9-8b77c96ea880",
-                    "done": false,
+                    "done": true,
                     "text": "To think about - click and create item on other item instead of selectin (Maybe some kind of option for user to personal setting)"
                   },
                   {
@@ -4287,7 +4475,7 @@
             "width": 1176,
             "height": 740,
             "frameId": null,
-            "locked": false,
+            "locked": true,
             "comments": [],
             "tags": [
               "todo"
@@ -4345,36 +4533,34 @@
             "tags": []
           },
           {
-            "url": "library://01a0cae4-0df7-7b60-ac54-eb9b4687e06b/58ea3a3b-3400-4586-963d-94b39c3394d0",
-            "caption": "",
-            "variant": "sticker",
-            "imgHeight": 592,
+            "url": "https://github.com/sponsors/Lewan24",
+            "title": "Sponsor me :D",
+            "description": "",
             "color": "#ffffff",
-            "id": "9a9206a4-549c-4165-b07a-1ca1f63f9ee0",
-            "type": "image",
-            "x": 4656,
-            "y": 2120,
-            "zIndex": 94,
-            "width": 624,
-            "height": 608,
-            "frameId": null,
-            "locked": false,
-            "comments": [],
-            "tags": []
-          },
-          {
-            "url": "library://01a0cae4-0df7-7b60-ac54-eb9b4687e06b/f4e44444-dd04-490e-8e1a-2e5231669e92",
-            "caption": "",
-            "variant": "sticker",
-            "imgHeight": 496,
-            "color": "#ffffff",
-            "id": "60d9d4d0-d6a4-4f3c-b3aa-47735dfd92fa",
-            "type": "image",
-            "x": 48,
-            "y": 2120,
-            "zIndex": 95,
-            "width": 320,
-            "height": 496,
+            "customCss": {
+              "source": "",
+              "enabled": false
+            },
+            "typography": {
+              "sections": {
+                "links": {
+                  "fontSize": 20
+                },
+                "title": {
+                  "fontSize": 20
+                },
+                "description": {
+                  "fontSize": 20
+                }
+              }
+            },
+            "id": "03a41e02-395e-4703-9a59-89b78ca17f79",
+            "type": "link",
+            "x": 1728,
+            "y": -190,
+            "zIndex": 99,
+            "width": 208,
+            "height": 134,
             "frameId": null,
             "locked": false,
             "comments": [],

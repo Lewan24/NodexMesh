@@ -23,6 +23,27 @@ namespace NodexMeshApi.Tests.Auditing;
 public class AuditTests
 {
     [Fact]
+    public void WarningFilter_ExcludesInformationAndIncludesAllHigherSeverities()
+    {
+        var events = new[] { "Information", "Warning", "Error", "Critical" }
+            .Select(severity => new AuditEvent { Severity = severity }).AsQueryable();
+        AuditEndpoints.Filter(events, new AuditQuery { Severity = "WarningAndAbove" })
+            .Select(e => e.Severity).Should().Equal("Warning", "Error", "Critical");
+        AuditEndpoints.Filter(events, new AuditQuery { Severity = "Information" }).Should().HaveCount(1);
+        AuditEndpoints.Filter(events, new AuditQuery()).Should().HaveCount(4);
+    }
+
+    [Fact]
+    public void Capture_UsesConcretePathIncludingPathBaseInsteadOfRouteTemplate()
+    {
+        var http = new DefaultHttpContext();
+        http.Request.PathBase = "/nodex";
+        http.Request.Path = "/api/v1/projects/123";
+        http.Items["audit.route"] = "/api/v1/projects/{id}";
+        AuditCapture.Create(http, "test").Route.Should().Be("/nodex/api/v1/projects/123");
+    }
+
+    [Fact]
     public async Task LoginAndFailure_ArePersistedWithoutCredentialsOrDuplicateHttpFailures()
     {
         await using var factory = new TestWebApplicationFactory();
@@ -154,16 +175,17 @@ public class AuditTests
     [InlineData(405, "http.method_rejected")]
     [InlineData(429, "http.rate_limited")]
     [InlineData(500, "http.server_error")]
-    public async Task HttpFailures_AreClassifiedWithoutRetainingRawPaths(int status, string type)
+    public async Task HttpFailures_RetainRequestedPathWithoutQuery(int status, string type)
     {
         await using var factory = new TestWebApplicationFactory();
         using var scope = factory.Services.CreateScope();
         var http = new DefaultHttpContext { RequestServices = scope.ServiceProvider };
-        http.Request.Path = "/secret-token/do-not-store";
+        http.Request.Path = "/.env";
+        http.Request.QueryString = new QueryString("?token=secret");
         var middleware = new AuditMiddleware(context => { context.Response.StatusCode = status; return Task.CompletedTask; });
         await middleware.InvokeAsync(http, scope.ServiceProvider.GetRequiredService<AuditWriter>(), NullLogger<AuditMiddleware>.Instance);
         var row = await scope.ServiceProvider.GetRequiredService<AppDbContext>().AuditEvents.SingleAsync(e => e.EventType == type);
-        row.Route.Should().Be("[unmatched]");
+        row.Route.Should().Be("/.env");
         row.ActorId.Should().BeNull();
         row.StatusCode.Should().Be(status);
     }

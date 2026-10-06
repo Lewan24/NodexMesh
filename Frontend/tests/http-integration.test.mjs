@@ -149,6 +149,7 @@ test('HTTP workspace composes project records and boards and reloads mutation sn
       if (path === '/projects/project/permanent' && options.method === 'DELETE') return null;
       if (path === '/boards/board/mutations') return { boardRevision: audit.revision, items: [], conflicts: [] };
       if (path === '/boards/board') return snapshot;
+      if (path === '/boards/board/loading-manifest') return { board: snapshot.board, items: [] };
       throw new Error(path);
     },
   });
@@ -306,6 +307,7 @@ test('HTTP project trash reloads without fetching inaccessible boards and restor
       assert.equal(project.deletedAt, null, 'trashed project boards must not be requested');
       if (path === '/projects/project/boards') return [snapshot.board];
       if (path === '/boards/board') return snapshot;
+      if (path === '/boards/board/loading-manifest') return { board: snapshot.board, items: [] };
       throw new Error(path);
     },
   });
@@ -389,4 +391,61 @@ test('account deletion signs out only after the server accepts all project decis
   assert.deepEqual(submitted, input);
   assert.equal(getAccessToken(), '');
   assert.equal(expired, 1);
+});
+
+test('MFA challenge grants no access token; successful proof creates a session', async () => {
+  const requests = [];
+  const challenge = {
+    mfaRequired: true,
+    challengeToken: 'opaque',
+    method: 'authenticator',
+    expiresAt: '2026-10-06T12:00:00Z',
+  };
+  const { auth, getAccessToken } = createHttpAuthService(async (url, options) => {
+    requests.push([url, JSON.parse(options.body)]);
+    if (url.endsWith('/auth/login')) return json(challenge);
+    if (url.endsWith('/auth/mfa/verify')) return json({ accessToken: token('verified') });
+    throw new Error(url);
+  });
+  assert.deepEqual(await auth.login({ username: 'person@example.com', password: 'secret' }), challenge);
+  assert.equal(getAccessToken(), '');
+  const user = await auth.login({ username: '', password: '', proof: { challengeToken: 'opaque', code: '123456' } });
+  assert.equal(user.id, 'verified');
+  assert.equal(getAccessToken(), token('verified'));
+  assert.deepEqual(requests[1][1], { challengeToken: 'opaque', code: '123456' });
+});
+
+test('MFA settings use authenticated requests and accept rotated session tokens', async () => {
+  const requests = [];
+  const { auth, getAccessToken } = createHttpAuthService(async (url, options) => {
+    requests.push([url, options]);
+    if (url.endsWith('/auth/login')) return json({ accessToken: token('old') });
+    if (url.endsWith('/auth/mfa/complete'))
+      return json({ auth: { accessToken: token('rotated') }, recoveryCodes: ['single-use'] });
+    if (url.endsWith('/auth/mfa/start')) return json({ mfaRequired: true, challengeToken: 'proof', method: 'email' });
+    return json({ enabled: false, emailAvailable: false });
+  });
+  await auth.login({ username: 'person@example.com', password: 'secret' });
+  await auth.mfaSettings();
+  assert.equal(requests.at(-1)[1].headers.Authorization, `Bearer ${token('old')}`);
+  await auth.startMfaChange({ currentPassword: 'secret', enabled: true, preferredMethod: 'authenticator' });
+  const result = await auth.completeMfaChange({ challengeToken: 'proof', code: '123456', setupCode: '654321' });
+  assert.deepEqual(result, { recoveryCodes: ['single-use'] });
+  assert.equal(getAccessToken(), token('rotated'));
+});
+
+test('sidebar width is round-tripped through the appearance API and old clients get a default', async () => {
+  const requests = [];
+  const api = createHttpAppearance({
+    request: async (url, options) => {
+      requests.push([url, options]);
+      return { ...newPreferences(), sidebarWidth: 272 };
+    },
+  });
+  const initial = newPreferences();
+  assert.equal(initial.sidebarWidth, 235);
+  const loaded = await api.load();
+  assert.equal(loaded.sidebarWidth, 272);
+  await api.save(loaded, { ...loaded, sidebarWidth: 320 });
+  assert.equal(requests.at(-1)[1].body.sidebarWidth, 320);
 });

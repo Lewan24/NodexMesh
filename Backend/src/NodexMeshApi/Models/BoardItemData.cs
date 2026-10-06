@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -42,7 +43,7 @@ public sealed record TimelineTaskData(
 public sealed record TimelineData(string Title, string Mode, double? TaskColumnWidth, IReadOnlyList<TimelineTaskData> Tasks);
 public sealed record ColumnData(string Title, string? Layout, double? GridColumns, double? Gap);
 public sealed record FrameData(string Title, double? Opacity);
-public sealed record DispenserData(string Title);
+public sealed record DispenserData(string Title, [property: RegularExpression("^#[0-9a-fA-F]{6}$")] string? PaperColor = null);
 public sealed record LineData(
     double X2, double Y2, bool ArrowStart, bool ArrowEnd, double StrokeWidth, double? Curve,
     string? LineCap, string? Label, string? LabelMode, double? LabelOffset, double? LabelFontSize, bool? Divider);

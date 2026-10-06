@@ -195,8 +195,8 @@ namespace NodexMeshApi.Migrations
                         .HasColumnName("resource_type");
 
                     b.Property<string>("Route")
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)")
+                        .HasMaxLength(8192)
+                        .HasColumnType("character varying(8192)")
                         .HasColumnName("route");
 
                     b.Property<string>("Severity")
@@ -257,6 +257,71 @@ namespace NodexMeshApi.Migrations
                         .HasDatabaseName("ix_audit_events_target_user_id_occurred_at");
 
                     b.ToTable("audit_events", (string)null);
+                });
+
+            modelBuilder.Entity("NodexMeshApi.Auditing.IpAccessState", b =>
+                {
+                    b.Property<string>("Ip")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("ip");
+
+                    b.Property<DateTime?>("BannedUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("banned_until");
+
+                    b.Property<int>("FailedLogins")
+                        .HasColumnType("integer")
+                        .HasColumnName("failed_logins");
+
+                    b.Property<DateTime>("LastSeen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen");
+
+                    b.Property<int>("NotFound")
+                        .HasColumnType("integer")
+                        .HasColumnName("not_found");
+
+                    b.Property<int>("RateLimited")
+                        .HasColumnType("integer")
+                        .HasColumnName("rate_limited");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTime?>("ReleasedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("released_at");
+
+                    b.Property<Guid?>("ReleasedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("released_by");
+
+                    b.Property<int>("Unauthorized")
+                        .HasColumnType("integer")
+                        .HasColumnName("unauthorized");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("version");
+
+                    b.Property<DateTime>("WindowStart")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("window_start");
+
+                    b.HasKey("Ip")
+                        .HasName("pk_ip_access_states");
+
+                    b.HasIndex("BannedUntil")
+                        .HasDatabaseName("ix_ip_access_states_banned_until");
+
+                    b.HasIndex("LastSeen")
+                        .HasDatabaseName("ix_ip_access_states_last_seen");
+
+                    b.ToTable("ip_access_states", (string)null);
                 });
 
             modelBuilder.Entity("NodexMeshApi.Auditing.SecurityIncident", b =>
@@ -353,6 +418,12 @@ namespace NodexMeshApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("palette_version");
 
+                    b.Property<int>("SidebarWidth")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(235)
+                        .HasColumnName("sidebar_width");
+
                     b.Property<string>("UiFont")
                         .IsRequired()
                         .HasColumnType("text")
@@ -431,6 +502,20 @@ namespace NodexMeshApi.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("lockout_end");
+
+                    b.Property<long?>("MfaLastAcceptedStep")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("mfa_last_accepted_step");
+
+                    b.Property<string>("MfaPreferredMethod")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("mfa_preferred_method");
+
+                    b.Property<string>("MfaSecretProtected")
+                        .HasColumnType("text")
+                        .HasColumnName("mfa_secret_protected");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -988,6 +1073,115 @@ namespace NodexMeshApi.Migrations
                     b.ToTable("library_assets", (string)null);
                 });
 
+            modelBuilder.Entity("NodexMeshApi.Models.MfaChallenge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Attempts")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("attempts");
+
+                    b.Property<bool>("Consumed")
+                        .IsConcurrencyToken()
+                        .HasColumnType("boolean")
+                        .HasColumnName("consumed");
+
+                    b.Property<string>("EmailCodeHash")
+                        .HasColumnType("text")
+                        .HasColumnName("email_code_hash");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("method");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("purpose");
+
+                    b.Property<string>("SecurityStamp")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("security_stamp");
+
+                    b.Property<string>("SetupSecretProtected")
+                        .HasColumnType("text")
+                        .HasColumnName("setup_secret_protected");
+
+                    b.Property<bool>("TargetEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("target_enabled");
+
+                    b.Property<string>("TargetMethod")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("target_method");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token_hash");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_mfa_challenges");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_mfa_challenges_expires_at");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_mfa_challenges_token_hash");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_mfa_challenges_user_id");
+
+                    b.ToTable("mfa_challenges", (string)null);
+                });
+
+            modelBuilder.Entity("NodexMeshApi.Models.MfaRecoveryCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("code_hash");
+
+                    b.Property<bool>("Consumed")
+                        .IsConcurrencyToken()
+                        .HasColumnType("boolean")
+                        .HasColumnName("consumed");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_mfa_recovery_codes");
+
+                    b.HasIndex("UserId", "CodeHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_mfa_recovery_codes_user_id_code_hash");
+
+                    b.ToTable("mfa_recovery_codes", (string)null);
+                });
+
             modelBuilder.Entity("NodexMeshApi.Models.Project", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1173,15 +1367,15 @@ namespace NodexMeshApi.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("revoked_by");
 
-                    b.Property<string>("TokenProtected")
-                        .HasColumnType("text")
-                        .HasColumnName("token_protected");
-
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
                         .HasColumnName("token_hash");
+
+                    b.Property<string>("TokenProtected")
+                        .HasColumnType("text")
+                        .HasColumnName("token_protected");
 
                     b.HasKey("Id")
                         .HasName("pk_project_share_links");
@@ -1227,6 +1421,10 @@ namespace NodexMeshApi.Migrations
                     b.Property<string>("RevokedByIp")
                         .HasColumnType("text")
                         .HasColumnName("revoked_by_ip");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text")
+                        .HasColumnName("security_stamp");
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
@@ -1475,6 +1673,26 @@ namespace NodexMeshApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_library_assets_projects_project_id");
+                });
+
+            modelBuilder.Entity("NodexMeshApi.Models.MfaChallenge", b =>
+                {
+                    b.HasOne("NodexMeshApi.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mfa_challenges_asp_net_users_user_id");
+                });
+
+            modelBuilder.Entity("NodexMeshApi.Models.MfaRecoveryCode", b =>
+                {
+                    b.HasOne("NodexMeshApi.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mfa_recovery_codes_asp_net_users_user_id");
                 });
 
             modelBuilder.Entity("NodexMeshApi.Models.ProjectMember", b =>

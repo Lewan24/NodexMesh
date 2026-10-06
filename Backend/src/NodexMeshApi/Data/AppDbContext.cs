@@ -15,6 +15,8 @@ namespace NodexMeshApi.Data;
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor? httpAccessor = null)
     : IdentityUserContext<ApplicationUser, Guid>(options)
 {
+    public DbSet<IpAccessState> IpAccessStates => Set<IpAccessState>();
+
     public DbSet<AuditDetectionCheckpoint> AuditDetectionCheckpoints => Set<AuditDetectionCheckpoint>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
     public DbSet<SecurityIncident> SecurityIncidents => Set<SecurityIncident>();
@@ -43,6 +45,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
     }
 
     public DbSet<LibraryAsset> LibraryAssets => Set<LibraryAsset>();
+    public DbSet<MfaChallenge> MfaChallenges => Set<MfaChallenge>();
+    public DbSet<MfaRecoveryCode> MfaRecoveryCodes => Set<MfaRecoveryCode>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
@@ -63,6 +67,32 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
     protected override void OnModelCreating(ModelBuilder b)
     {
         base.OnModelCreating(b);
+        b.Entity<ApplicationUser>().Property(x => x.MfaLastAcceptedStep).IsConcurrencyToken();
+        b.Entity<MfaChallenge>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.TokenHash).IsUnique();
+            e.HasIndex(x => x.ExpiresAt);
+            e.Property(x => x.Consumed).IsConcurrencyToken();
+            e.Property(x => x.Attempts).IsConcurrencyToken();
+            e.HasOne<ApplicationUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+        b.Entity<MfaRecoveryCode>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.UserId, x.CodeHash }).IsUnique();
+            e.Property(x => x.Consumed).IsConcurrencyToken();
+            e.HasOne<ApplicationUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+        b.Entity<IpAccessState>(e =>
+        {
+            e.HasKey(x => x.Ip);
+            e.Property(x => x.Ip).HasMaxLength(45);
+            e.Property(x => x.Reason).HasMaxLength(64);
+            e.Property(x => x.Version).IsConcurrencyToken();
+            e.HasIndex(x => x.BannedUntil);
+            e.HasIndex(x => x.LastSeen);
+        });
         b.Entity<AuditDetectionCheckpoint>().HasKey(x => x.Id);
         b.Entity<AuditEvent>(e =>
         {
@@ -73,7 +103,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
             e.Property(x => x.Severity).HasMaxLength(16);
             e.Property(x => x.Outcome).HasMaxLength(16);
             e.Property(x => x.UserAgent).HasMaxLength(256);
-            e.Property(x => x.Route).HasMaxLength(256);
+            e.Property(x => x.Route).HasMaxLength(8192);
             e.Property(x => x.Method).HasMaxLength(16);
             e.Property(x => x.ResourceType).HasMaxLength(64);
             e.Property(x => x.ResourceId).HasMaxLength(128);
@@ -308,6 +338,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
         b.Entity<AppearanceProfile>(e =>
         {
             e.HasKey(x => x.UserId);
+            e.Property(x => x.SidebarWidth).HasDefaultValue(235);
             e.Property(x => x.LightTheme).HasColumnType("jsonb");
             e.Property(x => x.DarkTheme).HasColumnType("jsonb");
         });

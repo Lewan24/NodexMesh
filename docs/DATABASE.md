@@ -50,3 +50,19 @@ dotnet ef migrations has-pending-model-changes --project Backend/src/NodexMeshAp
 ```
 
 Production should separate the migration owner from the runtime principal. The checked-in Compose stack uses one principal for simplicity and does not install pgAudit or alter PostgreSQL server logging.
+
+
+## Sidebar and MFA schema
+
+Migration `20261006071013_SidebarWidthAndMfa` adds `appearance_profiles.sidebar_width`, backfilling existing rows to `184`, and MFA columns on `AspNetUsers`: preferred method (initial `email`), protected authenticator secret, and last accepted TOTP step. The existing Identity `two_factor_enabled` flag controls MFA enforcement.
+
+`mfa_challenges` stores a hashed bearer token, user FK, purpose, method, security stamp, protected emailed-code hash/pending seed, target settings, attempts, consumption flag, and expiry. `mfa_recovery_codes` stores only a user-bound code hash and consumption flag. Both tables cascade on permanent user deletion; expired challenges are pruned hourly. Do not add either table's credential values to audit metadata. The snapshot includes concurrency tokens for challenge attempts/consumption, recovery consumption, and user TOTP steps.
+
+Migration `20261006073236_BindRefreshTokensToSecurityStamp` adds nullable `refresh_tokens.security_stamp`. New sessions populate it; pre-migration sessions remain compatible for non-MFA accounts, while MFA-enabled accounts must sign in again.
+
+Migration `20261006075102_DefaultSidebarWidth235` sets the database sidebar-width default to `235` and upgrades stored widths equal to the former `184` default. Other saved widths are preserved.
+
+
+## Persistent IP protection
+
+Migration `AddIpProtection` creates `ip_access_states`, keyed by a normalized IPv4/IPv6 string (45 characters). It stores a fixed failure window, four counters, last-seen time, optional ban expiry/reason and release timestamp/administrator. Indexes cover ban expiry and last-seen cleanup. A UUID `version` is an EF concurrency token for cross-instance counter updates and administrator release. Audit `security.ip_banned` is committed with the ban. Active bans survive restarts and remain until expiry/release; no in-memory cache is authoritative. Unbanned inactive states are removed under security audit retention.

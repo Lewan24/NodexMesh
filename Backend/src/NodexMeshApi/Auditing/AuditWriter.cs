@@ -31,6 +31,7 @@ public sealed class AuditWriter(IServiceScopeFactory scopes, ILogger<AuditWriter
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             db.AuditEvents.Add(audit);
             await db.SaveChangesAsync(timeout.Token);
+            await scope.ServiceProvider.GetRequiredService<IpProtectionService>().RecordAsync(audit, timeout.Token);
         }
         catch (Exception ex)
         {
@@ -63,7 +64,7 @@ public sealed class AuditMiddleware(RequestDelegate next)
             await writer.WriteAsync(failure);
             throw;
         }
-        if (http.Request.Path == "/health") return;
+        if (http.Request.Path == "/health" || http.Request.Path == "/api/v1/security/ip-check") return;
         var status = http.Response.StatusCode;
         if (status < 500 && http.Items.ContainsKey(AuditCapture.ExplicitEvent)) return;
         string? type = status switch
@@ -71,7 +72,7 @@ public sealed class AuditMiddleware(RequestDelegate next)
             400 or 422 => "http.validation_failed",
             401 => "http.unauthenticated",
             403 => "http.forbidden",
-            404 when route is null => "http.unmatched",
+            404 => route is null ? "http.unmatched" : "http.not_found",
             405 => "http.method_rejected",
             429 => "http.rate_limited",
             >= 500 => "http.server_error",
@@ -100,10 +101,16 @@ public sealed class AuditMiddleware(RequestDelegate next)
         }
         else if (status < 300 && http.Request.Method is "POST" or "PUT" or "PATCH" or "DELETE")
         {
-            // Durable entity events are committed by SaveChanges; this is the operation's console summary.
+            // Keep a request summary even when the operation does not change a tracked entity.
             var audit = AuditCapture.Create(http, "operation.completed", "activity");
             audit.StatusCode = status;
-            AuditWriter.Log(logger, audit);
+            await writer.WriteAsync(audit);
+        }
+        else
+        {
+            var audit = AuditCapture.Create(http, "http.request", "activity", status < 400 ? "success" : "denied");
+            audit.StatusCode = status;
+            await writer.WriteAsync(audit);
         }
     }
 }

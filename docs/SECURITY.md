@@ -1,6 +1,6 @@
 # Security posture
 
-Reviewed against the code on 2026-09-24. This is an implementation review, not a penetration test or a guarantee that a particular deployment is secure.
+Updated for administrator MFA recovery, persistent IP bans, MFA and session changes on 2026-10-06. This is an implementation review, not a penetration test or a guarantee that a particular deployment is secure.
 
 ## Implemented controls
 
@@ -14,7 +14,7 @@ Reviewed against the code on 2026-09-24. This is an implementation review, not a
 - Profile/password changes and administrator identity/role/password operations revoke affected sessions as appropriate.
 - Bootstrap administrator requires a configured password; credentials are never printed.
 
-There is no MFA, email verification, invitation acceptance flow, or self-service email-based password recovery. Administrators can reset passwords.
+Opt-in MFA supports authenticator apps and email codes, with single-use recovery codes. Email verification and self-service password recovery are available when global email delivery is enabled. Administrators can reset passwords; password resets retain MFA. There is no invitation acceptance flow.
 
 ### Authorization and data isolation
 
@@ -55,9 +55,8 @@ There is no MFA, email verification, invitation acceptance flow, or self-service
 - Standalone audit writes can be lost during a database outage/process crash; durable container logging and external immutable retention are not provided by the application.
 - Project public links are bearer URLs returned once; library public links are retrievable stable aliases. Anyone holding either URL can access its scoped public content until expiry/revocation/deletion.
 - SVG validation is a restrictive parser, not malware scanning. Video is not transcoded. External URLs are rendered by browsers; the API does not fetch them and therefore avoids an SSRF service today.
-- Open registration has no CAPTCHA/email ownership verification and can be abused if exposed without edge controls.
-- Account deletion/GDPR export and automatic alert delivery are not implemented.
-- The current test-only SQLite dependency graph reports NU1903 for `SQLitePCLRaw.lib.e_sqlite3` 2.1.11 (GHSA-2m69-gcr7-jv3q). It is not referenced by the PostgreSQL production API, but the test dependency should be upgraded.
+- Open registration has no CAPTCHA and can be abused without edge controls. Email ownership verification requires global email delivery; accounts are auto-confirmed while email is disabled.
+- Account deletion has a retention/recovery lifecycle (see `account-deletion.md`). A comprehensive GDPR data export is not implemented; email alerts require configured delivery.
 
 ## Production checklist
 
@@ -69,3 +68,50 @@ There is no MFA, email verification, invitation acceptance flow, or self-service
 - Back up and restore-test PostgreSQL and media storage.
 - Configure alerting for audit persistence failures, token reuse, authentication/403/404/429 spikes, disk pressure, and detection lag.
 - Perform deployment-specific threat modeling, automated browser security tests, and a penetration test before high-risk public use.
+
+
+## MFA protections and operational requirements
+
+MFA is opt-in. Email is the initial preferred method when delivery is globally available; authenticator enrollment is available independently of SMTP. Authenticator tokens follow [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238): SHA-1, six digits, a 30-second period, and a one-step clock-drift window. Provisioning supports a locally generated QR code, a manual Base32 key, and an `otpauth://` URI compatible with standard authenticator apps. Accepted TOTP steps must increase, preventing reuse across concurrent challenges.
+
+Threat controls follow the [OWASP MFA Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html) and [Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html): verify password before challenges; verify the existing factor before changing/disabling MFA; prove a newly selected factor; enforce per-IP throttling plus persisted account lockout; use generic failure responses; and invalidate sessions after security changes. This is an implementation assessment, not an OWASP certification or penetration test. Email MFA inherits the security of the mailbox; TOTP does not provide phishing resistance.
+
+A 256-bit random challenge bearer is stored only as SHA-256. Email codes use cryptographic randomness, five-minute expiry, single use, and a protected hash bound to the challenge token. Outbox bodies containing codes are encrypted by the existing outbox payload protector. Authenticator seeds and pending setup seeds are encrypted with ASP.NET Data Protection under a dedicated purpose. Recovery codes have 80 bits of randomness, are stored only as user-bound SHA-256 hashes, and are consumed with optimistic concurrency checks. Challenge consumption, attempts, recovery consumption, and accepted TOTP steps use concurrency tokens. A successful proof is durably consumed before session/settings issuance; if issuance fails, start a new challenge rather than replaying the proof. Settings writes and session replacement are transactional.
+
+Persist and protect the Data Protection key ring, share it between API instances, and synchronize server clocks. Losing keys prevents decrypting enrolled seeds and pending messages. Never log, export, or expose seeds, challenge tokens, codes, or recovery codes. Existing audit capture records property names and safe metadata, not credential values. MFA changes are recorded as `auth.mfa_changed`; completed logins record the selected authentication method; failed MFA proofs record `auth.mfa_failed` with the account identifier when available. Expired challenges are deleted by hourly cleanup; pending setup secrets are unusable after expiry.
+
+When email is disabled, enrolled authenticators continue to work; email-only users must use a recovery code. MFA is never silently disabled. Users must store their recovery codes separately and securely. There is no unauthenticated factor-reset endpoint. An administrator can reset another account after verifying their own password and enrolled MFA factor (when enabled), recording a reason, and independently verifying the requesting user’s identity. Administrators cannot reset their own MFA through this recovery endpoint. Email changes while MFA is enabled require verified MFA disable/re-enable, preventing replacement of the email factor using only a password and stolen session. Legacy refresh tokens without a security stamp cannot refresh an MFA-enabled account. New refresh tokens are bound to the current security stamp.
+
+
+MFA change review against [OWASP Top 10:2025](https://top10.owasp.org/2025/):
+
+| Area | Controls applied in this change |
+| --- | --- |
+| A01 Access control | Authenticated settings, caller-bound management challenges, no access token before second-factor proof. |
+| A02 Configuration | Email gated by effective global configuration; persistent key-ring and synchronized-clock requirements documented. |
+| A03 Supply chain | Updated test SQLite provider/bundle to remove the reported vulnerable native dependency; npm install audit reported zero vulnerabilities; committed dependency lockfile. |
+| A04 Cryptography | Random challenges/recovery codes, protected seeds and email payloads, stored hashes, constant-time OTP comparison. |
+| A05 Injection | Validated method/code/width DTOs, EF parameterized queries, template renderer escaping. |
+| A06 Design | Existing/new factor proof, expiry, single use, replay prevention, recovery codes, lockout across challenges. |
+| A07 Authentication | Password verification, account/IP throttling, generic invalid-proof responses, session security-stamp binding and revocation. |
+| A08 Integrity | Committed migrations/snapshot, optimistic concurrency, transactional settings/session replacement, PostgreSQL integration coverage. |
+| A09 Logging and alerts | Factor changes, failed MFA proofs, and completed sign-ins audited without credential values; existing admin incident review and email delivery controls apply. |
+| A10 Exceptional conditions | Invalid/expired/concurrent proofs fail closed; attempted proofs are consumed before issuance; settings/session transactions roll back on failure; SMTP disable never bypasses MFA. |
+
+Authenticator provisioning URIs and their QR images are generated locally; the secret is never sent to an external QR service. No user-supplied provisioning URL is fetched by the server.
+
+
+## Administrator recovery and persistent IP protection
+
+Administrator MFA reset is a high-risk recovery action. The administrator’s step-up challenge expires in five minutes, is single-use, and is bound to the administrator, security stamp and specific target account. A reset clears the target’s MFA enrollment, recovery codes, outstanding challenges and MFA-related lockout, rotates their security stamp, and revokes refresh sessions in one transaction. Existing access tokens fail the per-request stamp check. The password, blocked state and deletion state remain unchanged. A mandatory security notice is queued when global email delivery is enabled. The user signs in with their password and must enroll MFA again; reset does not generate a replacement password or factor. Independently verify identity before using recovery, particularly for administrator accounts.
+
+`IpProtection` defaults to a ten-minute fixed failure window, a sixty-minute ban, and thresholds of 10 failed login/MFA attempts, 30 unauthorized/forbidden responses, 40 not-found responses, or 20 rate-limit responses. Any one threshold causes a durable ban. Successful traffic does not erase failures. Ban expiry and administrator release reset counters; delayed events from before a release are ignored. Administrators can release records with an audited reason; future abuse can cause another ban. Exact IPv4/IPv6 allowlist entries bypass protection and are deployment configuration, not browser input. Mapped IPv4 addresses are normalized.
+
+Bans are checked against the database on every HTTP request before authentication or endpoints, including the public gate endpoint. Nginx uses an internal `auth_request` before serving pages, assets, API requests or hub handshakes; a banned caller receives 403 and a failed gate lookup fails closed. Existing SignalR connections are checked at every hub method invocation and aborted when banned. A committed ban aborts local connections immediately; other replicas close banned sockets through a five-second database monitor, including passive subscribers. Protection applies to future network operations; it cannot remove assets already downloaded by a browser or stop connection attempts at the TCP layer. Use edge/firewall limits for network-level flooding. The database remains the authority across replicas and restarts; optimistic concurrency prevents lost increments and races with administrator release. Blocked traffic is not added as fresh evidence or used to prolong a ban. Inactive records are pruned under audit security retention; active bans are retained.
+
+Client IPs come only from the validated connection address after trusted forwarding. The frontend trusts only `TRUSTED_EDGE_CIDR` and overwrites forwarded headers; the API trusts only configured immediate proxies. Do not use broad edge/proxy trust ranges. Shared NATs can include legitimate users: tune thresholds and use narrow allowlisting for controlled test/operations addresses. Keep another administrator access path available for recovery; a banned administrator has no HTTP bypass.
+
+These controls address OWASP access control, authentication, configuration, logging and exceptional-condition concerns using the [MFA recovery guidance](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html) and [login throttling guidance](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html). They do not constitute OWASP certification or a penetration test.
+
+
+Manual IP bans require an active administrator session and a recorded reason. The API validates full IPv4/IPv6 addresses and a duration of 1–43,200 minutes, normalizes address aliases, rejects the requesting administrator’s current IP and rejects deployment-allowlisted addresses or disabled protection. Concurrent updates fail with 409; ban state and the `admin.ip_banned` event are committed together. Manual bans use the existing enforcement and expiry mechanisms and can be released through the Security tab. MFA reset and manual ban forms use centered, width-limited dialogs with scrollable content on small screens.

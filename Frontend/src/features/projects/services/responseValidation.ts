@@ -35,7 +35,8 @@ export function parseProjectRecord(value: unknown): ProjectRecord {
   return project as unknown as ProjectRecord;
 }
 
-export function parseBoardSnapshot(value: unknown): BoardSnapshot {
+/** Partial pages validate records and local relations; callers must validate the assembled snapshot before editing. */
+export function parseBoardSnapshot(value: unknown, partial = false): BoardSnapshot {
   const snapshot = record(value);
   const board = record(snapshot.board);
   audit(board);
@@ -69,7 +70,7 @@ export function parseBoardSnapshot(value: unknown): BoardSnapshot {
     if (!ids.has(tag.itemId) || !result.tags.some((t) => t.id === tag.tagId))
       fail(422, 'invalid_tag', translate('Invalid tag reference.'));
   }
-  validateBoard(result);
+  if (!partial) validateBoard(result);
   return result;
 }
 
