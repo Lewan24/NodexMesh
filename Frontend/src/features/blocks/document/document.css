@@ -41,7 +41,7 @@
 }
 .document-editor code,
 .document-editor pre {
-  font-family: monospace;
+  font-family: var(--font-mono);
   background: color-mix(in srgb, currentColor 8%, transparent);
   border-radius: 4px;
   padding: 0.15em 0.3em;

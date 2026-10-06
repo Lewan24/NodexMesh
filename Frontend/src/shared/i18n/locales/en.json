@@ -1419,5 +1419,13 @@
   "Search project": "Search project",
   "Project is loading, please wait.": "Project is loading, please wait.",
   "Make your workspace feel like yours.": "Make your workspace feel like yours.",
-  "Your next great idea starts here.": "Your next great idea starts here."
+  "Your next great idea starts here.": "Your next great idea starts here.",
+  "Reject request": "Reject request",
+  "Connection color": "Connection color",
+  "Connection thickness": "Connection thickness",
+  "Connection line pattern": "Connection line pattern",
+  "Solid": "Solid",
+  "Dashed": "Dashed",
+  "Dotted": "Dotted",
+  "Show arrow": "Show arrow"
 }

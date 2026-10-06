@@ -53,7 +53,10 @@ public sealed record MindmapNodeData(string Id, string? ParentId, string Label, 
 public sealed record MindmapData(string Title, string Layout, string LineStyle, double LineWidth, bool Dashed, IReadOnlyList<MindmapNodeData> Nodes);
 public sealed record DiagramNodeShapeData(string Label, string Shape, string Color);
 public sealed record DiagramNodeData(string Id, Position Position, string Type, DiagramNodeShapeData Data);
-public sealed record DiagramEdgeData(string Id, string Source, string Target, string? SourceHandle, string? TargetHandle, string? Label, string? Type);
+public sealed record DiagramEdgeData(
+    string Id, string Source, string Target, string? SourceHandle, string? TargetHandle, string? Label, string? Type,
+    [property: RegularExpression("^#[0-9a-fA-F]{6}$")] string? Color = null,
+    [property: Range(1, 8)] double? StrokeWidth = null, string? LineStyle = null, bool? Arrow = null);
 public sealed record DiagramData(string Title, IReadOnlyList<DiagramNodeData> Nodes, IReadOnlyList<DiagramEdgeData> Edges);
 public sealed record DbFieldData(string Id, string Name, string DataType, bool PrimaryKey, bool Nullable, bool Unique, string DefaultValue);
 public sealed record DbTableData(string Id, string Name, Position Position, IReadOnlyList<DbFieldData> Fields);

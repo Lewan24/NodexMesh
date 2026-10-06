@@ -1,7 +1,7 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
-import { getTypographyStyle } from '../typography/typographyUtils';
+import { getTypographyStyle, MONO_FONT_STACK } from '../typography/typographyUtils';
 import { isDefaultCardColor, useCardAppearance } from '../shared/cardAppearance';
 import './code.css';
 import { useMemo, useState } from 'react';
@@ -49,9 +49,7 @@ export default function CodeBlock({
   );
   const codeStyle = {
     ...getTypographyStyle(item),
-    fontFamily: item.typography?.fontFamily
-      ? getTypographyStyle(item).fontFamily
-      : 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+    fontFamily: item.typography?.fontFamily ? getTypographyStyle(item).fontFamily : MONO_FONT_STACK,
   };
   const [editing, setEditing] = useState(false);
   const [copyStatus, setCopyStatus] = useState('Copy');

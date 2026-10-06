@@ -71,9 +71,21 @@ const { tasksInWindow, dateDay, taskRange, shiftTask, scheduleRange, reorderTask
   '/src/features/blocks/timeline/timelineUtils.ts',
 );
 const { cloneItems, copyOrigin } = await server.ssrLoadModule('/src/features/canvas/utils/cloneItems.ts');
-const { diagramTemplate, layoutDiagram, removeDiagramNodes, alignDiagramNodes, canConnectDiagram } =
-  await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts');
-const { getDiagramPreviewEdgeGeometry } = await server.ssrLoadModule('/src/features/blocks/diagram/DiagramPreview.tsx');
+const {
+  diagramTemplate,
+  layoutDiagram,
+  layoutDiagramConnections,
+  removeDiagramNodes,
+  alignDiagramNodes,
+  canConnectDiagram,
+} = await server.ssrLoadModule('/src/features/blocks/diagram/diagramUtils.ts');
+const { default: DiagramPreview, getDiagramPreviewEdgeGeometry } = await server.ssrLoadModule(
+  '/src/features/blocks/diagram/DiagramPreview.tsx',
+);
+const { diagramNodeSize, diagramFlowEdge, toDiagramEdges } = await server.ssrLoadModule(
+  '/src/features/blocks/diagram/diagramGeometry.ts',
+);
+const { getSmoothStepPath, getBezierPath, getStraightPath, Position } = await import('@xyflow/react');
 const { createDrawing, drawingPath, drawingOutline, smoothDrawing, penPressure, joinDrawings, drawingStrokes } =
   await server.ssrLoadModule('/src/features/blocks/drawing/drawingUtils.ts');
 const { insertTask, createTaskChecklist } = await server.ssrLoadModule(
@@ -348,15 +360,123 @@ test('diagram preview paths terminate at their saved node handles', () => {
   const source = graph.nodes[0];
   const target = graph.nodes[1];
   const geometry = getDiagramPreviewEdgeGeometry(graph.edges[0], source, target);
-  assert.match(geometry.path, new RegExp(`^M${source.position.x + 80} ${source.position.y + 72}`));
-  assert.match(geometry.path, new RegExp(`L${target.position.x + 80} ${target.position.y}$`));
+  assert.match(geometry.path, new RegExp(`^M${source.position.x + 96} ${source.position.y + 80}`));
+  assert.match(geometry.path, new RegExp(`${target.position.x + 96} ${target.position.y}$`));
 
   const horizontal = getDiagramPreviewEdgeGeometry(
     { ...graph.edges[0], type: 'straight', sourceHandle: 'right', targetHandle: 'left' },
     source,
     { ...target, position: { x: 440, y: 0 } },
   );
-  assert.equal(horizontal.path, 'M380 36L440 55');
+  assert.equal(horizontal.path, 'M 352,40L 440,64');
+});
+
+test('diagram preview shares editor routing for every handle pair and line style', () => {
+  const graph = diagramTemplate();
+  const source = graph.nodes[1];
+  const target = { ...graph.nodes[2], position: { x: 528, y: 432 } };
+  const sides = { top: Position.Top, right: Position.Right, bottom: Position.Bottom, left: Position.Left };
+  const anchor = (node, side) => {
+    const { width, height } = diagramNodeSize(node);
+    return {
+      x: node.position.x + (side === 'left' ? 0 : side === 'right' ? width : width / 2),
+      y: node.position.y + (side === 'top' ? 0 : side === 'bottom' ? height : height / 2),
+    };
+  };
+  for (const sourceHandle of Object.keys(sides))
+    for (const targetHandle of Object.keys(sides)) {
+      const start = anchor(source, sourceHandle);
+      const end = anchor(target, targetHandle);
+      const params = {
+        sourceX: start.x,
+        sourceY: start.y,
+        targetX: end.x,
+        targetY: end.y,
+        sourcePosition: sides[sourceHandle],
+        targetPosition: sides[targetHandle],
+      };
+      for (const type of ['smoothstep', 'default', 'straight']) {
+        const edge = { ...graph.edges[0], sourceHandle, targetHandle, type };
+        const expected =
+          type === 'straight'
+            ? getStraightPath(params)
+            : type === 'default'
+              ? getBezierPath(params)
+              : getSmoothStepPath({ ...params, borderRadius: 16, offset: 32 });
+        const actual = getDiagramPreviewEdgeGeometry(edge, source, target);
+        assert.equal(actual.path, expected[0]);
+        assert.deepEqual(actual.label, { x: expected[1], y: expected[2] });
+        assert.ok(actual.points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y)));
+      }
+    }
+});
+
+test('starter diagram has symmetric branches and auto layout centers its layers', () => {
+  const { nodes, edges } = diagramTemplate();
+  assert.equal(nodes[1].position.x - nodes[2].position.x, nodes[3].position.x - nodes[1].position.x);
+  assert.equal(nodes[2].position.y, nodes[3].position.y);
+  assert.equal(nodes[4].position.y, nodes[5].position.y);
+  assert.equal(nodes[2].position.x, nodes[4].position.x);
+  assert.equal(nodes[3].position.x, nodes[5].position.x);
+  for (const layout of [layoutDiagram(nodes, edges), layoutDiagram(nodes, edges, 'horizontal')]) {
+    for (let a = 0; a < layout.length; a++)
+      for (let b = a + 1; b < layout.length; b++) {
+        const first = layout[a];
+        const second = layout[b];
+        const sizeA = diagramNodeSize(first);
+        const sizeB = diagramNodeSize(second);
+        assert.ok(
+          first.position.x + sizeA.width <= second.position.x ||
+            second.position.x + sizeB.width <= first.position.x ||
+            first.position.y + sizeA.height <= second.position.y ||
+            second.position.y + sizeB.height <= first.position.y,
+        );
+      }
+  }
+});
+
+test('auto layout routes decision branches to opposite ports and retains connection settings', () => {
+  const { nodes, edges } = diagramTemplate();
+  const styled = edges.map((edge) => ({ ...edge, strokeWidth: 5, lineStyle: 'dotted', arrow: false }));
+  const horizontalNodes = layoutDiagram(nodes, styled, 'horizontal');
+  const horizontal = layoutDiagramConnections(horizontalNodes, styled, 'horizontal');
+  assert.equal(horizontal[0].sourceHandle, 'right');
+  assert.equal(horizontal[0].targetHandle, 'left');
+  assert.equal(horizontal[1].sourceHandle, 'top');
+  assert.equal(horizontal[2].sourceHandle, 'bottom');
+  for (const edge of horizontal) {
+    assert.equal(edge.strokeWidth, 5);
+    assert.equal(edge.lineStyle, 'dotted');
+    assert.equal(edge.arrow, false);
+  }
+  const vertical = layoutDiagramConnections(layoutDiagram(nodes, edges), edges, 'vertical');
+  assert.equal(vertical[1].sourceHandle, 'left');
+  assert.equal(vertical[2].sourceHandle, 'right');
+});
+
+test('styled diagram preview renders matching colored arrows, dash patterns and wider strokes', () => {
+  const graph = diagramTemplate();
+  const edge = { ...graph.edges[0], color: '#123456', strokeWidth: 6, lineStyle: 'dashed', arrow: true };
+  const flowEdge = diagramFlowEdge(edge, graph.nodes);
+  assert.equal(flowEdge.style.stroke, '#123456');
+  assert.equal(flowEdge.style.strokeWidth, 6);
+  assert.equal(flowEdge.markerEnd.color, '#123456');
+  const html = renderToStaticMarkup(createElement(DiagramPreview, { nodes: graph.nodes, edges: [edge] }));
+  assert.match(html, /stroke="#123456"/);
+  assert.match(html, /fill="#123456"/);
+  assert.match(html, /stroke-width="6"/);
+  assert.match(html, /stroke-dasharray="10 6"/);
+  assert.match(html, /marker-end="url\(#/);
+  const noArrow = renderToStaticMarkup(
+    createElement(DiagramPreview, { nodes: graph.nodes, edges: [{ ...edge, arrow: false, lineStyle: 'dotted' }] }),
+  );
+  assert.doesNotMatch(noArrow, /marker-end=/);
+  assert.match(noArrow, /stroke-dasharray="1 6"/);
+  const saved = toDiagramEdges([{ ...flowEdge, selected: true }]);
+  assert.deepEqual(saved[0], { ...edge, type: 'smoothstep' });
+  assert.equal(itemSchemas.diagram.validate({ title: 'Flow', nodes: graph.nodes, edges: saved }), true);
+  const invalid = { ...saved[0], strokeWidth: 99 };
+  assert.equal(itemSchemas.diagram.validate({ title: 'Flow', nodes: graph.nodes, edges: [invalid] }), false);
 });
 
 test('planning block quick copies are empty and search includes nested content', () => {
@@ -866,7 +986,7 @@ test('diagram alignment affects only selection and layout positions follow the g
   const aligned = alignDiagramNodes(nodes, selected, 'x');
   assert.equal(aligned[0].position.x, aligned[2].position.x);
   assert.equal(aligned[1], nodes[1]);
-  assert.deepEqual(nodes[0].position, { x: 220, y: 0 });
+  assert.deepEqual(nodes[0].position, { x: 160, y: 0 });
   for (const node of layoutDiagram(nodes, edges)) {
     assert.equal(node.position.x % 16, 0);
     assert.equal(node.position.y % 16, 0);

@@ -90,6 +90,10 @@ export interface DiagramNode {
   type: 'shape';
 }
 export interface DiagramEdge {
+  color?: string;
+  strokeWidth?: number;
+  lineStyle?: 'solid' | 'dashed' | 'dotted';
+  arrow?: boolean;
   type?: 'smoothstep' | 'default' | 'straight';
   id: string;
   source: string;

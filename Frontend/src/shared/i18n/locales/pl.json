@@ -1419,5 +1419,13 @@
   "Search project": "Szukaj w projekcie",
   "Project is loading, please wait.": "Projekt się ładuje, proszę czekać.",
   "Make your workspace feel like yours.": "Dostosuj przestrzeń pracy do siebie.",
-  "Your next great idea starts here.": "Twój kolejny świetny pomysł zaczyna się tutaj."
+  "Your next great idea starts here.": "Twój kolejny świetny pomysł zaczyna się tutaj.",
+  "Reject request": "Odrzuć żądanie",
+  "Connection color": "Kolor połączenia",
+  "Connection thickness": "Grubość połączenia",
+  "Connection line pattern": "Wzór linii połączenia",
+  "Solid": "Ciągła",
+  "Dashed": "Przerywana",
+  "Dotted": "Kropkowana",
+  "Show arrow": "Pokaż strzałkę"
 }

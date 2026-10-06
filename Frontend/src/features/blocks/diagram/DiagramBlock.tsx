@@ -16,21 +16,23 @@ import {
   Handle,
   Position,
   ConnectionMode,
-  MarkerType,
   SelectionMode,
   ConnectionLineType,
   reconnectEdge,
   applyNodeChanges,
   applyEdgeChanges,
 } from '@xyflow/react';
-import type { Node, NodeProps, Edge, ReactFlowInstance } from '@xyflow/react';
+import type { Node, NodeProps, ReactFlowInstance } from '@xyflow/react';
 import type { DiagramItem, DiagramNode, DiagramEdge, DiagramShape } from '@/entities/board/types';
 import type { BlockDeleteHandler, BlockUpdateHandler } from '../types';
 import ContentBlockShell from '../shared/ContentBlockShell';
 import DiagramPreview from './DiagramPreview';
+import { diagramNodeSize, diagramFlowEdge, diagramEdgeAppearance, toDiagramEdges as toEdges } from './diagramGeometry';
+import type { FlowEdge } from './diagramGeometry';
 import {
   diagramTemplate,
   layoutDiagram,
+  layoutDiagramConnections,
   removeDiagramNodes,
   alignDiagramNodes,
   canConnectDiagram,
@@ -43,13 +45,14 @@ function ShapeNode({ data, selected }: NodeProps<FlowNode>) {
   useTranslation();
   const labelStyle = useSectionStyle('labels');
   return (
-    <div className="diagram-node" data-selected={selected}>
+    <div className="diagram-node" data-selected={selected} data-shape={data.shape}>
       <div
         className="diagram-shape"
         data-shape={data.shape}
-        style={{ background: data.color, color: readableText(data.color), ...labelStyle }}
+        title={data.label}
+        style={{ ...diagramNodeSize({ data }), background: data.color, color: readableText(data.color), ...labelStyle }}
       >
-        {data.label || translate('Untitled')}
+        <span className="diagram-shape-label">{data.label || translate('Untitled')}</span>
       </div>
       {(
         [
@@ -109,25 +112,8 @@ const shapes: { value: DiagramShape; label: string }[] = [
     },
   },
 ];
-const edgeOptions = {
-  type: 'smoothstep',
-  interactionWidth: 24,
-  pathOptions: { borderRadius: 16, offset: 24 },
-  markerEnd: { type: MarkerType.ArrowClosed },
-  style: { stroke: '#8b7daa', strokeWidth: 2 },
-};
 const toNodes = (nodes: FlowNode[]): DiagramNode[] =>
   nodes.map(({ id, position, data }) => ({ id, position, data, type: 'shape' }));
-const toEdges = (edges: Edge[]): DiagramEdge[] =>
-  edges.map(({ id, source, target, sourceHandle, targetHandle, label, type }) => ({
-    id,
-    source,
-    target,
-    sourceHandle,
-    targetHandle,
-    type: type === 'default' || type === 'straight' ? type : 'smoothstep',
-    label: typeof label === 'string' ? label : '',
-  }));
 
 export default function DiagramBlock({
   item,
@@ -150,7 +136,7 @@ export default function DiagramBlock({
     if (mobile) setEditingRequested(false);
   }, [mobile]);
   const [nodes, setNodes] = useState<FlowNode[]>(item.nodes);
-  const [edges, setEdges] = useState<Edge[]>(item.edges);
+  const [edges, setEdges] = useState<FlowEdge[]>(item.edges);
   const [selection, setSelection] = useState<{ node?: string; edge?: string }>({});
   const clickedSelection = useRef(new Set<string>());
   const flow = useRef<ReactFlowInstance<FlowNode> | null>(null);
@@ -171,7 +157,7 @@ export default function DiagramBlock({
   useEffect(() => {
     setEdges(item.edges);
   }, [item.edges]);
-  const save = (nextNodes: FlowNode[], nextEdges: Edge[]) => {
+  const save = (nextNodes: FlowNode[], nextEdges: FlowEdge[]) => {
     setNodes(nextNodes);
     setEdges(nextEdges);
     onUpdate((current) =>
@@ -180,6 +166,12 @@ export default function DiagramBlock({
   };
   const selectedNode = nodes.find((node) => node.id === selection.node);
   const selectedEdge = edges.find((edge) => edge.id === selection.edge);
+  const updateEdge = (patch: Partial<DiagramEdge>) => {
+    save(
+      nodes,
+      edges.map((edge) => (edge.id === selectedEdge?.id ? { ...edge, ...patch } : edge)),
+    );
+  };
   const addNode = (shape: DiagramShape) => {
     const id = createId();
     const viewport = flow.current?.getViewport() ?? { x: 0, y: 0, zoom: 1 };
@@ -299,7 +291,8 @@ export default function DiagramBlock({
             className="planning-button ml-auto"
             disabled={!nodes.length}
             onClick={() => {
-              save(layoutDiagram(toNodes(nodes), toEdges(edges), layoutDirection), edges);
+              const nextNodes = layoutDiagram(toNodes(nodes), toEdges(edges), layoutDirection);
+              save(nextNodes, layoutDiagramConnections(nextNodes, toEdges(edges), layoutDirection));
               requestAnimationFrame(() => flow.current?.fitView({ padding: 0.2, duration: 200 }));
             }}
           >
@@ -336,11 +329,11 @@ export default function DiagramBlock({
               id={`diagram-${item.id}`}
               nodes={nodes}
               edges={edges.map((edge) => ({
-                ...edge,
-                labelStyle: { ...edge.labelStyle, ...getSectionStyle(item.typography, 'labels') },
+                ...diagramFlowEdge(toEdges([edge])[0]!, toNodes(nodes)),
+                selected: edge.id === selection.edge,
+                labelStyle: { fill: 'var(--color-text-primary)', ...getSectionStyle(item.typography, 'labels') },
               }))}
               nodeTypes={nodeTypes}
-              defaultEdgeOptions={edgeOptions}
               connectionMode={ConnectionMode.Loose}
               connectionRadius={28}
               reconnectRadius={16}
@@ -350,7 +343,9 @@ export default function DiagramBlock({
                 if (canConnectDiagram(toEdges(edges), connection, edge.id))
                   save(nodes, reconnectEdge(edge, connection, edges));
               }}
-              isValidConnection={(connection) => canConnectDiagram([], connection)}
+              isValidConnection={(connection) =>
+                canConnectDiagram(toEdges(edges), connection, 'id' in connection ? connection.id : undefined)
+              }
               onInit={(instance) => {
                 flow.current = instance;
               }}
@@ -376,7 +371,11 @@ export default function DiagramBlock({
               onSelectionDragStop={(_, selected) => {
                 clickedSelection.current = new Set(selected.map((node) => node.id));
               }}
-              onEdgeClick={(_, edge) => setSelection({ edge: edge.id })}
+              onEdgeClick={(_, edge) => {
+                clickedSelection.current.clear();
+                setNodes((current) => current.map((node) => ({ ...node, selected: false })));
+                setSelection({ edge: edge.id });
+              }}
               onPaneClick={() => {
                 clickedSelection.current.clear();
                 setSelection({});
@@ -514,7 +513,7 @@ export default function DiagramBlock({
         </div>
       )}
       {editing && selectedEdge && (
-        <div className="planning-toolbar">
+        <div className="planning-toolbar" onMouseDown={(event) => event.stopPropagation()}>
           <label className="text-sm">
             {translate('Connection style')}{' '}
             <select
@@ -532,6 +531,47 @@ export default function DiagramBlock({
               <option value="default">{translate('Curve')}</option>
               <option value="straight">{translate('Straight')}</option>
             </select>
+          </label>
+          <label className="text-sm flex items-center gap-2">
+            {translate('Connection color')}
+            <input
+              type="color"
+              aria-label={translate('Connection color')}
+              className="h-8 w-8"
+              value={diagramEdgeAppearance(selectedEdge).color}
+              onChange={(event) => updateEdge({ color: event.target.value })}
+            />
+          </label>
+          <label className="text-sm flex items-center gap-2">
+            {translate('Connection thickness')}
+            <input
+              type="range"
+              min="1"
+              max="8"
+              step="1"
+              aria-label={translate('Connection thickness')}
+              value={diagramEdgeAppearance(selectedEdge).strokeWidth}
+              onChange={(event) => updateEdge({ strokeWidth: Number(event.target.value) })}
+            />
+            <span>{diagramEdgeAppearance(selectedEdge).strokeWidth}px</span>
+          </label>
+          <select
+            className="planning-input"
+            aria-label={translate('Connection line pattern')}
+            value={selectedEdge.lineStyle ?? 'solid'}
+            onChange={(event) => updateEdge({ lineStyle: event.target.value as DiagramEdge['lineStyle'] })}
+          >
+            <option value="solid">{translate('Solid')}</option>
+            <option value="dashed">{translate('Dashed')}</option>
+            <option value="dotted">{translate('Dotted')}</option>
+          </select>
+          <label className="text-sm flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={selectedEdge.arrow !== false}
+              onChange={(event) => updateEdge({ arrow: event.target.checked })}
+            />
+            {translate('Show arrow')}
           </label>
           <span className="text-xs text-theme-muted">{translate('Drag either endpoint to reconnect.')}</span>
         </div>
