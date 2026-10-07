@@ -9,7 +9,16 @@ import {
   MAX_SIDEBAR_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
 } from '@/features/appearance/appearanceModel';
-import { ChevronDown, LayoutGrid, ListTree, Play, MousePointer2 } from 'lucide-react';
+import {
+  ChevronDown,
+  LayoutGrid,
+  Play,
+  MousePointer2,
+  PanelLeftClose,
+  PanelLeftOpen,
+  CalendarRange,
+  FolderKanban,
+} from 'lucide-react';
 import type { ToolType } from '@/entities/board/toolTypes';
 import { SIDEBAR_TOOLS } from './sidebarTools';
 import { consumeToolDragClickSuppression, startToolDrag } from '@/features/canvas/utils/toolDrag';
@@ -21,7 +30,7 @@ const groups = [
     get label() {
       return translate('Planning');
     },
-    icon: ListTree,
+    icon: CalendarRange,
     tools: ['timeline', 'mindmap', 'diagram', 'database'],
   },
   {
@@ -37,7 +46,7 @@ const groups = [
     get label() {
       return translate('Organize');
     },
-    icon: ListTree,
+    icon: FolderKanban,
     tools: ['checklist', 'kanban', 'column', 'section-title', 'frame', 'line', 'divider', 'board'],
   },
   {
@@ -60,18 +69,38 @@ export default function Sidebar({
   useTranslation();
   const mobile = useMobileLayout();
   const { preferences, savePreferences } = useTheme();
+  const [collapsed, setCollapsed] = useState(false);
+  const compact = collapsed && !mobile;
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const width = dragWidth ?? normalizeSidebarWidth(preferences.sidebarWidth);
   const persistWidth = (next: number) => savePreferences({ ...preferences, sidebarWidth: normalizeSidebarWidth(next) });
   const [openGroup, setOpenGroup] = useState<string | null>('common');
   return (
     <MobilePanel title={translate('Tools')} slot="tools">
-      <aside className="tool-sidebar" style={mobile ? undefined : { width }} aria-label={translate('Board tools')}>
+      <aside
+        className="tool-sidebar"
+        data-collapsed={compact}
+        style={mobile ? undefined : { width: compact ? 76 : width }}
+        aria-label={translate('Board tools')}
+      >
+        {!mobile && (
+          <button
+            type="button"
+            className="sidebar-collapse-toggle"
+            aria-label={compact ? translate('Expand sidebar') : translate('Collapse sidebar')}
+            title={compact ? translate('Expand sidebar') : translate('Collapse sidebar')}
+            aria-expanded={!compact}
+            onClick={() => setCollapsed(!collapsed)}
+          >
+            {compact ? <PanelLeftOpen size={21} /> : <PanelLeftClose size={21} />}
+          </button>
+        )}
         <div className="tool-sidebar-heading">{translate('CREATE & CONNECT')}</div>
         <button
           type="button"
           className="tool-select"
           aria-label={translate('Select')}
+          title={translate('Select & move')}
           aria-pressed={selectedTool === 'select'}
           onClick={() => onSelectTool('select')}
         >
@@ -88,6 +117,8 @@ export default function Sidebar({
                 <button
                   type="button"
                   className="tool-group-trigger"
+                  title={group.label}
+                  aria-label={group.label}
                   aria-expanded={open}
                   aria-controls={`tools-${group.id}`}
                   onClick={() => setOpenGroup(open ? null : group.id)}
@@ -113,6 +144,7 @@ export default function Sidebar({
                             key={id}
                             type="button"
                             className="tool-tile"
+                            data-tool={id}
                             aria-label={tool.label}
                             aria-pressed={selectedTool === id}
                             title={
@@ -141,7 +173,7 @@ export default function Sidebar({
             );
           })}
         </nav>
-        {!mobile && (
+        {!mobile && !compact && (
           <div
             className="sidebar-resize-handle"
             role="separator"

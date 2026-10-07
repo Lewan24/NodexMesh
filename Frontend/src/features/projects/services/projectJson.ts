@@ -55,7 +55,7 @@ export async function exportWorkspaceProject(api: WorkspaceServices, projectId: 
   const activeIds = new Map(records.map((board) => [board.id, board.id]));
   const boards = await Promise.all(
     records.map(async (record) => {
-      const board = await api.boards.get(projectId, record.id);
+      const board = await api.boards.get(projectId, record.id, undefined, true);
       return {
         id: record.id,
         name: record.name,

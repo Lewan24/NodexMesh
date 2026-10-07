@@ -1221,6 +1221,11 @@ namespace NodexMeshApi.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("revision");
 
+                    b.Property<string>("TaskCategories")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("task_categories");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");

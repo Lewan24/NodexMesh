@@ -1,0 +1,16 @@
+# Optional override for docker-compose.production.yml (also works with docker-compose.yml).
+# Create the external network and attach NPM as described in docs/REVERSE_PROXY.md.
+services:
+  frontend:
+    environment:
+      TRUSTED_EDGE_CIDR: 172.29.0.2/32
+    networks:
+      nodexmesh_edge:
+        ipv4_address: 172.29.0.3
+        aliases:
+          - nodexmesh-frontend
+
+networks:
+  nodexmesh_edge:
+    external: true
+    name: nodexmesh_edge

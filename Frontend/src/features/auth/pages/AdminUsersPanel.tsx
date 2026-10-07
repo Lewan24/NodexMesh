@@ -433,12 +433,12 @@ function AdminUserRow({
           {user.displayName.slice(0, 1).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold">{user.displayName}</p>
-          <p className="truncate text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="break-all font-semibold">{user.displayName}</p>
+          <p className="break-all text-xs" style={{ color: 'var(--color-text-muted)' }}>
             {user.email}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="basis-full pl-[3.25rem]">
           <span
             className="rounded-full px-2.5 py-1 text-[11px] font-semibold"
             style={{
@@ -454,65 +454,83 @@ function AdminUserRow({
                   ? translate('Administrator')
                   : translate('User')}
           </span>
-          <button className="btn-ghost rounded-lg px-2.5 py-1.5 text-xs" onClick={() => setDialog('edit')}>
-            {translate('Edit')}
-          </button>
-          <button className="btn-ghost rounded-lg px-2.5 py-1.5 text-xs" onClick={() => setDialog('password')}>
-            {translate('Reset password')}
-          </button>
-          <button className="btn-ghost rounded-lg px-2.5 py-1.5 text-xs" onClick={() => setDialog('appearance')}>
-            {translate('Reset appearance')}
-          </button>
-          {user.id !== currentUserId && <AdminMfaReset userId={user.id} email={user.email} />}
-          {user.deletionRequestedAt && (
-            <div className="w-full space-y-2 text-xs">
-              <p>
-                {translate('Scheduled for permanent deletion:')}{' '}
-                {user.permanentDeletionAt ? new Date(user.permanentDeletionAt).toLocaleDateString(locale()) : ''}
-              </p>
-              <p>{translate('Restoring the account does not undo project changes or restore memberships.')}</p>
+        </div>
+        <details
+          className="user-actions w-full"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.currentTarget.open = false;
+              event.currentTarget.querySelector('summary')?.focus();
+            }
+          }}
+        >
+          <summary className="btn-ghost cursor-pointer rounded-xl px-3 py-2 text-xs font-semibold">
+            {translate('User actions')}
+          </summary>
+          <div
+            className="mt-2 flex flex-wrap items-center gap-2 border-t pt-3"
+            style={{ borderColor: 'var(--color-border)' }}
+          >
+            <button className="btn-ghost rounded-lg px-2.5 py-1.5 text-xs" onClick={() => setDialog('edit')}>
+              {translate('Edit')}
+            </button>
+            <button className="btn-ghost rounded-lg px-2.5 py-1.5 text-xs" onClick={() => setDialog('password')}>
+              {translate('Reset password')}
+            </button>
+            <button className="btn-ghost rounded-lg px-2.5 py-1.5 text-xs" onClick={() => setDialog('appearance')}>
+              {translate('Reset appearance')}
+            </button>
+            {user.id !== currentUserId && <AdminMfaReset userId={user.id} email={user.email} />}
+            {user.deletionRequestedAt && (
+              <div className="w-full space-y-2 text-xs">
+                <p>
+                  {translate('Scheduled for permanent deletion:')}{' '}
+                  {user.permanentDeletionAt ? new Date(user.permanentDeletionAt).toLocaleDateString(locale()) : ''}
+                </p>
+                <p>{translate('Restoring the account does not undo project changes or restore memberships.')}</p>
+                <button
+                  disabled={accountBusy}
+                  className="btn-accent rounded-lg px-3 py-2"
+                  onClick={async () => {
+                    setAccountBusy(true);
+                    try {
+                      await onRestore();
+                    } finally {
+                      setAccountBusy(false);
+                    }
+                  }}
+                >
+                  {translate('Restore account')}
+                </button>
+                <button
+                  disabled={accountBusy}
+                  className="btn-ghost rounded-lg px-3 py-2"
+                  onClick={() => setPurgeOpen(true)}
+                >
+                  {translate('Delete permanently')}
+                </button>
+              </div>
+            )}
+            {user.isBlocked && !user.deletionRequestedAt && user.id !== currentUserId && (
               <button
                 disabled={accountBusy}
-                className="btn-accent rounded-lg px-3 py-2"
-                onClick={async () => {
-                  setAccountBusy(true);
-                  try {
-                    await onRestore();
-                  } finally {
-                    setAccountBusy(false);
-                  }
-                }}
-              >
-                {translate('Restore account')}
-              </button>
-              <button
-                disabled={accountBusy}
-                className="btn-ghost rounded-lg px-3 py-2"
+                className="btn-ghost rounded-lg px-3 py-2 text-xs"
                 onClick={() => setPurgeOpen(true)}
               >
                 {translate('Delete permanently')}
               </button>
-            </div>
-          )}
-          {user.isBlocked && !user.deletionRequestedAt && user.id !== currentUserId && (
-            <button
-              disabled={accountBusy}
-              className="btn-ghost rounded-lg px-3 py-2 text-xs"
-              onClick={() => setPurgeOpen(true)}
-            >
-              {translate('Delete permanently')}
-            </button>
-          )}
-          {user.id !== currentUserId && !user.deletionRequestedAt && (
-            <button
-              className="rounded-lg px-2.5 py-1.5 text-xs font-semibold"
-              style={{ color: user.isBlocked ? 'var(--color-success)' : 'var(--color-danger-strong)' }}
-              onClick={() => void onToggleBlocked()}
-            >
-              {user.isBlocked ? translate('Unblock') : translate('Block')}
-            </button>
-          )}
-        </div>
+            )}
+            {user.id !== currentUserId && !user.deletionRequestedAt && (
+              <button
+                className="rounded-lg px-2.5 py-1.5 text-xs font-semibold"
+                style={{ color: user.isBlocked ? 'var(--color-success)' : 'var(--color-danger-strong)' }}
+                onClick={() => void onToggleBlocked()}
+              >
+                {user.isBlocked ? translate('Unblock') : translate('Block')}
+              </button>
+            )}
+          </div>
+        </details>
       </div>
       {purgeOpen && (
         <ConfirmProjectDialog

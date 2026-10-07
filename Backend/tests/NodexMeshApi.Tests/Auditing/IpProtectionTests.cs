@@ -12,8 +12,46 @@ namespace NodexMeshApi.Tests.Auditing;
 public sealed class IpProtectionTests : IDisposable
 {
     private readonly SqliteInMemoryDb database = new();
-    private readonly IpProtectionOptions options = new() { FailedLoginThreshold = 3, UnauthorizedThreshold = 3, NotFoundThreshold = 3, RateLimitThreshold = 3 };
+    private readonly IpProtectionOptions options = new() { FailedLoginThreshold = 3, UnauthorizedThreshold = 3, NotFoundThreshold = 3, RateLimitThreshold = 3, BanOnRateLimit = true };
     public void Dispose() => database.Dispose();
+
+    [Theory]
+    [InlineData("http.unauthenticated", "/api/v1/auth/refresh")]
+    [InlineData("http.unauthenticated", "/api/v1/auth/profile")]
+    [InlineData("http.not_found", "/api/v1/projects/deleted")]
+    [InlineData("http.unmatched", "/assets/old-deployment.js")]
+    [InlineData("http.unmatched", "/favicon.ico")]
+    public async Task NormalReloadFailuresRemainAuditableButDoNotCountTowardBans(string eventType, string route)
+    {
+        await using var db = database.CreateContext();
+        var service = new IpProtectionService(db, Microsoft.Extensions.Options.Options.Create(options));
+        for (var i = 0; i < 10; i++)
+            await service.RecordAsync(new AuditEvent { ClientIp = "192.0.2.1", EventType = eventType, Route = route }, default);
+        (await db.IpAccessStates.AnyAsync()).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task FailedProfilePasswordVerificationStillCountsAsUnauthorized()
+    {
+        await using var db = database.CreateContext();
+        var service = new IpProtectionService(db, Microsoft.Extensions.Options.Options.Create(options));
+        for (var i = 0; i < 3; i++)
+            await service.RecordAsync(new AuditEvent { ClientIp = "192.0.2.1", EventType = "http.unauthenticated",
+                Route = "/api/v1/auth/profile", Method = "PUT" }, default);
+        (await service.IsBannedAsync("192.0.2.1", default)).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task RateLimitFailuresAreCountersOnlyByDefaultAndCannotBanNormalTraffic()
+    {
+        options.BanOnRateLimit = false;
+        await using var db = database.CreateContext();
+        var service = new IpProtectionService(db, Microsoft.Extensions.Options.Options.Create(options));
+        for (var i = 0; i < 10; i++)
+            await service.RecordAsync(new AuditEvent { ClientIp = "192.0.2.1", EventType = "http.rate_limited" }, default);
+        (await service.IsBannedAsync("192.0.2.1", default)).Should().BeFalse();
+        (await db.IpAccessStates.SingleAsync()).RateLimited.Should().Be(10);
+    }
 
     [Fact]
     public async Task BanImmediatelyAbortsMatchingLiveSocketsAndRetainsOtherClients()
@@ -41,7 +79,6 @@ public sealed class IpProtectionTests : IDisposable
     [InlineData("http.unauthenticated")]
     [InlineData("http.forbidden")]
     [InlineData("http.unmatched")]
-    [InlineData("http.not_found")]
     [InlineData("http.rate_limited")]
     public async Task ThresholdBansPersistAcrossScopesAndStopEveryRequest(string eventType)
     {

@@ -90,6 +90,10 @@ export interface DiagramNode {
   type: 'shape';
 }
 export interface DiagramEdge {
+  color?: string;
+  strokeWidth?: number;
+  lineStyle?: 'solid' | 'dashed' | 'dotted';
+  arrow?: boolean;
   type?: 'smoothstep' | 'default' | 'straight';
   id: string;
   source: string;
@@ -212,7 +216,15 @@ export interface TypographySettings {
   verticalAlign?: VerticalAlign;
 }
 
+export interface TaskSummary {
+  completedCount: number;
+  columns: Record<string, number>;
+  boardId: string;
+  revision: string;
+}
+
 export interface BaseItem {
+  taskSummary?: TaskSummary;
   customCss?: { enabled: boolean; source: string };
   colorRole?: 'default' | 'accent1' | 'accent2' | 'accent3' | 'accent4' | 'accent5';
   gradient?: { from: string; to: string; kind: 'linear' | 'radial'; angle: number };
@@ -247,6 +259,7 @@ export interface NoteItem extends BaseItem {
 }
 
 export interface KanbanItem extends BaseItem {
+  hideCompleted?: boolean;
   type: 'kanban';
   title: string;
   columns: KanbanColumn[];
@@ -262,11 +275,7 @@ export interface KanbanColumn {
   width?: number;
 }
 
-export interface KanbanCard {
-  id: string;
-  text: string;
-  done: boolean;
-}
+export interface KanbanCard extends ChecklistEntry {}
 
 export interface ImageItem extends BaseItem {
   type: 'image';
@@ -315,13 +324,31 @@ export interface FrameItem extends BaseItem {
 }
 
 export interface ChecklistItem extends BaseItem {
+  hideCompleted?: boolean;
   type: 'checklist';
   title: string;
   color: string;
   entries: ChecklistEntry[];
 }
 
+export interface TaskCategory {
+  id: string;
+  name: string;
+  color: string;
+}
+export interface Subtask {
+  id: string;
+  text: string;
+  done: boolean;
+}
 export interface ChecklistEntry {
+  description?: string;
+  subtasks?: Subtask[];
+  assigneeUserId?: string;
+  /** Legacy single-category assignment, read until the task is edited. */
+  categoryId?: string;
+  categoryIds?: string[];
+  deadline?: string;
   id: string;
   text: string;
   done: boolean;

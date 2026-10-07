@@ -3,16 +3,18 @@ import { httpClient } from '@/app/services';
 import { translate } from '@/shared/i18n';
 import Modal from '@/shared/components/dialogs/Modal';
 
-export default function AdminIpBan({ onBanned }: { onBanned: () => void }) {
+export default function AdminIpBan({ onBanned, initialIp = '' }: { onBanned: () => void; initialIp?: string }) {
   const [open, setOpen] = useState(false);
-  const [ip, setIp] = useState('');
+  const [ip, setIp] = useState(initialIp);
   const [reason, setReason] = useState('');
   const [durationMinutes, setDurationMinutes] = useState('60');
+  const [forever, setForever] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const close = () => {
     setOpen(false);
-    setIp('');
+    setIp(initialIp);
+    setForever(false);
     setReason('');
     setDurationMinutes('60');
     setError('');
@@ -42,7 +44,12 @@ export default function AdminIpBan({ onBanned }: { onBanned: () => void }) {
                 if (!httpClient) throw new Error(translate('This action requires the API connection.'));
                 await httpClient.request('/admin/security/ips', {
                   method: 'POST',
-                  body: { ip: ip.trim(), reason: reason.trim(), durationMinutes: Number(durationMinutes) },
+                  body: {
+                    ip: ip.trim(),
+                    reason: reason.trim(),
+                    durationMinutes: forever ? 60 : Number(durationMinutes),
+                    forever,
+                  },
                 });
                 close();
                 onBanned();
@@ -84,11 +91,20 @@ export default function AdminIpBan({ onBanned }: { onBanned: () => void }) {
                 min={1}
                 max={43200}
                 step={1}
-                disabled={busy}
+                disabled={busy || forever}
                 value={durationMinutes}
                 onChange={(event) => setDurationMinutes(event.target.value)}
                 className="input-theme w-full px-3 py-2"
               />
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={forever}
+                disabled={busy}
+                onChange={(event) => setForever(event.target.checked)}
+              />
+              {translate('Ban forever')}
             </label>
             <label className="block space-y-1 text-sm font-medium">
               <span>{translate('Reason')}</span>

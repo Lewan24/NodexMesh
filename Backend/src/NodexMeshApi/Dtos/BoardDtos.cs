@@ -57,7 +57,8 @@ public sealed record ItemWriteDto(
     [property: Required] string Type,
     short SchemaVersion,
     [SkipValidation] [property: SkipValidation] JsonElement Appearance,
-    [SkipValidation] [property: SkipValidation] JsonElement Data);
+    [SkipValidation] [property: SkipValidation] JsonElement Data,
+    bool PreserveCompletedTasks = false);
 #pragma warning restore ASP0029
 
 public sealed record ItemLinkDto(Guid SourceItemId, Guid TargetItemId, string Kind);
@@ -110,7 +111,8 @@ public sealed record ItemRecordDto(
     string Type, short SchemaVersion, JsonElement Appearance, JsonElement Data,
     [property: JsonConverter(typeof(RevisionJsonConverter))] long Revision,
     DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt,
-    Guid? CreatedBy, Guid? UpdatedBy, DateTimeOffset? DeletedAt);
+    Guid? CreatedBy, Guid? UpdatedBy, DateTimeOffset? DeletedAt,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] TaskSummaryDto? TaskSummary = null);
 
 public sealed record BoardRecordDto(
     Guid Id, Guid ProjectId, string Name, int SortOrder,
@@ -159,4 +161,6 @@ public sealed record ItemSkeletonDto(Guid Id, double X, double Y, double? Width,
 public sealed record BoardLoadingManifestDto(BoardRecordDto Board, IReadOnlyList<ItemSkeletonDto> Items);
 public sealed record BoardPageRequest(
     [property: Required, MinLength(1), MaxLength(50)] Guid[] ItemIds,
-    [property: JsonConverter(typeof(RevisionJsonConverter))] long ExpectedRevision);
+    [property: JsonConverter(typeof(RevisionJsonConverter))] long ExpectedRevision, bool IncludeCompleted = true);
+
+public sealed record TaskSummaryDto(int CompletedCount, IReadOnlyDictionary<string, int> Columns);

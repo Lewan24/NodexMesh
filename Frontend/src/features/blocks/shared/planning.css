@@ -426,8 +426,11 @@
   }
 }
 .diagram-shape {
-  width: 160px;
-  min-height: 72px;
+  width: 192px;
+  height: 80px;
+  min-height: 80px;
+  box-sizing: border-box;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -465,18 +468,44 @@
 }
 .diagram-shape[data-shape='decision'] {
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-  min-height: 110px;
-  padding: 24px 32px;
+  height: 128px;
+  min-height: 128px;
+  padding: 32px 48px;
   border: 0;
 }
 .diagram-node[data-selected='true'] {
   filter: drop-shadow(0 0 4px var(--color-accent));
+}
+.diagram-shape-label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  line-height: 1.25;
 }
 .diagram-node .react-flow__handle {
   width: 12px;
   height: 12px;
   background: var(--color-accent);
   border: 2px solid white;
+}
+/* Keep the routing endpoint on the shape boundary, at the port's outer edge. */
+.diagram-node .react-flow__handle-top,
+.diagram-node .react-flow__handle-bottom {
+  transform: translate(-50%, 0);
+}
+.diagram-node .react-flow__handle-left,
+.diagram-node .react-flow__handle-right {
+  transform: translate(0, -50%);
+}
+.diagram-node[data-shape='input'] .react-flow__handle-left {
+  left: 6%;
+}
+.diagram-node[data-shape='input'] .react-flow__handle-right {
+  right: 6%;
+}
+.diagram-node[data-shape='document'] .react-flow__handle-bottom {
+  bottom: 15%;
 }
 .diagram-editor {
   display: flex;

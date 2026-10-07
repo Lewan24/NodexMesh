@@ -66,6 +66,22 @@ services:
       # Keep this address stable; do not replace it with 0.0.0.0/0.
       ReverseProxy__KnownProxies__0: 172.30.0.10
       ReverseProxy__ForwardLimit: 1
+      RateLimiting__IpRequestsPerMinute: ${RATE_LIMIT_IP_PER_MINUTE:-2000}
+      RateLimiting__UserRequestsPerMinute: ${RATE_LIMIT_USER_PER_MINUTE:-1000}
+      RateLimiting__AuthRequestsPerMinute: ${RATE_LIMIT_AUTH_PER_MINUTE:-5}
+      RateLimiting__RefreshRequestsPerMinute: ${RATE_LIMIT_REFRESH_PER_MINUTE:-120}
+      RateLimiting__GateRequestsPerMinute: ${RATE_LIMIT_GATE_PER_MINUTE:-10000}
+      IpProtection__Enabled: ${IP_PROTECTION_ENABLED:-true}
+      IpProtection__WindowMinutes: ${IP_PROTECTION_WINDOW_MINUTES:-10}
+      IpProtection__BanMinutes: ${IP_PROTECTION_BAN_MINUTES:-60}
+      IpProtection__FailedLoginThreshold: ${IP_FAILED_LOGIN_THRESHOLD:-10}
+      IpProtection__UnauthorizedThreshold: ${IP_UNAUTHORIZED_THRESHOLD:-100}
+      IpProtection__NotFoundThreshold: ${IP_NOT_FOUND_THRESHOLD:-100}
+      IpProtection__BanOnRateLimit: ${IP_BAN_ON_RATE_LIMIT:-false}
+      IpProtection__RateLimitThreshold: ${IP_RATE_LIMIT_THRESHOLD:-100}
+      # Optional exact client addresses. Empty values are ignored; proxy trust is separate.
+      IpProtection__Allowlist__0: ${FRIENDLY_IP_1:-}
+      IpProtection__Allowlist__1: ${FRIENDLY_IP_2:-}
 
     volumes:
       - library-data:/app/storage

@@ -1,6 +1,6 @@
+import TaskPreview from '../shared/TaskPreview';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
-import { useEffect, useState } from 'react';
 
 import type { KanbanCard } from '@/entities/board/types';
 import DragHandle from '../shared/DragHandle';
@@ -18,7 +18,8 @@ interface KanbanCardItemProps {
   textStyle?: React.CSSProperties;
   onToggle: () => void;
   onDelete: () => void;
-  onEdit: (text: string) => void;
+  onOpen: () => void;
+  readOnly?: boolean;
   onDragHandleMouseDown: (event: React.MouseEvent) => void;
 }
 
@@ -35,38 +36,14 @@ export default function KanbanCardItem({
   textStyle,
   onToggle,
   onDelete,
-  onEdit,
+  onOpen,
+  readOnly = false,
   onDragHandleMouseDown,
 }: KanbanCardItemProps) {
   useTranslation();
-  const [editing, setEditing] = useState(false);
-  const [text, setText] = useState(card.text);
-
-  /*
-   * Jeśli tekst karty zmieni się z zewnątrz,
-   * lokalny input nie powinien zostać ze starą wartością.
-   */
-  useEffect(() => {
-    if (!editing) {
-      setText(card.text);
-    }
-  }, [card.text, editing]);
-
-  const commit = () => {
-    const nextText = text.trim();
-
-    if (nextText && nextText !== card.text) {
-      onEdit(nextText);
-    } else {
-      setText(card.text);
-    }
-
-    setEditing(false);
-  };
-
   return (
     <div
-      className="group/card flex items-center gap-1.5 item-rounded px-2 py-2 mb-1.5 shadow-sm transition-all duration-150"
+      className="task-preview-row group/card flex items-center gap-1.5 item-rounded px-2 py-2 mb-1.5 shadow-sm transition-all duration-150"
       style={{ backgroundColor: cardBackground, borderColor: cardBorder, opacity: isDragging ? 0.35 : 1 }}
       onMouseEnter={(event) => {
         event.currentTarget.style.borderColor = cardBorderHover;
@@ -80,57 +57,61 @@ export default function KanbanCardItem({
       {/* Done toggle */}
 
       <button
+        type="button"
+        className="task-preview-toggle cursor-pointer disabled:cursor-default"
         onMouseDown={(event) => event.stopPropagation()}
+        disabled={readOnly}
         onClick={onToggle}
-        className="w-4 h-4 rounded-full mt-0.5 flex-shrink-0 border-2 flex items-center justify-center transition-all duration-200"
-        style={{
-          backgroundColor: card.done ? accentColor : 'transparent',
-          borderColor: card.done ? accentColor : mutedColor,
-        }}
+        role="checkbox"
+        aria-checked={card.done}
+        aria-label={translate('Complete {{value1}}', { value1: card.text || translate('Task') })}
       >
-        {card.done && (
-          <svg viewBox="0 0 10 10" fill="none" width="10" height="10">
-            <path d="M2 5.5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
+        <span
+          className="w-4 h-4 rounded border flex items-center justify-center"
+          style={{
+            borderColor: card.done ? accentColor : `${textColor}40`,
+            backgroundColor: card.done ? accentColor : 'transparent',
+          }}
+        >
+          {card.done && (
+            <svg viewBox="0 0 10 10" fill="none" width="10" height="10">
+              <path
+                d="M1.5 5l2.5 2.5 4.5-5"
+                stroke="white"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </span>
       </button>
 
       {/* Text */}
 
-      {editing ? (
-        <input
-          autoFocus
-          className="flex-1 bg-transparent text-sm outline-none min-w-0"
-          style={{ color: textColor, ...textStyle }}
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          onBlur={commit}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === 'Escape') {
-              commit();
-            }
-          }}
-          onMouseDown={(event) => event.stopPropagation()}
-        />
-      ) : (
+      <button
+        type="button"
+        className="task-open-button flex-1 min-w-0 text-left py-1 cursor-pointer"
+        style={{ color: card.done ? doneColor : textColor, ...textStyle }}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={onOpen}
+      >
         <span
-          onDoubleClick={() => setEditing(true)}
-          className="flex-1 min-w-0 text-sm leading-snug select-none cursor-text transition-colors"
-          style={{
-            color: card.done ? doneColor : textColor,
-            textDecoration: card.done ? 'line-through' : 'none',
-            ...textStyle,
-          }}
+          className="block whitespace-pre-wrap break-words"
+          style={{ textDecoration: card.done ? 'line-through' : undefined }}
         >
-          {card.text}
+          {card.text || translate('Untitled')}
         </span>
-      )}
+        <TaskPreview task={card} />
+      </button>
 
       {/* Delete */}
 
       <button
+        disabled={readOnly}
+        aria-label={translate('Delete task')}
         onClick={onDelete}
-        className="opacity-0 group-hover/card:opacity-100 transition-opacity flex-shrink-0"
+        className="task-delete-button opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 transition-opacity flex-shrink-0 cursor-pointer disabled:cursor-default"
         style={{ color: mutedColor }}
         onMouseDown={(event) => event.stopPropagation()}
         onMouseEnter={(event) => {

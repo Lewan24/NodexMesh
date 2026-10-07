@@ -1,41 +1,48 @@
 import { translate } from '@/shared/i18n';
 import type { BoardItem, FontFamily, TypographySettings } from '@/entities/board/types';
 
+export const SANS_FONT_STACK = '"DM Sans", Arial, sans-serif';
+export const SERIF_FONT_STACK = '"Noto Serif", Georgia, Cambria, serif';
+export const MONO_FONT_STACK = '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+// Several decorative fonts only provide basic Latin. Use shipped fonts for missing glyphs
+// instead of the device's unpredictable generic cursive face.
+const handwritingFont = (family: string) => `"${family}", "Patrick Hand", ${SANS_FONT_STACK}`;
+
 export const FONT_FAMILIES: { value: FontFamily; label: string; css: string }[] = [
   {
     value: 'caveat',
     get label() {
       return translate('Caveat · Handwriting');
     },
-    css: '"Caveat", cursive',
+    css: handwritingFont('Caveat'),
   },
   {
     value: 'kalam',
     get label() {
       return translate('Kalam · Sketch');
     },
-    css: '"Kalam", cursive',
+    css: handwritingFont('Kalam'),
   },
   {
     value: 'patrick-hand',
     get label() {
       return translate('Patrick Hand · Notes');
     },
-    css: '"Patrick Hand", cursive',
+    css: `"Patrick Hand", ${SANS_FONT_STACK}`,
   },
   {
     value: 'comic-neue',
     get label() {
       return translate('Comic Neue · Playful');
     },
-    css: '"Comic Neue", cursive',
+    css: handwritingFont('Comic Neue'),
   },
   {
     value: 'architects-daughter',
     get label() {
       return translate('Architects Daughter · Draft');
     },
-    css: '"Architects Daughter", cursive',
+    css: handwritingFont('Architects Daughter'),
   },
 
   {
@@ -43,63 +50,63 @@ export const FONT_FAMILIES: { value: FontFamily; label: string; css: string }[] 
     get label() {
       return translate('Short Stack · Playful');
     },
-    css: '"Short Stack", cursive',
+    css: handwritingFont('Short Stack'),
   },
   {
     value: 'shantell-sans',
     get label() {
       return translate('Shantell Sans · Handwritten');
     },
-    css: '"Shantell Sans", sans-serif',
+    css: handwritingFont('Shantell Sans'),
   },
   {
     value: 'mynerve',
     get label() {
       return translate('Mynerve · Casual');
     },
-    css: '"Mynerve", cursive',
+    css: handwritingFont('Mynerve'),
   },
   {
     value: 'schoolbell',
     get label() {
       return translate('Schoolbell · Notes');
     },
-    css: '"Schoolbell", cursive',
+    css: handwritingFont('Schoolbell'),
   },
   {
     value: 'mansalva',
     get label() {
       return translate('Mansalva · Sketch');
     },
-    css: '"Mansalva", cursive',
+    css: handwritingFont('Mansalva'),
   },
   {
     value: 'walter-turncoat',
     get label() {
       return translate('Walter Turncoat · Rough');
     },
-    css: '"Walter Turncoat", cursive',
+    css: handwritingFont('Walter Turncoat'),
   },
   {
     value: 'patrick-hand-sc',
     get label() {
       return translate('Patrick Hand SC · Small Caps');
     },
-    css: '"Patrick Hand SC", cursive',
+    css: handwritingFont('Patrick Hand SC'),
   },
   {
     value: 'indie-flower',
     get label() {
       return translate('Indie Flower · Handwriting');
     },
-    css: '"Indie Flower", cursive',
+    css: handwritingFont('Indie Flower'),
   },
   {
     value: 'gloria-hallelujah',
     get label() {
       return translate('Gloria Hallelujah · Handwriting');
     },
-    css: '"Gloria Hallelujah", cursive',
+    css: handwritingFont('Gloria Hallelujah'),
   },
 
   {
@@ -107,26 +114,26 @@ export const FONT_FAMILIES: { value: FontFamily; label: string; css: string }[] 
     get label() {
       return translate('Sans');
     },
-    css: 'Inter, ui-sans-serif, system-ui, sans-serif',
+    css: SANS_FONT_STACK,
   },
   {
     value: 'serif',
     get label() {
       return translate('Serif');
     },
-    css: 'ui-serif, Georgia, Cambria, serif',
+    css: SERIF_FONT_STACK,
   },
   {
     value: 'mono',
     get label() {
       return translate('Mono');
     },
-    css: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    css: MONO_FONT_STACK,
   },
-  { value: 'arial', label: 'Arial', css: 'Arial, sans-serif' },
-  { value: 'georgia', label: 'Georgia', css: 'Georgia, serif' },
-  { value: 'verdana', label: 'Verdana', css: 'Verdana, sans-serif' },
-  { value: 'trebuchet', label: 'Trebuchet', css: '"Trebuchet MS", sans-serif' },
+  { value: 'arial', label: 'Arial', css: `Arial, ${SANS_FONT_STACK}` },
+  { value: 'georgia', label: 'Georgia', css: `Georgia, ${SERIF_FONT_STACK}` },
+  { value: 'verdana', label: 'Verdana', css: `Verdana, ${SANS_FONT_STACK}` },
+  { value: 'trebuchet', label: 'Trebuchet', css: `"Trebuchet MS", ${SANS_FONT_STACK}` },
 ];
 
 export const FONT_SIZE_PRESETS = [12, 14, 16, 20, 24, 32];
@@ -137,13 +144,8 @@ export const MAX_FONT_SIZE = 96;
 export const DEFAULT_FONT_FAMILY: FontFamily = 'short-stack';
 
 export function getFontFamilyCss(family?: FontFamily): string {
-  if (!family) return 'var(--project-font, "Short Stack", cursive)';
-  const resolvedFamily = family ?? DEFAULT_FONT_FAMILY;
-
-  return (
-    FONT_FAMILIES.find((option) => option.value === resolvedFamily)?.css ??
-    'Inter, ui-sans-serif, system-ui, sans-serif'
-  );
+  if (!family) return `var(--project-font, ${handwritingFont('Short Stack')})`;
+  return FONT_FAMILIES.find((option) => option.value === family)?.css ?? SANS_FONT_STACK;
 }
 
 export function getTypographyStyle(item: BoardItem): React.CSSProperties {

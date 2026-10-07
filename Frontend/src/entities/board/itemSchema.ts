@@ -46,12 +46,34 @@ const day: Check = (v) =>
   Number.isFinite(Date.parse(v)) &&
   new Date(v).toISOString().slice(0, 10) === v;
 const entry = object({ id: text, text, done: bool });
+const uniqueIds: Check = (v) => Array.isArray(v) && new Set(v.map((e) => e.id)).size === v.length;
 const position = object({ x: number, y: number });
 const point = object({ x: number, y: number, pressure: optional(number) });
 const points = list(point, 100_000);
 const title = { title: text };
 const uuid: Check = (v) =>
   typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+const task = object({
+  id: text,
+  text,
+  done: bool,
+  description: optional((v) => typeof v === 'string' && v.length <= 20_000),
+  subtasks: optional(
+    list(
+      object({ id: text, text: (v) => typeof v === 'string' && v.length <= 500 && !/[\r\n]/.test(v), done: bool }),
+      200,
+    ),
+  ),
+  assigneeUserId: optional(uuid),
+  categoryId: optional(text),
+  categoryIds: optional(
+    (v) =>
+      list((id) => typeof id === 'string' && id.trim().length > 0 && id.length <= 100, 100)(v) &&
+      Array.isArray(v) &&
+      new Set(v).size === v.length,
+  ),
+  deadline: optional(day),
+});
 const sectionStyle = object({
   color: optional(text),
   fontSize: optional(number),
@@ -148,13 +170,26 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
   },
   link: { version: 1, canNest: true, validate: object({ url, ...title, description: text }) },
   embed: { version: 1, canNest: true, validate: object({ url, ...title, showLabel: bool }) },
-  checklist: { version: 1, canNest: true, validate: object({ ...title, entries: list(entry) }) },
+  checklist: {
+    version: 1,
+    canNest: true,
+    validate: object({ ...title, entries: (v) => list(task)(v) && uniqueIds(v), hideCompleted: optional(bool) }),
+  },
   kanban: {
     version: 1,
     canNest: false,
     validate: object({
       ...title,
-      columns: list(object({ id: text, ...title, color: text, width: optional(number), cards: list(entry) })),
+      hideCompleted: optional(bool),
+      columns: list(
+        object({
+          id: text,
+          ...title,
+          color: text,
+          width: optional(number),
+          cards: (v) => list(task)(v) && uniqueIds(v),
+        }),
+      ),
     }),
   },
   timeline: {
@@ -276,6 +311,10 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
           targetHandle: optional(choice(null, 'top', 'bottom', 'left', 'right')),
           label: optional(text),
           type: optional(choice('smoothstep', 'default', 'straight')),
+          color: optional((value) => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)),
+          strokeWidth: optional((value) => number(value) && Number(value) >= 1 && Number(value) <= 8),
+          lineStyle: optional(choice('solid', 'dashed', 'dotted')),
+          arrow: optional(bool),
         }),
       ),
     }),

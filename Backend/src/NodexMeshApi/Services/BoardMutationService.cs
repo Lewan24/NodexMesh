@@ -181,8 +181,48 @@ public sealed class BoardMutationService(
             return (409, new BoardMutationResultDto(board.Revision, [], conflicts));
         }
 
+        var partialIds = mutation.Upserts.Where(u => u.Item.PreserveCompletedTasks).Select(u => u.Item.Id).ToHashSet();
+        mutation = mutation with
+        {
+            Upserts = mutation.Upserts.Select(u =>
+            {
+                if (!u.Item.PreserveCompletedTasks) return u;
+                BoardValidator.ValidateItem(u.Item);
+                if (!existing.TryGetValue(u.Item.Id, out var old) || old.Type != u.Item.Type)
+                    throw new ApiException(422, "invalid_item", "Load all tasks before copying or changing the block type.");
+                using var storedData = JsonDocument.Parse(old.Data);
+                return u with { Item = u.Item with { Data = TaskProjection.Merge(u.Item.Type, u.Item.Data,
+                    storedData.RootElement) } };
+            }).ToList()
+        };
+
         // --- 4. Validate against the referenced subgraph, not the whole 20k-item board ---
         await ValidateAgainstGraphAsync(boardId, mutation, existing, ct);
+
+        // Resolve project participants only when this mutation includes task blocks.
+        var taskUpserts = mutation.Upserts.Where(u => u.Item.Type is "checklist" or "kanban").ToList();
+        if (taskUpserts.Count > 0)
+        {
+            var participantIds = await db.ProjectMembers.Where(m => m.ProjectId == board.ProjectId)
+                .Select(m => m.UserId).ToListAsync(ct);
+            participantIds.Add(await db.Projects.Where(p => p.Id == board.ProjectId).Select(p => p.OwnerId).SingleAsync(ct));
+            foreach (var upsert in taskUpserts)
+            {
+                var data = BoardItemTypes.Deserialize(upsert.Item.Type, upsert.Item.Data.GetRawText());
+                var tasks = data is ChecklistData checklist ? checklist.Entries : ((KanbanData)data).Columns.SelectMany(c => c.Cards);
+                IEnumerable<TaskEntry> previousTasks = [];
+                if (existing.TryGetValue(upsert.Item.Id, out var previous) && previous.Type == upsert.Item.Type)
+                {
+                    var previousData = BoardItemTypes.Deserialize(previous.Type, previous.Data);
+                    previousTasks = previousData is ChecklistData oldChecklist ? oldChecklist.Entries
+                        : ((KanbanData)previousData).Columns.SelectMany(c => c.Cards);
+                }
+                var retainedAssignees = previousTasks.ToDictionary(t => t.Id, t => t.AssigneeUserId);
+                if (tasks.Any(t => t.AssigneeUserId is { } id && !participantIds.Contains(id)
+                    && (!retainedAssignees.TryGetValue(t.Id, out var oldId) || oldId != id)))
+                    throw new ApiException(422, "invalid_assignee", "Task assignees must be project participants.");
+            }
+        }
 
         // Tags are project-scoped UUIDs, never arbitrary foreign-key references.
         var requestedTags = new HashSet<Guid>();
@@ -287,7 +327,7 @@ public sealed class BoardMutationService(
                 [new ConflictDto(boardId, null, "revision_mismatch")]));
         }
 
-        var result = new BoardMutationResultDto(board.Revision, written.Select(ToDto).ToList(), []);
+        var result = new BoardMutationResultDto(board.Revision, written.Select(i => partialIds.Contains(i.Id) ? TaskProjection.ForPreference(ToDto(i)) : ToDto(i)).ToList(), []);
 
         db.IdempotencyKeys.Add(new IdempotencyKey
         {

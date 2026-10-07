@@ -34,3 +34,5 @@ Incoming remote state is rebased into local undo history so undo does not revers
 - Interactive writes remain synchronous. A message broker would not decide merge semantics; use a transactional outbox only for genuinely asynchronous background work.
 
 Measure save latency, conflict/rebase rates, 409/429 responses, polling/SignalR traffic, and snapshot bytes with multiple real clients before changing these boundaries.
+
+Collaboration obtains a fresh access token before negotiation and reconnect, sharing the authentication service's refresh lock. Mock and anonymous sessions do not start SignalR. Negotiation requires a bearer header; query tokens are accepted only on the exact collaboration transport endpoint. Genuine 401s remain security events, with a safe authentication failure category in metadata and no token values.

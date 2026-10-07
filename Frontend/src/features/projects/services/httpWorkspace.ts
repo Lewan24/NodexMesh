@@ -10,6 +10,10 @@ import { parseBoardRecord, parseBoardSnapshot, parseProjectRecord, parseTrashedI
 const segment = encodeURIComponent;
 
 export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
+  const taskQuery = (_boardId: string, includeCompleted = false) =>
+    includeCompleted ? '?includeCompleted=true' : '?includeCompleted=false';
+  const readBoard = (boardId: string, signal?: AbortSignal, includeCompleted = false) =>
+    client.request(`/boards/${segment(boardId)}${taskQuery(boardId, includeCompleted)}`, { signal });
   const projects = new Map<string, ProjectRecord>();
   const created = new Map<string, ProjectRecord>();
   const mutationBodies = new WeakMap<object, unknown>();
@@ -34,7 +38,7 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
     const boards = await client.request(`/projects/${segment(project.id)}/boards`, { signal });
     if (!Array.isArray(boards) || !boards[0]?.id)
       fail(422, 'invalid_response', translate('Project has no default board.'));
-    const board = parseBoardSnapshot(await client.request(`/boards/${segment(boards[0].id)}`, { signal }));
+    const board = parseBoardSnapshot(await readBoard(boards[0].id, signal));
     if (board.board.projectId !== project.id) fail(422, 'invalid_scope', translate('Invalid board project.'));
     projects.set(project.id, project);
     return { project, board };
@@ -52,9 +56,7 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
       if (!current || typeof current.revision !== 'string')
         fail(404, 'not_found', translate('Board is no longer available.'));
       const changed = current.revision !== previous.board.board.revision;
-      const board = changed
-        ? parseBoardSnapshot(await client.request(`/boards/${segment(current.id)}`, { signal }))
-        : previous.board;
+      const board = changed ? parseBoardSnapshot(await readBoard(current.id, signal)) : previous.board;
       if (board.board.projectId !== id) fail(422, 'invalid_scope', translate('Invalid board project.'));
       projects.set(id, project);
       return changed || project.revision !== previous.project.revision || project.role !== previous.project.role
@@ -133,7 +135,11 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
                         client.request(`/boards/${segment(board.id)}/item-page`, {
                           method: 'POST',
                           signal,
-                          body: { itemIds: batch.map((item) => item.id), expectedRevision: board.revision },
+                          body: {
+                            itemIds: batch.map((item) => item.id),
+                            expectedRevision: board.revision,
+                            includeCompleted: false,
+                          },
                         }),
                       signal,
                     ),
@@ -229,7 +235,7 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
     boards: {
       async saveComments(_projectId, boardId, itemId, changes) {
         return parseBoardSnapshot(
-          await client.request(`/boards/${segment(boardId)}/items/${segment(itemId)}/comments`, {
+          await client.request(`/boards/${segment(boardId)}/items/${segment(itemId)}/comments${taskQuery(boardId)}`, {
             method: 'PUT',
             body: changes,
           }),
@@ -261,8 +267,8 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
         await client.request(`/boards/${segment(boardId)}`, { method: 'DELETE' });
         void projectId;
       },
-      async get(_projectId, boardId, signal) {
-        return parseBoardSnapshot(await client.request(`/boards/${segment(boardId)}`, { signal }));
+      async get(_projectId, boardId, signal, includeCompleted) {
+        return parseBoardSnapshot(await readBoard(boardId, signal, includeCompleted));
       },
       async mutate(projectId, boardId, mutation) {
         const role = projects.get(projectId)?.role;
@@ -333,7 +339,7 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
             'revision_mismatch',
             translate('The board changed in another session. Local changes are preserved.'),
           );
-        return parseBoardSnapshot(await client.request(`/boards/${segment(boardId)}`));
+        return parseBoardSnapshot(await readBoard(boardId));
       },
       async listTrash(projectId) {
         const value = await client.request(`/projects/${segment(projectId)}/item-trash`);
@@ -342,10 +348,10 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
       },
       async restoreTrashItem(projectId, itemId, targetBoardId, position) {
         return parseBoardSnapshot(
-          await client.request(`/projects/${segment(projectId)}/item-trash/${segment(itemId)}/restore`, {
-            method: 'POST',
-            body: { targetBoardId, x: position?.x ?? null, y: position?.y ?? null },
-          }),
+          await client.request(
+            `/projects/${segment(projectId)}/item-trash/${segment(itemId)}/restore${taskQuery(targetBoardId)}`,
+            { method: 'POST', body: { targetBoardId, x: position?.x ?? null, y: position?.y ?? null } },
+          ),
         );
       },
       async purgeTrashItem(projectId, itemId) {

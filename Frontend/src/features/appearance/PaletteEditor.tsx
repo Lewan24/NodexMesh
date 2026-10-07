@@ -21,7 +21,7 @@ export default function PaletteEditor({
         const gradient = canGradient ? palette.gradients?.[fillKey] : undefined;
         const label = key === 'default' ? translate('Card default') : displayLabel(key);
         return (
-          <div key={key} className="space-y-2 p-3 border border-current/15">
+          <div key={key} className="appearance-palette-card space-y-2 p-3">
             <label className="flex items-center justify-between gap-2 text-sm">
               {label}
               <input
@@ -129,7 +129,7 @@ export default function PaletteEditor({
                     value1: displayLabel(mode),
                     value2: displayLabel(key),
                   })}
-                  className="h-8 border border-current/15"
+                  className="h-8 rounded-lg border border-current/15"
                   style={{ background: paletteBackground(palette, fillKey) }}
                 />
               </>

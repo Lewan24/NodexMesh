@@ -23,9 +23,10 @@ public static class CommentEndpoints
         .RequireAuthorization().WithTags("Comments");
 
     private static async Task<Ok<BoardSnapshotDto>> UpdateAsync(
-        Guid boardId, Guid itemId, UpdateCommentsRequest request, ClaimsPrincipal principal,
+        Guid boardId, Guid itemId, UpdateCommentsRequest request, bool? includeCompleted, string? includeCompletedFor, ClaimsPrincipal principal,
         AppDbContext db, IProjectAccessService access, IBoardMutationService boards, IHubContext<CollaborationHub, ICollaborationClient> hub, CancellationToken ct)
     {
+        _ = TaskProjection.ExpandedIds(includeCompleted, includeCompletedFor);
         var userId = principal.GetUserId();
         var board = await db.Boards.FirstOrDefaultAsync(b => b.Id == boardId, ct)
             ?? throw new ApiException(404, "not_found", "Board not found.");
@@ -105,6 +106,6 @@ public static class CommentEndpoints
         {
             // The comment is committed; a missed hint is recovered by the client's reconciliation poll.
         }
-        return TypedResults.Ok(await boards.GetSnapshotAsync(boardId, ct));
+        return TypedResults.Ok(TaskProjection.Project(await boards.GetSnapshotAsync(boardId, ct), includeCompleted, includeCompletedFor));
     }
 }

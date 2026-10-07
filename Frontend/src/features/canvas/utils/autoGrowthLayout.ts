@@ -66,7 +66,7 @@ export function autoGrowthLayout(
         target.x + target.width <= current.x
       )
         continue;
-      const nextY = current.y + current.height + CANVAS_GRID_SIZE;
+      const nextY = Math.ceil((current.y + current.height + CANVAS_GRID_SIZE) / CANVAS_GRID_SIZE) * CANVAS_GRID_SIZE;
       if (target.y >= nextY - 0.5) continue;
       const patch: Partial<BoardItem> = { y: item.y + nextY - targetBefore.y };
       if (item.type === 'line') Object.assign(patch, { y2: item.y2 + nextY - targetBefore.y });

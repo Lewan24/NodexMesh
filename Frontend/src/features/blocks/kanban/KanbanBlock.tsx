@@ -1,3 +1,7 @@
+import { saveTaskDetails } from '../shared/saveTaskDetails';
+import TaskDialog from '../shared/TaskDialog';
+import { useCompletedTasks } from '../shared/useCompletedTasks';
+import CompletedTasksButton from '../shared/CompletedTasksButton';
 import { translate, displayLabel } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
@@ -26,6 +30,7 @@ import { ITEM_WIDTH } from '@/features/canvas/constants';
 
 interface KanbanBlockProps {
   item: KanbanItem;
+  readOnly?: boolean;
   zoom?: number;
   isSelected?: boolean;
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
@@ -43,12 +48,21 @@ function DropLine() {
   );
 }
 
-export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCardDroppedOutside }: KanbanBlockProps) {
+export default function KanbanBlock({
+  readOnly = false,
+  item: sourceItem,
+  zoom = 1,
+  onUpdate: saveUpdate,
+  onDelete,
+  onCardDroppedOutside,
+}: KanbanBlockProps) {
+  const { item, onUpdate, controlItem, onVisibilityUpdate } = useCompletedTasks(sourceItem, saveUpdate, readOnly);
   useTranslation();
   const [columnSettings, setColumnSettings] = useState<string | null>(null);
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [dropColumn, setDropColumn] = useState<string | null>(null);
   const [addAtTop, setAddAtTop] = useState(false);
+  const [editingTask, setEditingTask] = useState<KanbanCard | null>(null);
   const [editingTitle, setEditingTitle] = useState(false);
   const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(null);
   const [newCardText, setNewCardText] = useState('');
@@ -93,7 +107,10 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
     (updater: (columns: KanbanColumn[]) => KanbanColumn[]) => {
       onUpdate((current) => {
         if (current.type !== 'kanban') return current;
-        const columns = updater(current.columns);
+        const visibleColumns = current.hideCompleted
+          ? current.columns.map((column) => ({ ...column, cards: column.cards.filter((card) => !card.done) }))
+          : current.columns;
+        const columns = updater(visibleColumns);
         return {
           ...current,
           columns,
@@ -135,9 +152,15 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
     onCardDroppedOutside,
   });
 
-  const totalCards = item.columns.reduce((total, column) => total + column.cards.length, 0);
+  const totalCards = item.columns.reduce(
+    (total, column) => total + column.cards.length,
+    item.taskSummary?.completedCount ?? 0,
+  );
 
-  const doneCards = item.columns.reduce((total, column) => total + column.cards.filter((card) => card.done).length, 0);
+  const doneCards = item.columns.reduce(
+    (total, column) => total + column.cards.filter((card) => card.done).length,
+    item.taskSummary?.completedCount ?? 0,
+  );
 
   const toggleCard = useCallback(
     (columnId: string, cardId: string) => {
@@ -160,19 +183,6 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
       updateColumns((columns) =>
         columns.map((column) =>
           column.id === columnId ? { ...column, cards: column.cards.filter((card) => card.id !== cardId) } : column,
-        ),
-      );
-    },
-    [updateColumns],
-  );
-
-  const editCard = useCallback(
-    (columnId: string, cardId: string, text: string) => {
-      updateColumns((columns) =>
-        columns.map((column) =>
-          column.id === columnId
-            ? { ...column, cards: column.cards.map((card) => (card.id === cardId ? { ...card, text } : card)) }
-            : column,
         ),
       );
     },
@@ -255,7 +265,11 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
     <div
       className="group relative"
       style={{
-        width: Math.max(item.width ?? ITEM_WIDTH.kanban, getKanbanMinWidth(item.columns.length)),
+        width: Math.max(
+          item.width ?? ITEM_WIDTH.kanban,
+          getKanbanMinWidth(item.columns.length),
+          Math.ceil((item.columns.length * 20 * (baseFontSize ?? 14)) / 16) * 16,
+        ),
         height: item.height,
       }}
     >
@@ -266,6 +280,7 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
         className="item-rounded shadow-xl overflow-scroll"
         style={{ width: '100%', height: item.height ? '100%' : undefined, background, borderColor }}
       >
+        <CompletedTasksButton item={controlItem} onUpdate={onVisibilityUpdate} readOnly={readOnly} />
         {item.topColor && <div style={{ height: 5, background: item.topColor, borderRadius: '16px 16px 0 0' }} />}
 
         {/* Header */}
@@ -581,6 +596,11 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                   outlineOffset: -2,
                 }}
               >
+                {column.cards.length === 0 && (
+                  <p className="px-2 py-3 text-xs" style={{ color: mutedColor }}>
+                    {translate('All tasks done. Add a new one!')}
+                  </p>
+                )}
                 {column.cards.map((card, index) => (
                   <div key={card.id}>
                     {dropTarget?.columnId === column.id &&
@@ -611,7 +631,8 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
                         onDragHandleMouseDown={(event) => handleCardDragStart(column.id, card.id, event)}
                         onToggle={() => toggleCard(column.id, card.id)}
                         onDelete={() => deleteCard(column.id, card.id)}
-                        onEdit={(text) => editCard(column.id, card.id, text)}
+                        onOpen={() => setEditingTask(card)}
+                        readOnly={readOnly}
                         textStyle={{
                           ...typographyStyle,
                           fontSize: baseFontSize ? `${baseFontSize}px` : undefined,
@@ -712,6 +733,15 @@ export default function KanbanBlock({ item, zoom = 1, onUpdate, onDelete, onCard
           ))}
         </div>
       </div>
+      {editingTask && (
+        <TaskDialog
+          key={editingTask.id}
+          task={editingTask}
+          readOnly={readOnly}
+          onClose={() => setEditingTask(null)}
+          onSave={(task) => saveTaskDetails(sourceItem, task, onUpdate)}
+        />
+      )}
       {columnSettings && item.columns.find((column) => column.id === columnSettings) && (
         <KanbanColumnDialog
           key={columnSettings}

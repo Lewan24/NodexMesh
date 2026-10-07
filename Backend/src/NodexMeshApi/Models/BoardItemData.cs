@@ -6,6 +6,9 @@ namespace NodexMeshApi.Models;
 
 // ---- shared fragments --------------------------------------------------
 public sealed record Entry(string Id, string Text, bool Done);
+public sealed record TaskEntry(string Id, string Text, bool Done, string? Description = null,
+    IReadOnlyList<Entry>? Subtasks = null, Guid? AssigneeUserId = null, string? CategoryId = null, string? Deadline = null, IReadOnlyList<string>? CategoryIds = null);
+public sealed record TaskCategory(string Id, string Name, string Color);
 public sealed record Position(double X, double Y);
 public sealed record GeoPoint(double X, double Y, double? Pressure);
 
@@ -34,9 +37,9 @@ public sealed record ImageData(string Url, string Caption, string? Variant, doub
 public sealed record FileData(string Title, string Source, string FileName, string ContentType, long Size);
 public sealed record LinkData(string Url, string Title, string Description);
 public sealed record EmbedData(string Url, string Title, bool ShowLabel);
-public sealed record ChecklistData(string Title, IReadOnlyList<Entry> Entries);
-public sealed record KanbanColumnData(string Id, string Title, string Color, double? Width, IReadOnlyList<Entry> Cards);
-public sealed record KanbanData(string Title, IReadOnlyList<KanbanColumnData> Columns);
+public sealed record ChecklistData(string Title, IReadOnlyList<TaskEntry> Entries, bool HideCompleted = false);
+public sealed record KanbanColumnData(string Id, string Title, string Color, double? Width, IReadOnlyList<TaskEntry> Cards);
+public sealed record KanbanData(string Title, IReadOnlyList<KanbanColumnData> Columns, bool HideCompleted = false);
 public sealed record TimelineTaskData(
     string Id, string Title, string Start, string End, bool Done, string Color,
     IReadOnlyList<Entry> Checklist, Guid? AssigneeUserId = null);
@@ -53,7 +56,10 @@ public sealed record MindmapNodeData(string Id, string? ParentId, string Label, 
 public sealed record MindmapData(string Title, string Layout, string LineStyle, double LineWidth, bool Dashed, IReadOnlyList<MindmapNodeData> Nodes);
 public sealed record DiagramNodeShapeData(string Label, string Shape, string Color);
 public sealed record DiagramNodeData(string Id, Position Position, string Type, DiagramNodeShapeData Data);
-public sealed record DiagramEdgeData(string Id, string Source, string Target, string? SourceHandle, string? TargetHandle, string? Label, string? Type);
+public sealed record DiagramEdgeData(
+    string Id, string Source, string Target, string? SourceHandle, string? TargetHandle, string? Label, string? Type,
+    [property: RegularExpression("^#[0-9a-fA-F]{6}$")] string? Color = null,
+    [property: Range(1, 8)] double? StrokeWidth = null, string? LineStyle = null, bool? Arrow = null);
 public sealed record DiagramData(string Title, IReadOnlyList<DiagramNodeData> Nodes, IReadOnlyList<DiagramEdgeData> Edges);
 public sealed record DbFieldData(string Id, string Name, string DataType, bool PrimaryKey, bool Nullable, bool Unique, string DefaultValue);
 public sealed record DbTableData(string Id, string Name, Position Position, IReadOnlyList<DbFieldData> Fields);

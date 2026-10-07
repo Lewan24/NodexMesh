@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { httpClient } from '@/app/services';
 import { translate } from '@/shared/i18n';
+import AdminIpBan from './AdminIpBan';
 import Modal from '@/shared/components/dialogs/Modal';
 
 type AuditRow = {
@@ -513,6 +514,13 @@ export default function AdminAuditPanel() {
                   </pre>
                 </div>
                 <div className="flex flex-wrap justify-end gap-2">
+                  {typeof (details as Record<string, unknown>).clientIp === 'string' &&
+                    Boolean((details as Record<string, unknown>).clientIp) && (
+                      <AdminIpBan
+                        initialIp={String((details as Record<string, unknown>).clientIp)}
+                        onBanned={() => setRevision((value) => value + 1)}
+                      />
+                    )}
                   <button
                     className="btn-ghost rounded-xl px-4 py-2 text-sm"
                     onClick={() => {

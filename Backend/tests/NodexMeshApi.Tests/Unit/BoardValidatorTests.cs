@@ -23,6 +23,45 @@ public class BoardValidatorTests
             Appearance: appearance ?? EmptyObject(),
             Data: data ?? Json(new { content = "hello" }));
 
+    [Theory]
+    [InlineData("checklist", "{\"title\":\"Tasks\",\"entries\":null}")]
+    [InlineData("checklist", "{\"title\":\"Tasks\",\"entries\":[null]}")]
+    [InlineData("checklist", "{\"title\":\"Tasks\",\"entries\":[{\"id\":\"x\",\"text\":\"Task\",\"done\":false},{\"id\":\"x\",\"text\":\"Duplicate\",\"done\":true}]}")]
+    [InlineData("kanban", "{\"title\":\"Tasks\",\"columns\":[{\"id\":\"column\",\"title\":\"Column\",\"color\":\"#fff\",\"cards\":null}]}")]
+    public void TaskArraysRejectMissingNullAndDuplicateEntries(string type, string data)
+    {
+        var act = () => BoardValidator.ValidateItem(NoteItem(type: type, data: JsonDocument.Parse(data).RootElement));
+        act.Should().Throw<ApiException>().Where(e => e.Code == "invalid_item");
+    }
+
+    [Theory]
+    [InlineData("2026-02-30", "one line", false)]
+    [InlineData("2026-10-31", "two\nlines", false)]
+    [InlineData("2026-10-31", "one line", true)]
+    public void RichTaskDetailsValidateDatesAndSingleLineSubtasks(string deadline, string subtask, bool valid)
+    {
+        var data = Json(new { title = "Tasks", entries = new[] { new { id = "task", text = "Release", done = false,
+            description = "Details", categoryId = "important", assigneeUserId = Guid.NewGuid(), deadline,
+            subtasks = new[] { new { id = "subtask", text = subtask, done = true } } } } });
+        var act = () => BoardValidator.ValidateItem(NoteItem(type: "checklist", data: data));
+        if (valid) act.Should().NotThrow();
+        else act.Should().Throw<ApiException>().Where(e => e.Code == "invalid_item");
+    }
+
+    [Theory]
+    [InlineData("[\"important\",\"medium\"]", true)]
+    [InlineData("[]", true)]
+    [InlineData("[\"important\",\"important\"]", false)]
+    [InlineData("[\"\"]", false)]
+    [InlineData("[null]", false)]
+    public void TaskCategorySelectionsRequireUniqueNonemptyIds(string categories, bool valid)
+    {
+        var json = "{\"title\":\"Tasks\",\"entries\":[{\"id\":\"task\",\"text\":\"Release\",\"done\":false,\"categoryIds\":" + categories + "}]}";
+        var act = () => BoardValidator.ValidateItem(NoteItem(type: "checklist", data: JsonDocument.Parse(json).RootElement));
+        if (valid) act.Should().NotThrow();
+        else act.Should().Throw<ApiException>().Where(error => error.Code == "invalid_item");
+    }
+
     [Fact]
     public void ValidateItem_AcceptsOptionalCustomCss()
     {

@@ -16,6 +16,8 @@ public sealed class Project
     public DateTimeOffset? DeletedAt { get; set; }
     public DateTimeOffset? UserDeletedAt { get; set; }
 
+    public string TaskCategories { get; set; } = "[]";
+
     public List<Board> Boards { get; set; } = [];
     public List<ProjectMember> Members { get; set; } = [];
     public List<Tag> Tags { get; set; } = [];
