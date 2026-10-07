@@ -64,8 +64,18 @@ public static class BoardValidator
 
         // Strict deserialization: unknown/missing/wrong-typed fields throw (mass-assignment guard).
         var data = BoardItemTypes.Deserialize(item.Type, item.Data.GetRawText());
-        static bool ValidEntries(IReadOnlyList<Entry>? entries) => entries is not null
-            && entries.All(e => e is not null && !string.IsNullOrWhiteSpace(e.Id) && IsText(e.Id) && IsText(e.Text))
+        static bool ValidEntries(IReadOnlyList<TaskEntry>? entries) => entries is not null && entries.Count <= 10_000
+            && entries.All(e => e is not null && !string.IsNullOrWhiteSpace(e.Id) && IsText(e.Id) && IsText(e.Text)
+                && (e.Description is null || e.Description.Length <= 20_000)
+                && (e.CategoryId is null || IsText(e.CategoryId))
+                && (e.CategoryIds is null || e.CategoryIds.Count <= 100
+                    && e.CategoryIds.All(id => !string.IsNullOrWhiteSpace(id) && id.Length <= 100)
+                    && e.CategoryIds.Distinct().Count() == e.CategoryIds.Count)
+                && (e.Deadline is null || DateOnly.TryParseExact(e.Deadline, "yyyy-MM-dd", out _))
+                && (e.Subtasks is null || e.Subtasks.Count <= 200 && e.Subtasks.All(t => t is not null
+                    && !string.IsNullOrWhiteSpace(t.Id) && IsText(t.Id) && t.Text is not null && t.Text.Length <= 500
+                    && !t.Text.Contains('\n') && !t.Text.Contains('\r'))
+                    && e.Subtasks.Select(t => t.Id).Distinct().Count() == e.Subtasks.Count))
             && entries.Select(e => e.Id).Distinct().Count() == entries.Count;
         if (data is ChecklistData checklist && (!IsText(checklist.Title) || !ValidEntries(checklist.Entries)))
             throw new ApiException(422, "invalid_item", "Invalid checklist tasks.");

@@ -1,3 +1,5 @@
+import { saveTaskDetails } from '../shared/saveTaskDetails';
+import TaskDialog from '../shared/TaskDialog';
 import { useCompletedTasks } from '../shared/useCompletedTasks';
 import CompletedTasksButton from '../shared/CompletedTasksButton';
 import { translate } from '@/shared/i18n';
@@ -41,6 +43,7 @@ export default function ChecklistBlock({
 }: ChecklistBlockProps) {
   const { item, onUpdate, controlItem, onVisibilityUpdate } = useCompletedTasks(sourceItem, saveUpdate, readOnly);
   useTranslation();
+  const [editingTask, setEditingTask] = useState<ChecklistEntry | null>(null);
   const [editingTitle, setEditingTitle] = useState(false);
   const [addingEntry, setAddingEntry] = useState(false);
   const [newEntryText, setNewEntryText] = useState('');
@@ -50,10 +53,6 @@ export default function ChecklistBlock({
   const addInputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const entriesRef = useRef(item.entries);
-
-  entriesRef.current = item.entries;
-
   useEffect(() => {
     if (addingEntry) addInputRef.current?.focus();
   }, [addingEntry]);
@@ -75,9 +74,18 @@ export default function ChecklistBlock({
 
   const updateEntries = useCallback(
     (updater: (entries: ChecklistEntry[]) => ChecklistEntry[]) => {
-      update({ entries: updater(entriesRef.current) });
+      onUpdate((current) =>
+        current.type === 'checklist'
+          ? {
+              ...current,
+              entries: updater(
+                current.hideCompleted ? current.entries.filter((entry) => !entry.done) : current.entries,
+              ),
+            }
+          : current,
+      );
     },
-    [update],
+    [onUpdate],
   );
 
   const doneCount = item.entries.filter((entry) => entry.done).length + (item.taskSummary?.completedCount ?? 0);
@@ -118,18 +126,20 @@ export default function ChecklistBlock({
     [updateEntries],
   );
 
-  const editEntry = useCallback(
-    (entryId: string, text: string) => {
-      updateEntries((entries) => entries.map((entry) => (entry.id === entryId ? { ...entry, text } : entry)));
-    },
-    [updateEntries],
-  );
-
   return (
     <div
       className="group relative transition-shadow duration-200 hover:shadow-2xl"
       style={{ width: item.width ?? 220, height: item.height }}
     >
+      {editingTask && (
+        <TaskDialog
+          key={editingTask.id}
+          task={editingTask}
+          readOnly={readOnly}
+          onClose={() => setEditingTask(null)}
+          onSave={(task) => saveTaskDetails(sourceItem, task, onUpdate)}
+        />
+      )}
       <div
         ref={cardRef}
         data-wheel-scroll={item.height ? 'true' : 'false'}
@@ -249,7 +259,8 @@ export default function ChecklistBlock({
                   onDragHandleMouseDown={(event) => handleDragStart(index, event)}
                   onToggle={() => toggleEntry(entry.id)}
                   onDelete={() => deleteEntry(entry.id)}
-                  onEdit={(text) => editEntry(entry.id, text)}
+                  onOpen={() => setEditingTask(entry)}
+                  readOnly={readOnly}
                 />
               </div>
             </div>

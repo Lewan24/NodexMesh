@@ -79,6 +79,31 @@ public class BoardEndpointsTests : IDisposable
     }
 
     [Fact]
+    public async Task RichTasks_RoundTripDetailsAndRejectForeignAssignees()
+    {
+        var (owner, ownerId, _, _) = await _factory.CreateSeededUserAsync();
+        var (_, strangerId, _, _) = await _factory.CreateSeededUserAsync();
+        var (_, board) = await CreateProjectWithBoardAsync(owner);
+        var richData = JsonSerializer.SerializeToElement(new { title = "Tasks", entries = new[] { new {
+            id = "task", text = "Release", done = false, description = "Task details", deadline = "2026-10-31",
+            categoryIds = new[] { "important", "medium" }, assigneeUserId = ownerId,
+            subtasks = new[] { new { id = "sub", text = "Test", done = true } } } } });
+        var item = NoteInsert(board.Id);
+        item = item with { Item = item.Item with { Type = "checklist", Data = richData } };
+        var path = $"/api/v1/boards/{board.Id}";
+        (await owner.PostAsJsonAsync(path + "/mutations", new BoardMutationDto(Guid.NewGuid(), board.Revision, [item], []))).EnsureSuccessStatusCode();
+        var stored = (await owner.GetFromJsonAsync<BoardSnapshotDto>(path))!;
+        stored.Items.Single().Data.GetProperty("entries")[0].GetProperty("description").GetString().Should().Be("Task details");
+        stored.Items.Single().Data.GetProperty("entries")[0].GetProperty("categoryIds").EnumerateArray()
+            .Select(category => category.GetString()).Should().Equal("important", "medium");
+        stored.Items.Single().Data.GetProperty("entries")[0].GetProperty("subtasks")[0].GetProperty("done").GetBoolean().Should().BeTrue();
+        var foreignData = JsonDocument.Parse(richData.GetRawText().Replace(ownerId.ToString(), strangerId.ToString())).RootElement;
+        var edit = item with { ExpectedRevision = stored.Items.Single().Revision, Item = item.Item with { Data = foreignData } };
+        (await owner.PostAsJsonAsync(path + "/mutations", new BoardMutationDto(Guid.NewGuid(), stored.Board.Revision, [edit], [])))
+            .StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+    }
+
+    [Fact]
     public async Task Commenter_CanManageOwnComments_ButViewerAndOtherAuthorsCannotWrite()
     {
         var (owner, _, _, _) = await _factory.CreateSeededUserAsync();

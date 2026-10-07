@@ -122,3 +122,27 @@ The app bar keeps project selection, project search, sharing, and account access
 Administration user rows show full, wrapping names and email addresses. Expand User actions to edit accounts, reset credentials or appearance, manage MFA, block accounts, or access the existing restore/deletion confirmations. Actions expand below the identity rather than overlapping it.
 
 Opening an unloaded project shows a loading status instead of a partial read-only board. Loading failures retain a Retry button; validated snapshots and session caching still control when the board becomes available.
+
+Checklist and kanban tasks retain the quick-add flow. Click a task title to open the shared editor;
+Save task and clicking the backdrop commit changes and close only after the workspace save queue confirms
+success. Close also saves; Cancel/Escape discards the open draft. Failed saves keep the dialog open and
+allow retry through the workspace recovery path. Optional details include description,
+project assignee, deadline, multiple categories, and simple done/undone subtasks. Previews show category color and
+name, completed/total subtask counts, detail icons, and deadline. The category editor is available from
+the task dialog and saves project-wide settings separately from task edits. Read-only inspection disables
+editing. Custom categories are available to project editors without a subscription requirement.
+
+Regression coverage: `Frontend/tests/rich-tasks.test.mjs`, rich-task cases in `BoardValidatorTests`,
+project-category authorization/concurrency tests in `ProjectEndpointsTests`, and the existing completed-task
+and cross-item drag suites.
+
+The task dialog uses separate task-field and category-editor components. Category chips are keyboard-accessible
+checkboxes. Categories can be created in the project editor and then selected on a task. Category loading errors
+show a retry action. On phones the dialog is a scrollable bottom sheet with fixed actions, safe-area padding,
+16px inputs, and visual-viewport resizing for the software keyboard; background page scrolling is locked.
+Middle-button canvas panning is handled during capture so task titles, checkboxes, delete buttons, and drag handles
+cannot block navigation. Dialog and menu controls are excluded from middle-button capture.
+
+Task details remain open during persistence. If the server omits a completed task from a later partial board
+response, saving its still-open dialog reloads completed task data before editing, preserves the partial-write
+flag, and adjusts local progress counts. Removed tasks or columns show an error rather than being recreated.

@@ -275,11 +275,7 @@ export interface KanbanColumn {
   width?: number;
 }
 
-export interface KanbanCard {
-  id: string;
-  text: string;
-  done: boolean;
-}
+export interface KanbanCard extends ChecklistEntry {}
 
 export interface ImageItem extends BaseItem {
   type: 'image';
@@ -335,7 +331,24 @@ export interface ChecklistItem extends BaseItem {
   entries: ChecklistEntry[];
 }
 
+export interface TaskCategory {
+  id: string;
+  name: string;
+  color: string;
+}
+export interface Subtask {
+  id: string;
+  text: string;
+  done: boolean;
+}
 export interface ChecklistEntry {
+  description?: string;
+  subtasks?: Subtask[];
+  assigneeUserId?: string;
+  /** Legacy single-category assignment, read until the task is edited. */
+  categoryId?: string;
+  categoryIds?: string[];
+  deadline?: string;
   id: string;
   text: string;
   done: boolean;

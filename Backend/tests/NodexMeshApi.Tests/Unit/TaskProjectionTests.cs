@@ -11,6 +11,21 @@ public class TaskProjectionTests
     private static JsonElement Json(string source) => JsonDocument.Parse(source).RootElement;
 
     [Fact]
+    public void CompletedProjectionAndPartialMergePreserveRichTaskDetails()
+    {
+        var stored = Json("""
+            {"title":"Tasks","entries":[{"id":"hidden","text":"Release","done":true,
+            "description":"Details","categoryId":"important","deadline":"2026-10-31",
+            "assigneeUserId":"01900000-0000-7000-8000-000000000001",
+            "subtasks":[{"id":"sub","text":"Test","done":true}]}]}
+            """);
+        var projected = TaskProjection.Completed("checklist", stored);
+        JsonSerializer.Serialize(projected.GetProperty("entries")[0]).Should().Be(JsonSerializer.Serialize(stored.GetProperty("entries")[0]));
+        var merged = TaskProjection.Merge("checklist", Json("""{"title":"Changed","entries":[]}"""), stored);
+        merged.GetProperty("entries")[0].GetRawText().Should().Be(projected.GetProperty("entries")[0].GetRawText());
+    }
+
+    [Fact]
     public void HundredsOfCompletedTasksAreOmittedWhileProgressCountsRemainAccurate()
     {
         var data = JsonSerializer.SerializeToElement(new { title = "Tasks", entries = Enumerable.Range(0, 500)

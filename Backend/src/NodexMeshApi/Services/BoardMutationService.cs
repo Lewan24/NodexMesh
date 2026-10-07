@@ -199,6 +199,31 @@ public sealed class BoardMutationService(
         // --- 4. Validate against the referenced subgraph, not the whole 20k-item board ---
         await ValidateAgainstGraphAsync(boardId, mutation, existing, ct);
 
+        // Resolve project participants only when this mutation includes task blocks.
+        var taskUpserts = mutation.Upserts.Where(u => u.Item.Type is "checklist" or "kanban").ToList();
+        if (taskUpserts.Count > 0)
+        {
+            var participantIds = await db.ProjectMembers.Where(m => m.ProjectId == board.ProjectId)
+                .Select(m => m.UserId).ToListAsync(ct);
+            participantIds.Add(await db.Projects.Where(p => p.Id == board.ProjectId).Select(p => p.OwnerId).SingleAsync(ct));
+            foreach (var upsert in taskUpserts)
+            {
+                var data = BoardItemTypes.Deserialize(upsert.Item.Type, upsert.Item.Data.GetRawText());
+                var tasks = data is ChecklistData checklist ? checklist.Entries : ((KanbanData)data).Columns.SelectMany(c => c.Cards);
+                IEnumerable<TaskEntry> previousTasks = [];
+                if (existing.TryGetValue(upsert.Item.Id, out var previous) && previous.Type == upsert.Item.Type)
+                {
+                    var previousData = BoardItemTypes.Deserialize(previous.Type, previous.Data);
+                    previousTasks = previousData is ChecklistData oldChecklist ? oldChecklist.Entries
+                        : ((KanbanData)previousData).Columns.SelectMany(c => c.Cards);
+                }
+                var retainedAssignees = previousTasks.ToDictionary(t => t.Id, t => t.AssigneeUserId);
+                if (tasks.Any(t => t.AssigneeUserId is { } id && !participantIds.Contains(id)
+                    && (!retainedAssignees.TryGetValue(t.Id, out var oldId) || oldId != id)))
+                    throw new ApiException(422, "invalid_assignee", "Task assignees must be project participants.");
+            }
+        }
+
         // Tags are project-scoped UUIDs, never arbitrary foreign-key references.
         var requestedTags = new HashSet<Guid>();
         foreach (var upsert in mutation.Upserts)

@@ -21,6 +21,29 @@ public class ProjectEndpointsTests : IDisposable
     }
 
     [Fact]
+    public async Task TaskCategories_AreProjectScopedValidatedAndRevisionProtected()
+    {
+        var (owner, _, _, _) = await _factory.CreateSeededUserAsync();
+        var (viewer, _, email, _) = await _factory.CreateSeededUserAsync();
+        var (stranger, _, _, _) = await _factory.CreateSeededUserAsync();
+        var project = await CreateProjectAsync(owner);
+        await owner.PostAsJsonAsync($"/api/v1/projects/{project.Id}/members", new InviteMemberRequest(email, "Viewer"));
+        var path = $"/api/v1/projects/{project.Id}/task-categories";
+        var initial = (await owner.GetFromJsonAsync<NodexMeshApi.Endpoints.ProjectEndpoints.TaskCategoriesResponse>(path))!;
+        initial.Categories.Should().Contain(c => c.Name == "Important" && c.Color == "#EF4444");
+        (await stranger.GetAsync(path)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        var update = new { expectedRevision = initial.Revision, categories = new[] { new { id = "custom", name = "Custom", color = "#123456" } } };
+        (await viewer.PutAsJsonAsync(path, update)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await owner.PutAsJsonAsync(path, new { expectedRevision = initial.Revision,
+            categories = new[] { new { id = "custom", name = "Custom", color = "url(evil)" } } })).StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        (await owner.PutAsJsonAsync(path, update)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await owner.PutAsJsonAsync(path, update)).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var saved = (await viewer.GetFromJsonAsync<NodexMeshApi.Endpoints.ProjectEndpoints.TaskCategoriesResponse>(path))!;
+        saved.Categories.Should().ContainSingle(c => c.Name == "Custom");
+        saved.Revision.Should().Be(initial.Revision + 1);
+    }
+
+    [Fact]
     public async Task ProjectTrash_IsListedForOwner_AndPermanentDeletionRequiresOwnershipAndTrash()
     {
         var (owner, _, _, _) = await _factory.CreateSeededUserAsync();

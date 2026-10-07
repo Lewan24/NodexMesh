@@ -66,3 +66,9 @@ Migration `20261006075102_DefaultSidebarWidth235` sets the database sidebar-widt
 ## Persistent IP protection
 
 Migration `AddIpProtection` creates `ip_access_states`, keyed by a normalized IPv4/IPv6 string (45 characters). It stores a fixed failure window, four counters, last-seen time, optional ban expiry/reason and release timestamp/administrator. Indexes cover ban expiry and last-seen cleanup. A UUID `version` is an EF concurrency token for cross-instance counter updates and administrator release. Audit `security.ip_banned` is committed with the ban. Active bans survive restarts and remain until expiry/release; no in-memory cache is authoritative. Unbanned inactive states are removed under security audit retention.
+
+Rich project tasks use the `RichProjectTasks` migration, which adds `projects.task_categories` as text
+containing serialized category records. Existing rows initialize to `[]`, interpreted as the default
+priority categories. Task descriptions, subtasks, assignments, category references, and deadlines remain
+in existing board item JSON; no rewrite of task rows is required. Apply the migration before running
+the updated API. Category updates participate in project optimistic concurrency and audit capture.

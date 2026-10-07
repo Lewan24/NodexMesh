@@ -6,6 +6,9 @@ namespace NodexMeshApi.Models;
 
 // ---- shared fragments --------------------------------------------------
 public sealed record Entry(string Id, string Text, bool Done);
+public sealed record TaskEntry(string Id, string Text, bool Done, string? Description = null,
+    IReadOnlyList<Entry>? Subtasks = null, Guid? AssigneeUserId = null, string? CategoryId = null, string? Deadline = null, IReadOnlyList<string>? CategoryIds = null);
+public sealed record TaskCategory(string Id, string Name, string Color);
 public sealed record Position(double X, double Y);
 public sealed record GeoPoint(double X, double Y, double? Pressure);
 
@@ -34,8 +37,8 @@ public sealed record ImageData(string Url, string Caption, string? Variant, doub
 public sealed record FileData(string Title, string Source, string FileName, string ContentType, long Size);
 public sealed record LinkData(string Url, string Title, string Description);
 public sealed record EmbedData(string Url, string Title, bool ShowLabel);
-public sealed record ChecklistData(string Title, IReadOnlyList<Entry> Entries, bool HideCompleted = false);
-public sealed record KanbanColumnData(string Id, string Title, string Color, double? Width, IReadOnlyList<Entry> Cards);
+public sealed record ChecklistData(string Title, IReadOnlyList<TaskEntry> Entries, bool HideCompleted = false);
+public sealed record KanbanColumnData(string Id, string Title, string Color, double? Width, IReadOnlyList<TaskEntry> Cards);
 public sealed record KanbanData(string Title, IReadOnlyList<KanbanColumnData> Columns, bool HideCompleted = false);
 public sealed record TimelineTaskData(
     string Id, string Title, string Start, string End, bool Done, string Color,

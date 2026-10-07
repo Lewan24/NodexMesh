@@ -109,10 +109,7 @@ for (const [type, Component] of [
       assert.equal(calls.length, 1);
       assert.match(calls[0].url, /expectedRevision=3/);
       assert.ok(host.querySelector('[data-read-only-action]') === null);
-      const toggle =
-        type === 'checklist'
-          ? host.querySelector('[role="checkbox"]')
-          : host.querySelector('.group\\/card button.rounded-full');
+      const toggle = host.querySelector('[role="checkbox"]');
       assert.ok(toggle);
       await click(toggle);
       assert.equal(updates, 2);
@@ -257,10 +254,7 @@ for (const [type, Component] of [
       assert.doesNotMatch(host.textContent, /Previously completed task/);
       assert.match(host.textContent, /Unfinished task/);
       assert.equal(flattenItems([current], '00000000-0000-4000-8000-000000000002')[0].item.data.hideCompleted, true);
-      const checkbox =
-        type === 'checklist'
-          ? host.querySelector('[role="checkbox"]')
-          : host.querySelector('.group\\/card button.rounded-full');
+      const checkbox = host.querySelector('[role="checkbox"]');
       await click(checkbox);
       const entries = type === 'checklist' ? current.entries : current.columns[0].cards;
       assert.equal(entries.length, 2);

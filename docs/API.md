@@ -215,3 +215,22 @@ Manual bans normalize IPv6 and mapped IPv4 addresses, persist in the existing IP
 Item writes may set `preserveCompletedTasks: true` outside `data` when editing partial task payloads. The backend retains stored completed tasks in surviving lists/columns, validates the merged payload and enforces existing revision/idempotency checks. This flag is only valid for existing checklist/kanban blocks of the same type. Omit it or set it to false when editing fully loaded tasks. The canvas automatically fetches complete tasks before pasting or duplicating a partial block. Removing a kanban column explicitly removes its hidden cards.
 
 Manual IP ban requests also accept `forever: true`, for example `{ "ip": "192.0.2.123", "reason": "Verified malicious source", "forever": true }`. The default remains a 60-minute temporary ban. `durationMinutes`, when supplied, must still be between 1 and 43,200. Permanent bans use the UTC maximum timestamp (`9999-12-31T23:59:59.9999999Z`) in the existing `bannedUntil` column; they survive retention cleanup and remain active until explicitly released. The admin UI displays “Banned forever”. No database migration is required.
+
+### Rich checklist and kanban tasks
+
+Checklist `entries` and kanban `columns[].cards` keep `id`, `text`, and `done` and accept optional
+`description` (20,000 characters), `subtasks` (up to 200 `{ id, text, done }` entries, unique IDs,
+500-character single-line text), `assigneeUserId` (project participant UUID), `categoryId`, and
+`deadline` (valid `YYYY-MM-DD`), and `categoryIds` (up to 100 distinct nonempty IDs, each at most 100 characters).
+`categoryId` remains readable for legacy tasks; new edits use `categoryIds`. An explicit empty array clears
+all assignments, including a legacy single category. Existing tasks need no conversion. Rich details survive completed-task
+projection, partial mutations, and checklist/kanban transfers. An unchanged assignment to a former
+participant is retained; new assignments must reference current participants.
+
+`GET /api/v1/projects/{projectId}/task-categories` returns `{ revision, categories: [{ id, name, color }] }`.
+All project participants can read it. `PUT` accepts `{ expectedRevision, categories }`, requires Editor
+or Owner access, and returns the updated representation. Stale revisions return 409. Supply 1–100
+categories, unique nonempty IDs and names up to 100 characters, and six-digit hex colors. Every project
+starts with Important (red), Medium priority (yellow), and Low priority (green). Editors can rename,
+recolor, remove, and add custom categories. Deleted categories leave task IDs intact and appear as
+Deleted category in the task editor until cleared or replaced. Category changes use the project revision.

@@ -1,3 +1,5 @@
+import { saveTaskDetails } from '../shared/saveTaskDetails';
+import TaskDialog from '../shared/TaskDialog';
 import { useCompletedTasks } from '../shared/useCompletedTasks';
 import CompletedTasksButton from '../shared/CompletedTasksButton';
 import { translate, displayLabel } from '@/shared/i18n';
@@ -60,6 +62,7 @@ export default function KanbanBlock({
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [dropColumn, setDropColumn] = useState<string | null>(null);
   const [addAtTop, setAddAtTop] = useState(false);
+  const [editingTask, setEditingTask] = useState<KanbanCard | null>(null);
   const [editingTitle, setEditingTitle] = useState(false);
   const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(null);
   const [newCardText, setNewCardText] = useState('');
@@ -104,7 +107,10 @@ export default function KanbanBlock({
     (updater: (columns: KanbanColumn[]) => KanbanColumn[]) => {
       onUpdate((current) => {
         if (current.type !== 'kanban') return current;
-        const columns = updater(current.columns);
+        const visibleColumns = current.hideCompleted
+          ? current.columns.map((column) => ({ ...column, cards: column.cards.filter((card) => !card.done) }))
+          : current.columns;
+        const columns = updater(visibleColumns);
         return {
           ...current,
           columns,
@@ -177,19 +183,6 @@ export default function KanbanBlock({
       updateColumns((columns) =>
         columns.map((column) =>
           column.id === columnId ? { ...column, cards: column.cards.filter((card) => card.id !== cardId) } : column,
-        ),
-      );
-    },
-    [updateColumns],
-  );
-
-  const editCard = useCallback(
-    (columnId: string, cardId: string, text: string) => {
-      updateColumns((columns) =>
-        columns.map((column) =>
-          column.id === columnId
-            ? { ...column, cards: column.cards.map((card) => (card.id === cardId ? { ...card, text } : card)) }
-            : column,
         ),
       );
     },
@@ -634,7 +627,8 @@ export default function KanbanBlock({
                         onDragHandleMouseDown={(event) => handleCardDragStart(column.id, card.id, event)}
                         onToggle={() => toggleCard(column.id, card.id)}
                         onDelete={() => deleteCard(column.id, card.id)}
-                        onEdit={(text) => editCard(column.id, card.id, text)}
+                        onOpen={() => setEditingTask(card)}
+                        readOnly={readOnly}
                         textStyle={{
                           ...typographyStyle,
                           fontSize: baseFontSize ? `${baseFontSize}px` : undefined,
@@ -735,6 +729,15 @@ export default function KanbanBlock({
           ))}
         </div>
       </div>
+      {editingTask && (
+        <TaskDialog
+          key={editingTask.id}
+          task={editingTask}
+          readOnly={readOnly}
+          onClose={() => setEditingTask(null)}
+          onSave={(task) => saveTaskDetails(sourceItem, task, onUpdate)}
+        />
+      )}
       {columnSettings && item.columns.find((column) => column.id === columnSettings) && (
         <KanbanColumnDialog
           key={columnSettings}
