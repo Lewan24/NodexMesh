@@ -215,3 +215,71 @@ test('manual authenticator setup remains available when the server supplies no U
     await cleanup();
   }
 });
+
+test('desktop sidebar collapses to accessible icons and restores saved width', async () => {
+  const cleanup = await mount(createElement(Sidebar, { selectedTool: 'select', onSelectTool() {} }));
+  try {
+    const width = document.querySelector('aside.tool-sidebar').style.width;
+    await fire(document.querySelector('[aria-label="Collapse sidebar"]'), new MouseEvent('click', { bubbles: true }));
+    assert.equal(document.querySelector('aside.tool-sidebar').style.width, '76px');
+    assert.equal(document.querySelector('[aria-label="Resize sidebar"]'), null);
+    const documentTool = document.querySelector('[data-tool="document"]');
+    assert.equal(documentTool.getAttribute('aria-label'), 'Document');
+    assert.ok(documentTool.title.includes('drag'));
+    await fire(document.querySelector('[aria-label="Expand sidebar"]'), new MouseEvent('click', { bubbles: true }));
+    assert.equal(document.querySelector('aside.tool-sidebar').style.width, width);
+  } finally {
+    await cleanup();
+  }
+});
+
+test('auto-fit rounds natural document height up to the grid and shrinks after content removal', async () => {
+  const previousObserver = globalThis.ResizeObserver;
+  const previousHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+  let naturalHeight = 259;
+  let resized;
+  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get: () => naturalHeight });
+  globalThis.ResizeObserver = class {
+    constructor(callback) {
+      resized = callback;
+    }
+    observe() {}
+    disconnect() {}
+  };
+  const cleanup = await mount(
+    createElement(
+      ContentBlockShell,
+      { item: { id: 'document', width: 480 }, title: 'Document', autoHeight: true, minHeight: 240, onDelete() {} },
+      'Body',
+    ),
+  );
+  try {
+    assert.equal(document.querySelector('.content-block-shell').style.height, '272px');
+    naturalHeight = 242;
+    await act(async () => resized());
+    assert.equal(document.querySelector('.content-block-shell').style.height, '256px');
+  } finally {
+    await cleanup();
+    globalThis.ResizeObserver = previousObserver;
+    if (previousHeight) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', previousHeight);
+    else delete HTMLElement.prototype.offsetHeight;
+  }
+});
+
+test('mobile tools retain labels and full width without a collapse control', async () => {
+  const previousMatchMedia = window.matchMedia;
+  window.matchMedia = () => ({ matches: true, addEventListener() {}, removeEventListener() {} });
+  const cleanup = await mount(createElement(Sidebar, { selectedTool: 'select', onSelectTool() {} }));
+  try {
+    await fire(document.querySelector('.mobile-panel-trigger-tools'), new MouseEvent('click', { bubbles: true }));
+    const sidebar = document.querySelector('aside.tool-sidebar');
+    assert.equal(sidebar.dataset.collapsed, 'false');
+    assert.equal(sidebar.style.width, '');
+    assert.equal(document.querySelector('[aria-label="Collapse sidebar"]'), null);
+    assert.equal(document.querySelector('[aria-label="Resize sidebar"]'), null);
+    assert.ok(document.querySelector('[data-tool="document"]').textContent.includes('Document'));
+  } finally {
+    await cleanup();
+    window.matchMedia = previousMatchMedia;
+  }
+});

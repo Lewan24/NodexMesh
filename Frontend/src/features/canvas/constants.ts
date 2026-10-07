@@ -48,6 +48,6 @@ export const ITEM_WIDTH = {
   text: 320,
   column: 416,
   frame: 512,
-  kanban: 576,
+  kanban: 960,
   line: 192,
 } as const;

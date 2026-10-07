@@ -155,10 +155,18 @@ try
                 OnMessageReceived = context =>
                 {
                     // SignalR sends the short-lived access token in the query only for
-                    // WebSocket/SSE negotiation. Never accept this parameter on API routes.
+                    // WebSocket/SSE transports. Never accept this parameter on API routes.
                     var token = context.Request.Query["access_token"];
-                    if (!string.IsNullOrEmpty(token) && context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                    if (!string.IsNullOrEmpty(token) && context.HttpContext.Request.Path == "/hubs/collaboration"
+                        && !context.Request.Headers.ContainsKey("Authorization"))
                         context.Token = token;
+                    return Task.CompletedTask;
+                },
+                OnAuthenticationFailed = context =>
+                {
+                    // Store only a safe category, never token values or exception messages.
+                    context.HttpContext.Items["audit.authenticationFailure"] =
+                        context.Exception is SecurityTokenExpiredException ? "expired_token" : "invalid_token";
                     return Task.CompletedTask;
                 },
                 OnTokenValidated = async context =>

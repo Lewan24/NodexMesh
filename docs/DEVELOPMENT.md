@@ -146,3 +146,5 @@ cannot block navigation. Dialog and menu controls are excluded from middle-butto
 Task details remain open during persistence. If the server omits a completed task from a later partial board
 response, saving its still-open dialog reloads completed task data before editing, preserves the partial-write
 flag, and adjusts local progress counts. Removed tasks or columns show an error rather than being recreated.
+
+Canvas tools: new Kanban boards default to 960px, with a larger implicit width for larger fonts. Auto-fit document/code heights round up to the 16px canvas grid; automatic growth moves subsequent items to grid-aligned rows. Document edits save while typing and finish when clicking outside the document. The desktop tools sidebar can toggle between labeled tiles and an accessible icon rail; tool dragging and category controls work in both modes. Mobile keeps the full sidebar and has no collapse control.

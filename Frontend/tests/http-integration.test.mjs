@@ -450,3 +450,23 @@ test('sidebar width is round-tripped through the appearance API and old clients 
   await api.save(loaded, { ...loaded, sidebarWidth: 320 });
   assert.equal(requests.at(-1)[1].body.sidebarWidth, 320);
 });
+
+test('collaboration refreshes stale tokens once before concurrent negotiations and refuses anonymous sessions', async () => {
+  let refreshes = 0;
+  const fresh = `header.${Buffer.from(JSON.stringify({ sub: 'person', email: 'person@example.com', exp: Math.floor(Date.now() / 1000) + 600 })).toString('base64url')}.signature`;
+  const { auth, getCollaborationToken } = createHttpAuthService(async (url) => {
+    if (url.endsWith('/auth/login')) return json({ accessToken: token('person') });
+    if (url.endsWith('/auth/refresh')) {
+      refreshes++;
+      return json({ accessToken: fresh });
+    }
+    return new Response(null, { status: 204 });
+  });
+  await assert.rejects(getCollaborationToken());
+  assert.equal(refreshes, 0);
+  await auth.login({ username: 'person@example.com', password: 'secret' });
+  assert.deepEqual(await Promise.all([getCollaborationToken(), getCollaborationToken()]), [fresh, fresh]);
+  assert.equal(refreshes, 1);
+  assert.equal(await getCollaborationToken(), fresh);
+  assert.equal(refreshes, 1);
+});

@@ -1,7 +1,8 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
-import { useEffect, useRef, type ReactNode, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react';
+import { CANVAS_GRID_SIZE } from '@/features/canvas/constants';
 import type { BaseItem } from '@/entities/board/types';
 import { getFontFamilyCss } from '../typography/typographyUtils';
 import { useCardAppearance } from './cardAppearance';
@@ -24,6 +25,18 @@ export default function ContentBlockShell({
   onOutsideClick?: () => void;
 }) {
   useTranslation();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [fittedHeight, setFittedHeight] = useState(minHeight);
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!autoHeight || !content) return;
+    const measure = () =>
+      setFittedHeight(Math.ceil(Math.max(minHeight, content.offsetHeight) / CANVAS_GRID_SIZE) * CANVAS_GRID_SIZE);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [autoHeight, minHeight]);
   const shellRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!onOutsideClick) return;
@@ -53,7 +66,7 @@ export default function ContentBlockShell({
         {
           width: item.width,
 
-          height: autoHeight ? undefined : item.height,
+          height: autoHeight ? fittedHeight : item.height,
 
           minHeight,
 
@@ -77,29 +90,35 @@ export default function ContentBlockShell({
         } as CSSProperties
       }
     >
-      {item.topColor && <div className="h-[5px] shrink-0" style={{ background: item.topColor }} />}
-      <header
-        className="flex items-center gap-2 px-4 py-2 border-b cursor-grab text-sm font-medium"
-        style={{ borderColor: 'var(--color-border)' }}
+      <div
+        ref={contentRef}
+        className="flex flex-col min-h-0"
+        style={{ height: autoHeight ? undefined : '100%', flexShrink: autoHeight ? 0 : undefined }}
       >
-        <span aria-hidden="true" className="opacity-35 select-none" title={translate('Drag block')}>
-          ⠿
-        </span>
-        <div className="flex-1 min-w-0" style={getSectionStyle(item.typography, 'title')}>
-          {title}
-        </div>
-        <button
-          type="button"
-          title={translate('Delete block')}
-          aria-label={translate('Delete block')}
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={onDelete}
-          className="px-2 rounded hover:bg-black/10"
+        {item.topColor && <div className="h-[5px] shrink-0" style={{ background: item.topColor }} />}
+        <header
+          className="flex items-center gap-2 px-4 py-2 border-b cursor-grab text-sm font-medium"
+          style={{ borderColor: 'var(--color-border)' }}
         >
-          ×
-        </button>
-      </header>
-      {children}
+          <span aria-hidden="true" className="opacity-35 select-none" title={translate('Drag block')}>
+            ⠿
+          </span>
+          <div className="flex-1 min-w-0" style={getSectionStyle(item.typography, 'title')}>
+            {title}
+          </div>
+          <button
+            type="button"
+            title={translate('Delete block')}
+            aria-label={translate('Delete block')}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={onDelete}
+            className="px-2 rounded hover:bg-black/10"
+          >
+            ×
+          </button>
+        </header>
+        {children}
+      </div>
     </section>
   );
 }

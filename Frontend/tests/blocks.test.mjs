@@ -888,8 +888,8 @@ test('automatic growth pushes a vertical chain while preserving other columns an
   ]);
   const after = new Map(before).set(source.id, { width: 320, height: 180 });
   const patches = autoGrowthLayout([source, first, second, side, overlapping], source.id, before, after);
-  assert.equal(patches.get(first.id).y, 196);
-  assert.equal(patches.get(second.id).y, 292);
+  assert.equal(patches.get(first.id).y, 208);
+  assert.equal(patches.get(second.id).y, 304);
   assert.equal(patches.has(side.id), false);
   assert.equal(patches.has(overlapping.id), false);
   assert.equal(autoGrowthLayout([source, first], source.id, before, before).size, 0);
@@ -922,8 +922,8 @@ test('automatic growth expands containing frames and preserves standalone line g
   const before = new Map([[source.id, { width: 320, height: 100 }]]);
   const after = new Map(before).set(source.id, { width: 320, height: 180 });
   const patches = autoGrowthLayout([source, line, frame], source.id, before, after);
-  assert.equal(patches.get(line.id).y, 216);
-  assert.equal(patches.get(line.id).y2, 196);
+  assert.equal(patches.get(line.id).y, 228);
+  assert.equal(patches.get(line.id).y2, 208);
   assert.ok(patches.get(frame.id).height > frame.height);
 });
 

@@ -115,6 +115,17 @@ export default function DocumentBlock({
       autoHeight={autoHeight}
       minHeight={240}
       onDelete={onDelete}
+      onOutsideClick={
+        editing
+          ? () => {
+              if (editor && !editor.isDestroyed) {
+                const content = editor.getHTML();
+                onUpdate((current) => (current.type === 'document' ? { ...current, content } : current));
+              }
+              setEditing(false);
+            }
+          : undefined
+      }
       title={
         <div className="flex items-center gap-2">
           {editing ? (
@@ -132,7 +143,7 @@ export default function DocumentBlock({
           ) : (
             <span
               className="flex-1 truncate"
-              onDoubleClick={() => setEditing(true)}
+              onDoubleClick={() => setEditing(!item.locked)}
               style={getSectionStyle(item.typography, 'title')}
             >
               {item.title}
@@ -156,6 +167,7 @@ export default function DocumentBlock({
             type="button"
             className="shrink-0 rounded px-2 py-1 text-xs hover:bg-violet-500/10"
             onMouseDown={(e) => e.stopPropagation()}
+            disabled={item.locked}
             onClick={() => setEditing(!editing)}
           >
             {editing ? translate('Done') : translate('Edit')}
@@ -191,7 +203,7 @@ export default function DocumentBlock({
       <div
         className={`flex-1 min-h-0 ${autoHeight ? '' : 'overflow-auto'} ${editing ? 'cursor-text' : 'cursor-grab active:cursor-grabbing'}`}
         data-wheel-scroll={!autoHeight}
-        onDoubleClick={() => setEditing(true)}
+        onDoubleClick={() => setEditing(!item.locked)}
         onMouseDown={(e) => {
           if (editing) e.stopPropagation();
         }}

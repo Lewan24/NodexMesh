@@ -1433,5 +1433,7 @@
   "All tasks done. Add a new one!": "Wszystkie zadania ukończone. Dodaj nowe!",
   "Only unfinished tasks": "Tylko nieukończone zadania",
   "Show all tasks": "Pokaż wszystkie zadania",
-  "Tasks changed. Refresh and retry.": "Zadania uległy zmianie. Odśwież i spróbuj ponownie."
+  "Tasks changed. Refresh and retry.": "Zadania uległy zmianie. Odśwież i spróbuj ponownie.",
+  "Expand sidebar": "Rozwiń pasek boczny",
+  "Collapse sidebar": "Zwiń pasek boczny"
 }

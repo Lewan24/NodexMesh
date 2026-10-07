@@ -265,7 +265,11 @@ export default function KanbanBlock({
     <div
       className="group relative"
       style={{
-        width: Math.max(item.width ?? ITEM_WIDTH.kanban, getKanbanMinWidth(item.columns.length)),
+        width: Math.max(
+          item.width ?? ITEM_WIDTH.kanban,
+          getKanbanMinWidth(item.columns.length),
+          Math.ceil((item.columns.length * 20 * (baseFontSize ?? 14)) / 16) * 16,
+        ),
         height: item.height,
       }}
     >

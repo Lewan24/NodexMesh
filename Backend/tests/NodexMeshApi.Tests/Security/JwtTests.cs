@@ -44,6 +44,21 @@ public class JwtTests : IDisposable
     }
 
     [Fact]
+    public async Task CollaborationNegotiation_RequiresBearerIdentity()
+    {
+        var (authenticated, token) = await GetAuthenticatedTokenAsync(_factory);
+        var accepted = await authenticated.PostAsync("/hubs/collaboration/negotiate?negotiateVersion=1", null);
+        accepted.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var anonymous = _factory.CreateClientNoRedirect();
+        var rejected = await anonymous.PostAsync("/hubs/collaboration/negotiate?negotiateVersion=1", null);
+        rejected.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        var queryRejected = await anonymous.PostAsync(
+            $"/hubs/collaboration/negotiate?negotiateVersion=1&access_token={token}", null);
+        queryRejected.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task TamperingWithTheSignature_InvalidatesTheToken()
     {
         var (_, token) = await GetAuthenticatedTokenAsync(_factory);

@@ -1433,5 +1433,7 @@
   "All tasks done. Add a new one!": "All tasks done. Add a new one!",
   "Only unfinished tasks": "Only unfinished tasks",
   "Show all tasks": "Show all tasks",
-  "Tasks changed. Refresh and retry.": "Tasks changed. Refresh and retry."
+  "Tasks changed. Refresh and retry.": "Tasks changed. Refresh and retry.",
+  "Expand sidebar": "Expand sidebar",
+  "Collapse sidebar": "Collapse sidebar"
 }

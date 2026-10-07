@@ -399,3 +399,21 @@ textarea {
 .user-actions[open] > summary::after {
   content: ' −';
 }
+
+@layer base {
+  button:enabled,
+  [role='button']:not([aria-disabled='true']),
+  a[href],
+  summary {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+  input,
+  textarea,
+  [contenteditable='true'] {
+    cursor: text;
+  }
+}
