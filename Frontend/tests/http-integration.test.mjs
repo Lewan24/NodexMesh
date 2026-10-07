@@ -148,12 +148,13 @@ test('HTTP workspace composes project records and boards and reloads mutation sn
       if (path === '/projects/project/boards') return [snapshot.board];
       if (path === '/projects/project/permanent' && options.method === 'DELETE') return null;
       if (path === '/boards/board/mutations') return { boardRevision: audit.revision, items: [], conflicts: [] };
-      if (path === '/boards/board') return snapshot;
+      if (path === '/boards/board' || path === '/boards/board?includeCompleted=false') return snapshot;
       if (path === '/boards/board/loading-manifest') return { board: snapshot.board, items: [] };
       throw new Error(path);
     },
   });
   assert.equal((await api.projects.list())[0].project.color, '#7C3AED');
+  assert.ok(calls.some(([path]) => path === '/boards/board?includeCompleted=false'));
   await api.projects.create({ id: 'local', name: 'Test', color: '#7C3AED', clientMutationId: 'create' });
   assert.deepEqual(calls.find(([, options]) => options.method === 'POST')[1].body, { name: 'Test', color: '#7C3AED' });
   const mutation = { clientMutationId: 'mutation', expectedBoardRevision: audit.revision, upserts: [], deletes: [] };
@@ -205,7 +206,7 @@ test('new tags resolve once per normalized name and mutation retries reuse the e
   const mutations = [];
   const api = createHttpWorkspace({
     async request(path, options = {}) {
-      if (path === '/boards/board') return snapshot;
+      if (path === '/boards/board' || path === '/boards/board?includeCompleted=false') return snapshot;
       if (path === '/projects/project/tags') {
         tagCalls.push(options.body);
         return { id: 'tag-id', projectId: 'project', name: 'Planning', normalizedName: 'planning' };
@@ -306,7 +307,7 @@ test('HTTP project trash reloads without fetching inaccessible boards and restor
       if (path === '/projects/project') return project;
       assert.equal(project.deletedAt, null, 'trashed project boards must not be requested');
       if (path === '/projects/project/boards') return [snapshot.board];
-      if (path === '/boards/board') return snapshot;
+      if (path === '/boards/board' || path === '/boards/board?includeCompleted=false') return snapshot;
       if (path === '/boards/board/loading-manifest') return { board: snapshot.board, items: [] };
       throw new Error(path);
     },
@@ -448,4 +449,24 @@ test('sidebar width is round-tripped through the appearance API and old clients 
   assert.equal(loaded.sidebarWidth, 272);
   await api.save(loaded, { ...loaded, sidebarWidth: 320 });
   assert.equal(requests.at(-1)[1].body.sidebarWidth, 320);
+});
+
+test('collaboration refreshes stale tokens once before concurrent negotiations and refuses anonymous sessions', async () => {
+  let refreshes = 0;
+  const fresh = `header.${Buffer.from(JSON.stringify({ sub: 'person', email: 'person@example.com', exp: Math.floor(Date.now() / 1000) + 600 })).toString('base64url')}.signature`;
+  const { auth, getCollaborationToken } = createHttpAuthService(async (url) => {
+    if (url.endsWith('/auth/login')) return json({ accessToken: token('person') });
+    if (url.endsWith('/auth/refresh')) {
+      refreshes++;
+      return json({ accessToken: fresh });
+    }
+    return new Response(null, { status: 204 });
+  });
+  await assert.rejects(getCollaborationToken());
+  assert.equal(refreshes, 0);
+  await auth.login({ username: 'person@example.com', password: 'secret' });
+  assert.deepEqual(await Promise.all([getCollaborationToken(), getCollaborationToken()]), [fresh, fresh]);
+  assert.equal(refreshes, 1);
+  assert.equal(await getCollaborationToken(), fresh);
+  assert.equal(refreshes, 1);
 });

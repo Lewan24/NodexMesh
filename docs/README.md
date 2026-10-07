@@ -6,6 +6,7 @@ The root [README](../README.md) is the product overview and quick start. Maintai
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | [DEVELOPMENT.md](DEVELOPMENT.md)               | Local setup, repository structure, data adapters, demo data, import/export, and verification      |
 | [DEPLOYMENT.md](DEPLOYMENT.md)                 | Docker Compose, Portainer, secrets, TLS/proxy settings, persistent volumes, and backups           |
+| [REVERSE_PROXY.md](REVERSE_PROXY.md) | Exact Nginx Proxy Manager setup, real client IPs, refresh-safe quotas, bans and friendly IPs |
 | [API.md](API.md)                               | HTTP/SignalR route inventory, permissions, transport rules, revisions, and mutation behavior      |
 | [DATABASE.md](DATABASE.md)                     | Current EF Core/PostgreSQL model, migrations, deletion states, JSONB boundaries, and file storage |
 | [SECURITY.md](SECURITY.md)                     | Implemented controls, trust boundaries, known limitations, and production checklist               |

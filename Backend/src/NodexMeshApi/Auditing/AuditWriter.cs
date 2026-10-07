@@ -82,6 +82,11 @@ public sealed class AuditMiddleware(RequestDelegate next)
         {
             var audit = AuditCapture.Create(http, type, status >= 500 ? "diagnostic" : "security", "denied");
             audit.StatusCode = status;
+            if (status == 401)
+                audit.Metadata = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    authenticationFailure = http.Items["audit.authenticationFailure"] as string ?? "missing_or_rejected_identity"
+                });
             if (status >= 500)
             {
                 audit.Severity = "Error";

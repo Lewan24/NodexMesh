@@ -4,7 +4,7 @@ Reviewed against the frontend on 2026-09-24. The statements below describe code 
 
 ## Implemented
 
-- Authenticated startup downloads project summaries and item counts. Main-board content loads on opening a project, with positioned skeletons followed by item content in bounded asynchronous pages (50 items per page, at most three concurrent downloads). Loaded projects are cached for the session; full board editing starts after snapshot validation.
+- Authenticated startup downloads project summaries and item counts. Main-board content loads on opening a project, with a centered “Project is loading, please wait.” status while item content downloads in bounded asynchronous pages (50 items per page, at most three concurrent downloads). Loaded projects are cached for the session; full board editing starts after snapshot validation.
 
 - Mouse pan, wheel zoom, touch pan/pinch, and item/frame-group dragging publish visual changes on animation frames and flush final movement on release.
 - Dragging uses transient geometry instead of writing persisted project state on every pointer event. Attached lines follow transient geometry and final positions commit as one board operation.
@@ -43,3 +43,11 @@ Test a production build on an actual weaker phone as well as a CPU-throttled des
 ## Undo/history boundary
 
 Board history tracks item content/geometry, nested column items, tags, comments, appearance, and compound canvas operations. Pointer gestures and discrete keyboard actions form one step; continuous typing groups until a pause/field change. Native text undo and TipTap history remain active while their editors are focused. Pan, zoom, selection, dialogs, clipboard contents, theme, and diagram viewport are UI state and are not board history. History is in memory and resets on project switch/reload.
+
+## Completed checklist and kanban tasks
+
+Checklist and kanban blocks show all tasks by default. The “Only unfinished tasks” toggle saves `hideCompleted: true` in each block’s data. The frontend requests authenticated snapshots and item pages with `includeCompleted=false`; the API omits completed tasks only for blocks with this preference enabled. Columns remain present even if every card is complete. A small `taskSummary` reports omitted completion counts, so progress remains accurate without transferring completed task text. Empty lists/columns show “All tasks done. Add a new one!” and filtered blocks offer “Show all tasks”. Turning the filter off fetches omitted tasks with a revision check before saving `hideCompleted: false`; loading failures leave the filter enabled. Viewers can change the display locally without writing to the board.
+
+Partial writes set `preserveCompletedTasks` on the item. The backend merges stored completed entries by ID before validating the complete payload and applying the existing board/item revision checks. Deleting a column explicitly deletes its hidden cards; deleting a block uses the existing soft-delete/trash behavior. Full writes can delete or reopen completed tasks. Completed entries are appended after visible entries when merging. Copy/paste and duplication fetch omitted tasks before cloning. Export explicitly requests complete snapshots, so archives retain every task. Public shared boards retain their existing complete read-only payload.
+
+This reduces API payload and client rendering cost; the backend still reads each block's JSON from storage. Tasks are not separate database rows. Loading more tasks can therefore increase rendering work again, intentionally.

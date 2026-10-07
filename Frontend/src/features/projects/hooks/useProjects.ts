@@ -95,8 +95,9 @@ export function useProjects(userId: string): UseProjectsResult {
       }
       if (!abort.signal.aborted) await controller.load(abort.signal);
     })();
-    const unregister = registerSaveGuard(async () => {
-      await controller.flush();
+    const unregister = registerSaveGuard(async (retryFailedSaves) => {
+      if (retryFailedSaves && ['error', 'conflict'].includes(controller.getSnapshot().status)) await controller.retry();
+      else await controller.flush();
       return controller.getSnapshot().status === 'saved';
     });
     const beforeUnload = (event: BeforeUnloadEvent) => {

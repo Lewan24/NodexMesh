@@ -12,6 +12,15 @@ import { createCanvasItem } from '@/features/canvas/utils/createCanvasItem';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import { getContainedItemIds } from '@/features/canvas/utils/itemGeometry';
 
+/** Capture middle-button navigation before board controls consume bubbling events. */
+export function shouldCaptureMiddlePan(event: React.MouseEvent): boolean {
+  return (
+    event.button === 1 &&
+    event.target instanceof Element &&
+    !event.target.closest('[data-canvas-ui], dialog, [role="dialog"], [role="menu"]')
+  );
+}
+
 interface ProjectLike {
   items: BoardItem[];
 }

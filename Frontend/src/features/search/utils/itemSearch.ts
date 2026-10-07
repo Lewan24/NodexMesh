@@ -1,9 +1,12 @@
-import type { BoardItem, ColumnItem } from '@/entities/board/types';
+import type { BoardItem, ColumnItem, ChecklistEntry } from '@/entities/board/types';
 
 export interface SearchResult {
   matches: boolean;
   nestedMatchIds: Set<string>;
 }
+
+const taskText = (task: ChecklistEntry) =>
+  [task.text, task.description ?? '', task.deadline ?? '', ...(task.subtasks ?? []).map((s) => s.text)].join(' ');
 
 export function getSearchableText(item: BoardItem): string {
   switch (item.type) {
@@ -51,13 +54,10 @@ export function getSearchableText(item: BoardItem): string {
       return item.content;
 
     case 'checklist':
-      return [item.title, ...item.entries.map((entry) => entry.text)].join(' ');
+      return [item.title, ...item.entries.map(taskText)].join(' ');
 
     case 'kanban':
-      return [
-        item.title,
-        ...item.columns.flatMap((column) => [column.title, ...column.cards.map((card) => card.text)]),
-      ].join(' ');
+      return [item.title, ...item.columns.flatMap((column) => [column.title, ...column.cards.map(taskText)])].join(' ');
 
     case 'icon':
       return `${item.label} ${item.iconMode === 'svg' ? '' : item.source}`;

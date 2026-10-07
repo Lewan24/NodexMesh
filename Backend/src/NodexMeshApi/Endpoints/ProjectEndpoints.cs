@@ -27,6 +27,8 @@ public static class ProjectEndpoints
         group.MapDelete("/{projectId:guid}/permanent", PurgeAsync);
 
         group.MapPost("/{projectId:guid}/tags", CreateTagAsync);
+        group.MapGet("/{projectId:guid}/task-categories", GetTaskCategoriesAsync);
+        group.MapPut("/{projectId:guid}/task-categories", PutTaskCategoriesAsync);
 
         group.MapGet("/{projectId:guid}/participants", ListParticipantsAsync);
         group.MapGet("/{projectId:guid}/members", ListMembersAsync);
@@ -212,6 +214,49 @@ public static class ProjectEndpoints
         Guid projectId, CreateTagRequest request, ClaimsPrincipal principal, TagService tags, CancellationToken ct)
     {
         return TypedResults.Ok(await tags.GetOrCreateAsync(projectId, CurrentUserId(principal), request.Name, ct));
+    }
+
+    public sealed record TaskCategoriesRequest(long ExpectedRevision, List<TaskCategory> Categories);
+    public sealed record TaskCategoriesResponse(long Revision, IReadOnlyList<TaskCategory> Categories);
+    public static IReadOnlyList<TaskCategory> DefaultTaskCategories => [
+        new("important", "Important", "#EF4444"), new("medium", "Medium priority", "#EAB308"),
+        new("low", "Low priority", "#22C55E")];
+    private static IReadOnlyList<TaskCategory> Categories(Project project) => project.TaskCategories == "[]"
+        ? DefaultTaskCategories : System.Text.Json.JsonSerializer.Deserialize<List<TaskCategory>>(project.TaskCategories)!;
+
+    private static async Task<Ok<TaskCategoriesResponse>> GetTaskCategoriesAsync(Guid projectId,
+        ClaimsPrincipal principal, AppDbContext db, IProjectAccessService access, CancellationToken ct)
+    {
+        await access.RequireAsync(projectId, CurrentUserId(principal), ProjectRole.Viewer, ct);
+        var project = await db.Projects.AsNoTracking().SingleAsync(p => p.Id == projectId, ct);
+        return TypedResults.Ok(new TaskCategoriesResponse(project.Revision, Categories(project)));
+    }
+
+    private static async Task<Ok<TaskCategoriesResponse>> PutTaskCategoriesAsync(Guid projectId,
+        TaskCategoriesRequest request, ClaimsPrincipal principal, AppDbContext db,
+        IProjectAccessService access, CancellationToken ct)
+    {
+        var userId = CurrentUserId(principal);
+        await access.RequireAsync(projectId, userId, ProjectRole.Editor, ct);
+        if (request.Categories is null || request.Categories.Count is < 1 or > 100
+            || request.Categories.Any(c => c is null || string.IsNullOrWhiteSpace(c.Id) || c.Id.Length > 100
+                || string.IsNullOrWhiteSpace(c.Name) || c.Name.Length > 100 || c.Color is null
+                || c.Color.Length != 7 || !System.Text.RegularExpressions.Regex.IsMatch(c.Color, "^#[0-9a-fA-F]{6}$"))
+            || request.Categories.Select(c => c.Id).Distinct().Count() != request.Categories.Count)
+            throw new ApiException(422, "invalid_categories", "Supply 1 to 100 categories with unique IDs, names and hex colors.");
+        var project = await db.Projects.SingleAsync(p => p.Id == projectId, ct);
+        if (project.Revision != request.ExpectedRevision)
+            throw new ApiException(409, "revision_mismatch", "Reload categories before saving.");
+        project.TaskCategories = System.Text.Json.JsonSerializer.Serialize(request.Categories);
+        project.Revision++;
+        project.UpdatedAt = DateTimeOffset.UtcNow;
+        project.UpdatedBy = userId;
+        try { await db.SaveChangesAsync(ct); }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ApiException(409, "revision_mismatch", "Reload categories before saving.");
+        }
+        return TypedResults.Ok(new TaskCategoriesResponse(project.Revision, Categories(project)));
     }
 
     // ---------------- sharing ----------------

@@ -57,16 +57,6 @@
                 "text": "Change default dark canvas color and card to a bit lighter"
               },
               {
-                "id": "a2f75308-c7be-4b9b-b601-b5f9414814b1",
-                "done": false,
-                "text": "Prepare code audit and suggestions"
-              },
-              {
-                "id": "f5eeab60-77e3-4372-b4b9-6b585e4249cb",
-                "done": false,
-                "text": "Let AI check current tools and functionallities and suggest any future new ideas for new blocks"
-              },
-              {
                 "id": "53df14b8-93e1-4a83-ba0b-1944e85cd19e",
                 "done": false,
                 "text": "Implement keyboard moving, editing etc. also in blocks like mindmap or diagram"
@@ -80,6 +70,11 @@
                 "id": "68e60fc5-7b13-479a-82f9-11491f7e12c8",
                 "done": true,
                 "text": "Implement MindMapBlock"
+              },
+              {
+                "id": "22d20ef8-4252-488d-85d5-6b6ff00589a5",
+                "done": true,
+                "text": "Sprawdzić hack and plan / Trello I zobaczyć co można jeszcze ciekawego dodać do Radków"
               },
               {
                 "id": "1ec1e23b-1320-4a58-8fb6-2d4fbcab760c",
@@ -185,9 +180,114 @@
             "id": "438980c4-7e52-4d14-9c9b-05eca4ba2581",
             "cards": [
               {
-                "id": "2936b781-5c9e-4452-a19e-890b96a81a3d",
+                "id": "b323cb2d-9ec0-4802-b557-987a2f3044c6",
                 "done": false,
-                "text": "Implement toggle button to work like now with space holding, so it will allow to change middle mouse to left"
+                "text": "Dodać sortowanie w checkliscie i kanbanie nie zależne od oryginalnego położenia, więc filtr jest tymczasowy jako tylko podgląd, filtrować można po kategorii, etykiecie, nazwie"
+              },
+              {
+                "id": "50031e62-710d-4b7c-b653-6590076f0c2c",
+                "done": false,
+                "text": "Tytul dostosowac wielkosc"
+              },
+              {
+                "id": "fbacfbcd-120b-452a-8a7f-266a0a0eb6e0",
+                "done": false,
+                "text": "Jak sie kliknie procent przyblizenia to niech bedzie lista do wyboru"
+              },
+              {
+                "id": "15690cc0-eb23-4898-996c-7557a684c9e2",
+                "done": false,
+                "text": "Diagram tekst ograniczyc ilosc znakow"
+              },
+              {
+                "id": "eb4f787d-1d03-412b-bf00-c395d9d9ae0e",
+                "done": true,
+                "text": "puszczanie myszki na zewnatrz wylacza go"
+              },
+              {
+                "id": "6adf61ee-a919-4235-9939-60d2bdb0308b",
+                "done": true,
+                "text": "Sidebar collapse"
+              },
+              {
+                "id": "c353b253-e1a5-48bd-8adc-000080f8afdf",
+                "done": true,
+                "text": "Zmiana ikonek na bardziej modern i lepiej odzwierciedlajace narzedzia"
+              },
+              {
+                "id": "9a553dab-a989-48ae-8ec8-6ac770da59ab",
+                "done": true,
+                "text": "Auto fit do snap to grid, aby ladnie sie rowno ukladalo"
+              },
+              {
+                "id": "2b4cbdeb-428f-4554-9e6e-a7e3381cd699",
+                "done": true,
+                "text": "Edycja dokumentu, wylaczyc po kliknieciu gdzies indziej"
+              },
+              {
+                "id": "04cd8078-1803-4321-97cb-149ca4c04daa",
+                "done": true,
+                "text": "Modify users panel in admin dashboard, change options to context menu or button options for better look"
+              },
+              {
+                "id": "cc80c6c9-ab37-4979-a391-dbd18f60df93",
+                "done": true,
+                "text": "Dodac blokade ip z poziomu konkretnego zdarzenia"
+              },
+              {
+                "id": "e21dc43a-c64e-495a-beec-82bc2e4ddbd5",
+                "done": true,
+                "text": "Automatyczne pobieranie tylko do zrobienia taskow, a dodac przycisk do pobrania reszty jesli potrzeba"
+              },
+              {
+                "id": "03b8729b-0a4b-4951-ae2c-125ebedc7b0b",
+                "done": true,
+                "text": "Dobrze aby te informacje również były zawarte w głównej karcie i widać było osobę przypisana i deadline"
+              },
+              {
+                "id": "1e62c913-54e5-442d-83e6-32824db68ed9",
+                "done": true,
+                "text": "Fajnie jakby do taska dało się dodać datę do kiedy ma być zrobiony i przypisać do niego osobę z projektu"
+              },
+              {
+                "id": "bb05f6ee-8086-460b-bea6-4046ed172baa",
+                "done": true,
+                "text": "Sama karta Tasku ma być większa bo pokazywać będzie kategorie i kolor etykiety"
+              },
+              {
+                "id": "06db0c71-4d5d-44be-9bc9-439db11f3855",
+                "done": true,
+                "text": "Kanban powinien mieć kategorie, opis, etykietę która pokazuje się w karcie"
+              },
+              {
+                "id": "fffe4459-2897-470e-8456-9faec8b5a33a",
+                "done": true,
+                "text": "Kategorie i etykiety z kolorami powinny być ustawione domyślne ale możliwe doz miany, dodania, usunięcia w danym projekcie"
+              },
+              {
+                "id": "226907cc-1c5a-453e-b87b-3c7a14cb4787",
+                "done": true,
+                "text": "Przenoszenie między checklista a kanbanem powinno dalej obowiązywać i dzialac"
+              },
+              {
+                "id": "38dd6506-6688-434f-8188-05f961ce8f06",
+                "done": true,
+                "text": "Item Tasku I w checkliscie i w kanbanie powinien przejść przebudowę z dodatkowym opisem, kategoriami, kolorami, priorytetem, subtaskami itd"
+              },
+              {
+                "id": "049ce4e1-2791-4876-9cd2-60695753794b",
+                "done": true,
+                "text": "Taski jak w trello, kolory, lista subtaskow w danym tasku"
+              },
+              {
+                "id": "3da8f23d-6c63-4e4a-bc8c-93ae092cfba6",
+                "done": true,
+                "text": "Opis taska w kanban taskach"
+              },
+              {
+                "id": "95fc4e75-1ccf-4376-8281-e32a3b15475c",
+                "done": true,
+                "text": "When lazy loading project and its items, change the loading from public shared read only tempalte to information about loading"
               },
               {
                 "id": "efeb86fe-6c91-43a0-971e-42be50378ae1",
@@ -547,6 +647,16 @@
           {
             "id": "b968584e-e538-4873-965a-bc121662d6fa",
             "cards": [
+              {
+                "id": "8111fd87-e3c5-4e08-89a5-0c937979bd8f",
+                "done": true,
+                "text": "Sprawdzic logowanie i telemetrie to unauthorized szczegolnie w kolaboracji i hub"
+              },
+              {
+                "id": "6d931bc5-284b-4244-a246-dc5f27dd9827",
+                "done": true,
+                "text": "Dodac mozliwosc recznego zablokowania ip na zawsze jako admin"
+              },
               {
                 "id": "dec94b4d-2c69-429c-bff8-3f8f34aafa16",
                 "done": true,
@@ -2017,7 +2127,7 @@
       },
       {
         "size": "lg",
-        "content": "Project version actual for 06.10.2026",
+        "content": "Project version actual for 07.10.2026",
         "topColor": "#e11d48",
         "colorRole": "default",
         "typography": {
@@ -2338,16 +2448,6 @@
                     "text": "Change default dark canvas color and card to a bit lighter"
                   },
                   {
-                    "id": "a2f75308-c7be-4b9b-b601-b5f9414814b1",
-                    "done": false,
-                    "text": "Prepare code audit and suggestions"
-                  },
-                  {
-                    "id": "f5eeab60-77e3-4372-b4b9-6b585e4249cb",
-                    "done": false,
-                    "text": "Let AI check current tools and functionallities and suggest any future new ideas for new blocks"
-                  },
-                  {
                     "id": "53df14b8-93e1-4a83-ba0b-1944e85cd19e",
                     "done": false,
                     "text": "Implement keyboard moving, editing etc. also in blocks like mindmap or diagram"
@@ -2361,6 +2461,11 @@
                     "id": "68e60fc5-7b13-479a-82f9-11491f7e12c8",
                     "done": true,
                     "text": "Implement MindMapBlock"
+                  },
+                  {
+                    "id": "22d20ef8-4252-488d-85d5-6b6ff00589a5",
+                    "done": true,
+                    "text": "Sprawdzić hack and plan / Trello I zobaczyć co można jeszcze ciekawego dodać do Radków"
                   },
                   {
                     "id": "1ec1e23b-1320-4a58-8fb6-2d4fbcab760c",
@@ -2466,9 +2571,114 @@
                 "id": "438980c4-7e52-4d14-9c9b-05eca4ba2581",
                 "cards": [
                   {
-                    "id": "2936b781-5c9e-4452-a19e-890b96a81a3d",
+                    "id": "b323cb2d-9ec0-4802-b557-987a2f3044c6",
                     "done": false,
-                    "text": "Implement toggle button to work like now with space holding, so it will allow to change middle mouse to left"
+                    "text": "Dodać sortowanie w checkliscie i kanbanie nie zależne od oryginalnego położenia, więc filtr jest tymczasowy jako tylko podgląd, filtrować można po kategorii, etykiecie, nazwie"
+                  },
+                  {
+                    "id": "50031e62-710d-4b7c-b653-6590076f0c2c",
+                    "done": false,
+                    "text": "Tytul dostosowac wielkosc"
+                  },
+                  {
+                    "id": "fbacfbcd-120b-452a-8a7f-266a0a0eb6e0",
+                    "done": false,
+                    "text": "Jak sie kliknie procent przyblizenia to niech bedzie lista do wyboru"
+                  },
+                  {
+                    "id": "15690cc0-eb23-4898-996c-7557a684c9e2",
+                    "done": false,
+                    "text": "Diagram tekst ograniczyc ilosc znakow"
+                  },
+                  {
+                    "id": "eb4f787d-1d03-412b-bf00-c395d9d9ae0e",
+                    "done": true,
+                    "text": "puszczanie myszki na zewnatrz wylacza go"
+                  },
+                  {
+                    "id": "6adf61ee-a919-4235-9939-60d2bdb0308b",
+                    "done": true,
+                    "text": "Sidebar collapse"
+                  },
+                  {
+                    "id": "c353b253-e1a5-48bd-8adc-000080f8afdf",
+                    "done": true,
+                    "text": "Zmiana ikonek na bardziej modern i lepiej odzwierciedlajace narzedzia"
+                  },
+                  {
+                    "id": "9a553dab-a989-48ae-8ec8-6ac770da59ab",
+                    "done": true,
+                    "text": "Auto fit do snap to grid, aby ladnie sie rowno ukladalo"
+                  },
+                  {
+                    "id": "2b4cbdeb-428f-4554-9e6e-a7e3381cd699",
+                    "done": true,
+                    "text": "Edycja dokumentu, wylaczyc po kliknieciu gdzies indziej"
+                  },
+                  {
+                    "id": "04cd8078-1803-4321-97cb-149ca4c04daa",
+                    "done": true,
+                    "text": "Modify users panel in admin dashboard, change options to context menu or button options for better look"
+                  },
+                  {
+                    "id": "cc80c6c9-ab37-4979-a391-dbd18f60df93",
+                    "done": true,
+                    "text": "Dodac blokade ip z poziomu konkretnego zdarzenia"
+                  },
+                  {
+                    "id": "e21dc43a-c64e-495a-beec-82bc2e4ddbd5",
+                    "done": true,
+                    "text": "Automatyczne pobieranie tylko do zrobienia taskow, a dodac przycisk do pobrania reszty jesli potrzeba"
+                  },
+                  {
+                    "id": "03b8729b-0a4b-4951-ae2c-125ebedc7b0b",
+                    "done": true,
+                    "text": "Dobrze aby te informacje również były zawarte w głównej karcie i widać było osobę przypisana i deadline"
+                  },
+                  {
+                    "id": "1e62c913-54e5-442d-83e6-32824db68ed9",
+                    "done": true,
+                    "text": "Fajnie jakby do taska dało się dodać datę do kiedy ma być zrobiony i przypisać do niego osobę z projektu"
+                  },
+                  {
+                    "id": "bb05f6ee-8086-460b-bea6-4046ed172baa",
+                    "done": true,
+                    "text": "Sama karta Tasku ma być większa bo pokazywać będzie kategorie i kolor etykiety"
+                  },
+                  {
+                    "id": "06db0c71-4d5d-44be-9bc9-439db11f3855",
+                    "done": true,
+                    "text": "Kanban powinien mieć kategorie, opis, etykietę która pokazuje się w karcie"
+                  },
+                  {
+                    "id": "fffe4459-2897-470e-8456-9faec8b5a33a",
+                    "done": true,
+                    "text": "Kategorie i etykiety z kolorami powinny być ustawione domyślne ale możliwe doz miany, dodania, usunięcia w danym projekcie"
+                  },
+                  {
+                    "id": "226907cc-1c5a-453e-b87b-3c7a14cb4787",
+                    "done": true,
+                    "text": "Przenoszenie między checklista a kanbanem powinno dalej obowiązywać i dzialac"
+                  },
+                  {
+                    "id": "38dd6506-6688-434f-8188-05f961ce8f06",
+                    "done": true,
+                    "text": "Item Tasku I w checkliscie i w kanbanie powinien przejść przebudowę z dodatkowym opisem, kategoriami, kolorami, priorytetem, subtaskami itd"
+                  },
+                  {
+                    "id": "049ce4e1-2791-4876-9cd2-60695753794b",
+                    "done": true,
+                    "text": "Taski jak w trello, kolory, lista subtaskow w danym tasku"
+                  },
+                  {
+                    "id": "3da8f23d-6c63-4e4a-bc8c-93ae092cfba6",
+                    "done": true,
+                    "text": "Opis taska w kanban taskach"
+                  },
+                  {
+                    "id": "95fc4e75-1ccf-4376-8281-e32a3b15475c",
+                    "done": true,
+                    "text": "When lazy loading project and its items, change the loading from public shared read only tempalte to information about loading"
                   },
                   {
                     "id": "efeb86fe-6c91-43a0-971e-42be50378ae1",
@@ -2828,6 +3038,16 @@
               {
                 "id": "b968584e-e538-4873-965a-bc121662d6fa",
                 "cards": [
+                  {
+                    "id": "8111fd87-e3c5-4e08-89a5-0c937979bd8f",
+                    "done": true,
+                    "text": "Sprawdzic logowanie i telemetrie to unauthorized szczegolnie w kolaboracji i hub"
+                  },
+                  {
+                    "id": "6d931bc5-284b-4244-a246-dc5f27dd9827",
+                    "done": true,
+                    "text": "Dodac mozliwosc recznego zablokowania ip na zawsze jako admin"
+                  },
                   {
                     "id": "dec94b4d-2c69-429c-bff8-3f8f34aafa16",
                     "done": true,
@@ -4298,7 +4518,7 @@
           },
           {
             "size": "lg",
-            "content": "Project version actual for 06.10.2026",
+            "content": "Project version actual for 07.10.2026",
             "topColor": "#e11d48",
             "colorRole": "default",
             "typography": {

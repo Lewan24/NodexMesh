@@ -21,6 +21,7 @@ public static class BoardEndpoints
         group.MapPatch("/boards/{boardId:guid}", RenameBoardAsync);
         group.MapDelete("/boards/{boardId:guid}", DeleteBoardAsync);
         group.MapGet("/boards/{boardId:guid}", GetSnapshotAsync);
+        group.MapGet("/boards/{boardId:guid}/items/{itemId:guid}/completed-tasks", GetCompletedTasksAsync);
         group.MapGet("/boards/{boardId:guid}/loading-manifest", GetLoadingManifestAsync);
         group.MapPost("/boards/{boardId:guid}/item-page", GetItemPageAsync)
             .RequireRateLimiting("board-load");
@@ -116,13 +117,30 @@ public static class BoardEndpoints
     }
 
     private static async Task<Ok<BoardSnapshotDto>> GetSnapshotAsync(
-        Guid boardId, ClaimsPrincipal principal, IProjectAccessService access,
+        Guid boardId, bool? includeCompleted, string? includeCompletedFor, ClaimsPrincipal principal, IProjectAccessService access,
         IBoardMutationService boards, CancellationToken ct)
     {
         var userId = CurrentUserId(principal);
         await access.RequireForBoardAsync(boardId, userId, ProjectRole.Viewer, ct);
 
-        return TypedResults.Ok(await boards.GetSnapshotAsync(boardId, ct));
+        var snapshot = await boards.GetSnapshotAsync(boardId, ct);
+        return TypedResults.Ok(TaskProjection.Project(snapshot, includeCompleted, includeCompletedFor));
+    }
+
+    private static async Task<IResult> GetCompletedTasksAsync(
+        Guid boardId, Guid itemId, string expectedRevision, ClaimsPrincipal principal,
+        IProjectAccessService access, AppDbContext db, CancellationToken ct)
+    {
+        await access.RequireForBoardAsync(boardId, CurrentUserId(principal), ProjectRole.Viewer, ct);
+        var item = await db.BoardItems.AsNoTracking().SingleOrDefaultAsync(i => i.Id == itemId && i.BoardId == boardId, ct)
+            ?? throw new ApiException(404, "not_found", "Item not found.");
+        if (!long.TryParse(expectedRevision, out var revision) || revision != item.Revision)
+            throw new ApiException(409, "revision_mismatch", "Tasks changed. Refresh and retry.");
+        if (item.Type is not ("checklist" or "kanban"))
+            throw new ApiException(422, "invalid_item", "Item does not contain tasks.");
+        // Return only completed tasks; clients merge by task ID into their current local edits.
+        using var data = System.Text.Json.JsonDocument.Parse(item.Data);
+        return Results.Ok(TaskProjection.Completed(item.Type, data.RootElement));
     }
 
     private static async Task<Ok<BoardLoadingManifestDto>> GetLoadingManifestAsync(
@@ -157,7 +175,7 @@ public static class BoardEndpoints
             throw new ApiException(409, "revision_mismatch", "Board changed while loading.");
         if (snapshot.Items.Count != request.ItemIds.Length)
             throw new ApiException(422, "invalid_scope", "Items must belong to this board.");
-        return TypedResults.Ok(snapshot);
+        return TypedResults.Ok(TaskProjection.Project(snapshot, request.IncludeCompleted, null));
     }
 
     /// <summary>
@@ -213,9 +231,10 @@ public static class BoardEndpoints
     }
 
     private static async Task<Ok<BoardSnapshotDto>> RestoreItemAsync(
-        Guid projectId, Guid itemId, RestoreTrashItemRequest request, ClaimsPrincipal principal,
+        Guid projectId, Guid itemId, RestoreTrashItemRequest request, bool? includeCompleted, string? includeCompletedFor, ClaimsPrincipal principal,
         AppDbContext db, IProjectAccessService access, IBoardMutationService boardsService, CancellationToken ct)
     {
+        _ = TaskProjection.ExpandedIds(includeCompleted, includeCompletedFor);
         var userId = CurrentUserId(principal);
         await access.RequireAsync(projectId, userId, ProjectRole.Editor, ct);
         if ((request.X is { } x && !double.IsFinite(x)) || (request.Y is { } y && !double.IsFinite(y)))
@@ -286,7 +305,7 @@ public static class BoardEndpoints
             board.UpdatedBy = userId;
         }
         await db.SaveChangesAsync(ct);
-        return TypedResults.Ok(await boardsService.GetSnapshotAsync(targetBoard.Id, ct));
+        return TypedResults.Ok(TaskProjection.Project(await boardsService.GetSnapshotAsync(targetBoard.Id, ct), includeCompleted, includeCompletedFor));
     }
 
     private static async Task<NoContent> PurgeItemAsync(

@@ -31,7 +31,7 @@ export function useCollaborationPresence(
   boardId: string | undefined,
   userId: string,
   selectedIds: string[],
-  getAccessToken?: () => string,
+  getAccessToken?: () => string | Promise<string>,
 ) {
   const [remote, setRemote] = useState<Record<string, RemotePresence>>({});
   const connection = useRef<HubConnection | undefined>(undefined);
@@ -80,13 +80,15 @@ export function useCollaborationPresence(
   };
 
   useEffect(() => {
-    if (!projectId || !boardId || !userId) return;
+    if (!projectId || !boardId || !userId || !getAccessToken) return;
     cursorRef.current = null;
     let disposed = false;
     const next = new HubConnectionBuilder()
       .withUrl(hubUrl, {
         accessTokenFactory: async () => {
-          return getAccessToken?.() ?? '';
+          const token = await getAccessToken();
+          if (!token) throw new Error('No authenticated collaboration session.');
+          return token;
         },
         withCredentials: true,
       })

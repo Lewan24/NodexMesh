@@ -265,5 +265,18 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
       await admin(`/admin/settings/email/outbox/${encodeURIComponent(id)}`, { method: 'DELETE' });
     },
   };
-  return { auth, client, getAccessToken: () => accessToken };
+  const getCollaborationToken = async () => {
+    if (!accessToken || !user) throw new Error('No authenticated collaboration session.');
+    let expiresAt = 0;
+    try {
+      const payload = accessToken.split('.')[1]!;
+      expiresAt = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))).exp * 1000;
+    } catch {
+      // Treat unreadable expiry as stale; the server still validates every token.
+    }
+    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now() + 60_000) await refresh();
+    if (!accessToken) throw new Error('Collaboration session expired.');
+    return accessToken;
+  };
+  return { auth, client, getAccessToken: () => accessToken, getCollaborationToken };
 }

@@ -36,7 +36,7 @@ import { useCrossItemDrop } from '@/features/canvas/hooks/useCrossItemDrop';
 import { useCanvasKeyboard } from '@/features/canvas/hooks/useCanvasKeyboard';
 import { useItemAnimation } from '@/features/canvas/hooks/useItemAnimation';
 import { useItemDrag } from '@/features/canvas/hooks/useItemDrag';
-import { useCanvasMouse } from '@/features/canvas/hooks/useCanvasMouse';
+import { useCanvasMouse, shouldCaptureMiddlePan } from '@/features/canvas/hooks/useCanvasMouse';
 import { useFrameActions } from '@/features/canvas/hooks/useFrameActions';
 import { useDeleteConfirmation } from '@/features/canvas/hooks/useDeleteConfirmation';
 import { useColumnSelection } from '../hooks/useColumnSelection';
@@ -803,6 +803,13 @@ export default function Canvas({
 
   const handleCanvasMouseDownCapture = useCallback(
     (event: React.MouseEvent) => {
+      // Capture middle-button panning before task controls stop bubbling mouse events.
+      if (shouldCaptureMiddlePan(event)) {
+        event.stopPropagation();
+        handleCanvasMouseDown(event);
+        return;
+      }
+
       if (event.button === 0 && spacePanActive) {
         event.stopPropagation();
         handleCanvasMouseDown(event);

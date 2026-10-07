@@ -8,6 +8,25 @@ namespace NodexMeshApi.Tests.Unit;
 public class BoardItemTypesTests
 {
     [Fact]
+    public void Diagram_ConnectionAppearance_RoundTripsAndAcceptsLegacyEdges()
+    {
+        const string json = """{"title":"Flow","nodes":[],"edges":[{"id":"e","source":"a","target":"b","color":"#123456","strokeWidth":6,"lineStyle":"dashed","arrow":false}]}""";
+        var diagram = (DiagramData)BoardItemTypes.Deserialize("diagram", json);
+        var edge = diagram.Edges[0];
+        edge.Color.Should().Be("#123456");
+        edge.StrokeWidth.Should().Be(6);
+        edge.LineStyle.Should().Be("dashed");
+        edge.Arrow.Should().BeFalse();
+        var saved = System.Text.Json.JsonSerializer.Serialize(diagram, BoardItemTypes.StrictOptions);
+        var restored = (DiagramData)BoardItemTypes.Deserialize("diagram", saved);
+        restored.Should().BeEquivalentTo(diagram);
+        const string legacy = """{"title":"Flow","nodes":[],"edges":[{"id":"e","source":"a","target":"b"}]}""";
+        var oldDiagram = (DiagramData)BoardItemTypes.Deserialize("diagram", legacy);
+        oldDiagram.Edges[0].Color.Should().BeNull();
+        oldDiagram.Edges[0].Arrow.Should().BeNull();
+    }
+
+    [Fact]
     public void Appearance_CustomCss_RoundTripsWithStrictOptions()
     {
         const string json = """{"customCss":{"enabled":true,"source":"border-radius: 24px;"}}""";

@@ -20,6 +20,7 @@ const appearanceKeys = [
   'italic',
 ];
 const sharedKeys = [
+  'taskSummary',
   'id',
   'type',
   'x',
@@ -47,6 +48,7 @@ export function flattenItems(items: BoardItem[], boardId: string): ItemMutation[
       );
       const write = {
         // HTML is explicitly versioned until the editor JSON migration is implemented.
+        ...(item.taskSummary ? { preserveCompletedTasks: true } : {}),
         id: item.id,
         boardId,
         parentItemId,
@@ -94,6 +96,9 @@ export function toProjectView(snapshot: ProjectSnapshot): Project {
     const item = {
       ...record.data,
       ...record.appearance,
+      ...(record.taskSummary
+        ? { taskSummary: { ...record.taskSummary, boardId: record.boardId, revision: record.revision } }
+        : {}),
       id: record.id,
       type: record.type,
       x: record.x,

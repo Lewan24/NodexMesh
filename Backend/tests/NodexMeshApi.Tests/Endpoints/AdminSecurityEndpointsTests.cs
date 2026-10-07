@@ -24,6 +24,27 @@ public sealed class AdminSecurityEndpointsTests : IDisposable
         public bool CanHaveBody => true;
     }
 
+    [Fact]
+    public async Task PermanentBanIsEnforcedListedAuditedAndReleasable()
+    {
+        var admin = await factory.CreateAdminClientAsync();
+        (await admin.PostAsJsonAsync("/api/v1/admin/security/ips",
+            new BanIpRequest("192.0.2.123", "Permanent malicious source", Forever: true))).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            (await db.IpAccessStates.SingleAsync()).BannedUntil.Should().Be(DateTime.MaxValue);
+            (await db.AuditEvents.SingleAsync(e => e.EventType == "admin.ip_banned")).Metadata.Should().Contain("\"Forever\":true");
+            (await scope.ServiceProvider.GetRequiredService<IpProtectionService>().IsBannedAsync("192.0.2.123", default)).Should().BeTrue();
+        }
+        var listed = await admin.GetFromJsonAsync<JsonElement>("/api/v1/admin/security/ips?status=banned");
+        listed.GetProperty("total").GetInt32().Should().Be(1);
+        (await admin.PostAsJsonAsync("/api/v1/admin/security/ips/192.0.2.123/release",
+            new ReleaseIpRequest("Investigation completed"))).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var releasedScope = factory.Services.CreateScope();
+        (await releasedScope.ServiceProvider.GetRequiredService<IpProtectionService>().IsBannedAsync("192.0.2.123", default)).Should().BeFalse();
+    }
+
     [Theory]
     [InlineData("192.0.2.123", "192.0.2.123")]
     [InlineData("2001:0db8:0:0:0:0:0:123", "2001:db8::123")]
@@ -81,11 +102,13 @@ public sealed class AdminSecurityEndpointsTests : IDisposable
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
-    [Fact]
-    public async Task ManualBanRequiresAdminAndEnabledProtectionAndRejectsAllowlistedAddresses()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ManualBanRequiresAdminAndEnabledProtectionAndRejectsAllowlistedAddresses(bool forever)
     {
         var (user, _, _, _) = await factory.CreateSeededUserAsync();
-        var request = new BanIpRequest("192.0.2.1", "Authorization validation test");
+        var request = new BanIpRequest("192.0.2.1", "Authorization validation test", Forever: forever);
         (await user.PostAsJsonAsync("/api/v1/admin/security/ips", request)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         (await factory.CreateClientNoRedirect().PostAsJsonAsync("/api/v1/admin/security/ips", request)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         var admin = await factory.CreateAdminClientAsync();
@@ -96,11 +119,13 @@ public sealed class AdminSecurityEndpointsTests : IDisposable
         (await admin.PostAsJsonAsync("/api/v1/admin/security/ips", request with { Ip = "192.0.2.2" })).StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
-    [Fact]
-    public async Task ManualBanCannotBanAdministratorCurrentAddress()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ManualBanCannotBanAdministratorCurrentAddress(bool forever)
     {
         var admin = await factory.CreateAdminClientAsync();
-        var body = JsonSerializer.Serialize(new BanIpRequest("::ffff:192.0.2.1", "Prevent accidental lockout"));
+        var body = JsonSerializer.Serialize(new BanIpRequest("::ffff:192.0.2.1", "Prevent accidental lockout", Forever: forever));
         var response = await factory.Server.SendAsync(http =>
         {
             http.Connection.RemoteIpAddress = System.Net.IPAddress.Parse("192.0.2.1");
@@ -120,7 +145,7 @@ public sealed class AdminSecurityEndpointsTests : IDisposable
     [Fact]
     public async Task ScannerTrafficTriggersBanInRealPipelineAndForgedHeadersCannotChooseVictimIp()
     {
-        _ = factory.Services;
+        factory.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<IpProtectionOptions>>().Value.NotFoundThreshold = 40;
         for (var i = 0; i < 40; i++)
         {
             var response = await factory.Server.SendAsync(http =>

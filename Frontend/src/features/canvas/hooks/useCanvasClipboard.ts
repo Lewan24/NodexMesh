@@ -1,3 +1,5 @@
+import { completeTaskItems } from '@/features/blocks/shared/completeTaskItems';
+import { toast } from 'sonner';
 import { useCallback, useState } from 'react';
 import type { RefObject } from 'react';
 import type { BoardItem } from '@/entities/board/types';
@@ -73,12 +75,30 @@ export function useCanvasClipboard({
   const insert = useCallback(
     (items: BoardItem[], dx: number, dy: number) => {
       if (!items.length) return;
-      const all = projectRef.current.items;
-      const copies = cloneItems(items, dx, dy, Math.max(0, ...all.map((item) => item.zIndex)) + 1);
-      pushHistory();
-      onRestoreItems([...all, ...copies]);
-      clearColumnSelection();
-      onSelectItems(copies.map((item) => item.id));
+      const projectId = projectRef.current.id;
+      const ownerId = projectRef.current.ownerId;
+      const boardId = projectRef.current.boardId;
+      const restore = (complete: BoardItem[]) => {
+        if (
+          projectRef.current.id !== projectId ||
+          projectRef.current.ownerId !== ownerId ||
+          projectRef.current.boardId !== boardId
+        )
+          return;
+        const all = projectRef.current.items;
+        const copies = cloneItems(complete, dx, dy, Math.max(0, ...all.map((item) => item.zIndex)) + 1);
+        pushHistory();
+        onRestoreItems([...all, ...copies]);
+        clearColumnSelection();
+        onSelectItems(copies.map((item) => item.id));
+      };
+      const hasPartial = (entries: BoardItem[]): boolean =>
+        entries.some((entry) => entry.taskSummary || (entry.type === 'column' && hasPartial(entry.items)));
+      if (hasPartial(items))
+        void completeTaskItems(items)
+          .then(restore)
+          .catch((cause) => toast.error(cause instanceof Error ? cause.message : String(cause)));
+      else restore(items);
     },
     [projectRef, pushHistory, onRestoreItems, onSelectItems, clearColumnSelection],
   );

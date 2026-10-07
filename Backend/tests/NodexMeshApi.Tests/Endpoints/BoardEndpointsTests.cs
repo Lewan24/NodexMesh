@@ -31,6 +31,78 @@ public class BoardEndpointsTests : IDisposable
             "note", 1, EmptyObject(), NoteData()),
         ExpectedRevision: null, Links: [], Comments: [], Tags: []);
 
+    [Theory]
+    [InlineData("checklist")]
+    [InlineData("kanban")]
+    public async Task TaskReadsFilterCompletedAndPartialEditsPreserveThem(string type)
+    {
+        var (owner, _, _, _) = await _factory.CreateSeededUserAsync();
+        var (_, board) = await CreateProjectWithBoardAsync(owner);
+        var entries = new[] { new { id = "open", text = "Open task", done = false }, new { id = "done", text = "Secret completed text", done = true } };
+        var data = type == "checklist"
+            ? JsonSerializer.SerializeToElement(new { title = "Tasks", entries, hideCompleted = true })
+            : JsonSerializer.SerializeToElement(new { title = "Tasks", hideCompleted = true, columns = new[] { new { id = "column", title = "Column", color = "#ffffff", cards = entries } } });
+        var insert = NoteInsert(board.Id);
+        insert = insert with { Item = insert.Item with { Type = type, Data = data } };
+        (await owner.PostAsJsonAsync($"/api/v1/boards/{board.Id}/mutations", new BoardMutationDto(Guid.NewGuid(), board.Revision, [insert], []))).EnsureSuccessStatusCode();
+        var path = $"/api/v1/boards/{board.Id}";
+        var partial = (await owner.GetFromJsonAsync<BoardSnapshotDto>(path + "?includeCompleted=false"))!;
+        partial.Items.Single().TaskSummary!.CompletedCount.Should().Be(1);
+        partial.Items.Single().Data.GetRawText().Should().NotContain("Secret completed text");
+        var full = (await owner.GetFromJsonAsync<BoardSnapshotDto>(path + "?includeCompleted=true"))!;
+        full.Items.Single().Data.GetRawText().Should().Contain("Secret completed text");
+        // Older clients receive complete data unless they explicitly opt into partial reads.
+        (await owner.GetFromJsonAsync<BoardSnapshotDto>(path))!.Items.Single().Data.GetRawText().Should().Contain("Secret completed text");
+        var selected = (await owner.GetFromJsonAsync<BoardSnapshotDto>(path + $"?includeCompleted=false&includeCompletedFor={insert.Item.Id}"))!;
+        selected.Items.Single().TaskSummary.Should().BeNull();
+        selected.Items.Single().Data.GetRawText().Should().Contain("Secret completed text");
+        var pageResponse = await owner.PostAsJsonAsync(path + "/item-page", new BoardPageRequest([insert.Item.Id], partial.Board.Revision, IncludeCompleted: false));
+        pageResponse.EnsureSuccessStatusCode();
+        (await pageResponse.Content.ReadFromJsonAsync<BoardSnapshotDto>())!.Items.Single().Data.GetRawText().Should().NotContain("Secret completed text");
+        var taskPath = $"{path}/items/{insert.Item.Id}/completed-tasks?expectedRevision={partial.Items.Single().Revision}";
+        var completed = await owner.GetFromJsonAsync<JsonElement>(taskPath);
+        completed.GetRawText().Should().Contain("Secret completed text").And.NotContain("Open task");
+        var (stranger, _, _, _) = await _factory.CreateSeededUserAsync();
+        (await stranger.GetAsync(taskPath)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await owner.GetAsync($"{path}/items/{insert.Item.Id}/completed-tasks?expectedRevision=0")).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var edit = insert with { ExpectedRevision = partial.Items.Single().Revision,
+            Item = insert.Item with { Data = partial.Items.Single().Data, PreserveCompletedTasks = true, X = 50 } };
+        (await owner.PostAsJsonAsync(path + "/mutations", new BoardMutationDto(Guid.NewGuid(), partial.Board.Revision, [edit], []))).EnsureSuccessStatusCode();
+        var after = (await owner.GetFromJsonAsync<BoardSnapshotDto>(path + "?includeCompleted=true"))!;
+        after.Items.Single().Data.GetRawText().Should().Contain("Secret completed text");
+        after.Items.Single().X.Should().Be(50);
+        (await owner.GetAsync(taskPath)).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        // Full-data edits can explicitly delete completed tasks.
+        var deletion = edit with { ExpectedRevision = after.Items.Single().Revision, Item = edit.Item with { PreserveCompletedTasks = false } };
+        (await owner.PostAsJsonAsync(path + "/mutations", new BoardMutationDto(Guid.NewGuid(), after.Board.Revision, [deletion], []))).EnsureSuccessStatusCode();
+        (await owner.GetFromJsonAsync<BoardSnapshotDto>(path + "?includeCompleted=true"))!.Items.Single().Data.GetRawText().Should().NotContain("Secret completed text");
+    }
+
+    [Fact]
+    public async Task RichTasks_RoundTripDetailsAndRejectForeignAssignees()
+    {
+        var (owner, ownerId, _, _) = await _factory.CreateSeededUserAsync();
+        var (_, strangerId, _, _) = await _factory.CreateSeededUserAsync();
+        var (_, board) = await CreateProjectWithBoardAsync(owner);
+        var richData = JsonSerializer.SerializeToElement(new { title = "Tasks", entries = new[] { new {
+            id = "task", text = "Release", done = false, description = "Task details", deadline = "2026-10-31",
+            categoryIds = new[] { "important", "medium" }, assigneeUserId = ownerId,
+            subtasks = new[] { new { id = "sub", text = "Test", done = true } } } } });
+        var item = NoteInsert(board.Id);
+        item = item with { Item = item.Item with { Type = "checklist", Data = richData } };
+        var path = $"/api/v1/boards/{board.Id}";
+        (await owner.PostAsJsonAsync(path + "/mutations", new BoardMutationDto(Guid.NewGuid(), board.Revision, [item], []))).EnsureSuccessStatusCode();
+        var stored = (await owner.GetFromJsonAsync<BoardSnapshotDto>(path))!;
+        stored.Items.Single().Data.GetProperty("entries")[0].GetProperty("description").GetString().Should().Be("Task details");
+        stored.Items.Single().Data.GetProperty("entries")[0].GetProperty("categoryIds").EnumerateArray()
+            .Select(category => category.GetString()).Should().Equal("important", "medium");
+        stored.Items.Single().Data.GetProperty("entries")[0].GetProperty("subtasks")[0].GetProperty("done").GetBoolean().Should().BeTrue();
+        var foreignData = JsonDocument.Parse(richData.GetRawText().Replace(ownerId.ToString(), strangerId.ToString())).RootElement;
+        var edit = item with { ExpectedRevision = stored.Items.Single().Revision, Item = item.Item with { Data = foreignData } };
+        (await owner.PostAsJsonAsync(path + "/mutations", new BoardMutationDto(Guid.NewGuid(), stored.Board.Revision, [edit], [])))
+            .StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+    }
+
     [Fact]
     public async Task Commenter_CanManageOwnComments_ButViewerAndOtherAuthorsCannotWrite()
     {
@@ -47,6 +119,9 @@ public class BoardEndpointsTests : IDisposable
         var path = $"/api/v1/boards/{board.Id}/items/{item.Item.Id}/comments";
         var commentId = Guid.NewGuid();
         var request = new UpdateCommentsRequest(before.Board.Revision, [new CommentWrite(commentId, "Review this", "open")], []);
+        // Invalid projection options must fail before committing a comment or advancing its revision.
+        (await commenter.PutAsJsonAsync(path + "?includeCompleted=false&includeCompletedFor=invalid", request))
+            .StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
         (await viewer.PutAsJsonAsync(path, request)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
         var added = await commenter.PutAsJsonAsync(path, request);
         added.EnsureSuccessStatusCode();

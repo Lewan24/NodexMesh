@@ -37,6 +37,7 @@ const server = await createServer({
 await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
 const { default: AdminMfaReset } = await server.ssrLoadModule('/src/features/auth/pages/AdminMfaReset.tsx');
 const { default: AdminIpPanel } = await server.ssrLoadModule('/src/features/auth/pages/AdminIpPanel.tsx');
+const { default: AdminAuditPanel } = await server.ssrLoadModule('/src/features/auth/pages/AdminAuditPanel.tsx');
 await server.close();
 const json = (data) =>
   new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -151,7 +152,12 @@ test('manual IP ban dialog submits address, duration and reason and refreshes ba
     await input(document.querySelector('dialog textarea'), 'Verified malicious activity');
     await submit();
     const ban = calls.find((call) => call.url === '/api/v1/admin/security/ips');
-    assert.deepEqual(ban.body, { ip: '2001:db8::123', reason: 'Verified malicious activity', durationMinutes: 1440 });
+    assert.deepEqual(ban.body, {
+      ip: '2001:db8::123',
+      reason: 'Verified malicious activity',
+      durationMinutes: 1440,
+      forever: false,
+    });
     assert.equal(document.querySelector('dialog'), null);
     assert.ok(calls.filter((call) => call.url.includes('/security/ips?')).length >= 2);
   } finally {
@@ -176,6 +182,61 @@ test('manual ban failure remains in the dialog and preserves the entered values'
     await submit();
     assert.match(document.querySelector('dialog [role="alert"]').textContent, /current IP/);
     assert.equal(document.querySelector('dialog input[autocomplete="off"]').value, '192.0.2.1');
+  } finally {
+    await cleanup();
+  }
+});
+
+test('incident evidence offers a prefilled permanent IP ban with a reason', async () => {
+  calls.length = 0;
+  const event = {
+    id: 'event',
+    occurredAt: new Date().toISOString(),
+    eventType: 'auth.login_failed',
+    severity: 'Warning',
+    outcome: 'failure',
+    clientIp: '2001:db8::123',
+  };
+  handler = (url) => {
+    if (url === '/api/v1/admin/security/ips') return new Response(null, { status: 204 });
+    if (url.includes('/events/event')) return json(event);
+    if (url.includes('/statistics')) return json({ counts: [], persistenceFailuresSinceStartup: 0 });
+    if (url.includes('/incidents'))
+      return json({
+        total: 1,
+        items: [
+          {
+            id: 'incident',
+            eventId: 'event',
+            rule: 'Repeated failures',
+            severity: 'Warning',
+            status: 'open',
+            windowStart: new Date().toISOString(),
+          },
+        ],
+      });
+    return json({ total: 1, items: [event] });
+  };
+  const cleanup = await mount(AdminAuditPanel);
+  try {
+    await click([...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Incidents'));
+    await tick();
+    await click(
+      [...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Underlying event'),
+    );
+    await tick();
+    await click([...document.querySelectorAll('button')].find((button) => button.textContent.trim() === 'Ban IP'));
+    assert.equal(document.querySelector('input[autocomplete="off"]').value, '2001:db8::123');
+    await click(document.querySelector('input[type="checkbox"]'));
+    assert.equal(document.querySelector('input[type="number"]').disabled, true);
+    await input(document.querySelector('textarea'), 'Verified malicious activity');
+    await submit();
+    assert.deepEqual(calls.find((call) => call.url === '/api/v1/admin/security/ips').body, {
+      ip: '2001:db8::123',
+      reason: 'Verified malicious activity',
+      durationMinutes: 60,
+      forever: true,
+    });
   } finally {
     await cleanup();
   }

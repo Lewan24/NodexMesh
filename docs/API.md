@@ -190,9 +190,9 @@ All `/api/v1/admin` routes require a current, active administrator session.
 | POST | `/admin/users/{userId}/mfa/reset/start` | `{ currentPassword }`; verify administrator password and return `{ mfaRequired: false }` or a standard MFA challenge for the administrator. |
 | POST | `/admin/users/{userId}/mfa/reset` | `{ currentPassword, reason, challengeToken?, code? }`; verify current administrator factor when enabled, disable the target’s MFA, invalidate credentials/sessions and notify target; 204. |
 | GET | `/admin/security/ips?status=banned&search=192.0.2&page=1` | `{ items, total }`; 50 per page. `status` is `banned`, `suspicious` (not currently banned), or `all`; optional substring IP search. |
-| POST | `/admin/security/ips` | `{ ip, reason, durationMinutes? }`; add a manual IPv4/IPv6 ban (default 60 minutes; range 1–43,200); 204. |
+| POST | `/admin/security/ips` | `{ ip, reason, durationMinutes?, forever? }`; add a manual IPv4/IPv6 ban (default 60 minutes; range 1–43,200); 204. |
 | POST | `/admin/security/ips/{ip}/release` | `{ reason }`; clear ban/failure counters and record releasing administrator; 204. URL-encode IPv6 addresses. |
-| GET | `/security/ip-check` | Anonymous 204 when allowed; 403 when banned. Used by Nginx’s internal gate, contains no IP data and accepts no caller-supplied IP parameter. |
+| GET | `/security/ip-check` | Anonymous 204 when allowed; 403 when banned; independent high gate quota can return 429. Used by Nginx’s internal gate, contains no IP data and accepts no caller-supplied IP parameter. |
 
 Reset/release reasons are required (5–500 characters). Passwords are limited to 256 characters. Reset/start/release use the strict IP rate limiter. Self-reset returns 409 `self_mfa_reset`; unknown targets/records return 404; failed password/factor proofs return 401. Reset challenges use the existing five-minute expiry, attempt limits and replay protections and cannot be used for another target. Recovery codes can prove the administrator’s existing factor if SMTP is unavailable. A reset does not unblock a blocked account or cancel pending deletion. Invalid IP syntax returns 422. Concurrent release changes return 409 and require refresh/retry.
 
@@ -200,3 +200,37 @@ IP records include `ip`, `windowStart`, `lastSeen`, per-rule counters (`failedLo
 
 
 Manual bans normalize IPv6 and mapped IPv4 addresses, persist in the existing IP state table and use the same site/API/live-socket enforcement as automatic bans. Supply a complete address without a port, CIDR prefix or IPv6 scope suffix. Malformed addresses return 422; invalid duration/reason fields return 400. A current-IP ban returns 409 `self_ip_ban`, an allowlisted address returns 409 `ip_allowlisted`, disabled protection returns 409 `ip_protection_disabled`, and an active duplicate ban returns 409 `ip_already_banned`. Release an active ban before replacing its duration. Successful manual bans record `admin.ip_banned` with the actor, normalized IP, reason and expiry. Manual ban creation uses the strict rate limiter.
+
+
+## Refresh-safe IP quotas and friendly clients
+
+`RateLimiting` now configures anonymous browsing (2,000/IP/minute), authenticated browsing (1,000/user/minute), refresh (120/IP/minute), gate checks (10,000/IP/minute) and sensitive authentication (5/IP/minute). The gate does not consume browsing capacity. `IpProtection:Allowlist` bypasses bans and global browsing/gate limits only; named authentication/resource policies and account lockout remain. 429 responses no longer trigger persistent bans by default. Ban defaults are 10 failed login/MFA attempts, 100 non-bootstrap unauthorized responses or 100 scanner-like unmatched routes in 10 minutes, with 60-minute expiry. See [REVERSE_PROXY.md](REVERSE_PROXY.md) for exact Compose/NPM settings and existing-ban recovery.
+
+## Partial checklist and kanban reads
+
+`GET /boards/{boardId}?includeCompleted=false` and `POST /boards/{boardId}/item-page` with `includeCompleted: false` omit completed checklist entries and kanban cards only where block `data.hideCompleted` is true. Missing/false preferences show all tasks. The frontend opts into these partial reads; omitted/true flags retain complete API responses for compatibility with older clients. Omitted entries are counted in optional item-level `taskSummary: { completedCount, columns }`; `columns` maps kanban column IDs to omitted counts. Empty columns remain in `data`. Other block types are unchanged. `GET /boards/{boardId}?includeCompleted=true` returns complete data (used by project export); `includeCompleted=false&includeCompletedFor=<comma-separated IDs>` expands up to 100 selected blocks. All reads require Viewer access to the board. Comment-save and trash-restore responses accept the same query flags; the frontend requests partial snapshots from those paths too.
+
+`GET /boards/{boardId}/items/{itemId}/completed-tasks?expectedRevision=<item revision>` returns the block's task data containing only completed entries/cards. It requires board access and item scope, returns 404 for inaccessible/missing items, and 409 when the item revision changed. Merge the result by task ID into the current local view.
+
+Item writes may set `preserveCompletedTasks: true` outside `data` when editing partial task payloads. The backend retains stored completed tasks in surviving lists/columns, validates the merged payload and enforces existing revision/idempotency checks. This flag is only valid for existing checklist/kanban blocks of the same type. Omit it or set it to false when editing fully loaded tasks. The canvas automatically fetches complete tasks before pasting or duplicating a partial block. Removing a kanban column explicitly removes its hidden cards.
+
+Manual IP ban requests also accept `forever: true`, for example `{ "ip": "192.0.2.123", "reason": "Verified malicious source", "forever": true }`. The default remains a 60-minute temporary ban. `durationMinutes`, when supplied, must still be between 1 and 43,200. Permanent bans use the UTC maximum timestamp (`9999-12-31T23:59:59.9999999Z`) in the existing `bannedUntil` column; they survive retention cleanup and remain active until explicitly released. The admin UI displays “Banned forever”. No database migration is required.
+
+### Rich checklist and kanban tasks
+
+Checklist `entries` and kanban `columns[].cards` keep `id`, `text`, and `done` and accept optional
+`description` (20,000 characters), `subtasks` (up to 200 `{ id, text, done }` entries, unique IDs,
+500-character single-line text), `assigneeUserId` (project participant UUID), `categoryId`, and
+`deadline` (valid `YYYY-MM-DD`), and `categoryIds` (up to 100 distinct nonempty IDs, each at most 100 characters).
+`categoryId` remains readable for legacy tasks; new edits use `categoryIds`. An explicit empty array clears
+all assignments, including a legacy single category. Existing tasks need no conversion. Rich details survive completed-task
+projection, partial mutations, and checklist/kanban transfers. An unchanged assignment to a former
+participant is retained; new assignments must reference current participants.
+
+`GET /api/v1/projects/{projectId}/task-categories` returns `{ revision, categories: [{ id, name, color }] }`.
+All project participants can read it. `PUT` accepts `{ expectedRevision, categories }`, requires Editor
+or Owner access, and returns the updated representation. Stale revisions return 409. Supply 1–100
+categories, unique nonempty IDs and names up to 100 characters, and six-digit hex colors. Every project
+starts with Important (red), Medium priority (yellow), and Low priority (green). Editors can rename,
+recolor, remove, and add custom categories. Deleted categories leave task IDs intact and appear as
+Deleted category in the task editor until cleared or replaced. Category changes use the project revision.
