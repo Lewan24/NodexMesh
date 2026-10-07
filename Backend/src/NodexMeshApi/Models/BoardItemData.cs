@@ -34,9 +34,9 @@ public sealed record ImageData(string Url, string Caption, string? Variant, doub
 public sealed record FileData(string Title, string Source, string FileName, string ContentType, long Size);
 public sealed record LinkData(string Url, string Title, string Description);
 public sealed record EmbedData(string Url, string Title, bool ShowLabel);
-public sealed record ChecklistData(string Title, IReadOnlyList<Entry> Entries);
+public sealed record ChecklistData(string Title, IReadOnlyList<Entry> Entries, bool HideCompleted = false);
 public sealed record KanbanColumnData(string Id, string Title, string Color, double? Width, IReadOnlyList<Entry> Cards);
-public sealed record KanbanData(string Title, IReadOnlyList<KanbanColumnData> Columns);
+public sealed record KanbanData(string Title, IReadOnlyList<KanbanColumnData> Columns, bool HideCompleted = false);
 public sealed record TimelineTaskData(
     string Id, string Title, string Start, string End, bool Done, string Color,
     IReadOnlyList<Entry> Checklist, Guid? AssigneeUserId = null);

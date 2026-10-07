@@ -148,12 +148,13 @@ test('HTTP workspace composes project records and boards and reloads mutation sn
       if (path === '/projects/project/boards') return [snapshot.board];
       if (path === '/projects/project/permanent' && options.method === 'DELETE') return null;
       if (path === '/boards/board/mutations') return { boardRevision: audit.revision, items: [], conflicts: [] };
-      if (path === '/boards/board') return snapshot;
+      if (path === '/boards/board' || path === '/boards/board?includeCompleted=false') return snapshot;
       if (path === '/boards/board/loading-manifest') return { board: snapshot.board, items: [] };
       throw new Error(path);
     },
   });
   assert.equal((await api.projects.list())[0].project.color, '#7C3AED');
+  assert.ok(calls.some(([path]) => path === '/boards/board?includeCompleted=false'));
   await api.projects.create({ id: 'local', name: 'Test', color: '#7C3AED', clientMutationId: 'create' });
   assert.deepEqual(calls.find(([, options]) => options.method === 'POST')[1].body, { name: 'Test', color: '#7C3AED' });
   const mutation = { clientMutationId: 'mutation', expectedBoardRevision: audit.revision, upserts: [], deletes: [] };
@@ -205,7 +206,7 @@ test('new tags resolve once per normalized name and mutation retries reuse the e
   const mutations = [];
   const api = createHttpWorkspace({
     async request(path, options = {}) {
-      if (path === '/boards/board') return snapshot;
+      if (path === '/boards/board' || path === '/boards/board?includeCompleted=false') return snapshot;
       if (path === '/projects/project/tags') {
         tagCalls.push(options.body);
         return { id: 'tag-id', projectId: 'project', name: 'Planning', normalizedName: 'planning' };
@@ -306,7 +307,7 @@ test('HTTP project trash reloads without fetching inaccessible boards and restor
       if (path === '/projects/project') return project;
       assert.equal(project.deletedAt, null, 'trashed project boards must not be requested');
       if (path === '/projects/project/boards') return [snapshot.board];
-      if (path === '/boards/board') return snapshot;
+      if (path === '/boards/board' || path === '/boards/board?includeCompleted=false') return snapshot;
       if (path === '/boards/board/loading-manifest') return { board: snapshot.board, items: [] };
       throw new Error(path);
     },

@@ -50,3 +50,5 @@ For stronger integrity, export to immutable external storage, use durable contai
 
 
 Administrators can manually add IPv4/IPv6 bans from the Security tab. `admin.ip_banned` records actor, normalized IP resource, sanitized reason, selected duration and expiry atomically with the ban. The live-connection registry aborts matching local sockets after commit; other replicas detect the stored ban through the existing monitor. Manual bans appear with reason `manual_admin` in the IP table; the full reason is available in the audit record.
+
+Manual bans also support “Ban forever”. Event details opened from suspicious actions or incidents offer “Ban IP” when a client address was recorded, with that address prefilled in the same reason/duration dialog as the Security tab. `admin.ip_banned` metadata includes `Forever`, selected duration and the persisted expiry; permanent bans use the maximum UTC timestamp. Release remains audited and resets failure counters.

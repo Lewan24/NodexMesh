@@ -23,6 +23,17 @@ public class BoardValidatorTests
             Appearance: appearance ?? EmptyObject(),
             Data: data ?? Json(new { content = "hello" }));
 
+    [Theory]
+    [InlineData("checklist", "{\"title\":\"Tasks\",\"entries\":null}")]
+    [InlineData("checklist", "{\"title\":\"Tasks\",\"entries\":[null]}")]
+    [InlineData("checklist", "{\"title\":\"Tasks\",\"entries\":[{\"id\":\"x\",\"text\":\"Task\",\"done\":false},{\"id\":\"x\",\"text\":\"Duplicate\",\"done\":true}]}")]
+    [InlineData("kanban", "{\"title\":\"Tasks\",\"columns\":[{\"id\":\"column\",\"title\":\"Column\",\"color\":\"#fff\",\"cards\":null}]}")]
+    public void TaskArraysRejectMissingNullAndDuplicateEntries(string type, string data)
+    {
+        var act = () => BoardValidator.ValidateItem(NoteItem(type: type, data: JsonDocument.Parse(data).RootElement));
+        act.Should().Throw<ApiException>().Where(e => e.Code == "invalid_item");
+    }
+
     [Fact]
     public void ValidateItem_AcceptsOptionalCustomCss()
     {

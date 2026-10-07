@@ -4,3 +4,6 @@ dist-ssr/
 Assets/
 package-lock.json
 *.tsbuildinfo
+
+# Preserve the generated application export as provided.
+src/entities/project/demoProject.json

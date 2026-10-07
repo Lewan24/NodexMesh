@@ -321,7 +321,7 @@ test('the HTTP workspace adapter exports and imports every board using server-cr
         projectForBoard.set(board.board.id, collection[1]);
         return board.board;
       }
-      const boardPath = path.match(/^\/boards\/([^/]+)(\/mutations)?$/);
+      const boardPath = path.split('?')[0].match(/^\/boards\/([^/]+)(\/mutations)?$/);
       if (boardPath) {
         const boardId = boardPath[1];
         const projectId = projectForBoard.get(boardId);
@@ -344,6 +344,7 @@ test('the HTTP workspace adapter exports and imports every board using server-cr
   const saved = await persistImportedProject(http, imported);
   assert.notEqual(saved.project.id, imported.id);
   const exported = JSON.parse(await exportWorkspaceProject(http, saved.project.id));
+  assert.ok(requests.some((request) => request.endsWith('?includeCompleted=true')));
   assert.equal(exported.project.boards.length, 3);
   assert.deepEqual(
     exported.project.boards.map((board) => board.name),

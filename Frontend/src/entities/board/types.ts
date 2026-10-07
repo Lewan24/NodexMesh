@@ -216,7 +216,15 @@ export interface TypographySettings {
   verticalAlign?: VerticalAlign;
 }
 
+export interface TaskSummary {
+  completedCount: number;
+  columns: Record<string, number>;
+  boardId: string;
+  revision: string;
+}
+
 export interface BaseItem {
+  taskSummary?: TaskSummary;
   customCss?: { enabled: boolean; source: string };
   colorRole?: 'default' | 'accent1' | 'accent2' | 'accent3' | 'accent4' | 'accent5';
   gradient?: { from: string; to: string; kind: 'linear' | 'radial'; angle: number };
@@ -251,6 +259,7 @@ export interface NoteItem extends BaseItem {
 }
 
 export interface KanbanItem extends BaseItem {
+  hideCompleted?: boolean;
   type: 'kanban';
   title: string;
   columns: KanbanColumn[];
@@ -319,6 +328,7 @@ export interface FrameItem extends BaseItem {
 }
 
 export interface ChecklistItem extends BaseItem {
+  hideCompleted?: boolean;
   type: 'checklist';
   title: string;
   color: string;

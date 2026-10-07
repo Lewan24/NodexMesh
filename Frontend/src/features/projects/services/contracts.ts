@@ -35,7 +35,7 @@ export interface BoardRepository {
   create(projectId: string, name: string): Promise<BoardSnapshot>;
   rename(projectId: string, boardId: string, name: string): Promise<BoardRecord>;
   delete(projectId: string, boardId: string): Promise<void>;
-  get(projectId: string, boardId: string, signal?: AbortSignal): Promise<BoardSnapshot>;
+  get(projectId: string, boardId: string, signal?: AbortSignal, includeCompleted?: boolean): Promise<BoardSnapshot>;
   mutate(projectId: string, boardId: string, mutation: BoardMutation): Promise<BoardSnapshot>;
   listTrash(projectId: string): Promise<TrashedItemRecord[]>;
   restoreTrashItem(

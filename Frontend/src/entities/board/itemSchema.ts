@@ -148,12 +148,17 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
   },
   link: { version: 1, canNest: true, validate: object({ url, ...title, description: text }) },
   embed: { version: 1, canNest: true, validate: object({ url, ...title, showLabel: bool }) },
-  checklist: { version: 1, canNest: true, validate: object({ ...title, entries: list(entry) }) },
+  checklist: {
+    version: 1,
+    canNest: true,
+    validate: object({ ...title, entries: list(entry), hideCompleted: optional(bool) }),
+  },
   kanban: {
     version: 1,
     canNest: false,
     validate: object({
       ...title,
+      hideCompleted: optional(bool),
       columns: list(object({ id: text, ...title, color: text, width: optional(number), cards: list(entry) })),
     }),
   },

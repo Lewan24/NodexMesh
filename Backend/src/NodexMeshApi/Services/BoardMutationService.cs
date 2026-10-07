@@ -181,6 +181,21 @@ public sealed class BoardMutationService(
             return (409, new BoardMutationResultDto(board.Revision, [], conflicts));
         }
 
+        var partialIds = mutation.Upserts.Where(u => u.Item.PreserveCompletedTasks).Select(u => u.Item.Id).ToHashSet();
+        mutation = mutation with
+        {
+            Upserts = mutation.Upserts.Select(u =>
+            {
+                if (!u.Item.PreserveCompletedTasks) return u;
+                BoardValidator.ValidateItem(u.Item);
+                if (!existing.TryGetValue(u.Item.Id, out var old) || old.Type != u.Item.Type)
+                    throw new ApiException(422, "invalid_item", "Load all tasks before copying or changing the block type.");
+                using var storedData = JsonDocument.Parse(old.Data);
+                return u with { Item = u.Item with { Data = TaskProjection.Merge(u.Item.Type, u.Item.Data,
+                    storedData.RootElement) } };
+            }).ToList()
+        };
+
         // --- 4. Validate against the referenced subgraph, not the whole 20k-item board ---
         await ValidateAgainstGraphAsync(boardId, mutation, existing, ct);
 
@@ -287,7 +302,7 @@ public sealed class BoardMutationService(
                 [new ConflictDto(boardId, null, "revision_mismatch")]));
         }
 
-        var result = new BoardMutationResultDto(board.Revision, written.Select(ToDto).ToList(), []);
+        var result = new BoardMutationResultDto(board.Revision, written.Select(i => partialIds.Contains(i.Id) ? TaskProjection.ForPreference(ToDto(i)) : ToDto(i)).ToList(), []);
 
         db.IdempotencyKeys.Add(new IdempotencyKey
         {

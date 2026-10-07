@@ -129,7 +129,9 @@ export default function AdminIpPanel() {
                   <td className="p-2">
                     {row.bannedUntil && new Date(row.bannedUntil).getTime() > Date.now() ? (
                       <>
-                        {translate('Banned until')} {new Date(row.bannedUntil).toLocaleString()}
+                        {new Date(row.bannedUntil).getUTCFullYear() === 9999
+                          ? translate('Banned forever')
+                          : `${translate('Banned until')} ${new Date(row.bannedUntil).toLocaleString()}`}
                         <br />
                         {row.reason}
                       </>

@@ -26,6 +26,8 @@ type DataFor<T extends BoardItem> = Omit<
 export type ItemDataMap = { [T in BoardItem as T['type']]: DataFor<T> };
 
 export interface ItemFields {
+  preserveCompletedTasks?: boolean;
+  taskSummary?: { completedCount: number; columns: Record<string, number> } | null;
   id: string;
   boardId: string;
   parentItemId: string | null;

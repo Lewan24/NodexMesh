@@ -19,7 +19,7 @@ public sealed record AdminMfaResetRequest(
 public sealed record BanIpRequest(
     [property: Required, MaxLength(45)] string Ip,
     [property: Required, MinLength(5), MaxLength(500)] string Reason,
-    [property: Range(1, 43200)] int DurationMinutes = 60);
+    [property: Range(1, 43200)] int DurationMinutes = 60, bool Forever = false);
 public sealed record ReleaseIpRequest([property: Required, MinLength(5), MaxLength(500)] string Reason);
 
 public static class AdminSecurityEndpoints
@@ -132,7 +132,7 @@ public static class AdminSecurityEndpoints
         }
         if (state.BannedUntil > now)
             throw new ApiException(409, "ip_already_banned", "This IP is already banned. Release it before adding a new ban.");
-        state.BannedUntil = now.AddMinutes(request.DurationMinutes);
+        state.BannedUntil = request.Forever ? DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc) : now.AddMinutes(request.DurationMinutes);
         state.Reason = "manual_admin";
         state.Version = Guid.NewGuid();
         var audit = AuditCapture.Create(http, "admin.ip_banned");
@@ -140,7 +140,7 @@ public static class AdminSecurityEndpoints
         audit.ResourceId = ip;
         audit.Metadata = System.Text.Json.JsonSerializer.Serialize(new
         {
-            reason = AuditCapture.Clean(request.Reason.Trim(), 500), state.BannedUntil, request.DurationMinutes
+            reason = AuditCapture.Clean(request.Reason.Trim(), 500), state.BannedUntil, request.DurationMinutes, request.Forever
         });
         db.AuditEvents.Add(audit);
         try { await db.SaveChangesAsync(ct); }

@@ -118,3 +118,9 @@ Manual IP bans require an active administrator session and a recorded reason. Th
 
 
 Refresh-safe limits default to 2,000 anonymous requests/IP/minute, 1,000 authenticated requests/user/minute, 120 refresh requests/IP/minute and 10,000 gate checks/IP/minute in a separate bucket. The strict authentication bucket remains five/IP/minute. Expected refresh and profile-bootstrap 401s, matched missing-resource 404s and stale/missing browser assets are audited without triggering bans; profile modification password failures still count. See [REVERSE_PROXY.md](REVERSE_PROXY.md) for exact NPM trust, scheme sanitization, verification and recovery steps. Raising limits does not clear previously stored bans.
+
+## Permanent IP bans and partial task reads (2026-10-07)
+
+Permanent manual bans share temporary-ban authorization, strict rate limiting, address normalization, allowlist/current-IP lockout checks, transactional audit logging and live connection enforcement. They are excluded from inactive-record retention until released. The incident/event details action invokes this same protected endpoint and requires a reason.
+
+Completed-task reads require Viewer access to the containing board and check item scope and revision before returning task text. Partial writes require Editor access and preserve hidden completed tasks before full schema/size validation. Existing optimistic concurrency and idempotency protections remain in force; stale downloads are rejected rather than overwriting current edits. Viewers can change the filter locally without writing; editors save the block preference, hydrating omitted tasks before disabling it. Project exports request complete task data.

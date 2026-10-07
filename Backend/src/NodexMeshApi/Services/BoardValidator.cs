@@ -64,6 +64,18 @@ public static class BoardValidator
 
         // Strict deserialization: unknown/missing/wrong-typed fields throw (mass-assignment guard).
         var data = BoardItemTypes.Deserialize(item.Type, item.Data.GetRawText());
+        static bool ValidEntries(IReadOnlyList<Entry>? entries) => entries is not null
+            && entries.All(e => e is not null && !string.IsNullOrWhiteSpace(e.Id) && IsText(e.Id) && IsText(e.Text))
+            && entries.Select(e => e.Id).Distinct().Count() == entries.Count;
+        if (data is ChecklistData checklist && (!IsText(checklist.Title) || !ValidEntries(checklist.Entries)))
+            throw new ApiException(422, "invalid_item", "Invalid checklist tasks.");
+        if (data is KanbanData kanban && (!IsText(kanban.Title) || kanban.Columns is null
+            || kanban.Columns.Any(c => c is null || string.IsNullOrWhiteSpace(c.Id) || !IsText(c.Id)
+                || !IsText(c.Title) || !IsText(c.Color) || !ValidEntries(c.Cards))
+            || kanban.Columns.Select(c => c.Id).Distinct().Count() != kanban.Columns.Count
+            || kanban.Columns.SelectMany(c => c.Cards).Select(c => c.Id).Distinct().Count()
+                != kanban.Columns.Sum(c => c.Cards.Count)))
+            throw new ApiException(422, "invalid_item", "Invalid kanban tasks.");
         if (item.Type == "dispenser" && item.Data.TryGetProperty("paperColor", out var paperColor) &&
             (paperColor.ValueKind != JsonValueKind.String ||
              !System.Text.RegularExpressions.Regex.IsMatch(paperColor.GetString()!, "^#[0-9a-fA-F]{6}$")))

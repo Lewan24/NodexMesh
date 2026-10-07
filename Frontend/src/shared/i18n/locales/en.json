@@ -1424,8 +1424,14 @@
   "Connection color": "Connection color",
   "Connection thickness": "Connection thickness",
   "Connection line pattern": "Connection line pattern",
-  "Solid": "Solid",
-  "Dashed": "Dashed",
   "Dotted": "Dotted",
-  "Show arrow": "Show arrow"
+  "Show arrow": "Show arrow",
+  "Ban forever": "Ban forever",
+  "Banned forever": "Banned forever",
+  "Load completed tasks": "Load completed tasks",
+  "Unable to load completed tasks.": "Unable to load completed tasks.",
+  "All tasks done. Add a new one!": "All tasks done. Add a new one!",
+  "Only unfinished tasks": "Only unfinished tasks",
+  "Show all tasks": "Show all tasks",
+  "Tasks changed. Refresh and retry.": "Tasks changed. Refresh and retry."
 }

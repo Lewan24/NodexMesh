@@ -164,6 +164,7 @@ function BlockContent({
       return (
         <Suspense fallback={<LoadingBlock item={item} />}>
           <KanbanBlock
+            readOnly={readOnly}
             item={item}
             onUpdate={onUpdate}
             onDelete={onDelete}
@@ -190,6 +191,7 @@ function BlockContent({
     case 'checklist':
       return (
         <ChecklistBlock
+          readOnly={readOnly}
           item={item}
           onUpdate={onUpdate}
           onDelete={onDelete}
