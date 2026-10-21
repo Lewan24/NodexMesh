@@ -5,7 +5,6 @@ import type { BoardSnapshot, ItemMutation } from '@/entities/board/records';
 import { canonicalJson } from '@/shared/api/canonicalJson';
 import type { BoardItem } from '@/entities/board/types';
 import { parseLibrarySource } from '@/features/library/librarySource';
-import { createMockWorkspace } from './mockWorkspace';
 import { flattenItems, renewProjectIds, toProjectView } from './boardAdapter';
 import type { WorkspaceServices } from './contracts';
 
@@ -233,6 +232,8 @@ export async function importProjectJson(text: string, userId: string): Promise<I
       data = next;
     },
   };
+  // The mock persistence validator is needed for imports, not normal HTTP startup.
+  const { createMockWorkspace } = await import('./mockWorkspace');
   await persistImportedProject(
     createMockWorkspace(userId, storage, () => userId),
     project,

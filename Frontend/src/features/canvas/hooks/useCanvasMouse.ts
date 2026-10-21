@@ -385,6 +385,8 @@ export function useCanvasMouse({
       pan,
       spacePanActive,
       placeOnItems,
+      measuredSizes,
+      onFramePreviewChange,
       screenToCanvas,
       snapValue,
       pushHistory,

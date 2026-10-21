@@ -2,6 +2,8 @@
 
 The root [README](../README.md) is the product overview and quick start. Maintained detailed documentation lives here.
 
+The [frontend review and refactor plan](FRONTEND_REVIEW.md) records the 2026-10-21 code review, focused improvements, validation findings, and staged follow-up work.
+
 | Document                                       | Contents                                                                                          |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | [DEVELOPMENT.md](DEVELOPMENT.md)               | Local setup, repository structure, data adapters, demo data, import/export, and verification      |

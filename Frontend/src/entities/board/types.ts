@@ -275,7 +275,7 @@ export interface KanbanColumn {
   width?: number;
 }
 
-export interface KanbanCard extends ChecklistEntry {}
+export type KanbanCard = ChecklistEntry;
 
 export interface ImageItem extends BaseItem {
   type: 'image';

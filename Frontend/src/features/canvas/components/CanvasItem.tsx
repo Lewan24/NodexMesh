@@ -194,6 +194,7 @@ export default function CanvasItem({
       </ItemWatcher>
     ),
     [
+      collaboratorLocked,
       contentZoom,
       item.id,
       item.type,

@@ -66,7 +66,8 @@ export default function FileBlock({
           onKeyDown={(event) => {
             if (event.key !== 'Enter' && event.key !== ' ') return;
             event.preventDefault();
-            item.source ? setPreviewOpen(true) : !readOnly && setLibraryOpen(true);
+            if (item.source) setPreviewOpen(true);
+            else if (!readOnly) setLibraryOpen(true);
           }}
         >
           <span className="file-block-icon">

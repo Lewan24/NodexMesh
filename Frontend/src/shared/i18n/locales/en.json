@@ -1435,5 +1435,10 @@
   "Show all tasks": "Show all tasks",
   "Tasks changed. Refresh and retry.": "Tasks changed. Refresh and retry.",
   "Expand sidebar": "Expand sidebar",
-  "Collapse sidebar": "Collapse sidebar"
+  "Collapse sidebar": "Collapse sidebar",
+  "This view could not be downloaded. Check your connection and retry.": "This view could not be downloaded. Check your connection and retry.",
+  "This view stopped working.": "This view stopped working.",
+  "You can retry this view. Reloading requires saving pending changes first.": "You can retry this view. Reloading requires saving pending changes first.",
+  "Changes could not be saved. Reload was cancelled. Please retry when connected.": "Changes could not be saved. Reload was cancelled. Please retry when connected.",
+  "Save changes and reload": "Save changes and reload"
 }

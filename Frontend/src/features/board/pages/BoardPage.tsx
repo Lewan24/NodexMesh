@@ -14,10 +14,9 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { BoardItem, ColumnItem, FrameItem } from '@/entities/board/types';
-import type { BoardRecord } from '@/entities/board/records';
-import type { ProjectParticipant } from '@/entities/project/shareTypes';
 
 import { useBoardView } from '@/features/board/hooks/useBoardView';
+import { useProjectMetadata } from '@/features/board/hooks/useProjectMetadata';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
 import { useProjectItems } from '@/features/projects/hooks/useProjectItems';
 import { useProjects } from '@/features/projects/hooks/useProjects';
@@ -87,57 +86,27 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
   } = useProjects(userId);
 
   const [boardTrail, setBoardTrail] = useState<Array<{ id: string; name: string }>>([]);
-  const [boards, setBoards] = useState<BoardRecord[]>([]);
   const [boardNavigationVisible, setBoardNavigationVisible] = useState(false);
   const [editBarVisible, setEditBarVisible] = useState(false);
   const trashRequest = useRef(0);
   const [trashOpen, setTrashOpen] = useState(false);
   const [trashLoading, setTrashLoading] = useState(false);
   const [trashedItems, setTrashedItems] = useState<TrashedItemRecord[]>([]);
-  const [projectParticipants, setProjectParticipants] = useState<ProjectParticipant[]>([]);
   const [participantsRevision, setParticipantsRevision] = useState(0);
-  useEffect(() => {
-    if (!activeProject) {
-      setBoards([]);
-      return;
-    }
-    if (status !== 'saved') return;
-    let cancelled = false;
-    void listBoards(activeProject.id)
-      .then((value) => {
-        if (!cancelled) setBoards(value);
-      })
-      .catch(() => {
-        if (!cancelled) toast.error(translate('Could not load the project boards.'));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [activeProject?.id, listBoards, status]);
+  // A board ID appears once the project has a persisted snapshot. Local saves
+  // must not refetch project metadata on every transition back to "saved".
+  const { boards, setBoards, projectParticipants } = useProjectMetadata({
+    projectId: activeProject?.boardId ? activeProject.id : undefined,
+    remoteVersion,
+    participantsRevision,
+    listBoards,
+    participants: sharingApi?.participants,
+  });
   useEffect(() => {
     ++trashRequest.current;
     setTrashOpen(false);
     setTrashedItems([]);
   }, [activeProject?.id]);
-  useEffect(() => {
-    if (!activeProject || !sharingApi) {
-      setProjectParticipants([]);
-      return;
-    }
-    if (status !== 'saved') return;
-    let cancelled = false;
-    void sharingApi
-      .participants(activeProject.id)
-      .then((participants) => {
-        if (!cancelled) setProjectParticipants(participants);
-      })
-      .catch(() => {
-        if (!cancelled) setProjectParticipants([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [activeProject?.id, participantsRevision, status]);
 
   const { setScope } = useTheme();
   const [appearanceOpen, setAppearanceOpen] = useState(false);
@@ -253,7 +222,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         })
         .catch(() => toast.error(translate('Could not create the linked board. Please try again.')));
     },
-    [activeProject, createBoard, addItem],
+    [activeProject, createBoard, addItem, setBoards],
   );
 
   const handleRenameBoard = useCallback(
@@ -263,7 +232,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         .then((record) => setBoards((current) => current.map((board) => (board.id === record.id ? record : board))))
         .catch(() => toast.error(translate('Could not rename this board.')));
     },
-    [activeProject, renameBoard],
+    [activeProject, renameBoard, setBoards],
   );
 
   const handleDeleteBoard = useCallback(
@@ -296,7 +265,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         toast.error(translate('Could not delete this board.'));
       }
     },
-    [activeProject, boards, deleteBoard, resetBoardView, selectBoard, setProjects],
+    [activeProject, boards, deleteBoard, resetBoardView, selectBoard, setProjects, setBoards],
   );
 
   const refreshItemTrash = useCallback(async () => {
@@ -323,7 +292,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       deleteItem(id);
       if (trashOpen) void refreshItemTrash();
     },
-    [activeProject, deleteItem, refreshItemTrash, trashOpen],
+    [activeProject, deleteItem, refreshItemTrash, trashOpen, setBoards],
   );
 
   const handleDeleteItems = useCallback(
@@ -343,7 +312,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       deleteItems(ids);
       if (trashOpen) void refreshItemTrash();
     },
-    [activeProject, deleteItems, refreshItemTrash, trashOpen],
+    [activeProject, deleteItems, refreshItemTrash, trashOpen, setBoards],
   );
 
   const handleRestoreTrashItem = useCallback(
@@ -359,7 +328,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         toast.error(translate('Could not restore this item.'));
       }
     },
-    [activeProject, listBoards, restoreTrashItem],
+    [activeProject, listBoards, restoreTrashItem, setBoards],
   );
 
   const handlePurgeTrashItem = useCallback(
@@ -379,7 +348,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         toast.error(translate('Could not permanently delete this item.'));
       }
     },
-    [activeProject, purgeTrashItem, refreshItemTrash],
+    [activeProject, purgeTrashItem, refreshItemTrash, setBoards],
   );
 
   const handleEmptyItemTrash = useCallback(async () => {
@@ -398,7 +367,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       setTrashLoading(false);
       toast.error(translate('Could not empty the item trash.'));
     }
-  }, [activeProject, emptyItemTrash, trashedItems]);
+  }, [activeProject, emptyItemTrash, trashedItems, setBoards]);
 
   const handleDropOnColumn = useCallback(
     (itemId: string, columnId: string) => {

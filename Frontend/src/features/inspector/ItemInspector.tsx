@@ -41,11 +41,12 @@ export default function ItemInspector({
   const [commentsOpen, setCommentsOpen] = useState(false);
 
   const single = items.length === 1 ? items[0] : null;
+  const selectionKey = JSON.stringify(items.map((item) => item.id));
 
   useEffect(() => {
     setNewTag('');
     setCommentsOpen(false);
-  }, [items.map((item) => item.id).join('|')]);
+  }, [selectionKey]);
 
   const tagSummary = useMemo<TagSummary[]>(() => {
     const counts = new Map<string, number>();

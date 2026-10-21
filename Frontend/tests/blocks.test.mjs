@@ -17,6 +17,24 @@ const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/ut
 const { normalizeItemNumbers } = await server.ssrLoadModule('/src/entities/board/normalizeNumbers.ts');
 const { createEmptySibling } = await server.ssrLoadModule('/src/features/canvas/utils/quickCreate.ts');
 const { resolveLineItem } = await server.ssrLoadModule('/src/features/canvas/utils/lineGeometry.ts');
+
+test('indexed connection geometry matches measured, missing-target and divider behavior', () => {
+  const start = { ...createCanvasItem('note', 10, 20), id: 'start' };
+  const end = { ...createCanvasItem('note', 500, 300), id: 'end' };
+  const items = [start, end];
+  const index = new Map(items.map((item) => [item.id, item]));
+  const sizes = new Map([
+    [start.id, { width: 180, height: 90 }],
+    [end.id, { width: 240, height: 160 }],
+  ]);
+  const line = { ...createCanvasItem('line', 0, 0), startItemId: start.id, endItemId: end.id };
+  for (const candidate of [line, { ...line, endItemId: 'deleted' }, { ...line, divider: true }]) {
+    assert.deepEqual(resolveLineItem(candidate, index, sizes), resolveLineItem(candidate, items, sizes));
+  }
+  const resolved = resolveLineItem(line, index, sizes);
+  assert.notEqual(resolved.x, line.x);
+  assert.equal(resolveLineItem(resolved, index, sizes), resolved);
+});
 const { getEmbedUrl } = await server.ssrLoadModule('/src/features/blocks/embed/embedUrl.ts');
 const { getSearchableText } = await server.ssrLoadModule('/src/features/search/utils/itemSearch.ts');
 const { getSearchTargets } = await server.ssrLoadModule('/src/features/search/utils/itemSearch.ts');

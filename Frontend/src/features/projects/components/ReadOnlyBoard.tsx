@@ -175,9 +175,10 @@ export default function ReadOnlyBoard({
       return next;
     });
   }, []);
+  const itemsById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
   const rendered = useMemo(
-    () => items.map((item) => (item.type === 'line' ? resolveLineItem(item, items, measuredSizes) : item)),
-    [items, measuredSizes],
+    () => items.map((item) => (item.type === 'line' ? resolveLineItem(item, itemsById, measuredSizes) : item)),
+    [items, itemsById, measuredSizes],
   );
   const { minX, minY, width, height } = useMemo(() => {
     let left = 0,

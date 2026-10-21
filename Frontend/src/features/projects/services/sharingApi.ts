@@ -13,8 +13,8 @@ export function createSharingApi(client: HttpClient) {
     async members(id: string) {
       return (await client.request(`${path(id)}/members`)) as ProjectMember[];
     },
-    async participants(id: string) {
-      return (await client.request(`${path(id)}/participants`)) as ProjectParticipant[];
+    async participants(id: string, signal?: AbortSignal) {
+      return (await client.request(`${path(id)}/participants`, { signal })) as ProjectParticipant[];
     },
     async invite(id: string, email: string, role: MemberRole) {
       return (await client.request(`${path(id)}/members`, { method: 'POST', body: { email, role } })) as ProjectMember;

@@ -90,8 +90,29 @@ export function flattenItems(items: BoardItem[], boardId: string): ItemMutation[
 
 export function toProjectView(snapshot: ProjectSnapshot): Project {
   const { project, board } = snapshot;
+  const commentsByItem = new Map<string, NonNullable<BoardItem['comments']>>();
+  for (const comment of board.comments) {
+    if (comment.deletedAt) continue;
+    const comments = commentsByItem.get(comment.itemId) ?? [];
+    comments.push({
+      id: comment.id,
+      text: comment.text,
+      status: comment.status,
+      createdAt: comment.createdAt,
+      authorId: comment.createdBy ?? undefined,
+    });
+    commentsByItem.set(comment.itemId, comments);
+  }
+  const tagsById = new Map(board.tags.map((tag) => [tag.id, tag]));
+  const tagsByItem = new Map<string, string[]>();
+  for (const relation of board.itemTags) {
+    const tags = tagsByItem.get(relation.itemId) ?? [];
+    tags.push(tagsById.get(relation.tagId)!.name);
+    tagsByItem.set(relation.itemId, tags);
+  }
+  const activeItems = board.items.filter((item) => !item.deletedAt);
   const items = new Map<string, BoardItem>();
-  for (const record of board.items.filter((item) => !item.deletedAt)) {
+  for (const record of activeItems) {
     validateItem(record);
     const item = {
       ...record.data,
@@ -108,18 +129,8 @@ export function toProjectView(snapshot: ProjectSnapshot): Project {
       height: record.height ?? undefined,
       frameId: record.frameId,
       locked: record.locked,
-      comments: board.comments
-        .filter((c) => c.itemId === record.id && !c.deletedAt)
-        .map((c) => ({
-          id: c.id,
-          text: c.text,
-          status: c.status,
-          createdAt: c.createdAt,
-          authorId: c.createdBy ?? undefined,
-        })),
-      tags: board.itemTags
-        .filter((t) => t.itemId === record.id)
-        .map((t) => board.tags.find((tag) => tag.id === t.tagId)!.name),
+      comments: commentsByItem.get(record.id) ?? [],
+      tags: tagsByItem.get(record.id) ?? [],
       ...(record.type === 'column' ? { items: [] } : {}),
     } as BoardItem;
     items.set(item.id, item);
@@ -131,7 +142,7 @@ export function toProjectView(snapshot: ProjectSnapshot): Project {
     if (item?.type === 'note' && link.kind === 'created_from') item.dispenserId = link.targetItemId;
   }
   const roots: BoardItem[] = [];
-  for (const record of [...board.items].filter((i) => !i.deletedAt).sort((a, b) => a.sortOrder - b.sortOrder)) {
+  for (const record of activeItems.sort((a, b) => a.sortOrder - b.sortOrder)) {
     const item = items.get(record.id)!;
     const parent = record.parentItemId ? items.get(record.parentItemId) : null;
     if (parent?.type === 'column') parent.items.push(item);

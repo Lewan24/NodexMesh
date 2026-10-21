@@ -1435,5 +1435,10 @@
   "Show all tasks": "Pokaż wszystkie zadania",
   "Tasks changed. Refresh and retry.": "Zadania uległy zmianie. Odśwież i spróbuj ponownie.",
   "Expand sidebar": "Rozwiń pasek boczny",
-  "Collapse sidebar": "Zwiń pasek boczny"
+  "Collapse sidebar": "Zwiń pasek boczny",
+  "This view could not be downloaded. Check your connection and retry.": "Nie udało się pobrać tego widoku. Sprawdź połączenie i spróbuj ponownie.",
+  "This view stopped working.": "Ten widok przestał działać.",
+  "You can retry this view. Reloading requires saving pending changes first.": "Przed ponownym załadowaniem trzeba zapisać oczekujące zmiany.",
+  "Changes could not be saved. Reload was cancelled. Please retry when connected.": "Nie udało się zapisać zmian. Anulowano ponowne ładowanie. Spróbuj ponownie po odzyskaniu połączenia.",
+  "Save changes and reload": "Zapisz zmiany i załaduj ponownie"
 }

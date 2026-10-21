@@ -1,5 +1,5 @@
 import { HubConnectionBuilder, HubConnectionState, LogLevel, type HubConnection } from '@microsoft/signalr';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export interface RemotePresence {
   userId: string;
@@ -40,9 +40,8 @@ export function useCollaborationPresence(
   const cursorRef = useRef<{ x: number; y: number } | null>(null);
   const lastPublishedAt = useRef(0);
   const publishTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const identity = `${projectId}:${boardId ?? ''}:${userId}`;
 
-  const publish = () => {
+  const publish = useCallback(() => {
     const active = connection.current;
     if (!boardId || !active || active.state !== HubConnectionState.Connected) return;
     const activeElement = document.activeElement;
@@ -63,21 +62,24 @@ export function useCollaborationPresence(
         cursorY: cursorRef.current?.y ?? null,
       })
       .catch(() => undefined);
-  };
+  }, [projectId, boardId]);
 
-  const schedulePublish = () => {
+  const schedulePublish = useCallback(() => {
     if (publishTimer.current) return;
     const delay = Math.max(0, 250 - (Date.now() - lastPublishedAt.current));
     publishTimer.current = setTimeout(() => {
       publishTimer.current = undefined;
       publish();
     }, delay);
-  };
+  }, [publish]);
 
-  const updateCursor = (cursor: { x: number; y: number } | null) => {
-    cursorRef.current = cursor;
-    schedulePublish();
-  };
+  const updateCursor = useCallback(
+    (cursor: { x: number; y: number } | null) => {
+      cursorRef.current = cursor;
+      schedulePublish();
+    },
+    [schedulePublish],
+  );
 
   useEffect(() => {
     if (!projectId || !boardId || !userId || !getAccessToken) return;
@@ -97,10 +99,11 @@ export function useCollaborationPresence(
       .build();
     connection.current = next;
     const onPresence = (value: PresenceEvent) => {
-      if (value.projectId !== projectId || value.boardId !== boardId || value.userId === userId) return;
+      if (disposed || value.projectId !== projectId || value.boardId !== boardId || value.userId === userId) return;
       setRemote((current) => ({ ...current, [value.userId]: value }));
     };
     const onCleared = (clearedUserId: string) => {
+      if (disposed) return;
       setRemote((current) => {
         if (!(clearedUserId in current)) return current;
         const copy = { ...current };
@@ -118,6 +121,7 @@ export function useCollaborationPresence(
     const join = async () => {
       if (disposed) return;
       await next.invoke('JoinProject', projectId);
+      if (disposed) return;
       publish();
       window.dispatchEvent(new CustomEvent('nodexmesh:board-changed', { detail: { projectId, boardId } }));
     };
@@ -125,13 +129,14 @@ export function useCollaborationPresence(
       try {
         await next.start();
         if (disposed) {
-          await next.stop();
+          await next.stop().catch(() => undefined);
           return;
         }
         await join();
       } catch {
         if (!disposed) {
-          await next.stop();
+          await next.stop().catch(() => undefined);
+          if (disposed) return;
           clearTimeout(retryTimer);
           retryTimer = setTimeout(() => void start(), 10000);
         }
@@ -152,14 +157,14 @@ export function useCollaborationPresence(
       publishTimer.current = undefined;
       if (next.state === HubConnectionState.Connected)
         void next.invoke('ClearPresence', projectId).catch(() => undefined);
-      void next.stop();
+      void next.stop().catch(() => undefined);
       connection.current = undefined;
       setRemote({});
     };
-  }, [identity, projectId, boardId, userId, getAccessToken]);
+  }, [projectId, boardId, userId, getAccessToken, publish]);
 
   useEffect(() => {
-    if (!boardId) return;
+    if (!projectId || !boardId || !userId || !getAccessToken) return;
     const clearCursor = () => {
       cursorRef.current = null;
       schedulePublish();
@@ -184,7 +189,7 @@ export function useCollaborationPresence(
       document.removeEventListener('focusout', schedulePublish);
       window.removeEventListener('blur', clearCursor);
     };
-  }, [projectId, boardId, selectedIds]);
+  }, [projectId, boardId, userId, getAccessToken, selectedIds, schedulePublish]);
 
   const byItem = useMemo(() => {
     const byItem: Record<string, RemotePresence[]> = {};

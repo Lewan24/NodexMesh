@@ -1,4 +1,4 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
@@ -29,7 +29,63 @@ const { exportProjectJson, importProjectJson, exportWorkspaceProject, persistImp
 const { demoProjects } = await server.ssrLoadModule('/src/entities/project/demoProjects.ts');
 const { createDefaultProjectFor } = await server.ssrLoadModule('/src/entities/project/projectFactory.ts');
 const { createId } = await server.ssrLoadModule('/src/shared/lib/createId.ts');
-await server.close();
+after(() => server.close());
+
+test('indexed projection preserves comment/tag order, nested ownership, deletion and snapshot immutability', async () => {
+  const values = new Map();
+  const api = createMockWorkspace(
+    'projection-test',
+    { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) },
+    () => 'projection-test',
+  );
+  const [initial] = await api.projects.list();
+  const child = {
+    ...createCanvasItem('note', 0, 0),
+    tags: ['Second', 'First'],
+    comments: [
+      { id: crypto.randomUUID(), text: 'Earlier', status: 'open' },
+      { id: crypto.randomUUID(), text: 'Later', status: 'resolved' },
+    ],
+  };
+  const sibling = {
+    ...createCanvasItem('note', 500, 0),
+    tags: ['First'],
+    comments: [{ id: crypto.randomUUID(), text: 'Sibling', status: 'open' }],
+  };
+  const column = { ...createCanvasItem('column', 0, 0), items: [child] };
+  const board = await api.boards.mutate(
+    initial.project.id,
+    initial.board.board.id,
+    diffBoard(initial.board, [column, sibling]),
+  );
+  board.comments.push({
+    ...board.comments[0],
+    id: crypto.randomUUID(),
+    text: 'Removed',
+    deletedAt: new Date().toISOString(),
+  });
+  const snapshot = { project: initial.project, board };
+  const before = structuredClone(snapshot);
+  const view = toProjectView(snapshot);
+  assert.equal(view.items.length, 2);
+  const nested = view.items[0].items[0];
+  assert.deepEqual(nested.tags, ['Second', 'First']);
+  assert.deepEqual(
+    nested.comments.map(({ text }) => text),
+    ['Earlier', 'Later'],
+  );
+  assert.deepEqual(
+    view.items[1].comments.map(({ text }) => text),
+    ['Sibling'],
+  );
+  assert.equal(nested.comments[1].status, 'resolved');
+  assert.deepEqual(snapshot, before);
+  nested.tags.push('Local only');
+  nested.comments[0].text = 'Local edit';
+  const fresh = toProjectView(snapshot).items[0].items[0];
+  assert.deepEqual(fresh.tags, ['Second', 'First']);
+  assert.equal(fresh.comments[0].text, 'Earlier');
+});
 
 test('HTTP mobile context can load demo, create a project, save blocks and reload', async (t) => {
   const originalCrypto = globalThis.crypto;

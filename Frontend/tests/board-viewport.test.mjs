@@ -31,7 +31,40 @@ const { useBoardView } = await server.ssrLoadModule('/src/features/board/hooks/u
 const { viewportKey, readViewport } = await server.ssrLoadModule('/src/features/board/hooks/boardViewport.ts');
 const { default: Controls } = await server.ssrLoadModule('/src/features/canvas/components/CanvasControls.tsx');
 const { default: Fields } = await server.ssrLoadModule('/src/features/blocks/shared/TaskDetailsFields.tsx');
+const { useItemResize } = await server.ssrLoadModule('/src/features/canvas/hooks/useItemResize.ts');
 await server.close();
+
+test('resize callbacks respect collaboration lock changes with otherwise stable inputs', async () => {
+  const root = createRoot(document.createElement('div'));
+  let resize;
+  let starts = 0;
+  const options = {
+    projectRef: { current: { items: [{ id: 'note', type: 'note', x: 0, y: 0, width: 220, height: 120 }] } },
+    zoomRef: { current: 1 },
+    measuredSizes: new Map(),
+    snapValue: (value) => value,
+    pushHistory() {},
+    onUpdateItem() {},
+    onResizeStart() {
+      starts++;
+    },
+  };
+  function Harness({ lockedIds }) {
+    resize = useItemResize({ ...options, collaboratorLockedIds: lockedIds }).handleItemResize;
+    return null;
+  }
+  const event = { button: 0, clientX: 220, clientY: 120, preventDefault() {}, stopPropagation() {} };
+  try {
+    for (const lockedIds of [new Set(), new Set(['note']), new Set()]) {
+      await act(async () => root.render(createElement(Harness, { lockedIds })));
+      resize('note', event, 'se');
+      document.dispatchEvent(new browser.MouseEvent('mouseup'));
+    }
+    assert.equal(starts, 2);
+  } finally {
+    await act(async () => root.unmount());
+  }
+});
 
 test('restores independent board cameras on navigation, remount, and account changes', async () => {
   const host = document.createElement('div');

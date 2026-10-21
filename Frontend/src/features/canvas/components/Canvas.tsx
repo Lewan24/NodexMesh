@@ -998,13 +998,13 @@ export default function Canvas({
           item.type === 'line'
             ? resolveLineItem(
                 (effectiveItemsById.get(item.id) as typeof item | undefined) ?? item,
-                effectiveItems,
+                effectiveItemsById,
                 measuredSizes,
               )
             : (effectiveItemsById.get(item.id) ?? item),
         ]),
       ),
-    [regularItems, effectiveItems, effectiveItemsById, measuredSizes],
+    [regularItems, effectiveItemsById, measuredSizes],
   );
   const lockedFrameIds = useMemo(
     () =>

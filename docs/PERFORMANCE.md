@@ -2,6 +2,8 @@
 
 Reviewed against the frontend on 2026-09-24. The statements below describe code behavior; they are not browser benchmark claims.
 
+The [2026-10-21 frontend review](FRONTEND_REVIEW.md) records screen-level and mock-runtime lazy loading, indexed connection endpoint and board-relation lookups, metadata request isolation, collaboration dependency fixes, error recovery, and a staged refactor plan with validation results and a reproducible projection benchmark.
+
 ## Implemented
 
 - Authenticated startup downloads project summaries and item counts. Main-board content loads on opening a project, with a centered “Project is loading, please wait.” status while item content downloads in bounded asynchronous pages (50 items per page, at most three concurrent downloads). Loaded projects are cached for the session; full board editing starts after snapshot validation.
@@ -22,7 +24,7 @@ Reviewed against the frontend on 2026-09-24. The statements below describe code 
 - Camera state remains above the canvas and exact zoom still reaches wrappers that need scale-aware UI. A dedicated camera owner could further decouple pan/pinch cost from board size.
 - Resizing and line endpoint manipulation still use direct update paths rather than the transient drag model.
 - Inactive documents still initialize TipTap, and diagrams/database diagrams mount React Flow once detailed. Static inactive previews could defer those costs.
-- Alignment, line lookup, and some frame/measurement paths scan arrays. Spatial or dependency indexes should be added only if profiling shows those scans dominate after culling.
+- Alignment, some interaction-specific line lookups, and frame/measurement paths still scan arrays. Full-board connection rendering and comment/tag projection now use indexes. Spatial or dependency indexes should be added only if profiling shows those scans dominate after culling.
 - Public read-only boards render full block content rather than editor LOD.
 
 ## Recommended sequence
@@ -51,3 +53,11 @@ Checklist and kanban blocks show all tasks by default. The “Only unfinished ta
 Partial writes set `preserveCompletedTasks` on the item. The backend merges stored completed entries by ID before validating the complete payload and applying the existing board/item revision checks. Deleting a column explicitly deletes its hidden cards; deleting a block uses the existing soft-delete/trash behavior. Full writes can delete or reopen completed tasks. Completed entries are appended after visible entries when merging. Copy/paste and duplication fetch omitted tasks before cloning. Export explicitly requests complete snapshots, so archives retain every task. Public shared boards retain their existing complete read-only payload.
 
 This reduces API payload and client rendering cost; the backend still reads each block's JSON from storage. Tasks are not separate database rows. Loading more tasks can therefore increase rendering work again, intentionally.
+
+## Recovery and loading boundaries (2026-10-21)
+
+HTTP startup defers mock/demo implementations; mock mode awaits its composition module before mounting. Import validation loads its persistence validator on demand. Root, screen, and block error boundaries offer local retry and an explicit save-before-reload action. Failed or still-pending registered saves cancel reload. Pending workspace/appearance guards survive failed-screen unmounts until successfully flushed, including unload protection; local uncommitted form/editor state is outside this guarantee.
+
+Project metadata requests are independent of local save status. Persisted project identity and remote revisions refresh board/participant metadata; sharing changes explicitly refresh participants. Abort signals and identity-scoped state reject obsolete responses after switching projects.
+
+`npm run benchmark:projection` measures snapshot-to-view conversion without browser rendering. A local 2,000-note fixture with comments/tags improved from 219.28 ms to 11.06 ms median after indexing relations; see the frontend review for fixture, p95, and limitations. Browser culling and frame-time profiling remain outstanding.

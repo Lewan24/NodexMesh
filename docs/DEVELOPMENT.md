@@ -162,3 +162,11 @@ board restores its view. This preference stays in the current browser and does n
 change shared project data or require an API migration. Writes are debounced and
 flushed when changing boards, unmounting, or leaving the page. Invalid saved values
 fall back to the default view; unavailable storage does not block canvas use.
+
+## Frontend recovery and performance checks
+
+Run `npm run lint`, `npm test`, `npm run build`, and `npm run format:check` from `Frontend`. Lint checks source TypeScript and React hook dependencies. `npm run benchmark:projection` prints median/p95 snapshot conversion measurements for 100, 500, and 2,000 annotated notes; timing is diagnostic rather than a CI pass/fail threshold.
+
+The frontend uses asynchronous mock composition, so both HTTP and `VITE_DATA_SOURCE=mock` production bundles must build. Tests verify the HTTP entry's emitted static module graph excludes mock/demo implementations, and exercise mock login/demo loading. The import validator is intentionally loaded on demand; Vite-based tests that call imports keep the module runner open until test teardown.
+
+Recovery boundaries isolate failed blocks/screens. Reload retries registered saves first and cancels if they fail or remain pending. Pending workspace/appearance saves remain guarded after unmount. These guards do not serialize local form drafts or uncommitted editor composition. See [FRONTEND_REVIEW.md](FRONTEND_REVIEW.md) for completed changes, tests, and remaining work.

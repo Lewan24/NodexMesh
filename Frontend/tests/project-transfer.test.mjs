@@ -1,4 +1,4 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
@@ -22,7 +22,7 @@ const { diffBoard, flattenItems, toProjectView } = await server.ssrLoadModule(
 const { demoProjects } = await server.ssrLoadModule('/src/entities/project/demoProjects.ts');
 const { DEMO_USER_ID } = await server.ssrLoadModule('/src/entities/user/mockUsers.ts');
 const { createHttpWorkspace } = await server.ssrLoadModule('/src/features/projects/services/httpWorkspace.ts');
-await server.close();
+after(() => server.close());
 
 function workspace(userId = 'transfer-user') {
   const values = new Map();
