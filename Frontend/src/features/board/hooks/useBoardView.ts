@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { defaultViewport, readViewport, viewportKey, writeViewport } from './boardViewport';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ToolType } from '@/entities/board/toolTypes';
 
@@ -7,26 +8,42 @@ export interface CanvasPoint {
   y: number;
 }
 
-export function useBoardView() {
+export function useBoardView(userId: string, projectId?: string, boardId?: string) {
+  const key = viewportKey(userId, projectId, boardId);
+  const [camera, setCamera] = useState(() => ({ key, ...readViewport(key) }));
+  if (camera.key !== key) setCamera({ key, ...readViewport(key) });
+  const latest = useRef(camera);
+
+  useEffect(() => {
+    const flush = () => writeViewport(latest.current.key, latest.current);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      flush();
+      window.removeEventListener('pagehide', flush);
+    };
+  }, [key]);
+
+  useEffect(() => {
+    latest.current = camera;
+    const timer = window.setTimeout(() => writeViewport(camera.key, camera), 200);
+    return () => window.clearTimeout(timer);
+  }, [camera]);
   const [selectedTool, setSelectedTool] = useState<ToolType>('select');
 
-  const [pan, setPan] = useState<CanvasPoint>({ x: 0, y: 0 });
-
-  const [zoom, setZoom] = useState(1);
+  const { pan, zoom } = camera;
+  const setPan = useCallback((pan: CanvasPoint) => setCamera((current) => ({ ...current, pan })), []);
+  const setZoom = useCallback((zoom: number) => setCamera((current) => ({ ...current, zoom })), []);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const resetViewport = useCallback(() => {
-    setPan({ x: 0, y: 0 });
-
-    setZoom(1);
+    setCamera((current) => ({ ...current, ...defaultViewport() }));
   }, []);
 
   const resetBoardView = useCallback(() => {
-    resetViewport();
     setSelectedTool('select');
     setSelectedIds([]);
-  }, [resetViewport]);
+  }, []);
 
   const selectTool = useCallback((tool: ToolType) => {
     setSelectedTool(tool);

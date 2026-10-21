@@ -97,7 +97,7 @@ export default function TaskDialog({
     }
     if (close && !draft.text.trim()) {
       setError(translate('Enter a task name before saving.'));
-      formRef.current?.querySelector<HTMLInputElement>('[name="taskName"]')?.focus();
+      formRef.current?.querySelector<HTMLTextAreaElement>('[name="taskName"]')?.focus();
       return;
     }
     savingRef.current = true;

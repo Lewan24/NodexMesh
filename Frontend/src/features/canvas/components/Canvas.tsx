@@ -1599,7 +1599,6 @@ export default function Canvas({
           });
           onZoomChange(nextZoom);
         }}
-        onPanChange={onPanChange}
         onFitView={handleReturnToBoard}
         selectionMode={touchSelectionMode}
         onToggleSelectionMode={() => setTouchSelectionMode((current) => !current)}

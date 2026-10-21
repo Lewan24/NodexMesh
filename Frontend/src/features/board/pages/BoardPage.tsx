@@ -158,9 +158,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
     setPan,
     zoom,
     setZoom,
-    resetViewport,
     resetBoardView,
-  } = useBoardView();
+  } = useBoardView(userId, activeProject?.id, activeProject?.boardId);
 
   const {
     byItem: remotePresence,
@@ -186,9 +185,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
   const handleAddProject = useCallback(
     (name: string) => {
       addProject(name);
-      resetViewport();
     },
-    [addProject, resetViewport],
+    [addProject],
   );
 
   const handleSelectProject = useCallback(

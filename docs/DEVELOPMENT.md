@@ -148,3 +148,17 @@ response, saving its still-open dialog reloads completed task data before editin
 flag, and adjusts local progress counts. Removed tasks or columns show an error rather than being recreated.
 
 Canvas tools: new Kanban boards default to 960px, with a larger implicit width for larger fonts. Auto-fit document/code heights round up to the 16px canvas grid; automatic growth moves subsequent items to grid-aligned rows. Document edits save while typing and finish when clicking outside the document. The desktop tools sidebar can toggle between labeled tiles and an accessible icon rail; tool dragging and category controls work in both modes. Mobile keeps the full sidebar and has no collapse control.
+
+### Canvas viewport and task editing
+
+The canvas percentage control offers zoom presets from 10% to 300%, preserving the
+visible canvas center. Task titles and descriptions support multiple lines, grow
+automatically up to a bounded height, and can also be resized vertically by dragging.
+Longer content scrolls within the field; the dialog body remains scrollable.
+
+Canvas pan and zoom are saved in browser local storage per signed-in user, project,
+and board (`nodexmesh.viewport.v1.`). Returning from a nested board or reopening a
+board restores its view. This preference stays in the current browser and does not
+change shared project data or require an API migration. Writes are debounced and
+flushed when changing boards, unmounting, or leaving the page. Invalid saved values
+fall back to the default view; unavailable storage does not block canvas use.
