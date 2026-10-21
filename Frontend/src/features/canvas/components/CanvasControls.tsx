@@ -5,6 +5,7 @@ import { MousePointerClick, Trash2 } from 'lucide-react';
 
 interface CanvasControlsProps {
   zoom: number;
+  getZoom?: () => number;
   snapEnabled: boolean;
   placeOnItems: boolean;
   onZoomChange: (zoom: number) => void;
@@ -20,6 +21,7 @@ interface CanvasControlsProps {
 
 export default function CanvasControls({
   zoom,
+  getZoom,
   snapEnabled,
   placeOnItems,
   onZoomChange,
@@ -34,13 +36,13 @@ export default function CanvasControls({
 }: CanvasControlsProps) {
   useTranslation();
   const zoomOut = () => {
-    const nextZoom = Math.max(ZOOM_MIN, Number((zoom - 0.1).toFixed(2)));
+    const nextZoom = Math.max(ZOOM_MIN, Number(((getZoom?.() ?? zoom) - 0.1).toFixed(2)));
 
     onZoomChange(nextZoom);
   };
 
   const zoomIn = () => {
-    const nextZoom = Math.min(ZOOM_MAX, Number((zoom + 0.1).toFixed(2)));
+    const nextZoom = Math.min(ZOOM_MAX, Number(((getZoom?.() ?? zoom) + 0.1).toFixed(2)));
 
     onZoomChange(nextZoom);
   };

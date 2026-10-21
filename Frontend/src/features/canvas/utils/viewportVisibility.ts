@@ -1,6 +1,7 @@
 import type { BoardItem } from '@/entities/board/types';
 import type { SizeMap } from './lineGeometry';
 import { getApproxItemSize } from './itemGeometry';
+import { CANVAS_VIEWPORT_OVERSCAN } from '../constants';
 
 export interface CanvasViewport {
   pan: { x: number; y: number };
@@ -11,7 +12,6 @@ export interface CanvasViewport {
 
 // Stateful editors/columns and connection curves retain their mounted state.
 const cullableTypes = new Set(['note', 'text', 'icon', 'image', 'link', 'drawing']);
-const overscan = 320;
 
 export function isCanvasItemVisible(
   item: BoardItem,
@@ -19,12 +19,24 @@ export function isCanvasItemVisible(
   sizes: SizeMap,
   measuredItems: ReadonlyMap<string, BoardItem>,
   retainedIds: ReadonlySet<string>,
+  overscan = CANVAS_VIEWPORT_OVERSCAN,
 ): boolean {
   if (!cullableTypes.has(item.type) || retainedIds.has(item.id) || item.customCss?.enabled) return true;
   if (viewport.width <= 0 || viewport.height <= 0 || !Number.isFinite(viewport.zoom) || viewport.zoom <= 0) return true;
   const fixedBounds = item.type === 'drawing' || (item.type === 'note' && item.height !== undefined && item.height > 0);
   // Unknown or remotely changed auto-sized content gets measured before culling.
   if (!fixedBounds && measuredItems.get(item.id) !== item) return true;
+  return intersectsCanvasViewport(item, viewport, sizes, overscan);
+}
+
+/** Geometry-only query, also used for previews whose stateful editors must stay mounted. */
+export function intersectsCanvasViewport(
+  item: BoardItem,
+  viewport: CanvasViewport,
+  sizes: SizeMap,
+  overscan = CANVAS_VIEWPORT_OVERSCAN,
+): boolean {
+  if (viewport.width <= 0 || viewport.height <= 0 || !Number.isFinite(viewport.zoom) || viewport.zoom <= 0) return true;
   const approximate = getApproxItemSize(item);
   const measured = sizes.get(item.id);
   const width = Math.max(approximate.width, measured?.width ?? 0);

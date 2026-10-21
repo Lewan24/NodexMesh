@@ -20,6 +20,7 @@
     "preview:performance": "vite preview --config vite.performance.config.ts --host 127.0.0.1 --port 4178 --strictPort",
     "test:browser": "playwright test",
     "benchmark:browser": "playwright test --grep \"profile pan\"",
+    "benchmark:workspace": "playwright test workspace-performance --grep \"profile workspace\"",
     "typecheck:browser": "tsc --project tsconfig.browser.json"
   },
   "dependencies": {

@@ -21,7 +21,7 @@ import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
 import { useProjectItems } from '@/features/projects/hooks/useProjectItems';
 import { useProjects } from '@/features/projects/hooks/useProjects';
 
-import Canvas from '@/features/canvas/components/Canvas';
+import BoardCanvas from '../components/BoardCanvas';
 import AppBar from '@/layout/appbar/AppBar';
 import Sidebar from '@/layout/sidebar/Sidebar';
 import SaveStatus from '@/features/projects/components/SaveStatus';
@@ -117,18 +117,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
   }, [userId, activeProjectId, setScope]);
   useEffect(() => () => setScope('', ''), [setScope]);
 
-  const {
-    selectedTool,
-    setSelectedTool,
-    selectTool,
-    selectedIds,
-    setSelectedIds,
-    pan,
-    setPan,
-    zoom,
-    setZoom,
-    resetBoardView,
-  } = useBoardView(userId, activeProject?.id, activeProject?.boardId);
+  const { selectedTool, setSelectedTool, selectTool, selectedIds, setSelectedIds, resetBoardView } = useBoardView();
 
   const {
     byItem: remotePresence,
@@ -329,6 +318,19 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       }
     },
     [activeProject, listBoards, restoreTrashItem, setBoards],
+  );
+
+  const handleOpenTrash = useCallback(() => {
+    setTrashOpen(true);
+    void refreshItemTrash();
+  }, [refreshItemTrash]);
+
+  const handleRestoreTrashOnCanvas = useCallback(
+    (itemId: string, position: { x: number; y: number }) => {
+      const entry = trashedItems.find((item) => item.item.id === itemId);
+      if (entry) void handleRestoreTrashItem(entry, position);
+    },
+    [trashedItems, handleRestoreTrashItem],
   );
 
   const handlePurgeTrashItem = useCallback(
@@ -734,7 +736,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
                 onCursorMove={updateCollaborationCursor}
               />
             ) : (
-              <Canvas
+              <BoardCanvas
+                userId={userId}
                 key={`${activeProjectId}:${activeProject.boardId ?? ''}`}
                 project={activeProject}
                 projectParticipants={projectParticipants}
@@ -743,11 +746,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
                 remoteCursors={remoteCursors}
                 onCursorMove={updateCollaborationCursor}
                 selectedTool={selectedTool}
-                pan={pan}
-                zoom={zoom}
                 selectedIds={selectedIds}
-                onPanChange={setPan}
-                onZoomChange={setZoom}
                 onSelectTool={setSelectedTool}
                 onSelectItems={setSelectedIds}
                 onGroupSelected={handleGroupSelected}
@@ -766,14 +765,8 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
                 onEjectFromColumn={handleEjectFromColumn}
                 onRestoreItems={restoreItems}
                 searchQuery={searchQuery}
-                onOpenTrash={() => {
-                  setTrashOpen(true);
-                  void refreshItemTrash();
-                }}
-                onRestoreTrashItem={(itemId, position) => {
-                  const entry = trashedItems.find((item) => item.item.id === itemId);
-                  if (entry) void handleRestoreTrashItem(entry, position);
-                }}
+                onOpenTrash={handleOpenTrash}
+                onRestoreTrashItem={handleRestoreTrashOnCanvas}
                 onEditBarVisibilityChange={setEditBarVisible}
               />
             )}

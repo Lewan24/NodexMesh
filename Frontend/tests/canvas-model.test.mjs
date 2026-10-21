@@ -33,6 +33,11 @@ const { resolveLineItem } = await server.ssrLoadModule('/src/features/canvas/uti
 const { useCanvasRenderModel } = await server.ssrLoadModule('/src/features/canvas/hooks/useCanvasRenderModel.ts');
 const item = (type, id, extra = {}) => ({ ...createCanvasItem(type, 0, 0), id, frameId: null, ...extra });
 
+const { useCanvasCallbacks } = await server.ssrLoadModule('/src/features/canvas/hooks/useCanvasCallbacks.ts');
+const { getHeavyPreviewLines, hasPreviewCustomCss, isHeavyPreviewItem } = await server.ssrLoadModule(
+  '/src/features/canvas/utils/heavyPreview.ts',
+);
+
 test('render layers retain stable paint order and transient connection geometry without mutating persisted items', () => {
   const start = item('note', 'start', { x: 10, y: 20, zIndex: 5 });
   const end = item('note', 'end', { x: 600, y: 400, zIndex: 5 });
@@ -178,4 +183,50 @@ test('camera/drag/measurement rerenders preserve ownership locks and base layer 
   } finally {
     await act(async () => root.unmount());
   }
+});
+
+test('stable canvas event props skip child work while using current geometry and permissions', async () => {
+  const { memo } = await import('react');
+  const host = document.createElement('div');
+  const root = createRoot(host);
+  let callbacks;
+  let renders = 0;
+  const Child = memo(function Child({ actions }) {
+    callbacks = actions;
+    renders++;
+    return null;
+  });
+  function Harness({ size, locked }) {
+    const actions = useCanvasCallbacks({ resize: (value) => (locked ? null : size + value) });
+    return createElement(Child, { actions });
+  }
+  try {
+    await act(() => root.render(createElement(Harness, { size: 100, locked: false })));
+    const first = callbacks;
+    assert.equal(callbacks.resize(20), 120);
+    await act(() => root.render(createElement(Harness, { size: 500, locked: false })));
+    assert.equal(callbacks, first);
+    assert.equal(renders, 1);
+    assert.equal(callbacks.resize(20), 520);
+    await act(() => root.render(createElement(Harness, { size: 500, locked: true })));
+    assert.equal(callbacks.resize(20), null);
+    assert.equal(renders, 1);
+  } finally {
+    await act(() => root.unmount());
+  }
+});
+
+test('preview eligibility excludes documents and bounds nested summaries and custom styles', () => {
+  assert.equal(isHeavyPreviewItem(item('document', 'document')), false);
+  const column = item('column', 'column', {
+    items: Array.from({ length: 100 }, (_, i) => item('note', `note-${i}`, { content: 'y'.repeat(1000) })),
+  });
+  assert.equal(getHeavyPreviewLines(column).length, 8);
+  assert.equal(getHeavyPreviewLines(column)[0].length, 160);
+  assert.equal(hasPreviewCustomCss(column), false);
+  column.items[0].customCss = { enabled: true, css: '' };
+  assert.equal(hasPreviewCustomCss(column), true);
+  const cyclic = item('column', 'cyclic', { items: [] });
+  cyclic.items.push(cyclic);
+  assert.equal(hasPreviewCustomCss(cyclic), false);
 });

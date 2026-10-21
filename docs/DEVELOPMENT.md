@@ -104,7 +104,6 @@ dotnet ef migrations has-pending-model-changes --project Backend/src/NodexMeshAp
 
 PostgreSQL-specific tests use `AUDIT_TEST_POSTGRES` and/or `NodexMesh_PersistenceTestConnection`. Point them only at a disposable database where the test user may create and drop schemas. Tests do not use application tables.
 
-
 ## Sidebar resizing and editor completion
 
 Desktop toolbars start at 235px and can be resized from 160–400px by dragging the right edge. The focused resize separator supports Left/Right arrows (8px), Home, and double-click to restore the default. Appearance settings also provide a width slider and reset button. Width persists through the existing appearance save queue; mobile panels retain their responsive layout.
@@ -175,6 +174,8 @@ The canvas model has a separate diagnostic benchmark: `npm run benchmark:canvas-
 
 ## Browser FPS and interaction checks
 
-See [BROWSER_PERFORMANCE.md](BROWSER_PERFORMANCE.md) for measurements, reproduction and retention policy. Install the Chromium test browser with `npx playwright install chromium`, then run `npm run test:browser` from `Frontend`. `npm run benchmark:browser` selects only the CPU-throttled frame profiles. Do not run builds or other test suites concurrently with frame measurements. `npm run typecheck:browser` checks the isolated fixture and Playwright/Vite configuration.
+See [BROWSER_PERFORMANCE.md](BROWSER_PERFORMANCE.md) for measurements, reproduction and retention policy. Install the Chromium test browser with `npx playwright install chromium`, then run `npm run test:browser` from `Frontend`. `npm run benchmark:browser` selects five frame profiles, including normal CPU speed and a pan-only case. [CAMERA_PERFORMANCE.md](CAMERA_PERFORMANCE.md) describes live camera ownership, navigation previews and the remaining 60 FPS plan. Do not run builds or other test suites concurrently with frame measurements. `npm run typecheck:browser` checks the isolated fixture and Playwright/Vite configuration.
 
 The test server builds into `dist-performance` and serves only on loopback port 4178. The diagnostic control API is excluded from application bundles, with a regression assertion. Test data does not use a live account or saved workspace. `test-results` stores machine-readable reports, failure traces and optional CPU samples (`CANVAS_CPU_PROFILE=1`). These generated directories are ignored by Git. A custom browser install path must also be supplied when running tests via `PLAYWRIGHT_BROWSERS_PATH`.
+
+The full application shell has a separate diagnostic: `npm run benchmark:workspace`. It uses isolated demo authentication/storage with the production App/BoardPage/BoardCanvas, profiles note and mixed boards through their mouse handlers, and measures visible-editor restoration plus subsequent frame times. `CANVAS_RENDER_TRACE=1` attaches compressed rendering traces and `CANVAS_CPU_PROFILE=1` attaches CPU samples for source-map attribution; `CANVAS_CPU_SLOWDOWN=1` selects normal CPU speed. See [WORKSPACE_RENDERING.md](WORKSPACE_RENDERING.md) for alternating comparisons, transport isolation, software-renderer limits and retained evidence.

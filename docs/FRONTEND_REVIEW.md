@@ -38,10 +38,10 @@ HTTP startup no longer initializes mock authentication/workspace adapters. Mock 
 
 Run `npm run benchmark:projection` from `Frontend` to reproduce the conversion benchmark. The sample uses notes with one comment and three tag assignments each, five warmups and 20 measured conversions. Same local Node environment, before/after medians:
 
-| Items | Before | After |
-| --- | --- | --- |
-| 100 | 1.34 ms | 0.74 ms |
-| 500 | 16.60 ms | 3.18 ms |
+| Items | Before    | After    |
+| ----- | --------- | -------- |
+| 100   | 1.34 ms   | 0.74 ms  |
+| 500   | 16.60 ms  | 3.18 ms  |
 | 2,000 | 219.28 ms | 11.06 ms |
 
 At 2,000 items, observed p95 changed from 222.89 ms to 16.92 ms. These are synthetic Node conversion measurements, not browser rendering or network timings; hardware, GC, and concurrent work affect them. The benchmark intentionally has no timing assertion in CI.
@@ -61,10 +61,10 @@ Drag capture indexes item identities and frame children once per gesture, and ca
 Run `npm run benchmark:canvas-model` from `Frontend`. It compares the previous calculations with the indexed/unified versions and asserts equivalent results before timing. Same local Node environment, five warmups and 20 measured runs, a mixture of notes/documents with one frame per ten items:
 
 | Items / frames | Frame locks, before → after median | Search, before → after median |
-| --- | --- | --- |
-| 100 / 10 | 0.026 → 0.019 ms | 0.633 → 0.213 ms |
-| 500 / 50 | 0.541 → 0.021 ms | 1.988 → 0.822 ms |
-| 2,000 / 200 | 6.173 → 0.077 ms | 8.863 → 3.667 ms |
+| -------------- | ---------------------------------- | ----------------------------- |
+| 100 / 10       | 0.026 → 0.019 ms                   | 0.633 → 0.213 ms              |
+| 500 / 50       | 0.541 → 0.021 ms                   | 1.988 → 0.822 ms              |
+| 2,000 / 200    | 6.173 → 0.077 ms                   | 8.863 → 3.667 ms              |
 
 At 2,000 items, observed p95 was 7.134 → 0.138 ms for frame locks and 9.708 → 4.365 ms for search. These are synthetic calculation timings, not browser frame times. Frame-lock work is additionally skipped for camera/drag/measurement-only updates by memoization. No timing threshold is enforced in tests.
 
@@ -78,13 +78,27 @@ Memoized item/frame components, stable default props/resize callbacks, a single 
 
 Overflow observation now batches all dirty roots on an animation frame, reads geometry before writing scroll attributes, ignores its own mutations and cancels work on unmount. The profile identified overflow layout reads as a remaining mount-time cost. Persistence and backend validation/authorization are unchanged. The diagnostic entry/control API has a separate build and an emitted-bundle exclusion test.
 
+### Completed: live camera and navigation preview boundaries
+
+`BoardCanvas` now owns persisted camera state below the board shell. The Canvas wrapper presents live scene/grid transforms independently of memoized content refreshes, with overscan safety and exact idle synchronization. Eligible fixed-height notes use readable previews during movement; active/focused, auto-sized and custom-styled content stays fully rendered. Live refs drive input conversion, zoom anchoring, inverse controls and cursor targets. The new comparison substantially reduces script work but does not demonstrate sustained 60 FPS. See [CAMERA_PERFORMANCE.md](CAMERA_PERFORMANCE.md) for matched measurements, limits, validation and the remaining renderer plan.
+
+### Completed: full-shell traces and restoration measurement
+
+The production App/BoardPage/camera path now has a separate isolated demo-backed benchmark with alternating before/after runs and rendering traces. Grid wrapping eliminates pan-driven dot-texture invalidation; offscreen overscan notes retain previews instead of mounting unnecessary editor controls. Visible editors restore sooner; the subsequent callback/retained-preview pass below addresses the measured post-restoration stalls. The renderer reports SwiftShader, so hardware-device conclusions remain open. See [WORKSPACE_RENDERING.md](WORKSPACE_RENDERING.md) for complete measurements, experiments rejected after testing, and validation.
+
+### Completed: recovery callback stability and retained heavy previews
+
+Measurement-dependent interaction callbacks now use stable event props backed by current committed handlers. This prevents measurement publication from invalidating every memoized editor while preserving fresh geometry and permissions. Columns, diagrams and databases retain their editor DOM/state behind bounded summaries during navigation/low zoom/offscreen rendering. Documents retain their normal rich-text renderer at all camera positions and zoom levels after a follow-up correction removed layout-changing summaries. Active editors, portals, selection/search/remote activity and custom styles stay fully rendered. Same-sized lazy loading placeholders now trigger a real-content measurement. Browser regressions verify state, scrolling, updates, geometry and interaction protection, including normal document formatting and dimensions sampled during navigation.
+
+Four alternating comparisons removed mixed-board recovery long tasks (4 → 0), with recovery FPS 52.2 → 58.6. Movement FPS remained around 45 and first restoration was slightly slower; retained DOM increased. This is not proof of sustained 60 FPS, memory savings or deferred startup. See [WORKSPACE_RENDERING.md](WORKSPACE_RENDERING.md) and its raw follow-up results for the measured tradeoffs.
+
 ## Larger refactors: stage and measure before implementation
 
 ### P2: Split canvas orchestration and add selective rendering
 
 `features/canvas/components/Canvas.tsx` still combines selection/navigation, drag/drop coordination, frame actions, dialogs and rendering. Render-model calculations and unified search results have been extracted. Eligible simple blocks now use viewport culling; stateful editors and other retained categories still mount offscreen.
 
-1. The 100/500/1,000-note production-browser study is recorded. Extend it to mixed items, connections, nested columns, documents, frames and remote presence, and to physical slower devices. Add retained-heap and compositor/memory analysis before broader culling.
+1. Note and mixed-board production-browser studies are recorded, including connections, nested columns, documents, frames and graphs. Extend coverage to live remote presence and physical slower devices. Add retained-heap and compositor/memory analysis before broader culling.
 2. Render-model calculations and unified search results are extracted and covered by regression tests. Continue separating selection/navigation and dialog composition while keeping state ownership and immutable item identities explicit.
 3. Extract dialog/action composition and interaction coordination into focused hooks/components. Keep persistence and history boundaries explicit; avoid a single context carrying every camera update.
 4. Simple-block culling, overscan, cached/source-aware measurements and activity retention are implemented. Extend to stateful editors only after preserving their drafts and view state in previews; retain crossing curves.
@@ -111,9 +125,9 @@ Plan: separate runtime configuration/composition from feature contracts; inject 
 
 ### P3: Defer inactive editors and review style/font cost
 
-Document blocks initialize TipTap and graph blocks initialize React Flow when mounted in detail. CSS includes many complete font faces and locales; the baseline entry CSS is about 201 kB (52.5 kB gzip). Emitted font files are not equivalent to fonts actually downloaded: unicode ranges and selected families determine requests.
+Document blocks initialize TipTap when mounted. Diagram/database blocks already use static SVG when inactive and initialize React Flow when editing. CSS includes many complete font faces and locales; the baseline entry CSS is about 201 kB (52.5 kB gzip). Emitted font files are not equivalent to fonts actually downloaded: unicode ranges and selected families determine requests.
 
-Plan: measure editor mount cost and real font/network use first. Add static inactive previews with activation on focus/edit, preserving selection, search text, dimensions, and custom typography. Split optional font families only with reliable saved-project font loading and Polish glyph coverage; preserve the existing font tests. Acceptance: improved cold startup/editor activation measurements with no layout jumps, missing glyphs, or content loss.
+Navigation/offscreen summaries now preserve mounted editor state. Next, measure editor mount cost and real font/network use, then consider an initial read-only document representation that delays TipTap creation until activation, preserving drafts, selection, search text, dimensions and custom typography. Split optional font families only with reliable saved-project font loading and Polish glyph coverage; preserve the existing font tests. Acceptance: improved cold startup/editor activation measurements with no layout jumps, missing glyphs, or content loss.
 
 ### P3: Profile history serialization
 
@@ -124,10 +138,10 @@ Plan: profile typing, multi-item updates, and remote changes. If dominant, cache
 ## Validation and limitations
 
 - Baseline: build passed, ESLint configuration was absent, and 19/20 test files passed with the demo portability failure.
-- Current validation: production TypeScript/build, mock production bundle, ESLint (zero warnings), formatting, and all 24 frontend test files pass, including viewport/observer regressions. The browser suite adds three CPU-throttled profiles and eight interaction cases; browser fixture/config types are checked separately. The historical demo failure is fixed. The targeted backend security, board-validation, and presence suite also passes all 123 tests (no skipped tests).
+- Current validation: production TypeScript/build, mock production bundle, ESLint (zero warnings), formatting, and all 26 frontend test files pass, including viewport/observer and camera presentation regressions. The browser suite adds seven frame profiles and twenty interaction cases; browser fixture/config types are checked separately. The historical demo failure is fixed. The earlier targeted backend security, board-validation, and presence run passed all 123 tests (no skipped tests); no backend source changed in these rendering follow-ups.
 - New tests exercise lazy-import/render failures, local retry, sensitive error redaction, save failure/rejection/delay, queued edits/newly registered views during saves, unmount/unload protection, presence connection stability and stale board events, metadata request counts/cancellation, stale text-preview decoding, relation projection ownership/order, emitted HTTP loading boundaries, and mock bootstrap authorization.
 - Existing HTTP, sharing, administrative security, schema validation, collaboration, transfer, and editor tests remain required. No backend endpoint contract or authorization rule was changed; the frontend participant wrapper now forwards an optional abort signal.
 - The skill version detector reported installed React 19.3.0, TypeScript 6.0.3, and Tailwind 4.3.3. A TypeScript 7 migration is not required for this work.
 - Unit DOM tests use Happy DOM; Playwright covers production-browser camera rendering, composition/portal retention, culling, scroll restoration and drag/undo. The projection/canvas-model scripts remain Node-only. Physical-device, broad accessibility, mixed-board, authenticated network and native unload-prompt studies remain outstanding.
 
-Next delivery sequence: extend the browser study to mixed boards and physical slower devices; separate remaining canvas selection/navigation/dialog orchestration; design state-preserving inactive editor previews; then extend culling and continue workspace persistence boundaries according to measured impact. Keep each stage independently reviewable.
+Next delivery sequence: validate the mixed-board study on physical slower devices; profile remaining movement painting/layer costs; separate remaining canvas selection/navigation/dialog orchestration; measure deferred document initialization and retained memory before extending editor culling; continue workspace persistence boundaries according to measured impact. Keep each stage independently reviewable.

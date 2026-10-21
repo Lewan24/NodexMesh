@@ -1,0 +1,1561 @@
+{
+  "date": "2026-10-21",
+  "protocol": {
+    "entry": "actual main/App/BoardPage/BoardCanvas; isolated demo auth/storage transport",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "cpuSlowdown": 4,
+    "browser": "Chromium 156.0.8078.4 / Playwright 1.64.1",
+    "renderer": "SwiftShader software rendering",
+    "driver": "90 frame-paced synthetic DOM middle-drag moves, 4000px horizontal / 600px vertical arc; release flush",
+    "movementIntervals": 89,
+    "postRestorationIntervals": 20,
+    "repetitions": 4,
+    "order": "Before/after alternated on successive repeats; serial worker",
+    "baseline": "isolated source copy retaining prior camera work; grid wrapping and overscan note selection reversed",
+    "concurrentChecks": false,
+    "scoreTracing": false
+  },
+  "limitations": [
+    "Synthetic pan events, not physical input latency, pinch/zoom or thermal measurements.",
+    "Demo transport, not live HTTP authorization/network/collaboration integration.",
+    "Not comparable to prior isolated Canvas pan/zoom FPS numbers.",
+    "Restoration includes the 120ms idle delay and means full visible editors; overscan previews remain.",
+    "Mixed-board post-restoration long tasks remain.",
+    "Trace durations overlap and worker times are not elapsed wall time.",
+    "Heap snapshots are not retained memory or GPU-memory measurements.",
+    "Four repeats are local diagnostics, not confidence intervals or a 60 FPS guarantee."
+  ],
+  "summary": [
+    {
+      "board": "notes",
+      "variant": "before",
+      "medianFps": 53.402648776301135,
+      "fpsRange": [44.87470377653406, 55.05381665223309],
+      "medianRestorationMs": 170.69999998807907,
+      "restorationLongTasks": 1,
+      "postRestorationLongTasks": 0,
+      "domNodes": 841
+    },
+    {
+      "board": "notes",
+      "variant": "after",
+      "medianFps": 55.20139694473713,
+      "fpsRange": [51.84667365722941, 58.044740103045726],
+      "medianRestorationMs": 145.1000000089407,
+      "restorationLongTasks": 0,
+      "postRestorationLongTasks": 0,
+      "domNodes": 657
+    },
+    {
+      "board": "mixed",
+      "variant": "before",
+      "medianFps": 46.23539438274567,
+      "fpsRange": [39.55611813145787, 47.68027429551055],
+      "medianRestorationMs": 205.45000000298023,
+      "restorationLongTasks": 4,
+      "postRestorationLongTasks": 4,
+      "domNodes": 2328
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "medianFps": 50.38845135455782,
+      "fpsRange": [48.99618380285257, 52.35602094240837],
+      "medianRestorationMs": 164.40000000596046,
+      "restorationLongTasks": 0,
+      "postRestorationLongTasks": 4,
+      "domNodes": 2144
+    }
+  ],
+  "samples": [
+    {
+      "board": "notes",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 44.87470377653406,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 49.90000000000009,
+        "p99Ms": 66.70000000000027,
+        "maxMs": 66.70000000000027,
+        "over25Ms": 23,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.00600060005997,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.700000000000728,
+        "p99Ms": 16.700000000000728,
+        "maxMs": 16.700000000000728,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 169.69999998807907,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 841,
+      "overscanPreviews": 0,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 28592812,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 58.04474010304571,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.800000000000182,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 3,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 59.98800239952008,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.799999999999727,
+        "p99Ms": 16.799999999999727,
+        "maxMs": 16.799999999999727,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 152.80000001192093,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 23986356,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 39.55611813145787,
+        "p50Ms": 16.700000000000273,
+        "p95Ms": 50,
+        "p99Ms": 66.69999999999982,
+        "maxMs": 66.69999999999982,
+        "over25Ms": 35,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 52.178450300026064,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 49.899999999999636,
+        "p99Ms": 49.899999999999636,
+        "maxMs": 49.899999999999636,
+        "over25Ms": 2,
+        "count": 20
+      },
+      "restorationMs": 205.30000001192093,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 3776.699999988079,
+            "duration": 50
+          },
+          {
+            "start": 4266.9000000059605,
+            "duration": 52
+          }
+        ],
+        "restoration": [
+          {
+            "start": 4400.5,
+            "duration": 73
+          }
+        ],
+        "afterRestoration": [
+          {
+            "start": 4531.0999999940395,
+            "duration": 70
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2328,
+      "overscanPreviews": 0,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 35266096,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 48.99618380285257,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.40000000000009,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 20,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 52.178450300026064,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 66.69999999999982,
+        "p99Ms": 66.69999999999982,
+        "maxMs": 66.69999999999982,
+        "over25Ms": 1,
+        "count": 20
+      },
+      "restorationMs": 166.2000000178814,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": [
+          {
+            "start": 3890.800000011921,
+            "duration": 73
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2144,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 43853808,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 58.044740103045726,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.800000000000182,
+        "p99Ms": 33.30000000000018,
+        "maxMs": 33.30000000000018,
+        "over25Ms": 3,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 59.98800239952008,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.800000000000182,
+        "p99Ms": 16.800000000000182,
+        "maxMs": 16.800000000000182,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 145.30000001192093,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 23231868,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 55.05381665223309,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.30000000000018,
+        "p99Ms": 50,
+        "maxMs": 50,
+        "over25Ms": 7,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 57.142857142857146,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.29999999999973,
+        "p99Ms": 33.29999999999973,
+        "maxMs": 33.29999999999973,
+        "over25Ms": 1,
+        "count": 20
+      },
+      "restorationMs": 183.90000000596046,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 3277.699999988079,
+            "duration": 57
+          }
+        ],
+        "restoration": [
+          {
+            "start": 3411.5999999940395,
+            "duration": 51
+          }
+        ],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 841,
+      "overscanPreviews": 0,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 27352916,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 52.35602094240837,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.399999999999636,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 13,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 54.55537370430995,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 50,
+        "p99Ms": 50,
+        "maxMs": 50,
+        "over25Ms": 1,
+        "count": 20
+      },
+      "restorationMs": 156.80000001192093,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 3657.9000000059605,
+            "duration": 53
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": [
+          {
+            "start": 3858.800000011921,
+            "duration": 59
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2144,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 44384604,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 46.43475030626065,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.40000000000009,
+        "p99Ms": 66.69999999999982,
+        "maxMs": 66.69999999999982,
+        "over25Ms": 23,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 52.178450300026185,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 66.69999999999982,
+        "p99Ms": 66.69999999999982,
+        "maxMs": 66.69999999999982,
+        "over25Ms": 1,
+        "count": 20
+      },
+      "restorationMs": 206.10000002384186,
+      "longTasks": {
+        "movement": [],
+        "restoration": [
+          {
+            "start": 4021.699999988079,
+            "duration": 79
+          }
+        ],
+        "afterRestoration": [
+          {
+            "start": 4158.399999976158,
+            "duration": 77
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2328,
+      "overscanPreviews": 0,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 29168848,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 53.403161467158846,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.30000000000018,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 11,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 59.98800239952017,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.800000000000182,
+        "p99Ms": 16.800000000000182,
+        "maxMs": 16.800000000000182,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 171.69999998807907,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 841,
+      "overscanPreviews": 0,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 29808060,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 51.84667365722941,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.30000000000018,
+        "p99Ms": 66.69999999999982,
+        "maxMs": 66.69999999999982,
+        "over25Ms": 10,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.00600060005997,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.800000000000182,
+        "p99Ms": 16.800000000000182,
+        "maxMs": 16.800000000000182,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 142.90000000596046,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 2210.4000000059605,
+            "duration": 58
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 23654236,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 47.68027429551055,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.40000000000009,
+        "p99Ms": 50,
+        "maxMs": 50,
+        "over25Ms": 21,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 52.178450300026185,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 49.899999999999636,
+        "p99Ms": 49.899999999999636,
+        "maxMs": 49.899999999999636,
+        "over25Ms": 2,
+        "count": 20
+      },
+      "restorationMs": 196.7999999821186,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 3913.399999976158,
+            "duration": 55
+          }
+        ],
+        "restoration": [
+          {
+            "start": 4046.0999999940395,
+            "duration": 65
+          }
+        ],
+        "afterRestoration": [
+          {
+            "start": 4168.5999999940395,
+            "duration": 74
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2328,
+      "overscanPreviews": 0,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 48281476,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 50.86388595516663,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.399999999999636,
+        "p99Ms": 50,
+        "maxMs": 50,
+        "over25Ms": 15,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 52.164840897235315,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 66.70000000000027,
+        "p99Ms": 66.70000000000027,
+        "maxMs": 66.70000000000027,
+        "over25Ms": 1,
+        "count": 20
+      },
+      "restorationMs": 164.5,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": [
+          {
+            "start": 3895.600000023842,
+            "duration": 73
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2144,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 44269544,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 52.35805378642855,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.33400000000006,
+        "p99Ms": 66.69999999999982,
+        "maxMs": 66.69999999999982,
+        "over25Ms": 9,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.00600060006006,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.800000000000182,
+        "p99Ms": 16.800000000000182,
+        "maxMs": 16.800000000000182,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 144.90000000596046,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 23784492,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 53.402136085443416,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.30000000000018,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 11,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.00600060005997,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.700000000000273,
+        "p99Ms": 16.700000000000273,
+        "maxMs": 16.700000000000273,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 166.59999999403954,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 841,
+      "overscanPreviews": 0,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 28251872,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 49.913016753949016,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.399999999999636,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 18,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 52.17845030002613,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 50,
+        "p99Ms": 50,
+        "maxMs": 50,
+        "over25Ms": 2,
+        "count": 20
+      },
+      "restorationMs": 164.30000001192093,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 3742.300000011921,
+            "duration": 51
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": [
+          {
+            "start": 3956.800000011921,
+            "duration": 71
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2144,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 44374208,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 46.03603845923069,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.40000000000009,
+        "p99Ms": 50,
+        "maxMs": 50,
+        "over25Ms": 24,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 50,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 66.69999999999982,
+        "p99Ms": 66.69999999999982,
+        "maxMs": 66.69999999999982,
+        "over25Ms": 2,
+        "count": 20
+      },
+      "restorationMs": 205.59999999403954,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 3965.4000000059605,
+            "duration": 60
+          }
+        ],
+        "restoration": [
+          {
+            "start": 4100.100000023842,
+            "duration": 73
+          }
+        ],
+        "afterRestoration": [
+          {
+            "start": 4248.200000017881,
+            "duration": 65
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2328,
+      "overscanPreviews": 0,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 31264824,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    }
+  ],
+  "traceDiagnostics": [
+    {
+      "board": "notes",
+      "variant": "before",
+      "trace": {
+        "movement": {
+          "elapsedMs": 1832.102,
+          "events": [
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146498:146501",
+              "event": "RasterTask",
+              "count": 1117,
+              "totalMs": 481.2219999999993,
+              "maxMs": 9.282
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146498:146505",
+              "event": "RasterTask",
+              "count": 1070,
+              "totalMs": 444.94900000000024,
+              "maxMs": 5.28
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "Layerize",
+              "count": 89,
+              "totalMs": 280.37300000000005,
+              "maxMs": 7.13
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "Paint",
+              "count": 1070,
+              "totalMs": 212.26999999999938,
+              "maxMs": 8.911
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146498:146509",
+              "event": "RasterTask",
+              "count": 283,
+              "totalMs": 118.42000000000006,
+              "maxMs": 5.989
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "UpdateLayoutTree",
+              "count": 103,
+              "totalMs": 95.67800000000004,
+              "maxMs": 7.15
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "Layout",
+              "count": 36,
+              "totalMs": 57.79200000000001,
+              "maxMs": 5.28
+            }
+          ]
+        },
+        "restoration": {
+          "elapsedMs": 171.061,
+          "events": [
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146498:146501",
+              "event": "RasterTask",
+              "count": 36,
+              "totalMs": 16.93,
+              "maxMs": 0.894
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "UpdateLayoutTree",
+              "count": 2,
+              "totalMs": 8.294,
+              "maxMs": 7.496
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146498:146505",
+              "event": "RasterTask",
+              "count": 13,
+              "totalMs": 7.353999999999999,
+              "maxMs": 1.305
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "Layout",
+              "count": 2,
+              "totalMs": 2.493,
+              "maxMs": 1.442
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "Layerize",
+              "count": 2,
+              "totalMs": 1.823,
+              "maxMs": 1.819
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "Paint",
+              "count": 11,
+              "totalMs": 1.296,
+              "maxMs": 0.777
+            }
+          ]
+        },
+        "afterRestoration": {
+          "elapsedMs": 351.263,
+          "events": [
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "UpdateLayoutTree",
+              "count": 1,
+              "totalMs": 9.871,
+              "maxMs": 9.871
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "Layout",
+              "count": 1,
+              "totalMs": 6.482,
+              "maxMs": 6.482
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "Paint",
+              "count": 13,
+              "totalMs": 3.57,
+              "maxMs": 2.271
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146498:146498",
+              "event": "Layerize",
+              "count": 21,
+              "totalMs": 3.4950000000000006,
+              "maxMs": 2.889
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146498:146501",
+              "event": "RasterTask",
+              "count": 6,
+              "totalMs": 2.1140000000000003,
+              "maxMs": 0.447
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146498:146505",
+              "event": "RasterTask",
+              "count": 6,
+              "totalMs": 2.1029999999999998,
+              "maxMs": 0.486
+            }
+          ]
+        }
+      }
+    },
+    {
+      "board": "notes",
+      "variant": "after",
+      "trace": {
+        "movement": {
+          "elapsedMs": 1570.146,
+          "events": [
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "Layerize",
+              "count": 89,
+              "totalMs": 253.9479999999999,
+              "maxMs": 7.004
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "Paint",
+              "count": 1049,
+              "totalMs": 166.8060000000001,
+              "maxMs": 4.817
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146573:146576",
+              "event": "RasterTask",
+              "count": 845,
+              "totalMs": 166.08100000000002,
+              "maxMs": 6.102
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146573:146580",
+              "event": "RasterTask",
+              "count": 792,
+              "totalMs": 149.35200000000006,
+              "maxMs": 5.708
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "UpdateLayoutTree",
+              "count": 103,
+              "totalMs": 85.04100000000001,
+              "maxMs": 5.646
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "Layout",
+              "count": 36,
+              "totalMs": 46.637000000000015,
+              "maxMs": 4.148
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146573:146583",
+              "event": "RasterTask",
+              "count": 39,
+              "totalMs": 9.489,
+              "maxMs": 1.817
+            }
+          ]
+        },
+        "restoration": {
+          "elapsedMs": 145.888,
+          "events": [
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "UpdateLayoutTree",
+              "count": 2,
+              "totalMs": 5.71,
+              "maxMs": 4.442
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "Layout",
+              "count": 2,
+              "totalMs": 3.741,
+              "maxMs": 2.087
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "Paint",
+              "count": 10,
+              "totalMs": 2.2239999999999998,
+              "maxMs": 1.15
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "Layerize",
+              "count": 2,
+              "totalMs": 1.998,
+              "maxMs": 1.995
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146573:146580",
+              "event": "RasterTask",
+              "count": 4,
+              "totalMs": 0.508,
+              "maxMs": 0.276
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146573:146576",
+              "event": "RasterTask",
+              "count": 9,
+              "totalMs": 0.505,
+              "maxMs": 0.097
+            }
+          ]
+        },
+        "afterRestoration": {
+          "elapsedMs": 352.629,
+          "events": [
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "Paint",
+              "count": 13,
+              "totalMs": 5.053,
+              "maxMs": 3.037
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "UpdateLayoutTree",
+              "count": 1,
+              "totalMs": 4.247,
+              "maxMs": 4.247
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "Layout",
+              "count": 1,
+              "totalMs": 3.029,
+              "maxMs": 3.029
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146573:146573",
+              "event": "Layerize",
+              "count": 21,
+              "totalMs": 2.8530000000000006,
+              "maxMs": 2.796
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146573:146580",
+              "event": "RasterTask",
+              "count": 7,
+              "totalMs": 1.288,
+              "maxMs": 0.229
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146573:146576",
+              "event": "RasterTask",
+              "count": 5,
+              "totalMs": 1.281,
+              "maxMs": 0.525
+            }
+          ]
+        }
+      }
+    },
+    {
+      "board": "mixed",
+      "variant": "before",
+      "trace": {
+        "movement": {
+          "elapsedMs": 2034.199,
+          "events": [
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146610:146613",
+              "event": "RasterTask",
+              "count": 1300,
+              "totalMs": 565.8089999999997,
+              "maxMs": 7.892
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146610:146617",
+              "event": "RasterTask",
+              "count": 1038,
+              "totalMs": 481.5520000000003,
+              "maxMs": 6.369
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "Paint",
+              "count": 1980,
+              "totalMs": 367.92399999999674,
+              "maxMs": 5.869
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "Layerize",
+              "count": 89,
+              "totalMs": 337.53000000000003,
+              "maxMs": 9.567
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146610:146620",
+              "event": "RasterTask",
+              "count": 301,
+              "totalMs": 133.16799999999995,
+              "maxMs": 5.643
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "UpdateLayoutTree",
+              "count": 103,
+              "totalMs": 112.709,
+              "maxMs": 11.539
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "Layout",
+              "count": 36,
+              "totalMs": 83.37100000000001,
+              "maxMs": 5.174
+            }
+          ]
+        },
+        "restoration": {
+          "elapsedMs": 214.503,
+          "events": [
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146610:146613",
+              "event": "RasterTask",
+              "count": 33,
+              "totalMs": 18.677,
+              "maxMs": 1.389
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "UpdateLayoutTree",
+              "count": 2,
+              "totalMs": 12.41,
+              "maxMs": 11.213
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146610:146617",
+              "event": "RasterTask",
+              "count": 27,
+              "totalMs": 11.729000000000003,
+              "maxMs": 1.037
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "Paint",
+              "count": 25,
+              "totalMs": 4.46,
+              "maxMs": 2.743
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "Layerize",
+              "count": 2,
+              "totalMs": 3.49,
+              "maxMs": 3.486
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "Layout",
+              "count": 2,
+              "totalMs": 3.161,
+              "maxMs": 1.841
+            }
+          ]
+        },
+        "afterRestoration": {
+          "elapsedMs": 440.412,
+          "events": [
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "UpdateLayoutTree",
+              "count": 1,
+              "totalMs": 10.949,
+              "maxMs": 10.949
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "Layout",
+              "count": 1,
+              "totalMs": 9.353,
+              "maxMs": 9.353
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "Paint",
+              "count": 13,
+              "totalMs": 7.381999999999999,
+              "maxMs": 4.998
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146610:146617",
+              "event": "RasterTask",
+              "count": 20,
+              "totalMs": 6.724,
+              "maxMs": 1.045
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146610:146613",
+              "event": "RasterTask",
+              "count": 11,
+              "totalMs": 5.701,
+              "maxMs": 1.575
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146610:146610",
+              "event": "Layerize",
+              "count": 21,
+              "totalMs": 3.3989999999999996,
+              "maxMs": 3.311
+            }
+          ]
+        }
+      }
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "trace": {
+        "movement": {
+          "elapsedMs": 2097.485,
+          "events": [
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "Paint",
+              "count": 1895,
+              "totalMs": 397.10899999999776,
+              "maxMs": 6.93
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "Layerize",
+              "count": 89,
+              "totalMs": 348.341,
+              "maxMs": 15.705
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146670:146673",
+              "event": "RasterTask",
+              "count": 1058,
+              "totalMs": 312.8169999999996,
+              "maxMs": 4.961
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146670:146677",
+              "event": "RasterTask",
+              "count": 872,
+              "totalMs": 291.78200000000027,
+              "maxMs": 10.916
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "UpdateLayoutTree",
+              "count": 103,
+              "totalMs": 116.50900000000001,
+              "maxMs": 11.294
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "Layout",
+              "count": 36,
+              "totalMs": 85.55600000000001,
+              "maxMs": 6.334
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146670:146680",
+              "event": "RasterTask",
+              "count": 5,
+              "totalMs": 3.0109999999999997,
+              "maxMs": 2.443
+            }
+          ]
+        },
+        "restoration": {
+          "elapsedMs": 167.261,
+          "events": [
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146670:146673",
+              "event": "RasterTask",
+              "count": 30,
+              "totalMs": 7.671000000000003,
+              "maxMs": 0.952
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "UpdateLayoutTree",
+              "count": 2,
+              "totalMs": 7.585,
+              "maxMs": 7.41
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "Layout",
+              "count": 2,
+              "totalMs": 6.467,
+              "maxMs": 5.765
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "Layerize",
+              "count": 2,
+              "totalMs": 4.606,
+              "maxMs": 4.602
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "Paint",
+              "count": 24,
+              "totalMs": 3.367999999999998,
+              "maxMs": 1.786
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146670:146677",
+              "event": "RasterTask",
+              "count": 14,
+              "totalMs": 3.2830000000000004,
+              "maxMs": 1.817
+            }
+          ]
+        },
+        "afterRestoration": {
+          "elapsedMs": 410.459,
+          "events": [
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146670:146673",
+              "event": "RasterTask",
+              "count": 17,
+              "totalMs": 8.040999999999999,
+              "maxMs": 1.617
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "Paint",
+              "count": 13,
+              "totalMs": 5.801000000000001,
+              "maxMs": 3.588
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "UpdateLayoutTree",
+              "count": 1,
+              "totalMs": 5.082,
+              "maxMs": 5.082
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "146670:146677",
+              "event": "RasterTask",
+              "count": 14,
+              "totalMs": 4.505999999999999,
+              "maxMs": 1.271
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "Layout",
+              "count": 1,
+              "totalMs": 4.24,
+              "maxMs": 4.24
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "146670:146670",
+              "event": "Layerize",
+              "count": 21,
+              "totalMs": 3.749000000000001,
+              "maxMs": 3.671
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

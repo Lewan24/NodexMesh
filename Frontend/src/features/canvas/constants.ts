@@ -13,6 +13,8 @@ export const DROPPABLE_ON_COLUMN = new Set([
 export const ZOOM_MIN = 0.1;
 export const ZOOM_MAX = 3;
 
+export const CANVAS_VIEWPORT_OVERSCAN = 320;
+
 export const CANVAS_GRID_SIZE = 16;
 export const CANVAS_MAJOR_GRID_SIZE = 64;
 

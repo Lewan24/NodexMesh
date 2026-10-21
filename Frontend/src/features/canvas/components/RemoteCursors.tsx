@@ -24,6 +24,9 @@ export default function RemoteCursors({ cursors, pan, zoom }: RemoteCursorsProps
         return (
           <div
             key={cursor.userId}
+            data-camera-cursor="true"
+            data-camera-x={cursor.x}
+            data-camera-y={cursor.y}
             className="absolute left-0 top-0 will-change-transform"
             style={{
               transform: `translate3d(${pan.x + cursor.x * zoom}px, ${pan.y + cursor.y * zoom}px, 0)`,

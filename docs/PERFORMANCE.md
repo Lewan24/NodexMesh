@@ -21,9 +21,9 @@ The [2026-10-21 frontend review](FRONTEND_REVIEW.md) records screen-level and mo
 ## Current limits
 
 - The editable canvas culls eligible simple blocks with overscan. Stateful editors, columns, task blocks, frames, connection curves, custom-CSS blocks and retained activity still mount offscreen; these can dominate mixed-board costs.
-- Camera state remains above the canvas and exact zoom still reaches wrappers that need scale-aware UI. A dedicated camera owner could further decouple pan/pinch cost from board size.
+- Camera state now belongs to `BoardCanvas`, below the board shell. Live scene/grid transforms are separate from memoized content refreshes; the controlled camera owner still receives every input frame. Fixed-height notes use readable navigation previews. See [CAMERA_PERFORMANCE.md](CAMERA_PERFORMANCE.md) for the follow-up measurements and remaining 60 FPS work.
 - Resizing and line endpoint manipulation still use direct update paths rather than the transient drag model.
-- Inactive documents still initialize TipTap, and diagrams/database diagrams mount React Flow once detailed. Static inactive previews could defer those costs.
+- Inactive documents still initialize TipTap. Diagram/database blocks use SVG previews and mount React Flow when editing. Measured columns, diagrams and databases retain their editor DOM behind lightweight navigation/offscreen previews; documents retain their normal rich-text renderer during navigation and at low zoom. These previews reduce painting but do not defer initial editor construction or establish memory savings.
 - Alignment, some interaction-specific line lookups, and frame normalization/measurement paths still scan arrays. Frame lock derivation and descendant drag capture now use ownership indexes. Full-board connection rendering and comment/tag projection now use indexes. Spatial or dependency indexes should be added only if profiling shows those scans dominate after culling.
 - Public read-only boards render full block content rather than editor LOD.
 
@@ -31,8 +31,8 @@ The [2026-10-21 frontend review](FRONTEND_REVIEW.md) records screen-level and mo
 
 1. Record production-build baselines on representative 100/500/1,000+ item mixed boards.
 2. Extend the measured simple-block culling to stateful editors only after preview/state retention is designed and verified. Keep curve geometry and search navigation intact.
-3. Profile camera ownership and wrapper rerenders; isolate transforms without competing React/imperative writes.
-4. Add static inactive previews for documents and graph editors with detail hysteresis and focus/state preservation.
+3. Profile paint/raster/compositor work and mixed-board camera behavior after the implemented camera/content isolation.
+4. State-preserving navigation/offscreen previews cover columns, diagrams and databases. Documents preserve their normal rich-text layout during all camera movement. Measure document activation/startup before deferring initial editor construction.
 5. Convert resize/line interactions to scheduled transient geometry if traces justify it.
 6. Add item/frame/connection/spatial indexes only for measured hot paths.
 
@@ -69,3 +69,7 @@ Project metadata requests are independent of local save status. Persisted projec
 Regression coverage includes frame ownership/lock release, nested columns, deep/cyclic references, transient connection geometry, query compatibility, stable paint order and nested/explicitly selected frame dragging with one final batched commit. Backend ownership validation is unchanged.
 
 The editable canvas now culls notes, text, icons, images, links and drawings with 320 screen pixels of overscan. Current source-identity measurements protect auto-sized content; active selections/focus, drag overrides, remote attendance, search matches and dialog targets stay mounted. Nested scroll offsets survive culling. Stateful editors, custom CSS, frames, section titles and curves retain their mounted state. Exact zoom is limited to scale-aware UI, and memoized item/frame components skip camera-only work. Overflow checks share an animation-frame read/write batch instead of synchronously measuring every dirty item. See [BROWSER_PERFORMANCE.md](BROWSER_PERFORMANCE.md) for browser regressions, the corrected before/after comparison, and remaining limits.
+
+## Full-shell rendering follow-up
+
+[WORKSPACE_RENDERING.md](WORKSPACE_RENDERING.md) records four alternating before/after repeats through the real production shell with isolated demo transport. Grid translation now wraps within one tile without repainting its texture on coarse pan refreshes. Offscreen overscan notes with known dimensions keep readable previews at rest; visible and active editors restore normally. The study includes restoration and post-restoration frame times and trace evidence. Its subsequent callback/retained-preview pass removed the measured recovery long tasks (four to zero across alternating mixed-board runs), while movement FPS remained around 45. Stable event handlers retain current committed geometry/permissions, and same-sized lazy placeholders now trigger real-content measurement. These pan-only measurements use a software renderer and do not replace physical-device or broader interaction profiling.

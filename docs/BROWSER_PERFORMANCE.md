@@ -2,6 +2,8 @@
 
 The editable canvas now culls eligible offscreen blocks and avoids camera-only item rerenders. The browser benchmark uses the real Canvas and styles in a separate production build, with local fixture data. No authentication or backend contract was changed.
 
+The subsequent [camera rendering follow-up](CAMERA_PERFORMANCE.md) separates live transforms/content refreshes and adds gesture previews. The numbers below remain the original culling study.
+
 ## Measured results
 
 Headless Chromium, 1,280 × 800 viewport, CDP 4× CPU slowdown, fixed-height notes laid out in 30 columns. The camera follows the same pan/zoom path for 90 animation-frame-driven synchronous commits; 89 frame intervals are recorded after fonts and initial rendering settle. The theme provider sits above camera state, matching the application. The before/after runs used the same corrected fixture with no concurrent build/test workload. The baseline is an isolated copy of the pre-FPS canvas, retaining the earlier render-model/search refactors.

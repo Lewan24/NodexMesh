@@ -105,6 +105,7 @@ function CanvasFrame({
 
       {/* Semantic frame label */}
       <div
+        data-camera-title-scale="true"
         className="absolute pointer-events-auto"
         style={{
           left: 8,

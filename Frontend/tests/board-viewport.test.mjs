@@ -23,15 +23,35 @@ const { createRoot } = await import('react-dom/client');
 const server = await createServer({
   configFile: false,
   optimizeDeps: { noDiscovery: true, include: [] },
-  resolve: { alias: { '@': fileURLToPath(new URL('../src', import.meta.url)) } },
+  resolve: {
+    alias: [
+      { find: '@/features/canvas/components/Canvas', replacement: '\0canvas-owner-probe' },
+      { find: '@', replacement: fileURLToPath(new URL('../src', import.meta.url)) },
+    ],
+  },
+  plugins: [
+    {
+      name: 'canvas-owner-probe',
+      resolveId(id) {
+        if (id === '\0canvas-owner-probe') return id;
+      },
+      load(id) {
+        if (id === '\0canvas-owner-probe') {
+          return 'export default function Canvas(props) { globalThis.cameraOwnerProps = props; return null; }';
+        }
+      },
+    },
+  ],
   server: { middlewareMode: true, watch: null, hmr: false },
 });
 await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('en');
+const { useBoardCamera } = await server.ssrLoadModule('/src/features/board/hooks/useBoardCamera.ts');
 const { useBoardView } = await server.ssrLoadModule('/src/features/board/hooks/useBoardView.ts');
 const { viewportKey, readViewport } = await server.ssrLoadModule('/src/features/board/hooks/boardViewport.ts');
 const { default: Controls } = await server.ssrLoadModule('/src/features/canvas/components/CanvasControls.tsx');
 const { default: Fields } = await server.ssrLoadModule('/src/features/blocks/shared/TaskDetailsFields.tsx');
 const { useItemResize } = await server.ssrLoadModule('/src/features/canvas/hooks/useItemResize.ts');
+const { default: BoardCanvas } = await server.ssrLoadModule('/src/features/board/components/BoardCanvas.tsx');
 await server.close();
 
 test('resize callbacks respect collaboration lock changes with otherwise stable inputs', async () => {
@@ -71,7 +91,7 @@ test('restores independent board cameras on navigation, remount, and account cha
   const root = createRoot(host);
   let view;
   function Harness({ user, project, board }) {
-    view = useBoardView(user, project, board);
+    view = { ...useBoardView(), ...useBoardCamera(user, project, board) };
     return null;
   }
   const render = (user, project, board) =>
@@ -159,4 +179,39 @@ test('task title and description are multiline and resize to loaded content', as
   );
   assert.equal(title.style.height, '202px');
   await act(async () => root.unmount());
+});
+
+test('production camera updates leave the shell and selection untouched and flush on pagehide', async () => {
+  const root = createRoot(document.createElement('div'));
+  let shellRenders = 0;
+  let selection;
+  function Shell() {
+    shellRenders++;
+    selection = useBoardView();
+    return createElement(BoardCanvas, {
+      userId: 'camera-owner-user',
+      project: { id: 'camera-owner-project', boardId: 'main', items: [] },
+      selectedIds: selection.selectedIds,
+    });
+  }
+  try {
+    await act(() => root.render(createElement(Shell)));
+    const before = shellRenders;
+    await act(() => {
+      globalThis.cameraOwnerProps.onPanChange({ x: -42, y: 120 });
+      globalThis.cameraOwnerProps.onZoomChange(0.7);
+    });
+    assert.equal(shellRenders, before);
+    assert.deepEqual(selection.selectedIds, []);
+    assert.deepEqual(globalThis.cameraOwnerProps.pan, { x: -42, y: 120 });
+    assert.equal(globalThis.cameraOwnerProps.zoom, 0.7);
+    window.dispatchEvent(new Event('pagehide'));
+    assert.deepEqual(readViewport(viewportKey('camera-owner-user', 'camera-owner-project', 'main')), {
+      pan: { x: -42, y: 120 },
+      zoom: 0.7,
+    });
+  } finally {
+    await act(() => root.unmount());
+    delete globalThis.cameraOwnerProps;
+  }
 });

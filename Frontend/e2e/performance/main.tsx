@@ -1,6 +1,6 @@
 import '@/shared/i18n';
 import '@/app/styles/index.css';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import Canvas from '@/features/canvas/components/Canvas';
@@ -10,7 +10,7 @@ import type { BoardItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
 import type { ProjectParticipant } from '@/entities/project/shareTypes';
 import type { ToolType } from '@/entities/board/toolTypes';
-import type { RemotePresence } from '@/features/projects/hooks/useCollaborationPresence';
+import type { RemoteCursor, RemotePresence } from '@/features/projects/hooks/useCollaborationPresence';
 
 // This entry is built separately; it is never included in the application build.
 const count = Number(new URLSearchParams(location.search).get('count') ?? 500);
@@ -35,6 +35,11 @@ function Fixture() {
   const [pan, setPan] = useState({ x: 40, y: 40 });
   const [zoom, setZoom] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [remoteCursors, setRemoteCursors] = useState<RemoteCursor[]>([]);
+  const cursorPosition = useRef<{ x: number; y: number } | null>(null);
+  const moveCursor = useCallback((position: { x: number; y: number } | null) => {
+    cursorPosition.current = position;
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [remotePresence, setRemotePresence] = useState<Record<string, RemotePresence[]>>({});
   const project = useMemo<Project>(
@@ -102,13 +107,16 @@ function Fixture() {
             ],
           }),
         ),
-      getState: () => ({ items, pan, zoom, selectedIds }),
+      cursors: (cursors: RemoteCursor[]) => flushSync(() => setRemoteCursors(cursors)),
+      getState: () => ({ items, pan, zoom, selectedIds, cursor: cursorPosition.current }),
     },
   });
   return (
     <div style={{ display: 'flex', height: '100dvh' }}>
       <Canvas
         remotePresence={remotePresence}
+        remoteCursors={remoteCursors}
+        onCursorMove={moveCursor}
         projectParticipants={participants}
         project={project}
         pan={pan}

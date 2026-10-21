@@ -18,7 +18,9 @@ const server = await createServer({
   server: { middlewareMode: true, watch: null, hmr: false },
 });
 after(() => server.close());
-const { isCanvasItemVisible } = await server.ssrLoadModule('/src/features/canvas/utils/viewportVisibility.ts');
+const { isCanvasItemVisible, intersectsCanvasViewport } = await server.ssrLoadModule(
+  '/src/features/canvas/utils/viewportVisibility.ts',
+);
 const { useCanvasMeasurements } = await server.ssrLoadModule('/src/features/canvas/hooks/useCanvasMeasurements.ts');
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 const viewport = { pan: { x: 0, y: 0 }, zoom: 1, width: 1000, height: 600 };
@@ -30,6 +32,8 @@ test('viewport culling converts screen overscan through pan/zoom and keeps edge 
   const visible = (item, camera = viewport) => isCanvasItemVisible(item, camera, empty, empty, none);
   assert.equal(visible(fixedNote), false);
   assert.equal(visible({ ...fixedNote, x: 1319 }), true);
+  assert.equal(isCanvasItemVisible({ ...fixedNote, x: 1319 }, viewport, empty, empty, none, 0), false);
+  assert.equal(isCanvasItemVisible({ ...fixedNote, x: 999 }, viewport, empty, empty, none, 0), true);
   assert.equal(visible({ ...fixedNote, x: 1321 }), false);
   assert.equal(visible({ ...fixedNote, x: -fixedNote.width - 320 }), true);
   assert.equal(visible(fixedNote, { ...viewport, pan: { x: -3000, y: 0 } }), true);
@@ -65,6 +69,16 @@ test('activity retention, custom CSS, curves and stateful blocks take precedence
   ]) {
     const item = createCanvasItem(type, 10000, 10000);
     assert.equal(isCanvasItemVisible(item, viewport, empty, empty, none), true, type);
+  }
+});
+
+test('heavy preview geometry is separate from state-preserving mount eligibility', () => {
+  for (const type of ['document', 'column', 'diagram', 'database']) {
+    const item = createCanvasItem(type, 10000, 10000);
+    assert.equal(isCanvasItemVisible(item, viewport, empty, empty, none), true);
+    assert.equal(intersectsCanvasViewport(item, viewport, empty, 0), false);
+    assert.equal(intersectsCanvasViewport({ ...item, x: 10, y: 20 }, viewport, empty, 0), true);
+    assert.equal(intersectsCanvasViewport(item, { ...viewport, width: 0 }, empty, 0), true);
   }
 });
 

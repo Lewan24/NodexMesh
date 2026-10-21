@@ -1,3 +1,6 @@
+import CanvasHeavyPreview from './CanvasHeavyPreview';
+import { hasPreviewCustomCss, isHeavyPreviewItem } from '../utils/heavyPreview';
+import CanvasNotePreview from './CanvasNotePreview';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -21,8 +24,10 @@ interface CanvasItemProps {
   renderedItem: BoardItem;
   zoom: number;
   lowDetail?: boolean;
+  motionPreview?: boolean;
   scrollPositions?: Map<string, { left: number; top: number }[]>;
   measuredSize?: { width: number; height: number };
+  measurementCurrent?: boolean;
   remotePresence?: RemotePresence[];
   collaboratorLocked?: boolean;
 
@@ -76,8 +81,10 @@ interface CanvasItemProps {
 function CanvasItem({
   zoom,
   lowDetail = zoom <= 0.25,
+  motionPreview = false,
   scrollPositions,
   measuredSize,
+  measurementCurrent = false,
   remotePresence,
   collaboratorLocked = false,
   item,
@@ -125,6 +132,8 @@ function CanvasItem({
   // appear to disappear before their first measurement completed.
   const simplified =
     lowDetail &&
+    !isHeavyPreviewItem(item) &&
+    item.type !== 'document' &&
     !isSelected &&
     !isDragging &&
     !isDragOver &&
@@ -134,6 +143,31 @@ function CanvasItem({
     item.type !== 'line' &&
     item.type !== 'drawing' &&
     item.type !== 'section-title';
+  const previewNote =
+    motionPreview &&
+    !simplified &&
+    item.type === 'note' &&
+    Boolean(item.height && item.height > 0) &&
+    !item.customCss?.enabled &&
+    !isSelected &&
+    !isDragging &&
+    !isDragOver &&
+    !hasFocus &&
+    !remotePresence?.length &&
+    !searchActive;
+  const previewCustomCss = useMemo(() => isHeavyPreviewItem(item) && hasPreviewCustomCss(item), [item]);
+  const previewHeavy =
+    (motionPreview || lowDetail) &&
+    isHeavyPreviewItem(item) &&
+    measurementCurrent &&
+    Boolean(measuredSize && measuredSize.width > 0 && measuredSize.height > 0) &&
+    !previewCustomCss &&
+    !isSelected &&
+    !isDragging &&
+    !isDragOver &&
+    !hasFocus &&
+    !remotePresence?.length &&
+    !searchActive;
   const approximateSize = getApproxItemSize(item);
   // Some blocks measure only their currently visible content (for example an
   // empty document or checklist). Keep the persisted/canonical item geometry
@@ -145,65 +179,63 @@ function CanvasItem({
   const showDragEffect = isDragging && item.type !== 'line';
   useLayoutEffect(() => {
     const saved = scrollPositions?.get(item.id);
-    if (simplified || !saved) return;
+    if (simplified || previewNote || previewHeavy || !saved) return;
     elementRef.current?.querySelectorAll<HTMLElement>('[data-wheel-scroll]').forEach((element, index) => {
       const position = saved[index];
       if (!position) return;
       element.scrollLeft = position.left;
       element.scrollTop = position.top;
     });
-  }, [item.id, scrollPositions, simplified]);
+  }, [item.id, scrollPositions, simplified, previewNote, previewHeavy]);
 
   // Only section titles change their content with the camera scale. Keep the
   // expensive block subtree intact while panning, pinching or animating its wrapper.
   const contentZoom = item.type === 'section-title' ? zoom : 1;
   const content = useMemo(
     () => (
-      <ItemWatcher itemId={item.id} measurementKey={item} onResize={onResize}>
-        <BlockRenderer
-          zoom={contentZoom}
-          item={renderedItem}
-          projectParticipants={projectParticipants}
-          onTaskDroppedOutside={onChecklistDropOutside}
-          isSelected={isSelected}
-          isDragOver={isDragOver}
-          selectedColumnItemId={selectedColumnItemId}
-          onUpdate={(updater) => {
-            if (!collaboratorLocked) onUpdateItem(item.id, updater);
-          }}
-          onDelete={() =>
-            onRequestDelete(() => {
-              onDeleteItem(item.id);
-              onSelectItems(selectedIds.filter((id) => id !== item.id));
-            })
-          }
-          onFitFrame={() => {}}
-          onLineEndpointDrag={(event, endpoint) => onLineEndpointDrag(item.id, event, endpoint)}
-          onEjectItem={
-            item.type === 'column'
-              ? (ejectedItem, clientX, clientY) => onEjectFromColumn(item.id, ejectedItem, clientX, clientY)
-              : undefined
-          }
-          onSelectColumnItem={
-            item.type === 'column' ? (columnItem) => onSelectColumnItem(item.id, columnItem) : undefined
-          }
-          onRequestDelete={onRequestDelete}
-          onEntryDroppedOutside={
-            item.type === 'checklist'
-              ? (entry, clientX, clientY) => onChecklistDropOutside(item.id, entry, clientX, clientY)
-              : undefined
-          }
-          onCardDroppedOutside={
-            item.type === 'kanban'
-              ? (card, clientX, clientY) => onKanbanCardDropOutside(item.id, card, clientX, clientY)
-              : undefined
-          }
-          searchActive={searchActive}
-          nestedSearchMatchIds={item.type === 'column' ? nestedSearchMatchIds : undefined}
-          onOpenBoard={onOpenBoard}
-          onRenameBoard={onRenameBoard}
-        />
-      </ItemWatcher>
+      <BlockRenderer
+        zoom={contentZoom}
+        item={renderedItem}
+        projectParticipants={projectParticipants}
+        onTaskDroppedOutside={onChecklistDropOutside}
+        isSelected={isSelected}
+        isDragOver={isDragOver}
+        selectedColumnItemId={selectedColumnItemId}
+        onUpdate={(updater) => {
+          if (!collaboratorLocked) onUpdateItem(item.id, updater);
+        }}
+        onDelete={() =>
+          onRequestDelete(() => {
+            onDeleteItem(item.id);
+            onSelectItems(selectedIds.filter((id) => id !== item.id));
+          })
+        }
+        onFitFrame={() => {}}
+        onLineEndpointDrag={(event, endpoint) => onLineEndpointDrag(item.id, event, endpoint)}
+        onEjectItem={
+          item.type === 'column'
+            ? (ejectedItem, clientX, clientY) => onEjectFromColumn(item.id, ejectedItem, clientX, clientY)
+            : undefined
+        }
+        onSelectColumnItem={
+          item.type === 'column' ? (columnItem) => onSelectColumnItem(item.id, columnItem) : undefined
+        }
+        onRequestDelete={onRequestDelete}
+        onEntryDroppedOutside={
+          item.type === 'checklist'
+            ? (entry, clientX, clientY) => onChecklistDropOutside(item.id, entry, clientX, clientY)
+            : undefined
+        }
+        onCardDroppedOutside={
+          item.type === 'kanban'
+            ? (card, clientX, clientY) => onKanbanCardDropOutside(item.id, card, clientX, clientY)
+            : undefined
+        }
+        searchActive={searchActive}
+        nestedSearchMatchIds={item.type === 'column' ? nestedSearchMatchIds : undefined}
+        onOpenBoard={onOpenBoard}
+        onRenameBoard={onRenameBoard}
+      />
     ),
     [
       collaboratorLocked,
@@ -226,7 +258,6 @@ function CanvasItem({
       onKanbanCardDropOutside,
       searchActive,
       nestedSearchMatchIds,
-      onResize,
       onOpenBoard,
       onRenameBoard,
     ],
@@ -268,7 +299,13 @@ function CanvasItem({
       onMouseDown={(event) => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
       onScrollCapture={(event) => {
-        if (!scrollPositions || !event.currentTarget.contains(event.target as Node)) return;
+        if (
+          !scrollPositions ||
+          !(event.target instanceof Element) ||
+          !event.currentTarget.contains(event.target) ||
+          !event.target.closest('[data-wheel-scroll]')
+        )
+          return;
         scrollPositions.set(
           item.id,
           Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[data-wheel-scroll]'), (element) => ({
@@ -287,6 +324,7 @@ function CanvasItem({
         <button
           type="button"
           data-touch-drag="true"
+          data-camera-inverse-scale="true"
           className="canvas-item-move-handle"
           aria-label={translate('Move selected item')}
           style={{ transform: `scale(${1 / zoom})`, transformOrigin: 'bottom left' }}
@@ -370,7 +408,9 @@ function CanvasItem({
           if (!event.currentTarget.contains(event.relatedTarget)) setHasFocus(false);
         }}
       >
-        {simplified ? (
+        {previewNote && item.type === 'note' ? (
+          <CanvasNotePreview item={item} scrollPosition={scrollPositions?.get(item.id)?.[0]} />
+        ) : simplified ? (
           <div
             data-canvas-lod="skeleton"
             className="item-rounded border p-3 overflow-hidden space-y-3"
@@ -387,8 +427,28 @@ function CanvasItem({
             <div className="h-2 w-4/5 rounded-full" style={{ background: '#e2e8f0' }} />
             <div className="h-2 w-3/5 rounded-full" style={{ background: '#e2e8f0' }} />
           </div>
+        ) : isHeavyPreviewItem(item) ? (
+          <div className="relative">
+            <div
+              data-canvas-retained-editor={String(previewHeavy)}
+              inert={previewHeavy || undefined}
+              aria-hidden={previewHeavy || undefined}
+              style={
+                previewHeavy
+                  ? { contentVisibility: 'hidden', width: measuredSize!.width, height: measuredSize!.height }
+                  : undefined
+              }
+            >
+              <ItemWatcher itemId={item.id} measurementKey={item} onResize={onResize} suspended={previewHeavy}>
+                {content}
+              </ItemWatcher>
+            </div>
+            {previewHeavy && <CanvasHeavyPreview item={item} />}
+          </div>
         ) : (
-          content
+          <ItemWatcher itemId={item.id} measurementKey={item} onResize={onResize}>
+            {content}
+          </ItemWatcher>
         )}
       </div>
     </div>
