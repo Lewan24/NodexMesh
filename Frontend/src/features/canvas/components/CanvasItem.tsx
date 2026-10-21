@@ -1,6 +1,6 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
-import { useMemo, useState } from 'react';
+import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { BoardItem, ChecklistEntry, KanbanCard } from '@/entities/board/types';
 
 import BlockRenderer from '@/features/blocks/BlockRenderer';
@@ -8,7 +8,6 @@ import ItemWatcher from '@/features/canvas/components/ItemWatcher';
 
 import type { ResizeDirection } from '@/features/canvas/types';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
-import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
 import ItemLockBadge from './ItemLockBadge';
@@ -21,6 +20,8 @@ interface CanvasItemProps {
   projectParticipants?: ProjectParticipant[];
   renderedItem: BoardItem;
   zoom: number;
+  lowDetail?: boolean;
+  scrollPositions?: Map<string, { left: number; top: number }[]>;
   measuredSize?: { width: number; height: number };
   remotePresence?: RemotePresence[];
   collaboratorLocked?: boolean;
@@ -46,6 +47,7 @@ interface CanvasItemProps {
   onMouseDown: (id: string, event: React.MouseEvent) => void;
   onAnimationEnd: (id: string) => void;
   onResize: (id: string, width: number, height: number) => void;
+  onFocusItem?: (id: string | null) => void;
 
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
 
@@ -66,15 +68,15 @@ interface CanvasItemProps {
 
   onKanbanCardDropOutside: (sourceId: string, card: KanbanCard, clientX: number, clientY: number) => boolean;
 
-  pushHistory: () => void;
-
   onQuickConnectStart: (id: string, event: React.MouseEvent, side: ConnectionSide) => void;
   onOpenBoard?: (boardId: string) => void;
   onRenameBoard?: (boardId: string, name: string) => void;
 }
 
-export default function CanvasItem({
+function CanvasItem({
   zoom,
+  lowDetail = zoom <= 0.25,
+  scrollPositions,
   measuredSize,
   remotePresence,
   collaboratorLocked = false,
@@ -99,6 +101,7 @@ export default function CanvasItem({
   onMouseDown,
   onAnimationEnd,
   onResize,
+  onFocusItem,
   onUpdateItem,
   onDeleteItem,
   onSelectItems,
@@ -115,14 +118,13 @@ export default function CanvasItem({
 }: CanvasItemProps) {
   useTranslation();
   const [hasFocus, setHasFocus] = useState(false);
-  const mobile = useMobileLayout();
-  const lodThreshold = mobile ? 0.2 : 0.25;
+  const elementRef = useRef<HTMLDivElement>(null);
   // Keep a cheap outline on the canvas while the camera is zoomed out. The
   // previous implementation only entered LOD after a measurement existed,
   // so newly loaded items stayed as expensive content at tiny scale and could
   // appear to disappear before their first measurement completed.
   const simplified =
-    zoom <= lodThreshold &&
+    lowDetail &&
     !isSelected &&
     !isDragging &&
     !isDragOver &&
@@ -141,13 +143,23 @@ export default function CanvasItem({
     height: Math.max(measuredSize?.height ?? 0, approximateSize.height),
   };
   const showDragEffect = isDragging && item.type !== 'line';
+  useLayoutEffect(() => {
+    const saved = scrollPositions?.get(item.id);
+    if (simplified || !saved) return;
+    elementRef.current?.querySelectorAll<HTMLElement>('[data-wheel-scroll]').forEach((element, index) => {
+      const position = saved[index];
+      if (!position) return;
+      element.scrollLeft = position.left;
+      element.scrollTop = position.top;
+    });
+  }, [item.id, scrollPositions, simplified]);
 
   // Only section titles change their content with the camera scale. Keep the
   // expensive block subtree intact while panning, pinching or animating its wrapper.
   const contentZoom = item.type === 'section-title' ? zoom : 1;
   const content = useMemo(
     () => (
-      <ItemWatcher itemId={item.id} onResize={onResize}>
+      <ItemWatcher itemId={item.id} measurementKey={item} onResize={onResize}>
         <BlockRenderer
           zoom={contentZoom}
           item={renderedItem}
@@ -196,8 +208,7 @@ export default function CanvasItem({
     [
       collaboratorLocked,
       contentZoom,
-      item.id,
-      item.type,
+      item,
       renderedItem,
       projectParticipants,
       isSelected,
@@ -223,6 +234,7 @@ export default function CanvasItem({
 
   return (
     <div
+      ref={elementRef}
       data-board-item="true"
       data-board-item-id={item.id}
       data-movement-locked={Boolean(item.locked || collaboratorLocked)}
@@ -255,6 +267,21 @@ export default function CanvasItem({
       }}
       onMouseDown={(event) => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
+      onScrollCapture={(event) => {
+        if (!scrollPositions || !event.currentTarget.contains(event.target as Node)) return;
+        scrollPositions.set(
+          item.id,
+          Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[data-wheel-scroll]'), (element) => ({
+            left: element.scrollLeft,
+            top: element.scrollTop,
+          })),
+        );
+      }}
+      onFocusCapture={() => onFocusItem?.(item.id)}
+      onBlurCapture={(event) => {
+        // Keep the owner alive through window blur and focus entering its portal.
+        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) onFocusItem?.(null);
+      }}
     >
       {isSelected && item.type !== 'line' && !item.locked && (
         <button
@@ -367,3 +394,5 @@ export default function CanvasItem({
     </div>
   );
 }
+
+export default memo(CanvasItem);

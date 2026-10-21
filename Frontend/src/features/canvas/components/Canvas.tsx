@@ -57,9 +57,10 @@ import CanvasDropPreview from './CanvasDropPreview';
 import { useCanvasLostState } from '../hooks/useCanvasLostState';
 import CanvasLostPrompt from './CanvasLostPrompt';
 import CanvasAlignmentGuides from './CanvasAlignmentGuides';
-import { getColumnSearchResult, getSearchTargets, matchesItemSearch } from '@/features/search/utils/itemSearch';
+import { getBoardSearchResult } from '@/features/search/utils/itemSearch';
+import { useCanvasRenderModel } from '../hooks/useCanvasRenderModel';
 
-import { isItemInsideFrame, isFrameMovementLocked, wouldCreateFrameCycle } from '@/features/canvas/utils/frameGeometry';
+import { isItemInsideFrame, wouldCreateFrameCycle } from '@/features/canvas/utils/frameGeometry';
 
 import ItemInspector from '@/features/inspector/ItemInspector';
 import { useCanvasClipboard } from '../hooks/useCanvasClipboard';
@@ -67,7 +68,12 @@ import CanvasContextMenu from './CanvasContextMenu';
 import type { CanvasMenuState } from './CanvasContextMenu';
 import QuickConnectMenu from './QuickConnectMenu';
 import type { QuickConnectMenuState } from './QuickConnectMenu';
+import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
+import { isCanvasItemVisible } from '../utils/viewportVisibility';
 import './contextMenu.css';
+
+const EMPTY_PARTICIPANTS: ProjectParticipant[] = [];
+const EMPTY_CURSORS: RemoteCursor[] = [];
 
 interface ToolDragGhostState extends ToolDragDetail {
   overCanvas: boolean;
@@ -112,10 +118,10 @@ interface CanvasProps {
 
 export default function Canvas({
   project,
-  projectParticipants = [],
+  projectParticipants = EMPTY_PARTICIPANTS,
   remoteVersion = 0,
   remotePresence,
-  remoteCursors = [],
+  remoteCursors = EMPTY_CURSORS,
   selectedTool,
   pan,
   zoom,
@@ -146,9 +152,28 @@ export default function Canvas({
   onCursorMove,
 }: CanvasProps) {
   useTranslation();
+  const mobile = useMobileLayout();
+  const lowDetail = zoom <= (mobile ? 0.2 : 0.25);
   const containerRef = useRef<HTMLDivElement>(null);
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
   const [spacePanActive, setSpacePanActive] = useState(false);
+  const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+  useEffect(() => {
+    const releaseFocus = (event: FocusEvent) => {
+      const target = event.target;
+      if (target instanceof Element && !target.closest('[data-board-item-id], dialog, [role="dialog"]')) {
+        setFocusedItemId(null);
+      }
+    };
+    document.addEventListener('focusin', releaseFocus);
+    return () => document.removeEventListener('focusin', releaseFocus);
+  }, []);
+  const scrollPositions = useRef(new Map<string, { left: number; top: number }[]>());
+  useEffect(() => {
+    if (!scrollPositions.current.size) return;
+    const ids = new Set(project.items.map((item) => item.id));
+    for (const id of scrollPositions.current.keys()) if (!ids.has(id)) scrollPositions.current.delete(id);
+  }, [project.items]);
   const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [placeOnItems, setPlaceOnItems] = useState(false);
@@ -318,11 +343,11 @@ export default function Canvas({
 
   const { pendingDelete, requestDelete, confirmDelete, cancelDelete } = useDeleteConfirmation({ pushHistory });
 
-  const { measuredSizes, handleItemResize: handleMeasuredItemResize } = useCanvasMeasurements({
-    projectRef,
-    suppressAutoLayout,
-    onUpdateItem,
-  });
+  const {
+    measuredSizes,
+    measuredItems,
+    handleItemResize: handleMeasuredItemResize,
+  } = useCanvasMeasurements({ items: project.items, projectRef, suppressAutoLayout, onUpdateItem });
 
   const onAddItem = useCallback(
     (item: BoardItem) => {
@@ -346,10 +371,15 @@ export default function Canvas({
     [addItemRaw, onRestoreItems, measuredSizes],
   );
 
+  const handleResizeStart = useCallback(() => {
+    suppressAutoLayout.current = true;
+  }, []);
+  const handleFrameResizeEnd = useCallback(
+    (frameId: string, containedIds: string[]) => onSelectItems([frameId, ...containedIds]),
+    [onSelectItems],
+  );
   const { handleItemResize } = useItemResize({
-    onResizeStart: () => {
-      suppressAutoLayout.current = true;
-    },
+    onResizeStart: handleResizeStart,
     onResizeEnd: resumeAutoLayout,
     projectRef,
     zoomRef,
@@ -361,9 +391,7 @@ export default function Canvas({
 
     onFramePreviewChange: setFrameCapturePreviewIds,
 
-    onFrameResizeEnd: (frameId, containedIds) => {
-      onSelectItems([frameId, ...containedIds]);
-    },
+    onFrameResizeEnd: handleFrameResizeEnd,
   });
 
   const { attachHoverId, handleLineEndpointDrag, handleQuickConnectStart } = useLineDrag({
@@ -844,7 +872,12 @@ export default function Canvas({
   );
 
   const safeSelectedIds = selectedIds ?? [];
-  const joinableDrawings = project.items.filter((item) => selectedIds.includes(item.id));
+  const selectedItemIds = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const selectedItems = useMemo(
+    () => project.items.filter((item) => selectedItemIds.has(item.id)),
+    [project.items, selectedItemIds],
+  );
+  const joinableDrawings = selectedItems;
   const canJoinDrawings =
     !selectedColumnItem &&
     joinableDrawings.length > 1 &&
@@ -871,15 +904,15 @@ export default function Canvas({
     onSelectItems([joined.id]);
   };
 
-  const selectedItems = project.items.filter((item) => safeSelectedIds.includes(item.id));
-
   const normalizedSearch = searchQuery.trim();
 
   const searchActive = normalizedSearch.length > 0;
-  const searchTargets = useMemo(
-    () => getSearchTargets(project.items, normalizedSearch),
-    [project.items, normalizedSearch],
-  );
+  const {
+    targets: searchTargets,
+    matchingIds,
+    nestedColumnMatches,
+    contextFrameIds,
+  } = useMemo(() => getBoardSearchResult(project.items, normalizedSearch), [project.items, normalizedSearch]);
   const searchIndex =
     searchCursor.query === normalizedSearch ? searchTargets.findIndex(({ item }) => item.id === searchCursor.id) : -1;
   const goToSearchResult = (direction: number) => {
@@ -928,90 +961,53 @@ export default function Canvas({
     setSearchCursor({ query: normalizedSearch, id: target.item.id });
   };
 
-  const { matchingIds, nestedColumnMatches, contextFrameIds } = useMemo(() => {
-    const matchingIds = new Set<string>();
-
-    const nestedColumnMatches = new Map<string, Set<string>>();
-
-    for (const item of project.items) {
-      if (item.type === 'column') {
-        const result = getColumnSearchResult(item, normalizedSearch);
-
-        if (result.matches) {
-          matchingIds.add(item.id);
-        }
-
-        nestedColumnMatches.set(item.id, result.nestedMatchIds);
-
-        continue;
-      }
-
-      if (matchesItemSearch(item, normalizedSearch)) {
-        matchingIds.add(item.id);
-      }
+  const { frames, regularItems, renderedItems, lockedFrameIds } = useCanvasRenderModel(
+    project.items,
+    dragOverrides,
+    measuredSizes,
+  );
+  const retainedItemIds = useMemo(() => {
+    const ids = new Set(selectedItemIds);
+    for (const id of dragOverrides.keys()) ids.add(id);
+    for (const id of frameCapturePreviewIds) ids.add(id);
+    for (const id of Object.keys(remotePresence ?? {})) ids.add(id);
+    if (searchActive) for (const id of matchingIds) ids.add(id);
+    for (const id of [
+      focusedItemId,
+      selectedColumnItem?.columnId,
+      customCssTarget?.columnId,
+      customCssTarget?.itemId,
+      attachHoverId,
+      dragOverColumnId,
+    ]) {
+      if (id) ids.add(id);
     }
-
-    const contextFrameIds = new Set<string>();
-
-    if (searchActive) {
-      const matchedItems = project.items.filter((item) => matchingIds.has(item.id));
-
-      for (const frame of project.items) {
-        if (frame.type !== 'frame') {
-          continue;
-        }
-
-        const containsMatch = matchedItems.some(
-          (matchedItem) => matchedItem.id !== frame.id && matchedItem.frameId === frame.id,
-        );
-
-        if (containsMatch) {
-          contextFrameIds.add(frame.id);
-        }
-      }
-    }
-
-    return { matchingIds, nestedColumnMatches, contextFrameIds };
-  }, [project.items, normalizedSearch, searchActive]);
-
-  const effectiveItems = useMemo(
+    return ids;
+  }, [
+    selectedItemIds,
+    dragOverrides,
+    frameCapturePreviewIds,
+    remotePresence,
+    searchActive,
+    matchingIds,
+    focusedItemId,
+    selectedColumnItem?.columnId,
+    customCssTarget,
+    attachHoverId,
+    dragOverColumnId,
+  ]);
+  const visibleItems = useMemo(
     () =>
-      dragOverrides.size === 0
-        ? project.items
-        : project.items.map((item) => {
-            const geometry = dragOverrides.get(item.id);
-            return geometry ? { ...item, ...geometry } : item;
-          }),
-    [project.items, dragOverrides],
-  );
-  const frames = useMemo(() => effectiveItems.filter((item) => item.type === 'frame'), [effectiveItems]);
-  const regularItems = useMemo(
-    () => project.items.filter((item) => item.type !== 'frame').sort((a, b) => a.zIndex - b.zIndex),
-    [project.items],
-  );
-  const effectiveItemsById = useMemo(() => new Map(effectiveItems.map((item) => [item.id, item])), [effectiveItems]);
-  const renderedItems = useMemo(
-    () =>
-      new Map(
-        regularItems.map((item) => [
-          item.id,
-          item.type === 'line'
-            ? resolveLineItem(
-                (effectiveItemsById.get(item.id) as typeof item | undefined) ?? item,
-                effectiveItemsById,
-                measuredSizes,
-              )
-            : (effectiveItemsById.get(item.id) ?? item),
-        ]),
+      regularItems.filter((item) =>
+        isCanvasItemVisible(
+          item,
+          { pan, zoom, width: viewportSize.width, height: viewportSize.height },
+          measuredSizes,
+          measuredItems,
+          retainedItemIds,
+        ),
       ),
-    [regularItems, effectiveItemsById, measuredSizes],
-  );
-  const lockedFrameIds = useMemo(
-    () =>
-      new Set(
-        frames.filter((frame) => isFrameMovementLocked(frame, project.items, measuredSizes)).map((frame) => frame.id),
-      ),
-    [frames, project.items, measuredSizes],
+    [regularItems, pan, zoom, viewportSize, measuredSizes, measuredItems, retainedItemIds],
   );
 
   const minorGridInterval = CANVAS_GRID_SIZE * zoom;
@@ -1317,7 +1313,7 @@ export default function Canvas({
             movementLocked={lockedFrameIds.has(frame.id)}
             onItemResize={handleItemResize}
             zoom={zoom}
-            isSelected={safeSelectedIds.includes(frame.id)}
+            isSelected={selectedItemIds.has(frame.id)}
             isDragging={draggingIds.includes(frame.id)}
             onQuickConnectStart={handleQuickConnectStart}
             isAnimating={animatingIds.has(frame.id)}
@@ -1336,7 +1332,7 @@ export default function Canvas({
           />
         ))}
 
-        {regularItems.map((item) => {
+        {visibleItems.map((item) => {
           const renderedItem = renderedItems.get(item.id) ?? item;
 
           return (
@@ -1355,8 +1351,10 @@ export default function Canvas({
               isDragging={draggingIds.includes(item.id)}
               dragTilt={draggingIds.includes(item.id) ? dragTilt : 0}
               onQuickConnectStart={handleQuickConnectStart}
-              zoom={zoom}
-              isSelected={safeSelectedIds.includes(item.id)}
+              zoom={item.type === 'section-title' || selectedItemIds.has(item.id) ? zoom : 1}
+              lowDetail={lowDetail}
+              scrollPositions={scrollPositions.current}
+              isSelected={selectedItemIds.has(item.id)}
               isAttachTarget={attachHoverId === item.id}
               isDragOver={dragOverColumnId === item.id}
               isAnimating={animatingIds.has(item.id)}
@@ -1364,6 +1362,7 @@ export default function Canvas({
               onMouseDown={handleItemMouseDown}
               onAnimationEnd={clearEnterAnimation}
               onResize={handleMeasuredItemResize}
+              onFocusItem={setFocusedItemId}
               onItemResize={handleItemResize}
               onUpdateItem={onUpdateItem}
               onDeleteItem={onDeleteItem}
@@ -1374,7 +1373,6 @@ export default function Canvas({
               onSelectColumnItem={handleSelectColumnItem}
               onChecklistDropOutside={handleChecklistDropOutside}
               onKanbanCardDropOutside={handleKanbanCardDropOutside}
-              pushHistory={pushHistory}
               searchActive={searchActive}
               isSearchMatch={!searchActive || matchingIds.has(item.id)}
               nestedSearchMatchIds={item.type === 'column' ? nestedColumnMatches.get(item.id) : undefined}

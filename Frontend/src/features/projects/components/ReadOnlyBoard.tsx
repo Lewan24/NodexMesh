@@ -326,7 +326,7 @@ export default function ReadOnlyBoard({
                     width: item.type === 'line' ? undefined : item.width,
                   }}
                 >
-                  <ItemWatcher itemId={item.id} onResize={handleItemResize}>
+                  <ItemWatcher itemId={item.id} measurementKey={item} onResize={handleItemResize}>
                     <ReadOnlyBlock
                       item={item}
                       projectParticipants={projectParticipants}

@@ -13,17 +13,34 @@ interface ProjectLike {
 }
 
 interface UseCanvasMeasurementsOptions {
+  items: BoardItem[];
   projectRef: RefObject<ProjectLike>;
   suppressAutoLayout: RefObject<boolean>;
 
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
 }
 
-export function useCanvasMeasurements({ projectRef, suppressAutoLayout, onUpdateItem }: UseCanvasMeasurementsOptions) {
-  const [measuredSizes, setMeasuredSizes] = useState<SizeMap>(() => new Map());
+export function useCanvasMeasurements({
+  items,
+  projectRef,
+  suppressAutoLayout,
+  onUpdateItem,
+}: UseCanvasMeasurementsOptions) {
+  const [measurements, setMeasurements] = useState(() => ({
+    sizes: new Map() as SizeMap,
+    items: new Map<string, BoardItem>(),
+  }));
 
   const sizesRef = useRef<SizeMap>(new Map());
+  const measuredItemsRef = useRef(new Map<string, BoardItem>());
   const pendingFrame = useRef<number | null>(null);
+  const scheduleMeasurements = useCallback(() => {
+    if (pendingFrame.current !== null) return;
+    pendingFrame.current = requestAnimationFrame(() => {
+      pendingFrame.current = null;
+      setMeasurements({ sizes: new Map(sizesRef.current), items: new Map(measuredItemsRef.current) });
+    });
+  }, []);
   useEffect(
     () => () => {
       if (pendingFrame.current !== null) cancelAnimationFrame(pendingFrame.current);
@@ -32,23 +49,36 @@ export function useCanvasMeasurements({ projectRef, suppressAutoLayout, onUpdate
     [],
   );
   const geometryRef = useRef(new Map<string, { width?: number; height?: number; x: number; y: number }>());
+  useEffect(() => {
+    const ids = new Set(items.map((item) => item.id));
+    let removed = false;
+    for (const id of sizesRef.current.keys()) {
+      if (ids.has(id)) continue;
+      sizesRef.current.delete(id);
+      measuredItemsRef.current.delete(id);
+      geometryRef.current.delete(id);
+      removed = true;
+    }
+    if (removed) scheduleMeasurements();
+  }, [items, scheduleMeasurements]);
   const handleItemResize = useCallback(
     (itemId: string, width: number, height: number) => {
       const prior = sizesRef.current.get(itemId);
       const changed = projectRef.current.items.find((item) => item.id === itemId);
+      if (!changed) return;
+      const sourceChanged = measuredItemsRef.current.get(itemId) !== changed;
+      measuredItemsRef.current.set(itemId, changed);
       const previousGeometry = geometryRef.current.get(itemId);
-      if (changed)
-        geometryRef.current.set(itemId, { width: changed.width, height: changed.height, x: changed.x, y: changed.y });
-      if (prior && prior.width === width && prior.height === height) return;
+      geometryRef.current.set(itemId, { width: changed.width, height: changed.height, x: changed.x, y: changed.y });
+      if (prior && prior.width === width && prior.height === height) {
+        if (sourceChanged) scheduleMeasurements();
+        return;
+      }
       const explicitResize =
-        !changed ||
-        !previousGeometry ||
-        changed.width !== previousGeometry.width ||
-        changed.height !== previousGeometry.height;
+        !previousGeometry || changed.width !== previousGeometry.width || changed.height !== previousGeometry.height;
       const needsLayout =
         !suppressAutoLayout.current &&
         !explicitResize &&
-        changed &&
         growsAutomatically(changed) &&
         prior &&
         height > prior.height + 0.5;
@@ -56,12 +86,7 @@ export function useCanvasMeasurements({ projectRef, suppressAutoLayout, onUpdate
       // except when auto-growth needs the previous geometry immediately.
       const before = needsLayout ? new Map(sizesRef.current) : sizesRef.current;
       const after = sizesRef.current.set(itemId, { width, height });
-      if (pendingFrame.current === null) {
-        pendingFrame.current = requestAnimationFrame(() => {
-          pendingFrame.current = null;
-          setMeasuredSizes(new Map(sizesRef.current));
-        });
-      }
+      scheduleMeasurements();
       if (needsLayout) {
         const patches = autoGrowthLayout(projectRef.current.items, itemId, before, after);
         for (const [id, patch] of patches)
@@ -124,8 +149,8 @@ export function useCanvasMeasurements({ projectRef, suppressAutoLayout, onUpdate
         });
       }
     },
-    [onUpdateItem, projectRef, suppressAutoLayout],
+    [onUpdateItem, projectRef, suppressAutoLayout, scheduleMeasurements],
   );
 
-  return { measuredSizes, handleItemResize };
+  return { measuredSizes: measurements.sizes, measuredItems: measurements.items, handleItemResize };
 }

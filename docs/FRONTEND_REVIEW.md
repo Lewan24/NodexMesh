@@ -48,19 +48,49 @@ At 2,000 items, observed p95 changed from 222.89 ms to 16.92 ms. These are synth
 
 The shared ThemeProvider chunk changed from about 451.62 kB to 67 kB minified after deferring mock composition. Chunk boundaries also changed elsewhere; this is not a total startup-transfer or page-load timing claim.
 
+### Completed: canvas render model, search and frame ownership calculations
+
+`useCanvasRenderModel` now owns memoized layer partitioning, transient geometry indexing, connection resolution and frame-lock derivation. The pure builders live in `canvasRenderModel.ts`. Persisted item objects remain unchanged; unaffected objects retain identity, and equal-z-index paint order stays stable. Frame locks depend on persisted items, so camera, drag-preview and measurement updates do not rebuild the ownership graph. Selection lookup also uses a memoized set instead of repeated array membership scans.
+
+Frame locks propagate from locked items/column contents through owning frames in one traversal. This replaces repeated per-frame recursive board scans. Unlocking, deleting or reparenting contents immediately updates the result. Traversal terminates on cyclic ownership references and does not recurse through deep frame chains; this is defensive client handling, not permission to persist cycles. Existing schema/ownership validation is unchanged.
+
+Drag capture indexes item identities and frame children once per gesture, and captures descendants iteratively. A selected nested frame is captured once alongside its ancestor. Gesture geometry remains transient until one batched final commit, including standalone line endpoints and one history boundary.
+
+`getBoardSearchResult` now supplies navigation targets, top-level/nested highlights and direct containing-frame context together. Documents and nested content are no longer matched independently for navigation and highlighting, and frame context is derived without per-frame scans. Existing empty, text, tag and status query semantics are retained.
+
+Run `npm run benchmark:canvas-model` from `Frontend`. It compares the previous calculations with the indexed/unified versions and asserts equivalent results before timing. Same local Node environment, five warmups and 20 measured runs, a mixture of notes/documents with one frame per ten items:
+
+| Items / frames | Frame locks, before → after median | Search, before → after median |
+| --- | --- | --- |
+| 100 / 10 | 0.026 → 0.019 ms | 0.633 → 0.213 ms |
+| 500 / 50 | 0.541 → 0.021 ms | 1.988 → 0.822 ms |
+| 2,000 / 200 | 6.173 → 0.077 ms | 8.863 → 3.667 ms |
+
+At 2,000 items, observed p95 was 7.134 → 0.138 ms for frame locks and 9.708 → 4.365 ms for search. These are synthetic calculation timings, not browser frame times. Frame-lock work is additionally skipped for camera/drag/measurement-only updates by memoization. No timing threshold is enforced in tests.
+
+Regression tests cover stable layering, moved/removed connection endpoints, dividers, input immutability, nested-column locks, ownership changes, 10,000-level frame chains, cyclic input termination, query compatibility, memoized identities, and a nested-frame drag with one final commit/history step.
+
+### Completed: browser frame pacing and simple-block culling
+
+The FPS-focused follow-up adds a separate production-built Playwright fixture, CPU-throttled frame measurements and real-browser interaction regressions. With the corrected fixture and 4× CPU slowdown, the 1,000-note workload improved from 3.3 to 26.3 effective FPS; p95 frame interval changed from 416.7 to 66.7 ms, observed long tasks from 88 to 1, and mounted items at the end from 1,000 to 35. These are local diagnostic results, not a physical-phone benchmark or a 60 FPS guarantee. Earlier exploratory runs with incorrect fixture provider placement were discarded. The full protocol and raw comparison are in [BROWSER_PERFORMANCE.md](BROWSER_PERFORMANCE.md).
+
+Memoized item/frame components, stable default props/resize callbacks, a single mobile-layout subscription and selective exact zoom remove camera-only leaf updates. Simple blocks outside 320 pixels of screen-space overscan are culled, with conservative bounds and source-aware remeasurement. Focused/composing editors, selected/dragged/remote-attended items, search matches and dialog targets stay mounted. Nested scrolling survives culling. Stateful editors, curves, frames, section titles and custom-CSS blocks are intentionally retained.
+
+Overflow observation now batches all dirty roots on an animation frame, reads geometry before writing scroll attributes, ignores its own mutations and cancels work on unmount. The profile identified overflow layout reads as a remaining mount-time cost. Persistence and backend validation/authorization are unchanged. The diagnostic entry/control API has a separate build and an emitted-bundle exclusion test.
+
 ## Larger refactors: stage and measure before implementation
 
 ### P2: Split canvas orchestration and add selective rendering
 
-`features/canvas/components/Canvas.tsx` is approximately 56 kB of source and combines selection, search, drag/drop, geometry, frame handling, dialogs, and rendering. All item wrappers still mount; low-detail rendering reduces block complexity but does not cull offscreen DOM.
+`features/canvas/components/Canvas.tsx` still combines selection/navigation, drag/drop coordination, frame actions, dialogs and rendering. Render-model calculations and unified search results have been extracted. Eligible simple blocks now use viewport culling; stateful editors and other retained categories still mount offscreen.
 
-1. Establish production traces using 100, 500, and 1,000 mixed items, including many connections, nested columns, documents, frames, and remote presence. Record p95 frame time, long tasks, React commit counts, mounted nodes, and heap.
-2. Extract pure selection/search and render-model calculations without changing state ownership. Keep immutable item identities and stable event contracts. Validate output against existing board fixtures.
+1. The 100/500/1,000-note production-browser study is recorded. Extend it to mixed items, connections, nested columns, documents, frames and remote presence, and to physical slower devices. Add retained-heap and compositor/memory analysis before broader culling.
+2. Render-model calculations and unified search results are extracted and covered by regression tests. Continue separating selection/navigation and dialog composition while keeping state ownership and immutable item identities explicit.
 3. Extract dialog/action composition and interaction coordination into focused hooks/components. Keep persistence and history boundaries explicit; avoid a single context carrying every camera update.
-4. Introduce viewport culling with overscan and cached measurements. Retain focused editors, selected/dragged/remote-attended items, search destinations, and lines crossing the viewport even when endpoints are offscreen.
+4. Simple-block culling, overscan, cached/source-aware measurements and activity retention are implemented. Extend to stateful editors only after preserving their drafts and view state in previews; retain crossing curves.
 5. Profile again before introducing a spatial index or separate camera store.
 
-Acceptance: fewer mounted nodes and lower measured interaction costs on large boards, with unchanged final coordinates, frame membership, snapping, search navigation, IME composition, nested scrolling, one-step gesture undo, and collaboration behavior. This needs browser interaction coverage and should be several small changes, not a canvas rewrite.
+Acceptance: fewer mounted nodes and lower measured interaction costs on large boards, with unchanged final coordinates, frame membership, snapping, search navigation, IME composition, nested scrolling, one-step gesture undo, and collaboration behavior. The current browser suite covers the simple-block path; mixed/stateful paths need further coverage in small changes.
 
 ### P2: Separate workspace persistence responsibilities
 
@@ -94,10 +124,10 @@ Plan: profile typing, multi-item updates, and remote changes. If dominant, cache
 ## Validation and limitations
 
 - Baseline: build passed, ESLint configuration was absent, and 19/20 test files passed with the demo portability failure.
-- Current validation: production TypeScript/build, mock production bundle, ESLint (zero warnings), formatting, and all 22 frontend test files pass. The historical demo failure is fixed. The targeted backend security, board-validation, and presence suite also passes all 123 tests (no skipped tests).
+- Current validation: production TypeScript/build, mock production bundle, ESLint (zero warnings), formatting, and all 24 frontend test files pass, including viewport/observer regressions. The browser suite adds three CPU-throttled profiles and eight interaction cases; browser fixture/config types are checked separately. The historical demo failure is fixed. The targeted backend security, board-validation, and presence suite also passes all 123 tests (no skipped tests).
 - New tests exercise lazy-import/render failures, local retry, sensitive error redaction, save failure/rejection/delay, queued edits/newly registered views during saves, unmount/unload protection, presence connection stability and stale board events, metadata request counts/cancellation, stale text-preview decoding, relation projection ownership/order, emitted HTTP loading boundaries, and mock bootstrap authorization.
 - Existing HTTP, sharing, administrative security, schema validation, collaboration, transfer, and editor tests remain required. No backend endpoint contract or authorization rule was changed; the frontend participant wrapper now forwards an optional abort signal.
 - The skill version detector reported installed React 19.3.0, TypeScript 6.0.3, and Tailwind 4.3.3. A TypeScript 7 migration is not required for this work.
-- DOM interaction tests use Happy DOM. No real-browser latency, keyboard/touch, accessibility, or authenticated backend timing measurements were taken. Before release, smoke-test these changes in real browsers, particularly a rejected deployment chunk, native unload prompts, board switching, IME drafts, and remote presence.
+- Unit DOM tests use Happy DOM; Playwright covers production-browser camera rendering, composition/portal retention, culling, scroll restoration and drag/undo. The projection/canvas-model scripts remain Node-only. Physical-device, broad accessibility, mixed-board, authenticated network and native unload-prompt studies remain outstanding.
 
-Next delivery sequence: record browser baselines; separate canvas render/search orchestration; introduce viewport culling with active-editor retention and crossing-line geometry; then continue workspace persistence boundaries and inactive editor previews according to measured impact. Keep each stage independently reviewable.
+Next delivery sequence: extend the browser study to mixed boards and physical slower devices; separate remaining canvas selection/navigation/dialog orchestration; design state-preserving inactive editor previews; then extend culling and continue workspace persistence boundaries according to measured impact. Keep each stage independently reviewable.

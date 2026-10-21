@@ -3,16 +3,18 @@ import { useEffect, useRef } from 'react';
 import { observeWheelOverflow } from '../utils/wheelOverflow';
 
 import type { ReactNode } from 'react';
+import type { BoardItem } from '@/entities/board/types';
 
 interface ItemWatcherProps {
   itemId: string;
+  measurementKey: BoardItem;
 
   onResize: (itemId: string, width: number, height: number) => void;
 
   children: ReactNode;
 }
 
-export default function ItemWatcher({ itemId, onResize, children }: ItemWatcherProps) {
+export default function ItemWatcher({ itemId, measurementKey, onResize, children }: ItemWatcherProps) {
   useTranslation();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -40,7 +42,7 @@ export default function ItemWatcher({ itemId, onResize, children }: ItemWatcherP
       observer.disconnect();
       stopObservingOverflow();
     };
-  }, [itemId, onResize]);
+  }, [itemId, measurementKey, onResize]);
 
   return <div ref={ref}>{children}</div>;
 }

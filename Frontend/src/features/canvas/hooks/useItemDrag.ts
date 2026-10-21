@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import type { BoardItem, ColumnItem, FrameItem, LineItem } from '@/entities/board/types';
 import type { ToolType } from '@/entities/board/toolTypes';
+import type { DragGeometry } from '../types';
 import { DROPPABLE_ON_COLUMN } from '@/features/canvas/constants';
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 import { getItemSize } from '@/features/canvas/utils/itemGeometry';
-import { isFrameMovementLocked, isItemInsideFrame, wouldCreateFrameCycle } from '../utils/frameGeometry';
+import { getFrameMovementLockedIds, isItemInsideFrame, wouldCreateFrameCycle } from '../utils/frameGeometry';
 import { AlignmentGuide, findAlignmentSnap } from '../utils/alignmentGuides';
 import { snapToGrid } from '../utils/gridSnap';
 
@@ -14,13 +15,6 @@ export interface ItemDropPreview {
   y: number;
   width: number;
   height: number;
-}
-
-export interface DragGeometry {
-  x: number;
-  y: number;
-  x2?: number;
-  y2?: number;
 }
 
 interface ProjectLike {
@@ -124,11 +118,14 @@ export function useItemDrag({
       onSelectItems(newSelected);
       const dragIds = newSelected.includes(id) ? newSelected : [id];
       const items = projectRef.current.items;
-      const clickedItem = items.find((item) => item.id === id);
+      const byId = new Map(items.map((item) => [item.id, item]));
+      const dragIdSet = new Set(dragIds);
+      const clickedItem = byId.get(id);
+      let lockedFrameIds: Set<string> | undefined;
       const movementLocked = (item: BoardItem) =>
         !!item.locked ||
         collaboratorLockedIds?.has(item.id) ||
-        (item.type === 'frame' && isFrameMovementLocked(item, items, measuredSizes));
+        (item.type === 'frame' && (lockedFrameIds ??= getFrameMovementLockedIds(items)).has(item.id));
 
       if (clickedItem && movementLocked(clickedItem)) return;
 
@@ -145,28 +142,36 @@ export function useItemDrag({
         });
       };
 
+      let childrenByFrame: Map<string, BoardItem[]> | undefined;
       const captureFrameContents = (frameId: string) => {
-        items
-          .filter(
-            (child) =>
-              !movementLocked(child) &&
-              !dragIds.includes(child.id) &&
-              !captureMap.has(child.id) &&
-              child.frameId === frameId,
-          )
-          .forEach((child) => {
-            capture(child);
-            if (child.type === 'frame') captureFrameContents(child.id);
-          });
+        if (!childrenByFrame) {
+          childrenByFrame = new Map();
+          for (const item of items) {
+            if (!item.frameId) continue;
+            const children = childrenByFrame.get(item.frameId) ?? [];
+            children.push(item);
+            childrenByFrame.set(item.frameId, children);
+          }
+        }
+        const pending = [...(childrenByFrame.get(frameId) ?? [])].reverse();
+        while (pending.length) {
+          const child = pending.pop()!;
+          if (movementLocked(child) || dragIdSet.has(child.id) || captureMap.has(child.id)) continue;
+          capture(child);
+          if (child.type === 'frame') {
+            const children = childrenByFrame.get(child.id) ?? [];
+            for (let index = children.length - 1; index >= 0; index--) pending.push(children[index]!);
+          }
+        }
       };
 
       for (const dragId of dragIds) {
-        const item = items.find((current) => current.id === dragId);
+        const item = byId.get(dragId);
         if (!item || movementLocked(item)) continue;
         capture(item);
 
         if (item.type === 'frame') {
-          captureFrameContents((item as FrameItem).id);
+          captureFrameContents(item.id);
         }
       }
 
@@ -177,7 +182,7 @@ export function useItemDrag({
       const startY = event.clientY;
       const currentZoom = zoomRef.current;
       const singleDragId = dragIds.length === 1 ? dragIds[0] : null;
-      const singleDragItem = singleDragId ? items.find((item) => item.id === singleDragId) : undefined;
+      const singleDragItem = singleDragId ? byId.get(singleDragId) : undefined;
       const canDropOnColumn = singleDragItem ? DROPPABLE_ON_COLUMN.has(singleDragItem.type) : false;
 
       let hasMoved = false;
@@ -211,7 +216,7 @@ export function useItemDrag({
         setDragTilt(Math.max(-3, Math.min(3, movementX * 0.35)));
 
         const primaryCapture = captureMap.get(id);
-        const primaryItem = items.find((item) => item.id === id);
+        const primaryItem = byId.get(id);
         if (primaryCapture && primaryItem && primaryItem.type !== 'line') {
           const rawX = primaryCapture.x + lastDx;
           const rawY = primaryCapture.y + lastDy;

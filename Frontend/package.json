@@ -14,7 +14,13 @@
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "preview": "vite preview",
-    "benchmark:projection": "node scripts/benchmark-projection.mjs"
+    "benchmark:projection": "node scripts/benchmark-projection.mjs",
+    "benchmark:canvas-model": "node scripts/benchmark-canvas-model.mjs",
+    "build:performance": "vite build --config vite.performance.config.ts",
+    "preview:performance": "vite preview --config vite.performance.config.ts --host 127.0.0.1 --port 4178 --strictPort",
+    "test:browser": "playwright test",
+    "benchmark:browser": "playwright test --grep \"profile pan\"",
+    "typecheck:browser": "tsc --project tsconfig.browser.json"
   },
   "dependencies": {
     "@fontsource/architects-daughter": "^5.3.0",
@@ -56,6 +62,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

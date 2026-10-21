@@ -14,6 +14,7 @@ The [frontend review and refactor plan](FRONTEND_REVIEW.md) records the 2026-10-
 | [SECURITY.md](SECURITY.md)                     | Implemented controls, trust boundaries, known limitations, and production checklist               |
 | [collaboration.md](collaboration.md)           | Save queue, merge/recovery behavior, SignalR presence, and multi-instance limits                  |
 | [AUDIT.md](AUDIT.md)                           | Application audit events, incident detection, retention, administration UI, and operations        |
+| [BROWSER_PERFORMANCE.md](BROWSER_PERFORMANCE.md) | Browser FPS study, culling/retention policy, Playwright reproduction and measured limits |
 | [PERFORMANCE.md](PERFORMANCE.md)               | Implemented canvas optimizations, remaining measured-work candidates, and profiling checklist     |
 | [POSTGRESQL_LOGGING.md](POSTGRESQL_LOGGING.md) | Optional operator-managed PostgreSQL server logging                                               |
 

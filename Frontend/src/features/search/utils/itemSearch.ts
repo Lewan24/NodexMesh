@@ -5,6 +5,13 @@ export interface SearchResult {
   nestedMatchIds: Set<string>;
 }
 
+export interface BoardSearchResult {
+  targets: { item: BoardItem; columnId?: string }[];
+  matchingIds: Set<string>;
+  nestedColumnMatches: Map<string, Set<string>>;
+  contextFrameIds: Set<string>;
+}
+
 const taskText = (task: ChecklistEntry) =>
   [task.text, task.description ?? '', task.deadline ?? '', ...(task.subtasks ?? []).map((s) => s.text)].join(' ');
 
@@ -149,6 +156,42 @@ export function getSearchTargets(items: BoardItem[], query: string): { item: Boa
         .map((child) => ({ item: child, columnId: item.id })),
     ];
   });
+}
+
+/** Share content matching between navigation and canvas highlighting. */
+export function getBoardSearchResult(items: BoardItem[], query: string): BoardSearchResult {
+  const active = query.trim().length > 0;
+  const targets: BoardSearchResult['targets'] = [];
+  const matchingIds = new Set<string>();
+  const nestedColumnMatches = new Map<string, Set<string>>();
+  const frameIds = new Set<string>();
+  for (const item of items) {
+    if (item.type === 'frame') frameIds.add(item.id);
+    if (item.type === 'column') {
+      const result = getColumnSearchResult(item, query);
+      nestedColumnMatches.set(item.id, result.nestedMatchIds);
+      if (result.matches) matchingIds.add(item.id);
+      if (active) {
+        if (matchesOwnColumnSearch(item, query)) targets.push({ item });
+        for (const child of item.items) {
+          if (result.nestedMatchIds.has(child.id)) targets.push({ item: child, columnId: item.id });
+        }
+      }
+    } else if (matchesItemSearch(item, query)) {
+      matchingIds.add(item.id);
+      if (active) targets.push({ item });
+    }
+  }
+
+  const contextFrameIds = new Set<string>();
+  if (active) {
+    for (const item of items) {
+      if (matchingIds.has(item.id) && item.frameId && item.frameId !== item.id && frameIds.has(item.frameId)) {
+        contextFrameIds.add(item.frameId);
+      }
+    }
+  }
+  return { targets, matchingIds, nestedColumnMatches, contextFrameIds };
 }
 
 function matchesOwnColumnSearch(column: ColumnItem, query: string): boolean {

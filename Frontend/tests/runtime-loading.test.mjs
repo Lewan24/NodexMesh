@@ -17,6 +17,11 @@ test('the production HTTP entry graph excludes mock authentication and demo work
     result.output.filter((entry) => entry.type === 'chunk').map((entry) => [entry.fileName, entry]),
   );
   const entry = [...chunks.values()].find((chunk) => chunk.isEntry);
+  assert.equal(
+    [...chunks.values()].some((chunk) => Object.keys(chunk.modules).some((id) => id.includes('/e2e/'))),
+    false,
+    'The performance fixture and its control API must never enter application bundles',
+  );
   assert.ok(entry);
   const seen = new Set();
   const visit = (fileName) => {

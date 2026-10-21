@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { memo } from 'react';
 import SectionLabel, { sectionTitleScale } from '@/features/blocks/shared/SectionLabel';
 
 import type { BoardItem, FrameItem } from '@/entities/board/types';
@@ -44,7 +45,7 @@ interface CanvasFrameProps {
   onQuickConnectStart: (id: string, event: React.MouseEvent, side: ConnectionSide) => void;
 }
 
-export default function CanvasFrame({
+function CanvasFrame({
   item,
   projectParticipants = [],
   isSelected,
@@ -162,3 +163,5 @@ export default function CanvasFrame({
     </div>
   );
 }
+
+export default memo(CanvasFrame);
