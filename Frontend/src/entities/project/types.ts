@@ -36,6 +36,7 @@ export interface ProjectBoard {
 
 /** Canvas projection. Persistence uses ProjectRecord + BoardSnapshot, never this tree. */
 export interface Project {
+  statuses?: import('@/features/statuses/types').ProjectStatus[];
   itemsLoading?: boolean;
   loadingError?: string;
   skeletons?: ItemSkeleton[];

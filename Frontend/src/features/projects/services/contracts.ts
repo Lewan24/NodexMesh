@@ -48,7 +48,17 @@ export interface BoardRepository {
   emptyTrash(projectId: string): Promise<void>;
 }
 
+export interface StatusRepository {
+  get(projectId: string): Promise<{ revision: string; statuses: import('@/features/statuses/types').ProjectStatus[] }>;
+  save(
+    projectId: string,
+    revision: string,
+    statuses: import('@/features/statuses/types').ProjectStatus[],
+  ): Promise<{ revision: string; statuses: import('@/features/statuses/types').ProjectStatus[] }>;
+}
+
 export interface WorkspaceServices {
+  statuses?: StatusRepository;
   /** Check revisions first; return a snapshot only if project metadata or board content changed. */
   sync?(previous: ProjectSnapshot, signal?: AbortSignal): Promise<ProjectSnapshot | null>;
   projects: ProjectRepository;

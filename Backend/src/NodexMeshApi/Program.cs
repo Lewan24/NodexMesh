@@ -439,6 +439,7 @@ try
     app.MapProjectEndpoints();
     app.MapLibraryEndpoints();
     app.MapBoardEndpoints();
+    app.MapStatusEndpoints();
     app.MapCommentEndpoints();
     app.MapPublicEndpoints();
     app.MapVersionEndpoints();

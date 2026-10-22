@@ -1,3 +1,4 @@
+import { validItemBorder } from '@/features/blocks/border/itemBorder';
 import { parseLibrarySource } from '@/features/library/librarySource';
 import { translate, displayLabel } from '@/shared/i18n';
 import { validMindmapTree } from '@/features/blocks/mindmap/mindmapUtils';
@@ -82,6 +83,8 @@ const sectionStyle = object({
   textAlign: optional(choice('left', 'center', 'right')),
 });
 const appearance = object({
+  border: optional(validItemBorder),
+  statusId: optional(uuid),
   customCss: optional(
     object({ enabled: bool, source: (value) => typeof value === 'string' && value.length <= 10_000 }),
   ),

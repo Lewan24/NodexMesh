@@ -59,6 +59,7 @@ export default function FileBlock({
       <ContentBlockShell item={item} title={title} onDelete={onDelete} minHeight={160}>
         <div
           role="button"
+          data-read-only-action={item.source ? true : undefined}
           tabIndex={0}
           className={`file-block-body ${item.source ? 'has-file' : ''}`}
           onMouseDown={(event) => event.stopPropagation()}

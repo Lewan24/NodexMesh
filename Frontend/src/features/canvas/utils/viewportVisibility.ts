@@ -21,7 +21,14 @@ export function isCanvasItemVisible(
   retainedIds: ReadonlySet<string>,
   overscan = CANVAS_VIEWPORT_OVERSCAN,
 ): boolean {
-  if (!cullableTypes.has(item.type) || retainedIds.has(item.id) || item.customCss?.enabled) return true;
+  if (
+    !cullableTypes.has(item.type) ||
+    retainedIds.has(item.id) ||
+    item.customCss?.enabled ||
+    item.statusId ||
+    item.border
+  )
+    return true;
   if (viewport.width <= 0 || viewport.height <= 0 || !Number.isFinite(viewport.zoom) || viewport.zoom <= 0) return true;
   const fixedBounds = item.type === 'drawing' || (item.type === 'note' && item.height !== undefined && item.height > 0);
   // Unknown or remotely changed auto-sized content gets measured before culling.

@@ -70,6 +70,7 @@ export default function PasteStyleDialog({
               setParts({
                 fill: event.target.checked,
                 strip: event.target.checked,
+                border: event.target.checked,
                 typography: event.target.checked,
                 customCss: event.target.checked,
               })
@@ -81,6 +82,7 @@ export default function PasteStyleDialog({
           [
             ['fill', translate('Card color and gradient')],
             ['strip', translate('Top strip color')],
+            ['border', translate('Border')],
             ['typography', translate('Typography and alignment')],
             ['customCss', translate('Custom CSS')],
           ] as const

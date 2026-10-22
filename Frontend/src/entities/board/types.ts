@@ -223,9 +223,19 @@ export interface TaskSummary {
   revision: string;
 }
 
+export interface ItemBorder {
+  color: string;
+  width: number;
+  style: 'solid' | 'dashed' | 'dotted' | 'double';
+  gradient?: { from: string; to: string; angle: number };
+  animation?: 'none' | 'pulse';
+}
+
 export interface BaseItem {
   taskSummary?: TaskSummary;
   customCss?: { enabled: boolean; source: string };
+  border?: ItemBorder;
+  statusId?: string;
   colorRole?: 'default' | 'accent1' | 'accent2' | 'accent3' | 'accent4' | 'accent5';
   gradient?: { from: string; to: string; kind: 'linear' | 'radial'; angle: number };
 

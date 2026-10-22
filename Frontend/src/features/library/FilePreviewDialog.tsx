@@ -123,17 +123,22 @@ export default function FilePreviewDialog({
     ['document', 'other'].includes(kind) || (kind === 'spreadsheet' && !name.toLowerCase().endsWith('.xlsx'));
 
   return (
-    <Modal onClose={onClose} centered label={translate('File preview')}>
+    <Modal readOnlyAction onClose={onClose} centered label={translate('File preview')}>
       <div className="file-preview-dialog" onMouseDown={(event) => event.stopPropagation()}>
         <header>
           <div className="min-w-0">
             <h2 title={name}>{name}</h2>
             <span>{formatFileSize(size)}</span>
           </div>
-          <button type="button" onClick={() => void download()} title={translate('Download')}>
+          <button
+            type="button"
+            onClick={() => void download()}
+            title={translate('Download')}
+            aria-label={translate('Download')}
+          >
             <Download size={17} />
           </button>
-          <button type="button" onClick={onClose} title={translate('Close')}>
+          <button type="button" onClick={onClose} title={translate('Close')} aria-label={translate('Close')}>
             <X size={19} />
           </button>
         </header>

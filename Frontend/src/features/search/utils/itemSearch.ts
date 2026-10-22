@@ -1,3 +1,4 @@
+import type { ProjectStatus } from '@/features/statuses/types';
 import type { BoardItem, ColumnItem, ChecklistEntry } from '@/entities/board/types';
 
 export interface SearchResult {
@@ -90,21 +91,25 @@ export function getSearchableText(item: BoardItem): string {
   }
 }
 
-export function matchesItemSearch(item: BoardItem, query: string): boolean {
+export function matchesItemSearch(item: BoardItem, query: string, statuses: readonly ProjectStatus[] = []): boolean {
   const normalized = query.trim().toLowerCase();
 
   if (!normalized) {
     return true;
   }
 
-  if (normalized.startsWith('status:')) {
-    const statusQuery = normalized.slice('status:'.length).trim();
+  if (
+    normalized.startsWith('status:') ||
+    normalized.startsWith('item-status:') ||
+    normalized.startsWith('comment-status:')
+  ) {
+    const statusQuery = normalized.slice(normalized.indexOf(':') + 1).trim();
 
     if (!statusQuery) {
       return true;
     }
 
-    return item.comments?.some((comment) => comment.status?.toLowerCase().includes(statusQuery)) ?? false;
+    return matchesStatusSearch(item, normalized, statusQuery, statuses);
   }
 
   /*
@@ -125,19 +130,26 @@ export function matchesItemSearch(item: BoardItem, query: string): boolean {
    * Normal text search.
    */
 
-  return getSearchableText(item).toLowerCase().includes(normalized);
+  const status = statuses.find((status) => status.id === item.statusId);
+  return `${getSearchableText(item)} ${status?.title ?? ''} ${status?.description ?? ''}`
+    .toLowerCase()
+    .includes(normalized);
 }
 
-export function getColumnSearchResult(column: ColumnItem, query: string): SearchResult {
+export function getColumnSearchResult(
+  column: ColumnItem,
+  query: string,
+  statuses: readonly ProjectStatus[] = [],
+): SearchResult {
   const nestedMatchIds = new Set<string>();
 
   for (const nestedItem of column.items) {
-    if (matchesItemSearch(nestedItem, query)) {
+    if (matchesItemSearch(nestedItem, query, statuses)) {
       nestedMatchIds.add(nestedItem.id);
     }
   }
 
-  const ownMatch = matchesOwnColumnSearch(column, query);
+  const ownMatch = matchesOwnColumnSearch(column, query, statuses);
 
   return {
     matches: ownMatch || nestedMatchIds.size > 0,
@@ -145,21 +157,29 @@ export function getColumnSearchResult(column: ColumnItem, query: string): Search
     nestedMatchIds,
   };
 }
-export function getSearchTargets(items: BoardItem[], query: string): { item: BoardItem; columnId?: string }[] {
+export function getSearchTargets(
+  items: BoardItem[],
+  query: string,
+  statuses: readonly ProjectStatus[] = [],
+): { item: BoardItem; columnId?: string }[] {
   if (!query.trim()) return [];
   return items.flatMap<{ item: BoardItem; columnId?: string }>((item) => {
-    if (item.type !== 'column') return matchesItemSearch(item, query) ? [{ item }] : [];
+    if (item.type !== 'column') return matchesItemSearch(item, query, statuses) ? [{ item }] : [];
     return [
-      ...(matchesOwnColumnSearch(item, query) ? [{ item }] : []),
+      ...(matchesOwnColumnSearch(item, query, statuses) ? [{ item }] : []),
       ...item.items
-        .filter((child) => matchesItemSearch(child, query))
+        .filter((child) => matchesItemSearch(child, query, statuses))
         .map((child) => ({ item: child, columnId: item.id })),
     ];
   });
 }
 
 /** Share content matching between navigation and canvas highlighting. */
-export function getBoardSearchResult(items: BoardItem[], query: string): BoardSearchResult {
+export function getBoardSearchResult(
+  items: BoardItem[],
+  query: string,
+  statuses: readonly ProjectStatus[] = [],
+): BoardSearchResult {
   const active = query.trim().length > 0;
   const targets: BoardSearchResult['targets'] = [];
   const matchingIds = new Set<string>();
@@ -168,16 +188,16 @@ export function getBoardSearchResult(items: BoardItem[], query: string): BoardSe
   for (const item of items) {
     if (item.type === 'frame') frameIds.add(item.id);
     if (item.type === 'column') {
-      const result = getColumnSearchResult(item, query);
+      const result = getColumnSearchResult(item, query, statuses);
       nestedColumnMatches.set(item.id, result.nestedMatchIds);
       if (result.matches) matchingIds.add(item.id);
       if (active) {
-        if (matchesOwnColumnSearch(item, query)) targets.push({ item });
+        if (matchesOwnColumnSearch(item, query, statuses)) targets.push({ item });
         for (const child of item.items) {
           if (result.nestedMatchIds.has(child.id)) targets.push({ item: child, columnId: item.id });
         }
       }
-    } else if (matchesItemSearch(item, query)) {
+    } else if (matchesItemSearch(item, query, statuses)) {
       matchingIds.add(item.id);
       if (active) targets.push({ item });
     }
@@ -194,21 +214,25 @@ export function getBoardSearchResult(items: BoardItem[], query: string): BoardSe
   return { targets, matchingIds, nestedColumnMatches, contextFrameIds };
 }
 
-function matchesOwnColumnSearch(column: ColumnItem, query: string): boolean {
+function matchesOwnColumnSearch(column: ColumnItem, query: string, statuses: readonly ProjectStatus[] = []): boolean {
   const normalized = query.trim().toLowerCase();
 
   if (!normalized) {
     return true;
   }
 
-  if (normalized.startsWith('status:')) {
-    const statusQuery = normalized.slice('status:'.length).trim();
+  if (
+    normalized.startsWith('status:') ||
+    normalized.startsWith('item-status:') ||
+    normalized.startsWith('comment-status:')
+  ) {
+    const statusQuery = normalized.slice(normalized.indexOf(':') + 1).trim();
 
     if (!statusQuery) {
       return true;
     }
 
-    return column.comments?.some((comment) => comment.status?.toLowerCase().includes(statusQuery)) ?? false;
+    return matchesStatusSearch(column, normalized, statusQuery, statuses);
   }
 
   if (normalized.startsWith('#')) {
@@ -217,5 +241,19 @@ function matchesOwnColumnSearch(column: ColumnItem, query: string): boolean {
     return column.tags?.some((tag) => tag.toLowerCase().includes(tagQuery)) ?? false;
   }
 
-  return column.title.toLowerCase().includes(normalized);
+  const status = statuses.find((status) => status.id === column.statusId);
+  return `${column.title} ${status?.title ?? ''} ${status?.description ?? ''}`.toLowerCase().includes(normalized);
+}
+
+function matchesStatusSearch(
+  item: BoardItem,
+  query: string,
+  term: string,
+  statuses: readonly ProjectStatus[],
+): boolean {
+  const status = statuses.find((status) => status.id === item.statusId);
+  const itemMatch = !!status && (status.title.toLowerCase().includes(term) || status.id === term);
+  if (query.startsWith('item-status:')) return itemMatch;
+  const commentMatch = item.comments?.some((comment) => comment.status?.toLowerCase().includes(term)) ?? false;
+  return query.startsWith('comment-status:') ? commentMatch : itemMatch || commentMatch;
 }

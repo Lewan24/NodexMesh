@@ -7,6 +7,7 @@ import type { Project } from '@/entities/project/types';
 import type { SizeMap } from '../utils/lineGeometry';
 import { resolveLineItem } from '../utils/lineGeometry';
 import { getFrameContents } from '../utils/frameGeometry';
+import { useProjectStatuses } from '@/features/statuses/ProjectStatusesContext';
 import { cloneItems, copyOrigin } from '../utils/cloneItems';
 
 // Board clipboard survives switching projects, and stays isolated per signed-in user.
@@ -37,6 +38,7 @@ export function useCanvasClipboard({
   onSelectItems: (ids: string[]) => void;
   pastePoint: () => { x: number; y: number };
 }) {
+  const { statuses } = useProjectStatuses();
   const [revision, setRevision] = useState(0);
   const selected = useCallback(() => {
     const all = projectRef.current.items;
@@ -86,7 +88,17 @@ export function useCanvasClipboard({
         )
           return;
         const all = projectRef.current.items;
-        const copies = cloneItems(complete, dx, dy, Math.max(0, ...all.map((item) => item.zIndex)) + 1);
+        const allowed = new Set(statuses.map((status) => status.id));
+        const cleanStatuses = (items: BoardItem[]): BoardItem[] =>
+          items.map(
+            (item) =>
+              ({
+                ...item,
+                statusId: item.statusId && allowed.has(item.statusId) ? item.statusId : undefined,
+                ...(item.type === 'column' ? { items: cleanStatuses(item.items) } : {}),
+              }) as BoardItem,
+          );
+        const copies = cloneItems(cleanStatuses(complete), dx, dy, Math.max(0, ...all.map((item) => item.zIndex)) + 1);
         pushHistory();
         onRestoreItems([...all, ...copies]);
         clearColumnSelection();
@@ -100,7 +112,7 @@ export function useCanvasClipboard({
           .catch((cause) => toast.error(cause instanceof Error ? cause.message : String(cause)));
       else restore(items);
     },
-    [projectRef, pushHistory, onRestoreItems, onSelectItems, clearColumnSelection],
+    [projectRef, pushHistory, onRestoreItems, onSelectItems, clearColumnSelection, statuses],
   );
   const paste = useCallback(
     (at?: { x: number; y: number }) => {

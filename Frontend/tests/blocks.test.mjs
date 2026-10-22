@@ -853,7 +853,7 @@ test('saving a drawing does not add a no-op step ahead of undo', () => {
 test('default white cards follow the theme; custom colors remain fixed', () => {
   for (const value of [undefined, '#fff', '#FFFFFF', '#ffffff', 'white']) {
     assert.equal(resolveCardColor(value, 'light'), '#ffffff');
-    assert.equal(resolveCardColor(value, 'dark'), '#1f1233');
+    assert.equal(resolveCardColor(value, 'dark'), '#25252A');
   }
   for (const value of ['#fefce8', '#0d2a35', '#ff0000']) {
     assert.equal(resolveCardColor(value, 'light'), value);

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using NodexMeshApi.Common;
 using NodexMeshApi.Data;
@@ -224,6 +225,25 @@ public sealed class BoardMutationService(
             }
         }
 
+        var statuses = ProjectStatusDefinitions.Read(await db.Projects.Where(p => p.Id == board.ProjectId)
+            .Select(p => p.ItemStatuses).SingleAsync(ct)).Select(s => s.Id).ToHashSet();
+        foreach (var upsert in mutation.Upserts)
+        {
+            if (upsert.Item.Appearance.TryGetProperty("statusId", out var status) && status.ValueKind != JsonValueKind.Null)
+            {
+                if (!status.TryGetGuid(out var statusId))
+                    throw new ApiException(422, "invalid_status", "Invalid status ID.");
+                if (!statuses.Contains(statusId))
+                {
+                    // Retired definitions stop rendering immediately. An unchanged stale assignment must not prevent edits.
+                    var retained = existing.TryGetValue(upsert.Item.Id, out var old) &&
+                        JsonDocument.Parse(old.Appearance).RootElement.TryGetProperty("statusId", out var previousStatus) &&
+                        previousStatus.ValueKind == JsonValueKind.String && previousStatus.GetGuid() == statusId;
+                    if (!retained) throw new ApiException(422, "invalid_status", "Statuses must belong to this project.");
+                }
+            }
+        }
+
         // Tags are project-scoped UUIDs, never arbitrary foreign-key references.
         var requestedTags = new HashSet<Guid>();
         foreach (var upsert in mutation.Upserts)
@@ -285,7 +305,19 @@ public sealed class BoardMutationService(
             entity.Height = dto.Height;
             entity.ZIndex = dto.ZIndex;
             entity.Locked = dto.Locked;
-            entity.Appearance = dto.Appearance.GetRawText();
+            if (dto.Appearance.TryGetProperty("statusId", out _) ||
+                (dto.Appearance.TryGetProperty("border", out var borderValue) && borderValue.ValueKind == JsonValueKind.Null))
+            {
+                var appearance = JsonNode.Parse(dto.Appearance.GetRawText())!.AsObject();
+                if (appearance.ContainsKey("statusId"))
+                {
+                    if (appearance["statusId"] is null) appearance.Remove("statusId");
+                    else appearance["statusId"] = Guid.Parse(appearance["statusId"]!.GetValue<string>()).ToString();
+                }
+                if (appearance.ContainsKey("border") && appearance["border"] is null) appearance.Remove("border");
+                entity.Appearance = appearance.ToJsonString();
+            }
+            else entity.Appearance = dto.Appearance.GetRawText();
             entity.Data = dto.Data.GetRawText();
             entity.Revision += 1;
             entity.UpdatedAt = now;

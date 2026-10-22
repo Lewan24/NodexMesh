@@ -217,7 +217,7 @@ test('stable canvas event props skip child work while using current geometry and
 });
 
 test('preview eligibility excludes documents and bounds nested summaries and custom styles', () => {
-  assert.equal(isHeavyPreviewItem(item('document', 'document')), false);
+  for (const kind of ['document', 'diagram', 'database']) assert.equal(isHeavyPreviewItem(item(kind, kind)), false);
   const column = item('column', 'column', {
     items: Array.from({ length: 100 }, (_, i) => item('note', `note-${i}`, { content: 'y'.repeat(1000) })),
   });

@@ -1206,6 +1206,13 @@ namespace NodexMeshApi.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
+                    b.Property<string>("ItemStatuses")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("[]")
+                        .HasColumnName("item_statuses");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)

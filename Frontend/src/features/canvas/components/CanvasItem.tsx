@@ -133,6 +133,10 @@ function CanvasItem({
   const simplified =
     lowDetail &&
     !isHeavyPreviewItem(item) &&
+    !item.statusId &&
+    !item.border &&
+    item.type !== 'diagram' &&
+    item.type !== 'database' &&
     item.type !== 'document' &&
     !isSelected &&
     !isDragging &&
@@ -149,6 +153,8 @@ function CanvasItem({
     item.type === 'note' &&
     Boolean(item.height && item.height > 0) &&
     !item.customCss?.enabled &&
+    !item.statusId &&
+    !item.border &&
     !isSelected &&
     !isDragging &&
     !isDragOver &&

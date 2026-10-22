@@ -692,7 +692,7 @@ internal static class DefaultThemes
         """;
 
     public const string Dark = """
-        {"primary":"#903df5","secondary":"#ff0000","canvas":"#0b0b0c","default":"#18181b",
+        {"primary":"#903df5","secondary":"#ff0000","canvas":"#1F1F22","default":"#25252A",
         "accent1":"#8272ba","accent2":"#6984a1","accent3":"#669297","accent4":"#78967f","accent5":"#aa7d7d",
         "gradients":{}}
         """;
@@ -705,7 +705,7 @@ internal static class DefaultThemes
         UiPrimary = "#8000ff",
         UiSecondary = "#6a00eb",
         InheritanceVersion = 1,
-        PaletteVersion = 2,
+        PaletteVersion = 3,
         LightTheme = Light,
         DarkTheme = Dark,
         UpdatedAt = updatedAt

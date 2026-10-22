@@ -85,7 +85,7 @@ Reproduce CPU attribution with `CANVAS_RENDER_TRACE=1 CANVAS_CPU_PROFILE=1 npm r
 
 ## Document layout correction
 
-Documents now keep their normal rich-text renderer throughout panning, offscreen movement and low zoom. The plain-text navigation summary changed document formatting and controls during movement and caused visible layout jumps, so document preview eligibility and its summary implementation were removed. Auto-height and fixed-height documents preserve their DOM, formatting, geometry and scroll positions; regressions sample these properties during camera commits and verify editing afterward. Columns, diagrams and databases retain their existing preview behavior. Stable interaction callbacks and the lazy-placeholder measurement fix remain in place.
+Documents now keep their normal rich-text renderer throughout panning, offscreen movement and low zoom. The plain-text navigation summary changed document formatting and controls during movement and caused visible layout jumps, so document preview eligibility and its summary implementation were removed. Auto-height and fixed-height documents preserve their DOM, formatting, geometry and scroll positions; regressions sample these properties during camera commits and verify editing afterward. Columns retain their existing preview behavior. Diagrams and database schemas also keep their normal SVG previews throughout camera movement and low zoom; they never switch to text summaries or skeletons. Stable interaction callbacks and the lazy-placeholder measurement fix remain in place.
 
 The comparison above records the earlier implementation that included document summaries. It is historical evidence, not a benchmark of this layout correction; no new FPS improvement is claimed.
 

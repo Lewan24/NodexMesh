@@ -95,7 +95,7 @@
 /* ── Dark theme ──────────────────────────────────────────────────────── */
 
 [data-theme='dark'] {
-  --color-item-default: #18181b;
+  --color-item-default: #25252a;
 
   /* Brand */
   --color-accent: #735cff;
@@ -105,13 +105,13 @@
   --color-accent-soft-strong: rgba(115, 92, 255, 0.24);
 
   /* Base */
-  --color-app-bg: #0b0b0c;
+  --color-app-bg: #1f1f22;
 
   --color-canvas-dot: rgba(255, 255, 255, 0.07);
 
-  --color-surface: #18181b;
+  --color-surface: #25252a;
   --color-surface-alt: #202024;
-  --color-surface-translucent: rgba(24, 24, 27, 0.92);
+  --color-surface-translucent: rgba(37, 37, 42, 0.92);
   --edit-bar-bg: rgba(13, 12, 17, 0.97);
   --edit-bar-panel: #121117;
   --edit-bar-card: #1a1820;

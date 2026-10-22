@@ -409,7 +409,7 @@ test('panning across grid tiles preserves pixels and avoids changing the dot tex
   expect(background(final)).toEqual(background(initial));
 });
 
-for (const kind of ['column', 'diagram', 'database']) {
+for (const kind of ['column']) {
   test(`${kind} previews retain editor DOM, scroll and model updates across navigation`, async ({ page }) => {
     test.setTimeout(30_000);
     await page.addInitScript(() => localStorage.setItem('nodexmesh_language', 'en'));
@@ -634,5 +634,56 @@ for (const autoHeight of [false, true]) {
       .poll(() => page.evaluate(() => window.canvasFixture.getState().items[0].content))
       .toContain('Editing the normal document after navigation');
     expect(errors).toEqual([]);
+  });
+}
+
+for (const kind of ['diagram', 'database']) {
+  test(`${kind} keeps the same SVG preview and geometry during pan and zoom`, async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('nodexmesh_language', 'en'));
+    await page.goto('/e2e/performance/?count=0');
+    await expect(page.locator('[data-canvas-root]')).toBeVisible();
+    await page.evaluate((kind) => {
+      const api = window.canvasFixture;
+      const content =
+        kind === 'diagram'
+          ? {
+              nodes: [
+                {
+                  id: 'node',
+                  type: 'shape',
+                  position: { x: 0, y: 0 },
+                  data: { label: 'Stable node', shape: 'process', color: '#7c3aed' },
+                },
+              ],
+              edges: [],
+            }
+          : {
+              tables: [
+                {
+                  id: 'table',
+                  name: 'Stable table',
+                  position: { x: 0, y: 0 },
+                  fields: [
+                    { id: 'field', name: 'id', dataType: 'uuid', primaryKey: true, nullable: false, unique: true },
+                  ],
+                },
+              ],
+              relations: [],
+            };
+      api.setItems([api.createItem(kind, 'graph', { x: 20, y: 20, width: 600, height: 400, ...content })]);
+    }, kind);
+    const block = page.locator('[data-board-item-id="graph"]');
+    const svg = block.locator('svg[role="img"]');
+    await expect(svg).toBeVisible();
+    const before = await svg.getAttribute('viewBox');
+    await svg.evaluate((node) => {
+      window.graphPreview = node;
+    });
+    for (const zoom of [0.7, 0.1, 1]) {
+      await page.evaluate((zoom) => window.canvasFixture.setCamera({ x: 80, y: 60 }, zoom), zoom);
+      await expect(block.locator('[data-camera-preview], [data-canvas-lod="skeleton"]')).toHaveCount(0);
+      await expect(svg).toHaveAttribute('viewBox', before);
+      expect(await svg.evaluate((node) => node === window.graphPreview)).toBe(true);
+    }
   });
 }

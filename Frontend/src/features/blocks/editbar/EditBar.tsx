@@ -7,6 +7,7 @@ import { translate } from '@/shared/i18n';
 import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 
 import { ITEM_TEXT_SECTIONS } from '../typography/sectionTypography';
+import BorderPanel from './components/BorderPanel';
 import ColorPanel from './components/ColorPanel';
 import ColumnLayoutControls from './components/ColumnLayoutControls';
 import DrawingControls from './components/DrawingControls';
@@ -92,7 +93,7 @@ export default function EditBar({
   const isColumnMode = !!columnItem;
   const isMulti = !isColumnMode && selectedItems.length > 1;
   const single = columnItem ?? (selectedItems.length === 1 ? selectedItems[0] : null);
-  const hasAppearance = !!single && single.type !== 'icon';
+  const hasAppearance = !!single || isMulti;
   const hasText = !!single && single.type !== 'drawing' && ITEM_TEXT_SECTIONS[single.type].length > 0;
   const hasLayout = !!single;
   const firstAvailableTab: EditTab | null = hasAppearance
@@ -112,6 +113,7 @@ export default function EditBar({
   const handleUpdate = (updater: (item: BoardItem) => BoardItem) => {
     if (isColumnMode && onUpdateColumnItem) onUpdateColumnItem(updater);
     else if (single) onUpdateItem(single.id, updater);
+    else selectedItems.forEach((item) => onUpdateItem(item.id, updater));
   };
   const handleDelete = () => {
     if (isColumnMode && onDeleteColumnItem) onDeleteColumnItem();
@@ -170,7 +172,7 @@ export default function EditBar({
           {typeLabel}
         </span>
 
-        {single && (
+        {(single || isMulti) && (
           <div className="edit-bar-tabs flex items-center gap-0.5" role="tablist" aria-label={translate('Item style')}>
             {hasAppearance && (
               <TabButton
@@ -248,22 +250,24 @@ export default function EditBar({
         </div>
       )}
 
-      {single && activeTab === 'appearance' && hasAppearance && (
+      {activeTab === 'appearance' && hasAppearance && (
         <div
           id="edit-bar-panel-appearance"
           role="tabpanel"
           className="edit-bar-tab-content edit-bar-appearance-panel flex items-start gap-2 overflow-x-auto border-t p-2"
           style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-panel)' }}
         >
-          {single.type === 'line' && !isColumnMode ? (
-            <LineControls item={single} onUpdate={handleUpdate} />
-          ) : single.type === 'drawing' ? (
-            <DrawingControls items={[single]} onUpdate={(_, updater) => handleUpdate(updater)} />
-          ) : single.type === 'frame' ? (
-            <FrameControls item={single} onUpdate={handleUpdate} />
-          ) : (
-            <ColorPanel item={single} onUpdate={handleUpdate} />
-          )}
+          {single &&
+            (single.type === 'line' && !isColumnMode ? (
+              <LineControls item={single} onUpdate={handleUpdate} />
+            ) : single.type === 'drawing' ? (
+              <DrawingControls items={[single]} onUpdate={(_, updater) => handleUpdate(updater)} />
+            ) : single.type === 'frame' ? (
+              <FrameControls item={single} onUpdate={handleUpdate} />
+            ) : (
+              <ColorPanel item={single} onUpdate={handleUpdate} />
+            ))}
+          <BorderPanel items={columnItem ? [columnItem] : selectedItems} onUpdate={handleUpdate} />
         </div>
       )}
 

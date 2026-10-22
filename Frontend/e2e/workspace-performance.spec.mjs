@@ -239,3 +239,150 @@ test('the workspace fixture refuses to overwrite an existing unmarked demo datab
   ).toBe('existing-demo-data');
   await expect(page.locator('[data-canvas-root]')).toHaveCount(0);
 });
+
+test('Mouse 4/5 and browser history restore workspace boards without leaving the app', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('nodexmesh_language', 'en'));
+  await page.goto('/e2e/workspace/?board=notes');
+  await expect(page.locator('[data-canvas-root]')).toBeVisible();
+  await page.evaluate(() => {
+    const key = 'nodexmesh_api_mock_v1_00000000-0000-4000-8000-000000000002';
+    const data = JSON.parse(localStorage.getItem(key));
+    const projectId = data.projects[0].project.id;
+    const first = data.boards[projectId][0];
+    const next = structuredClone(first);
+    next.board.id = '10000000-0000-4000-8000-000000009999';
+    next.board.name = 'Navigation destination';
+    next.board.sortOrder = 1;
+    next.items = [];
+    next.links = [];
+    next.comments = [];
+    next.tags = [];
+    next.itemTags = [];
+    data.boards[projectId].push(next);
+    localStorage.setItem(key, JSON.stringify(data));
+  });
+  await page.reload();
+  await page.getByRole('button', { name: 'Show board navigation', exact: true }).click();
+  const main = page.getByRole('button', { name: 'Notes board', exact: true });
+  const destination = page.getByRole('button', { name: 'Navigation destination', exact: true });
+  await expect(main).toHaveAttribute('aria-current', 'page');
+  await destination.click();
+  await expect(destination).toHaveAttribute('aria-current', 'page');
+  const sessionUrl = page.url();
+  const cdp = await page.context().newCDPSession(page);
+  const mouse = async (button, buttons) => {
+    await cdp.send('Input.dispatchMouseEvent', {
+      type: 'mousePressed',
+      x: 400,
+      y: 400,
+      button,
+      buttons,
+      clickCount: 1,
+    });
+    await cdp.send('Input.dispatchMouseEvent', {
+      type: 'mouseReleased',
+      x: 400,
+      y: 400,
+      button,
+      buttons: 0,
+      clickCount: 1,
+    });
+  };
+  await mouse('back', 8);
+  await expect(main).toHaveAttribute('aria-current', 'page');
+  await mouse('back', 8);
+  await expect(main).toHaveAttribute('aria-current', 'page');
+  expect(page.url()).toBe(sessionUrl);
+  await mouse('forward', 16);
+  await expect(destination).toHaveAttribute('aria-current', 'page');
+  await page.evaluate(() => history.back());
+  await expect(main).toHaveAttribute('aria-current', 'page');
+  await page.evaluate(() => history.forward());
+  await expect(destination).toHaveAttribute('aria-current', 'page');
+  expect(page.url()).toBe(sessionUrl);
+});
+
+test('item borders and project statuses compose, update and persist through the workspace UI', async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(30000);
+  await page.addInitScript(() => localStorage.setItem('nodexmesh_language', 'en'));
+  await page.route('**/api/v1/version/check', (route) =>
+    route.fulfill({ json: { currentVersion: 'test', latestVersion: 'test', updateAvailable: false, releaseUrl: '' } }),
+  );
+  await page.goto('/e2e/workspace/?board=notes');
+  await expect(page.locator('[data-canvas-root]')).toBeVisible();
+  const itemId = await page.evaluate(() => {
+    const key = 'nodexmesh_api_mock_v1_00000000-0000-4000-8000-000000000002';
+    const data = JSON.parse(localStorage.getItem(key));
+    const projectId = data.projects[0].project.id;
+    const board = data.boards[projectId][0];
+    const item = board.items[0];
+    item.appearance.customCss = { enabled: true, source: 'font-size: 22px;' };
+    item.appearance.border = {
+      color: '#903df5',
+      width: 3,
+      style: 'solid',
+      gradient: { from: '#903df5', to: '#ffbd65', angle: 90 },
+      animation: 'pulse',
+    };
+    data.projects[0].board = board;
+    data.statuses = {
+      [projectId]: [
+        {
+          id: '10000000-0000-4000-8000-000000008888',
+          title: 'Done',
+          description: 'Ready to ship',
+          customCss: { enabled: true, source: 'outline: 3px solid #22c55e;' },
+        },
+      ],
+    };
+    localStorage.setItem(key, JSON.stringify(data));
+    return item.id;
+  });
+  await page.reload();
+  const item = page.locator(`[data-board-item-id="${itemId}"]`);
+  await item.click({ position: { x: 45, y: 65 } });
+  const select = page.getByRole('combobox', { name: 'Item status', exact: true });
+  await expect(select).toBeEnabled();
+  await select.selectOption('10000000-0000-4000-8000-000000008888');
+  await expect(item.locator('[data-status-css]')).toHaveCount(1);
+  const styled = item.locator('[data-item-css-scope] > :not(style)').first();
+  await expect(styled).toHaveCSS('font-size', '22px');
+  await expect(styled).toHaveCSS('outline-color', 'rgb(34, 197, 94)');
+  const geometry = await styled.evaluate((node) => ({ width: node.offsetWidth, height: node.offsetHeight }));
+  expect(await styled.evaluate((node) => getComputedStyle(node, '::after').backgroundImage)).toContain(
+    'linear-gradient',
+  );
+  await page.getByRole('button', { name: 'Manage project statuses', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Project statuses', exact: true });
+  await dialog.getByRole('button', { name: 'Done', exact: true }).click();
+  await dialog.getByRole('textbox', { name: 'Custom CSS (optional)', exact: true }).fill('outline: 3px solid #ff0000;');
+  await dialog.getByRole('button', { name: 'Save status', exact: true }).click();
+  await expect(styled).toHaveCSS('outline-color', 'rgb(255, 0, 0)');
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+  await select.selectOption('');
+  await expect(item.locator('[data-status-css]')).toHaveCount(0);
+  await expect(styled).toHaveCSS('font-size', '22px');
+  expect(await styled.evaluate((node) => ({ width: node.offsetWidth, height: node.offsetHeight }))).toEqual(geometry);
+  await page.getByRole('tab', { name: 'Appearance', exact: true }).click();
+  const panel = page.getByRole('region', { name: 'Item border', exact: true });
+  await expect(panel).toBeVisible();
+  await panel.getByLabel('Width', { exact: true }).fill('5');
+  await page.screenshot({ path: testInfo.outputPath('border-and-status-controls.png') });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  expect(await styled.evaluate((node) => getComputedStyle(node, '::after').animationName)).toBe('none');
+  await expect.poll(() => item.locator('[data-item-border]').textContent()).toContain('padding: 5px');
+  await expect
+    .poll(() =>
+      page.evaluate((itemId) => {
+        const data = JSON.parse(localStorage.getItem('nodexmesh_api_mock_v1_00000000-0000-4000-8000-000000000002'));
+        return data.boards[data.projects[0].project.id][0].items.find((item) => item.id === itemId).appearance.border
+          .width;
+      }, itemId),
+    )
+    .toBe(5);
+  await page.reload();
+  await expect.poll(() => item.locator('[data-item-border]').textContent()).toContain('padding: 5px');
+  await expect(item.locator('[data-status-css]')).toHaveCount(0);
+});

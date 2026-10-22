@@ -65,6 +65,7 @@ import CanvasDropPreview from './CanvasDropPreview';
 import { useCanvasLostState } from '../hooks/useCanvasLostState';
 import CanvasLostPrompt from './CanvasLostPrompt';
 import CanvasAlignmentGuides from './CanvasAlignmentGuides';
+import { useProjectStatuses } from '@/features/statuses/ProjectStatusesContext';
 import { getBoardSearchResult } from '@/features/search/utils/itemSearch';
 import { useCanvasRenderModel } from '../hooks/useCanvasRenderModel';
 
@@ -925,6 +926,7 @@ function CanvasContent({
     onSelectItems([joined.id]);
   };
 
+  const { statuses } = useProjectStatuses();
   const normalizedSearch = searchQuery.trim();
 
   const searchActive = normalizedSearch.length > 0;
@@ -933,7 +935,10 @@ function CanvasContent({
     matchingIds,
     nestedColumnMatches,
     contextFrameIds,
-  } = useMemo(() => getBoardSearchResult(project.items, normalizedSearch), [project.items, normalizedSearch]);
+  } = useMemo(
+    () => getBoardSearchResult(project.items, normalizedSearch, statuses),
+    [project.items, normalizedSearch, statuses],
+  );
   const searchIndex =
     searchCursor.query === normalizedSearch ? searchTargets.findIndex(({ item }) => item.id === searchCursor.id) : -1;
   const goToSearchResult = (direction: number) => {
