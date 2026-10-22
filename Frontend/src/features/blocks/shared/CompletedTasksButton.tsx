@@ -1,3 +1,5 @@
+import { Eye, EyeOff } from 'lucide-react';
+import './completedTasksButton.css';
 import { useRef, useState } from 'react';
 import type { BoardItem } from '@/entities/board/types';
 import { translate } from '@/shared/i18n';
@@ -46,8 +48,9 @@ export default function CompletedTasksButton({
         aria-pressed={hiding}
         disabled={busy}
         onClick={() => void toggle()}
-        className="btn-ghost rounded px-2 py-1"
+        className="completed-tasks-button"
       >
+        {hiding ? <Eye size={16} aria-hidden="true" /> : <EyeOff size={16} aria-hidden="true" />}
         {busy ? translate('Loading…') : hiding ? translate('Show all tasks') : translate('Only unfinished tasks')}
       </button>
       {error && <p role="alert">{error}</p>}

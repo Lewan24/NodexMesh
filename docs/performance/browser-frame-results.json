@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-21",
+  "browser": "Playwright-managed Chromium 156.0.8078.4, headless",
+  "playwrightVersion": "1.64.1",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "cpuSlowdown": 4,
+  "protocol": "Production build; 90 RAF-driven synchronous camera commits; 89 measured intervals; same fixed-height note fixture and provider placement; no concurrent build/test work during measurements.",
+  "baseline": "Isolated pre-FPS-refactor source snapshot; prior render-model/search refactors retained.",
+  "limitations": [
+    "CPU emulation does not reproduce a physical phone GPU, memory, thermals or display.",
+    "A single local run at each size; environment-dependent diagnostic metrics, not CI FPS thresholds.",
+    "The workload uses unselected fixed-height notes. Stateful editors, retained selections/search results and read-only boards can retain additional work.",
+    "Earlier exploratory runs with unstable props or incorrect theme-provider placement were discarded."
+  ],
+  "before": [
+    {
+      "count": 100,
+      "cpuSlowdown": 4,
+      "meanFrameMs": 52.993258426966285,
+      "fps": 18.870324824018322,
+      "p95FrameMs": 83.30000000000018,
+      "framesOver25Ms": 89,
+      "sampleCount": 89,
+      "longTasks": 32,
+      "mountedItems": 100,
+      "domNodes": 1362,
+      "scriptMs": 75.486,
+      "layoutMs": 101.021,
+      "styleMs": 191.39100000000002,
+      "taskMs": 4688.772
+    },
+    {
+      "count": 500,
+      "cpuSlowdown": 4,
+      "meanFrameMs": 154.86179775280897,
+      "fps": 6.4573704716782645,
+      "p95FrameMs": 200,
+      "framesOver25Ms": 89,
+      "sampleCount": 89,
+      "longTasks": 89,
+      "mountedItems": 500,
+      "domNodes": 6562,
+      "scriptMs": 80.696,
+      "layoutMs": 220.078,
+      "styleMs": 187.70700000000002,
+      "taskMs": 14210.011
+    },
+    {
+      "count": 1000,
+      "cpuSlowdown": 4,
+      "meanFrameMs": 305.2303370786517,
+      "fps": 3.2762143159522186,
+      "p95FrameMs": 416.6999999999989,
+      "framesOver25Ms": 89,
+      "sampleCount": 89,
+      "longTasks": 88,
+      "mountedItems": 1000,
+      "domNodes": 13062,
+      "scriptMs": 74.42500000000001,
+      "layoutMs": 389.202,
+      "styleMs": 236.074,
+      "taskMs": 27778.677
+    }
+  ],
+  "after": [
+    {
+      "count": 100,
+      "cpuSlowdown": 4,
+      "meanFrameMs": 26.96629213483146,
+      "fps": 37.083333333333336,
+      "p95FrameMs": 50,
+      "framesOver25Ms": 46,
+      "sampleCount": 89,
+      "longTasks": 2,
+      "mountedItems": 21,
+      "domNodes": 335,
+      "scriptMs": 487.516,
+      "layoutMs": 101.25099999999999,
+      "styleMs": 203.899,
+      "taskMs": 2121.8469999999998
+    },
+    {
+      "count": 500,
+      "cpuSlowdown": 4,
+      "meanFrameMs": 37.07640449438202,
+      "fps": 26.9713315958543,
+      "p95FrameMs": 66.70000000000005,
+      "framesOver25Ms": 61,
+      "sampleCount": 89,
+      "longTasks": 3,
+      "mountedItems": 35,
+      "domNodes": 517,
+      "scriptMs": 919.009,
+      "layoutMs": 130.173,
+      "styleMs": 191.184,
+      "taskMs": 3226.839
+    },
+    {
+      "count": 1000,
+      "cpuSlowdown": 4,
+      "meanFrameMs": 38.013483146067415,
+      "fps": 26.30645542681485,
+      "p95FrameMs": 66.70000000000027,
+      "framesOver25Ms": 71,
+      "sampleCount": 89,
+      "longTasks": 1,
+      "mountedItems": 35,
+      "domNodes": 517,
+      "scriptMs": 882.5939999999999,
+      "layoutMs": 142.691,
+      "styleMs": 210.158,
+      "taskMs": 3255.786
+    }
+  ]
+}

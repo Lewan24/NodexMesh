@@ -62,6 +62,19 @@ public class BoardValidatorTests
         else act.Should().Throw<ApiException>().Where(error => error.Code == "invalid_item");
     }
 
+    [Theory]
+    [InlineData(-1, "#ffffff", "solid", "none")]
+    [InlineData(21, "#ffffff", "solid", "none")]
+    [InlineData(2, "red;position:fixed", "solid", "none")]
+    [InlineData(2, "#ffffff", "unknown", "none")]
+    [InlineData(2, "#ffffff", "solid", "flash")]
+    public void ValidateItem_RejectsInvalidBorders(double width, string color, string style, string animation)
+    {
+        var item = NoteItem(appearance: Json(new { border = new { color, width, style, animation } }));
+        var act = () => BoardValidator.ValidateItem(item);
+        act.Should().Throw<ApiException>().Where(error => error.Code == "invalid_item");
+    }
+
     [Fact]
     public void ValidateItem_AcceptsOptionalCustomCss()
     {

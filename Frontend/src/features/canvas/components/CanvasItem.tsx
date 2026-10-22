@@ -1,6 +1,9 @@
+import CanvasHeavyPreview from './CanvasHeavyPreview';
+import { hasPreviewCustomCss, isHeavyPreviewItem } from '../utils/heavyPreview';
+import CanvasNotePreview from './CanvasNotePreview';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
-import { useMemo, useState } from 'react';
+import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { BoardItem, ChecklistEntry, KanbanCard } from '@/entities/board/types';
 
 import BlockRenderer from '@/features/blocks/BlockRenderer';
@@ -8,7 +11,6 @@ import ItemWatcher from '@/features/canvas/components/ItemWatcher';
 
 import type { ResizeDirection } from '@/features/canvas/types';
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
-import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import ResizeHandles from '@/features/canvas/components/ResizeHandles';
 import ConnectionHandles, { ConnectionSide } from './ConnectionHandles';
 import ItemLockBadge from './ItemLockBadge';
@@ -21,7 +23,11 @@ interface CanvasItemProps {
   projectParticipants?: ProjectParticipant[];
   renderedItem: BoardItem;
   zoom: number;
+  lowDetail?: boolean;
+  motionPreview?: boolean;
+  scrollPositions?: Map<string, { left: number; top: number }[]>;
   measuredSize?: { width: number; height: number };
+  measurementCurrent?: boolean;
   remotePresence?: RemotePresence[];
   collaboratorLocked?: boolean;
 
@@ -46,6 +52,7 @@ interface CanvasItemProps {
   onMouseDown: (id: string, event: React.MouseEvent) => void;
   onAnimationEnd: (id: string) => void;
   onResize: (id: string, width: number, height: number) => void;
+  onFocusItem?: (id: string | null) => void;
 
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
 
@@ -66,16 +73,18 @@ interface CanvasItemProps {
 
   onKanbanCardDropOutside: (sourceId: string, card: KanbanCard, clientX: number, clientY: number) => boolean;
 
-  pushHistory: () => void;
-
   onQuickConnectStart: (id: string, event: React.MouseEvent, side: ConnectionSide) => void;
   onOpenBoard?: (boardId: string) => void;
   onRenameBoard?: (boardId: string, name: string) => void;
 }
 
-export default function CanvasItem({
+function CanvasItem({
   zoom,
+  lowDetail = zoom <= 0.25,
+  motionPreview = false,
+  scrollPositions,
   measuredSize,
+  measurementCurrent = false,
   remotePresence,
   collaboratorLocked = false,
   item,
@@ -99,6 +108,7 @@ export default function CanvasItem({
   onMouseDown,
   onAnimationEnd,
   onResize,
+  onFocusItem,
   onUpdateItem,
   onDeleteItem,
   onSelectItems,
@@ -115,14 +125,19 @@ export default function CanvasItem({
 }: CanvasItemProps) {
   useTranslation();
   const [hasFocus, setHasFocus] = useState(false);
-  const mobile = useMobileLayout();
-  const lodThreshold = mobile ? 0.2 : 0.25;
+  const elementRef = useRef<HTMLDivElement>(null);
   // Keep a cheap outline on the canvas while the camera is zoomed out. The
   // previous implementation only entered LOD after a measurement existed,
   // so newly loaded items stayed as expensive content at tiny scale and could
   // appear to disappear before their first measurement completed.
   const simplified =
-    zoom <= lodThreshold &&
+    lowDetail &&
+    !isHeavyPreviewItem(item) &&
+    !item.statusId &&
+    !item.border &&
+    item.type !== 'diagram' &&
+    item.type !== 'database' &&
+    item.type !== 'document' &&
     !isSelected &&
     !isDragging &&
     !isDragOver &&
@@ -132,6 +147,33 @@ export default function CanvasItem({
     item.type !== 'line' &&
     item.type !== 'drawing' &&
     item.type !== 'section-title';
+  const previewNote =
+    motionPreview &&
+    !simplified &&
+    item.type === 'note' &&
+    Boolean(item.height && item.height > 0) &&
+    !item.customCss?.enabled &&
+    !item.statusId &&
+    !item.border &&
+    !isSelected &&
+    !isDragging &&
+    !isDragOver &&
+    !hasFocus &&
+    !remotePresence?.length &&
+    !searchActive;
+  const previewCustomCss = useMemo(() => isHeavyPreviewItem(item) && hasPreviewCustomCss(item), [item]);
+  const previewHeavy =
+    (motionPreview || lowDetail) &&
+    isHeavyPreviewItem(item) &&
+    measurementCurrent &&
+    Boolean(measuredSize && measuredSize.width > 0 && measuredSize.height > 0) &&
+    !previewCustomCss &&
+    !isSelected &&
+    !isDragging &&
+    !isDragOver &&
+    !hasFocus &&
+    !remotePresence?.length &&
+    !searchActive;
   const approximateSize = getApproxItemSize(item);
   // Some blocks measure only their currently visible content (for example an
   // empty document or checklist). Keep the persisted/canonical item geometry
@@ -141,62 +183,70 @@ export default function CanvasItem({
     height: Math.max(measuredSize?.height ?? 0, approximateSize.height),
   };
   const showDragEffect = isDragging && item.type !== 'line';
+  useLayoutEffect(() => {
+    const saved = scrollPositions?.get(item.id);
+    if (simplified || previewNote || previewHeavy || !saved) return;
+    elementRef.current?.querySelectorAll<HTMLElement>('[data-wheel-scroll]').forEach((element, index) => {
+      const position = saved[index];
+      if (!position) return;
+      element.scrollLeft = position.left;
+      element.scrollTop = position.top;
+    });
+  }, [item.id, scrollPositions, simplified, previewNote, previewHeavy]);
 
   // Only section titles change their content with the camera scale. Keep the
   // expensive block subtree intact while panning, pinching or animating its wrapper.
   const contentZoom = item.type === 'section-title' ? zoom : 1;
   const content = useMemo(
     () => (
-      <ItemWatcher itemId={item.id} onResize={onResize}>
-        <BlockRenderer
-          zoom={contentZoom}
-          item={renderedItem}
-          projectParticipants={projectParticipants}
-          onTaskDroppedOutside={onChecklistDropOutside}
-          isSelected={isSelected}
-          isDragOver={isDragOver}
-          selectedColumnItemId={selectedColumnItemId}
-          onUpdate={(updater) => {
-            if (!collaboratorLocked) onUpdateItem(item.id, updater);
-          }}
-          onDelete={() =>
-            onRequestDelete(() => {
-              onDeleteItem(item.id);
-              onSelectItems(selectedIds.filter((id) => id !== item.id));
-            })
-          }
-          onFitFrame={() => {}}
-          onLineEndpointDrag={(event, endpoint) => onLineEndpointDrag(item.id, event, endpoint)}
-          onEjectItem={
-            item.type === 'column'
-              ? (ejectedItem, clientX, clientY) => onEjectFromColumn(item.id, ejectedItem, clientX, clientY)
-              : undefined
-          }
-          onSelectColumnItem={
-            item.type === 'column' ? (columnItem) => onSelectColumnItem(item.id, columnItem) : undefined
-          }
-          onRequestDelete={onRequestDelete}
-          onEntryDroppedOutside={
-            item.type === 'checklist'
-              ? (entry, clientX, clientY) => onChecklistDropOutside(item.id, entry, clientX, clientY)
-              : undefined
-          }
-          onCardDroppedOutside={
-            item.type === 'kanban'
-              ? (card, clientX, clientY) => onKanbanCardDropOutside(item.id, card, clientX, clientY)
-              : undefined
-          }
-          searchActive={searchActive}
-          nestedSearchMatchIds={item.type === 'column' ? nestedSearchMatchIds : undefined}
-          onOpenBoard={onOpenBoard}
-          onRenameBoard={onRenameBoard}
-        />
-      </ItemWatcher>
+      <BlockRenderer
+        zoom={contentZoom}
+        item={renderedItem}
+        projectParticipants={projectParticipants}
+        onTaskDroppedOutside={onChecklistDropOutside}
+        isSelected={isSelected}
+        isDragOver={isDragOver}
+        selectedColumnItemId={selectedColumnItemId}
+        onUpdate={(updater) => {
+          if (!collaboratorLocked) onUpdateItem(item.id, updater);
+        }}
+        onDelete={() =>
+          onRequestDelete(() => {
+            onDeleteItem(item.id);
+            onSelectItems(selectedIds.filter((id) => id !== item.id));
+          })
+        }
+        onFitFrame={() => {}}
+        onLineEndpointDrag={(event, endpoint) => onLineEndpointDrag(item.id, event, endpoint)}
+        onEjectItem={
+          item.type === 'column'
+            ? (ejectedItem, clientX, clientY) => onEjectFromColumn(item.id, ejectedItem, clientX, clientY)
+            : undefined
+        }
+        onSelectColumnItem={
+          item.type === 'column' ? (columnItem) => onSelectColumnItem(item.id, columnItem) : undefined
+        }
+        onRequestDelete={onRequestDelete}
+        onEntryDroppedOutside={
+          item.type === 'checklist'
+            ? (entry, clientX, clientY) => onChecklistDropOutside(item.id, entry, clientX, clientY)
+            : undefined
+        }
+        onCardDroppedOutside={
+          item.type === 'kanban'
+            ? (card, clientX, clientY) => onKanbanCardDropOutside(item.id, card, clientX, clientY)
+            : undefined
+        }
+        searchActive={searchActive}
+        nestedSearchMatchIds={item.type === 'column' ? nestedSearchMatchIds : undefined}
+        onOpenBoard={onOpenBoard}
+        onRenameBoard={onRenameBoard}
+      />
     ),
     [
+      collaboratorLocked,
       contentZoom,
-      item.id,
-      item.type,
+      item,
       renderedItem,
       projectParticipants,
       isSelected,
@@ -214,7 +264,6 @@ export default function CanvasItem({
       onKanbanCardDropOutside,
       searchActive,
       nestedSearchMatchIds,
-      onResize,
       onOpenBoard,
       onRenameBoard,
     ],
@@ -222,6 +271,7 @@ export default function CanvasItem({
 
   return (
     <div
+      ref={elementRef}
       data-board-item="true"
       data-board-item-id={item.id}
       data-movement-locked={Boolean(item.locked || collaboratorLocked)}
@@ -254,11 +304,33 @@ export default function CanvasItem({
       }}
       onMouseDown={(event) => onMouseDown(item.id, event)}
       onAnimationEnd={() => onAnimationEnd(item.id)}
+      onScrollCapture={(event) => {
+        if (
+          !scrollPositions ||
+          !(event.target instanceof Element) ||
+          !event.currentTarget.contains(event.target) ||
+          !event.target.closest('[data-wheel-scroll]')
+        )
+          return;
+        scrollPositions.set(
+          item.id,
+          Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[data-wheel-scroll]'), (element) => ({
+            left: element.scrollLeft,
+            top: element.scrollTop,
+          })),
+        );
+      }}
+      onFocusCapture={() => onFocusItem?.(item.id)}
+      onBlurCapture={(event) => {
+        // Keep the owner alive through window blur and focus entering its portal.
+        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) onFocusItem?.(null);
+      }}
     >
       {isSelected && item.type !== 'line' && !item.locked && (
         <button
           type="button"
           data-touch-drag="true"
+          data-camera-inverse-scale="true"
           className="canvas-item-move-handle"
           aria-label={translate('Move selected item')}
           style={{ transform: `scale(${1 / zoom})`, transformOrigin: 'bottom left' }}
@@ -342,7 +414,9 @@ export default function CanvasItem({
           if (!event.currentTarget.contains(event.relatedTarget)) setHasFocus(false);
         }}
       >
-        {simplified ? (
+        {previewNote && item.type === 'note' ? (
+          <CanvasNotePreview item={item} scrollPosition={scrollPositions?.get(item.id)?.[0]} />
+        ) : simplified ? (
           <div
             data-canvas-lod="skeleton"
             className="item-rounded border p-3 overflow-hidden space-y-3"
@@ -359,10 +433,32 @@ export default function CanvasItem({
             <div className="h-2 w-4/5 rounded-full" style={{ background: '#e2e8f0' }} />
             <div className="h-2 w-3/5 rounded-full" style={{ background: '#e2e8f0' }} />
           </div>
+        ) : isHeavyPreviewItem(item) ? (
+          <div className="relative">
+            <div
+              data-canvas-retained-editor={String(previewHeavy)}
+              inert={previewHeavy || undefined}
+              aria-hidden={previewHeavy || undefined}
+              style={
+                previewHeavy
+                  ? { contentVisibility: 'hidden', width: measuredSize!.width, height: measuredSize!.height }
+                  : undefined
+              }
+            >
+              <ItemWatcher itemId={item.id} measurementKey={item} onResize={onResize} suspended={previewHeavy}>
+                {content}
+              </ItemWatcher>
+            </div>
+            {previewHeavy && <CanvasHeavyPreview item={item} />}
+          </div>
         ) : (
-          content
+          <ItemWatcher itemId={item.id} measurementKey={item} onResize={onResize}>
+            {content}
+          </ItemWatcher>
         )}
       </div>
     </div>
   );
 }
+
+export default memo(CanvasItem);

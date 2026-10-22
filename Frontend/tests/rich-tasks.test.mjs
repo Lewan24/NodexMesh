@@ -118,7 +118,8 @@ test('task dialog saves details, supports cancellation, and disables read-only e
   try {
     await act(async () => render());
     const dialog = document.querySelector('[role="dialog"]');
-    assert.equal(dialog.querySelector('textarea').value, task.description);
+    assert.equal(dialog.querySelector('[name="taskName"]').value, task.text);
+    assert.equal(dialog.querySelector('.task-description').value, task.description);
     assert.equal(dialog.querySelector('input[type="date"]').value, task.deadline);
     assert.equal(dialog.querySelectorAll('input[type="checkbox"]').length, 6);
     await act(async () => dialog.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));

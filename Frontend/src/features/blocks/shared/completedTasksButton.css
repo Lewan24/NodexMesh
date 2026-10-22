@@ -1,0 +1,26 @@
+.completed-tasks-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 36px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+.completed-tasks-button:hover,
+.completed-tasks-button[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+}
+.completed-tasks-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.completed-tasks-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

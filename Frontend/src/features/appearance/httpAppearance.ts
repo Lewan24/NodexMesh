@@ -1,6 +1,6 @@
 import { translate } from '@/shared/i18n';
 import type { HttpClient } from '@/shared/api/httpClient';
-import { newPreferences, type AppearancePreferences } from './appearanceModel';
+import { newPreferences, upgradeDefaultPalette, type AppearancePreferences } from './appearanceModel';
 import { fail } from '@/shared/api/errors';
 
 export function createHttpAppearance(client: HttpClient) {
@@ -21,7 +21,9 @@ export function createHttpAppearance(client: HttpClient) {
           },
         ]),
       );
-      return preferences.defaults == null ? { ...newPreferences(), projects } : { ...preferences, projects };
+      return upgradeDefaultPalette(
+        preferences.defaults == null ? { ...newPreferences(), projects } : { ...preferences, projects },
+      );
     },
     async save(previous: AppearancePreferences, next: AppearancePreferences) {
       if (JSON.stringify({ ...previous, projects: {} }) !== JSON.stringify({ ...next, projects: {} })) {
@@ -37,7 +39,7 @@ export function createHttpAppearance(client: HttpClient) {
             uiPrimary: next.uiPrimary,
             uiSecondary: next.uiSecondary,
             inheritanceVersion: next.inheritanceVersion ?? 1,
-            paletteVersion: next.paletteVersion ?? 2,
+            paletteVersion: next.paletteVersion ?? 3,
           },
         });
       }

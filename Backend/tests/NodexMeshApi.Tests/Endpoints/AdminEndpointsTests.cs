@@ -129,7 +129,7 @@ public class AdminEndpointsTests : IDisposable
         var appearance = await createdUser.GetFromJsonAsync<JsonElement>("/api/v1/appearance");
         appearance.GetProperty("defaults").GetProperty("font").GetString().Should().Be("short-stack");
         appearance.GetProperty("uiPrimary").GetString().Should().Be("#8000ff");
-        appearance.GetProperty("paletteVersion").GetInt32().Should().Be(2);
+        appearance.GetProperty("paletteVersion").GetInt32().Should().Be(3);
     }
 
     [Fact]

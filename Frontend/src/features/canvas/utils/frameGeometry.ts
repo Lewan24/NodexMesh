@@ -22,16 +22,40 @@ export function getFrameContents(frame: FrameItem, items: BoardItem[], _sizes?: 
 }
 
 function containsLockedItem(item: BoardItem): boolean {
-  return !!item.locked || (item.type === 'column' && item.items.some(containsLockedItem));
+  const pending = [item];
+  while (pending.length) {
+    const current = pending.pop()!;
+    if (current.locked) return true;
+    if (current.type === 'column') for (const child of current.items) pending.push(child);
+  }
+  return false;
+}
+
+/** Propagate current content locks to owning frames once, independent of camera/drag geometry. */
+export function getFrameMovementLockedIds(items: BoardItem[]): Set<string> {
+  const frames = new Map<string, FrameItem>();
+  const pending: string[] = [];
+  for (const item of items) {
+    if (item.type === 'frame') frames.set(item.id, item);
+    if (!containsLockedItem(item)) continue;
+    if (item.type === 'frame') pending.push(item.id);
+    if (item.frameId) pending.push(item.frameId);
+  }
+
+  const locked = new Set<string>();
+  while (pending.length) {
+    const id = pending.pop()!;
+    if (locked.has(id)) continue;
+    locked.add(id);
+    const parentId = frames.get(id)?.frameId;
+    if (parentId) pending.push(parentId);
+  }
+  return locked;
 }
 
 /** Derived from current contents; unlocking/removing a child immediately releases the frame. */
 export function isFrameMovementLocked(frame: FrameItem, items: BoardItem[], _sizes?: SizeMap): boolean {
-  const children = items.filter((item) => item.frameId === frame.id);
-  return (
-    !!frame.locked ||
-    children.some((item) => containsLockedItem(item) || (item.type === 'frame' && isFrameMovementLocked(item, items)))
-  );
+  return !!frame.locked || getFrameMovementLockedIds(items).has(frame.id);
 }
 
 export function wouldCreateFrameCycle(itemId: string, frameId: string, items: BoardItem[]): boolean {

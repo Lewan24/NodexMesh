@@ -52,12 +52,17 @@ export function getRectBorderPoint(rect: ItemRect, targetX: number, targetY: num
   return { x: centerX + dx * scale, y: centerY + dy * scale };
 }
 
-export function resolveLineItem(line: LineItem, items: BoardItem[], sizes?: SizeMap): LineItem {
+export function resolveLineItem(
+  line: LineItem,
+  items: BoardItem[] | ReadonlyMap<string, BoardItem>,
+  sizes?: SizeMap,
+): LineItem {
   if (line.divider)
     return { ...line, startItemId: undefined, endItemId: undefined, arrowStart: false, arrowEnd: false };
-  const startTarget = line.startItemId ? items.find((item) => item.id === line.startItemId) : undefined;
+  const getItem = (id: string) => (Array.isArray(items) ? items.find((item) => item.id === id) : items.get(id));
+  const startTarget = line.startItemId ? getItem(line.startItemId) : undefined;
 
-  const endTarget = line.endItemId ? items.find((item) => item.id === line.endItemId) : undefined;
+  const endTarget = line.endItemId ? getItem(line.endItemId) : undefined;
 
   const startReference = startTarget ? getItemAnchor(startTarget, sizes) : { x: line.x, y: line.y };
 

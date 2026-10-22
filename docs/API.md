@@ -234,3 +234,11 @@ categories, unique nonempty IDs and names up to 100 characters, and six-digit he
 starts with Important (red), Medium priority (yellow), and Low priority (green). Editors can rename,
 recolor, remove, and add custom categories. Deleted categories leave task IDs intact and appear as
 Deleted category in the task editor until cleared or replaced. Category changes use the project revision.
+
+### Project item statuses and borders
+
+`GET /api/v1/projects/{projectId}/statuses` requires Viewer access and returns `{ revision, statuses }`. `PUT` requires Editor access and accepts `{ expectedRevision, statuses }`; revisions are decimal strings. Definitions contain `id` (UUID), `title` (1–100 characters, unique within the project), optional `description` (up to 2,000 characters), and optional `customCss: { enabled, source }` (up to 10,000 characters). A project supports at most 100 statuses. PUT replaces the definitions, so omitting a definition deletes it. Concurrent changes return 409 and require reloading before retrying.
+
+Items assign at most one definition through `appearance.statusId`. Board mutations reject assignments from another project. Retired references on existing items remain editable but have no active styling or search label. Definitions are resolved dynamically; status CSS is never copied into `appearance.customCss`. Public board snapshots include only definitions referenced by items on that board.
+
+`appearance.border` accepts `color` (six-digit hex), `width` (0–20 px), `style` (`solid`, `dashed`, `dotted`, `double`), optional `animation` (`none`, `pulse`), and optional `gradient: { from, to, angle }` (hex endpoints; 0–360 degrees; solid borders only). Invalid values return 422. The frontend renders borders as inset overlays without altering saved item geometry. Pulse animations respect reduced-motion preferences.

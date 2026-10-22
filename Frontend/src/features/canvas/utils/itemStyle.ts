@@ -1,5 +1,8 @@
 import type { BoardItem, BaseItem } from '@/entities/board/types';
-export type ItemStyle = Pick<BaseItem, 'color' | 'colorRole' | 'gradient' | 'topColor' | 'typography' | 'customCss'>;
+export type ItemStyle = Pick<
+  BaseItem,
+  'color' | 'colorRole' | 'gradient' | 'topColor' | 'typography' | 'customCss' | 'border'
+>;
 export function copyItemStyle(item: BoardItem): ItemStyle {
   return structuredClone({
     color: item.color,
@@ -8,10 +11,11 @@ export function copyItemStyle(item: BoardItem): ItemStyle {
     topColor: item.topColor,
     typography: item.typography,
     customCss: item.customCss,
+    border: item.border,
   });
 }
-export type StyleParts = { fill: boolean; strip: boolean; typography: boolean; customCss: boolean };
-export const allStyleParts: StyleParts = { fill: true, strip: true, typography: true, customCss: true };
+export type StyleParts = { fill: boolean; strip: boolean; border?: boolean; typography: boolean; customCss: boolean };
+export const allStyleParts: StyleParts = { fill: true, strip: true, border: true, typography: true, customCss: true };
 export function pasteItemStyle(item: BoardItem, style: ItemStyle, parts: StyleParts = allStyleParts): BoardItem {
   if (item.locked) return item;
   // Geometry, content, identity and frame ownership are deliberately excluded.
@@ -25,6 +29,7 @@ export function pasteItemStyle(item: BoardItem, style: ItemStyle, parts: StylePa
           gradient: copy.gradient,
         }
       : {}),
+    ...(parts.border ? { border: copy.border } : {}),
     ...(parts.strip ? { topColor: copy.topColor } : {}),
     ...(parts.typography ? { typography: copy.typography } : {}),
     ...(parts.customCss ? { customCss: copy.customCss } : {}),

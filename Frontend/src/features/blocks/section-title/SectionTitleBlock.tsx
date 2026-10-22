@@ -19,6 +19,7 @@ export default function SectionTitleBlock({
   return (
     <div style={{ width: item.width ?? 320, height: 36, position: 'relative' }}>
       <div
+        data-camera-title-scale="true"
         className="absolute pointer-events-auto"
         style={{
           left: 0,

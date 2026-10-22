@@ -313,7 +313,7 @@ public class BoardEndpointsTests : IDisposable
         appearance.GetProperty("uiPrimary").GetString().Should().Be("#8000ff");
         appearance.GetProperty("uiSecondary").GetString().Should().Be("#6a00eb");
         appearance.GetProperty("inheritanceVersion").GetInt32().Should().Be(1);
-        appearance.GetProperty("paletteVersion").GetInt32().Should().Be(2);
+        appearance.GetProperty("paletteVersion").GetInt32().Should().Be(3);
 
         var light = defaults.GetProperty("light");
         light.GetProperty("primary").GetString().Should().Be("#903df5");
@@ -325,8 +325,8 @@ public class BoardEndpointsTests : IDisposable
 
         var dark = defaults.GetProperty("dark");
         dark.GetProperty("primary").GetString().Should().Be("#903df5");
-        dark.GetProperty("canvas").GetString().Should().Be("#0b0b0c");
-        dark.GetProperty("default").GetString().Should().Be("#18181b");
+        dark.GetProperty("canvas").GetString().Should().Be("#1F1F22");
+        dark.GetProperty("default").GetString().Should().Be("#25252A");
         dark.GetProperty("accent1").GetString().Should().Be("#8272ba");
         dark.GetProperty("accent5").GetString().Should().Be("#aa7d7d");
         dark.GetProperty("gradients").EnumerateObject().Should().BeEmpty();

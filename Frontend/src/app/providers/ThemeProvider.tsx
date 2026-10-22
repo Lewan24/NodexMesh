@@ -1,6 +1,6 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
-import { registerSaveGuard } from '@/shared/api/pendingChanges';
+import { registerPersistentSaveGuard } from '@/shared/api/pendingChanges';
 import { httpClient } from '@/app/services';
 import { createHttpAppearance } from '@/features/appearance/httpAppearance';
 import { toast } from 'sonner';
@@ -59,10 +59,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const confirmedPreferences = useRef(preferences);
   useEffect(
     () =>
-      registerSaveGuard(async () => {
-        await saveQueue.current;
-        return !saveFailed.current;
-      }),
+      registerPersistentSaveGuard(
+        async (retryFailedSaves) => {
+          await saveQueue.current;
+          if (retryFailedSaves && saveFailed.current && appearanceApi) {
+            const next = preferencesRef.current;
+            // Use the same queue as normal edits so recovery never races a save.
+            saveQueue.current = saveQueue.current
+              .then(async () => {
+                await appearanceApi.save(confirmedPreferences.current, next);
+                confirmedPreferences.current = next;
+                saveFailed.current = false;
+              })
+              .catch(() => {
+                saveFailed.current = true;
+              });
+            await saveQueue.current;
+          }
+          return !saveFailed.current;
+        },
+        () => Boolean(appearanceApi && (saveFailed.current || preferencesRef.current !== confirmedPreferences.current)),
+      ),
     [],
   );
   useEffect(() => {

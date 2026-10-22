@@ -14,7 +14,15 @@ export interface AuditFields {
 
 export type ItemAppearance = Pick<
   BaseItem,
-  'color' | 'backgroundOpacity' | 'colorRole' | 'gradient' | 'topColor' | 'typography' | 'customCss'
+  | 'color'
+  | 'backgroundOpacity'
+  | 'colorRole'
+  | 'gradient'
+  | 'topColor'
+  | 'typography'
+  | 'customCss'
+  | 'border'
+  | 'statusId'
 > & { textAlign?: 'left' | 'center' | 'right'; fontSize?: 'sm' | 'base' | 'lg'; bold?: boolean; italic?: boolean };
 
 type DataFor<T extends BoardItem> = Omit<

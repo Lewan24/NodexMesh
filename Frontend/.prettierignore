@@ -1,5 +1,8 @@
 node_modules/
 dist/
+dist-performance/
+test-results/
+playwright-report/
 dist-ssr/
 Assets/
 package-lock.json

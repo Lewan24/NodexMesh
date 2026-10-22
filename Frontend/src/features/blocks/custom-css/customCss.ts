@@ -264,13 +264,15 @@ function scopeSelector(selector: string, anchor: string): string {
     .join(', ');
 }
 
-export function customCssRule(customCss: BaseItem['customCss'], scope: string): string {
+export function customCssRule(customCss: BaseItem['customCss'], scope: string, namespace = 'item'): string {
   if (!customCss?.enabled || !/^[\w-]+$/.test(scope)) return '';
   try {
     const anchor = `[data-item-css-scope="${scope}"]`;
     const rules = parseCustomCssRules(customCss.source);
     const names = new Map(
-      rules.filter((rule) => rule.keyframes).map((rule) => [rule.keyframes!, `item-${scope}-${rule.keyframes}`]),
+      rules
+        .filter((rule) => rule.keyframes)
+        .map((rule) => [rule.keyframes!, `${namespace}-${scope}-${rule.keyframes}`]),
     );
     const animationValue = (value: string) =>
       value.replace(

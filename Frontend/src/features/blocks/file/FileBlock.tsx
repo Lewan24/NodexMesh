@@ -59,6 +59,7 @@ export default function FileBlock({
       <ContentBlockShell item={item} title={title} onDelete={onDelete} minHeight={160}>
         <div
           role="button"
+          data-read-only-action={item.source ? true : undefined}
           tabIndex={0}
           className={`file-block-body ${item.source ? 'has-file' : ''}`}
           onMouseDown={(event) => event.stopPropagation()}
@@ -66,7 +67,8 @@ export default function FileBlock({
           onKeyDown={(event) => {
             if (event.key !== 'Enter' && event.key !== ' ') return;
             event.preventDefault();
-            item.source ? setPreviewOpen(true) : !readOnly && setLibraryOpen(true);
+            if (item.source) setPreviewOpen(true);
+            else if (!readOnly) setLibraryOpen(true);
           }}
         >
           <span className="file-block-icon">

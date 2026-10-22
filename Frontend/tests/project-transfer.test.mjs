@@ -1,4 +1,4 @@
-import test from 'node:test';
+import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
@@ -22,7 +22,7 @@ const { diffBoard, flattenItems, toProjectView } = await server.ssrLoadModule(
 const { demoProjects } = await server.ssrLoadModule('/src/entities/project/demoProjects.ts');
 const { DEMO_USER_ID } = await server.ssrLoadModule('/src/entities/user/mockUsers.ts');
 const { createHttpWorkspace } = await server.ssrLoadModule('/src/features/projects/services/httpWorkspace.ts');
-await server.close();
+after(() => server.close());
 
 function workspace(userId = 'transfer-user') {
   const values = new Map();
@@ -314,6 +314,11 @@ test('the HTTP workspace adapter exports and imports every board using server-cr
         projectForBoard.set(snapshot.board.board.id, snapshot.project.id);
         return snapshot.project;
       }
+      const statusPath = path.match(/^\/projects\/([^/]+)\/statuses$/);
+      if (statusPath)
+        return method === 'GET'
+          ? backing.statuses.get(statusPath[1])
+          : backing.statuses.save(statusPath[1], body.expectedRevision, body.statuses);
       const collection = path.match(/^\/projects\/([^/]+)\/boards$/);
       if (collection) {
         if (method === 'GET') return backing.boards.list(collection[1]);
@@ -354,4 +359,44 @@ test('the HTTP workspace adapter exports and imports every board using server-cr
   assert.equal(exported.project.items[0].boardId, exported.project.boards[1].id);
   assert.equal(exported.project.boards[1].items[1].boardId, exported.project.boardId);
   assert.equal(requests.filter((request) => request.endsWith('/mutations')).length, 2);
+});
+
+test('project statuses and layered appearance survive archive transfer with renewed references', async () => {
+  const statusId = crypto.randomUUID();
+  const source = archive(
+    [
+      {
+        id: 'main',
+        name: 'Main',
+        items: [
+          {
+            ...note('Done item'),
+            statusId,
+            border: { color: '#123456', width: 3, style: 'dashed' },
+            customCss: { enabled: true, source: 'font-size: 22px;' },
+          },
+        ],
+      },
+    ],
+    {
+      statuses: [
+        {
+          id: statusId,
+          title: 'Done',
+          description: 'Ready',
+          customCss: { enabled: true, source: 'border-color: #22c55e;' },
+        },
+      ],
+    },
+  );
+  const imported = await read(source);
+  assert.notEqual(imported.statuses[0].id, statusId);
+  assert.equal(imported.items[0].statusId, imported.statuses[0].id);
+  const { api } = workspace('new-owner');
+  const saved = await persistImportedProject(api, imported);
+  const exported = JSON.parse(await exportWorkspaceProject(api, saved.project.id));
+  assert.equal(exported.project.statuses[0].title, 'Done');
+  assert.equal(exported.project.items[0].statusId, exported.project.statuses[0].id);
+  assert.equal(exported.project.items[0].customCss.source, 'font-size: 22px;');
+  assert.equal(exported.project.items[0].border.width, 3);
 });

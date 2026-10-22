@@ -8,7 +8,7 @@ export function isDefaultCardColor(color?: string): boolean {
   return !color || ['#fff', '#ffffff', 'white'].includes(color.trim().toLowerCase());
 }
 export function resolveCardColor(color: string | undefined, theme: 'light' | 'dark'): string {
-  return isDefaultCardColor(color) ? (theme === 'dark' ? '#1f1233' : '#ffffff') : color!;
+  return isDefaultCardColor(color) ? (theme === 'dark' ? '#25252A' : '#ffffff') : color!;
 }
 
 export function resolvePaletteColor(color: string, palette: Palette): string {

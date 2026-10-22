@@ -86,6 +86,7 @@ export interface PublicAppearance {
 }
 
 export interface PublicBoardSnapshot {
+  statuses?: import('@/features/statuses/types').ProjectStatus[];
   project: PublicProject;
   board: PublicBoard;
   items: PublicItem[];

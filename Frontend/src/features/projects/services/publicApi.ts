@@ -1,3 +1,4 @@
+import { validateStatuses } from '@/features/statuses/statusModel';
 import { translate } from '@/shared/i18n';
 import { createHttpClient } from '@/shared/api/httpClient';
 import { fail } from '@/shared/api/errors';
@@ -44,6 +45,7 @@ export function createPublicApi(fetcher: typeof fetch = fetch, baseUrl = '/api/v
         !Array.isArray(value.itemTags)
       )
         fail(422, 'invalid_response', translate('Invalid share response.'));
+      validateStatuses(value.statuses ?? []);
       return value as unknown as PublicBoardSnapshot;
     },
   };
