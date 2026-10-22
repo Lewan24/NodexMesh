@@ -1,3 +1,5 @@
+import { validateStatuses } from '@/features/statuses/statusModel';
+import type { ProjectStatus } from '@/features/statuses/types';
 import { translate } from '@/shared/i18n';
 import { createId } from '@/shared/lib/createId';
 import { validateBoard } from '@/entities/board/boardValidation';
@@ -12,6 +14,7 @@ import { canonicalJson } from '@/shared/api/canonicalJson';
 import type { WorkspaceServices } from './contracts';
 
 interface Database {
+  statuses?: Record<string, ProjectStatus[]>;
   formatVersion: 2;
   projects: ProjectSnapshot[];
   boards: Record<string, BoardSnapshot[]>;
@@ -126,6 +129,7 @@ export function createMockWorkspace(
         formatVersion: number;
         projects: ProjectSnapshot[];
         boards?: Record<string, BoardSnapshot[]>;
+        statuses?: Record<string, ProjectStatus[]>;
         receipts: Database['receipts'];
       };
       const value: Database =
@@ -137,6 +141,8 @@ export function createMockWorkspace(
               receipts: parsed.receipts,
             }
           : { formatVersion: 2, projects: parsed.projects, boards: parsed.boards ?? {}, receipts: parsed.receipts };
+      value.statuses = parsed.statuses ?? {};
+      for (const statuses of Object.values(value.statuses)) validateStatuses(statuses);
       if (value.formatVersion !== 2 || !Array.isArray(value.projects) || !value.boards || !value.receipts)
         throw new Error();
       value.projects = parseProjectSnapshots(value.projects);
@@ -231,6 +237,33 @@ export function createMockWorkspace(
     });
   }
   const services: WorkspaceServices = {
+    statuses: {
+      async get(projectId) {
+        return locked(() => {
+          const db = read();
+          const project = db.projects.find(
+            (snapshot) => snapshot.project.id === projectId && !snapshot.project.deletedAt,
+          );
+          if (!project) fail(404, 'not_found', 'Project not found.');
+          return { revision: project.project.revision, statuses: db.statuses?.[projectId] ?? [] };
+        });
+      },
+      async save(projectId, revision, statuses) {
+        return locked(() => {
+          validateStatuses(statuses);
+          const db = read();
+          const project = db.projects.find(
+            (snapshot) => snapshot.project.id === projectId && !snapshot.project.deletedAt,
+          );
+          if (!project) fail(404, 'not_found', 'Project not found.');
+          if (project.project.revision !== revision) fail(409, 'revision_mismatch', 'Reload statuses before saving.');
+          project.project = touch(project.project, userId);
+          db.statuses = { ...db.statuses, [projectId]: statuses };
+          storage.setItem(key, JSON.stringify(db));
+          return { revision: project.project.revision, statuses };
+        });
+      },
+    },
     projects: {
       async list(signal) {
         return locked(() => {
@@ -439,7 +472,14 @@ export function createMockWorkspace(
             if ((existing?.revision ?? null) !== entry.expectedRevision)
               fail(409, 'revision_conflict', translate('Item changed in another session.'));
           }
-          for (const entry of mutation.upserts) applyItem(board, entry, userId);
+          const statuses = new Set((db.statuses?.[projectId] ?? []).map((status) => status.id));
+          for (const entry of mutation.upserts) {
+            const statusId = entry.item.appearance.statusId;
+            const retained = board.items.find((item) => item.id === entry.item.id)?.appearance.statusId;
+            if (statusId && !statuses.has(statusId) && statusId !== retained)
+              fail(422, 'invalid_status', 'Statuses must belong to this project.');
+            applyItem(board, entry, userId);
+          }
           const removed = new Set(mutation.deletes.map((entry) => entry.id));
           board.items = board.items.map((item) =>
             removed.has(item.id) ? { ...touch(item, userId), deletedAt: new Date().toISOString() } : item,

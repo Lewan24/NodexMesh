@@ -1,0 +1,1239 @@
+{
+  "protocol": "Four alternating serial before/after repeats, 4x CPU, Chromium 156 with SwiftShader, 1280x800. Saved immediately preceding production build versus stable committed callbacks, retained heavy previews and lazy-placeholder measurement fix. Same seeded workspaces and pan-only protocol as workspace-rendering-results.json.",
+  "limitations": [
+    "Synthetic pan-only input, isolated mock transport, software renderer; no physical-device or live-network conclusions.",
+    "Preview summaries retain full editor DOM and effects; they reduce painting, not startup or retained memory.",
+    "No demonstrated improvement to movement FPS; report all samples and recovery separately.",
+    "Small non-painting code cleanup after the paired build bounds malformed-tag stripping and makes nested custom-CSS detection iterative; final production-browser validation covers that code."
+  ],
+  "summary": {
+    "notes": {
+      "before": {
+        "movementFpsMedian": 50.422018679932535,
+        "movementFpsRange": [48.546337206131014, 54.490907977713825],
+        "recoveryFpsMedian": 60.01500510195082,
+        "restorationMsMedian": 145.75,
+        "postRestorationLongTasks": 0,
+        "restorationLongTasks": 0,
+        "domNodes": 657
+      },
+      "after": {
+        "movementFpsMedian": 52.1290947588287,
+        "movementFpsRange": [49.907474906073006, 55.05606439456268],
+        "recoveryFpsMedian": 59.98800239952008,
+        "restorationMsMedian": 157.05000001192093,
+        "postRestorationLongTasks": 0,
+        "restorationLongTasks": 0,
+        "domNodes": 657
+      }
+    },
+    "mixed": {
+      "before": {
+        "movementFpsMedian": 45.33836752216564,
+        "movementFpsRange": [42.051190946425834, 48.99262358251679],
+        "recoveryFpsMedian": 52.178450300026064,
+        "restorationMsMedian": 167.90000000596046,
+        "postRestorationLongTasks": 4,
+        "restorationLongTasks": 0,
+        "domNodes": 2144
+      },
+      "after": {
+        "movementFpsMedian": 44.68995787785968,
+        "movementFpsRange": [41.39919992557447, 46.43397506130328],
+        "recoveryFpsMedian": 58.57442887145856,
+        "restorationMsMedian": 175.75,
+        "postRestorationLongTasks": 0,
+        "restorationLongTasks": 0,
+        "domNodes": 2209
+      }
+    }
+  },
+  "samples": [
+    {
+      "board": "notes",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 48.994403628008065,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.40000000000009,
+        "p99Ms": 50.09999999999991,
+        "maxMs": 50.09999999999991,
+        "over25Ms": 19,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.00600060005997,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.799999999999727,
+        "p99Ms": 16.799999999999727,
+        "maxMs": 16.799999999999727,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 151.7000000178814,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 24455132,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 50.857142857142854,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.40000000000009,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 16,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 57.142857142857146,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.40000000000009,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 1,
+        "count": 20
+      },
+      "restorationMs": 155.19999998807907,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 22621508,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 42.051190946425834,
+        "p50Ms": 16.700000000000273,
+        "p95Ms": 50,
+        "p99Ms": 100,
+        "maxMs": 100,
+        "over25Ms": 27,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 52.178450300026064,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 50,
+        "p99Ms": 50,
+        "maxMs": 50,
+        "over25Ms": 2,
+        "count": 20
+      },
+      "restorationMs": 191.59999999403954,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 3998.5,
+            "duration": 70
+          },
+          {
+            "start": 4256,
+            "duration": 99
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": [
+          {
+            "start": 4504.5,
+            "duration": 66
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2144,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 43997392,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 46.43397506130328,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.40000000000009,
+        "p99Ms": 66.69999999999982,
+        "maxMs": 66.69999999999982,
+        "over25Ms": 23,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.00600060005997,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.699999999999818,
+        "p99Ms": 16.699999999999818,
+        "maxMs": 16.699999999999818,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 184.90000000596046,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 4527.100000023842,
+            "duration": 53
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 129,
+      "domNodes": 2209,
+      "overscanPreviews": 32,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 49152444,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 53.40104666051454,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.33399999999983,
+        "p99Ms": 50.100000000000364,
+        "maxMs": 50.100000000000364,
+        "over25Ms": 10,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 59.98800239952008,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.800000000000182,
+        "p99Ms": 16.800000000000182,
+        "maxMs": 16.800000000000182,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 158.30000001192093,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 22869416,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 54.490907977713825,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.30000000000018,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 9,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.02400960384158,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.800000000000182,
+        "p99Ms": 16.800000000000182,
+        "maxMs": 16.800000000000182,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 146.19999998807907,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 23695004,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 44.50222511125556,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.5,
+        "p99Ms": 50.09999999999991,
+        "maxMs": 50.09999999999991,
+        "over25Ms": 27,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.00600060006014,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.800000000000182,
+        "p99Ms": 16.800000000000182,
+        "maxMs": 16.800000000000182,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 173.40000000596046,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 129,
+      "domNodes": 2209,
+      "overscanPreviews": 32,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 30087380,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 47.259983007646554,
+        "p50Ms": 16.700000000000045,
+        "p95Ms": 33.399999999999864,
+        "p99Ms": 50.09999999999991,
+        "maxMs": 50.09999999999991,
+        "over25Ms": 23,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 50.01250312578138,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 66.60000000000036,
+        "p99Ms": 66.60000000000036,
+        "maxMs": 66.60000000000036,
+        "over25Ms": 2,
+        "count": 20
+      },
+      "restorationMs": 166.5,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 3833.2000000178814,
+            "duration": 52
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": [
+          {
+            "start": 4054.800000011921,
+            "duration": 83
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2144,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 42248176,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 51.849633731857,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.30000000000018,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 14,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.00600060006006,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.700000000000273,
+        "p99Ms": 16.700000000000273,
+        "maxMs": 16.700000000000273,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 145.30000001192093,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 24833016,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 55.05606439456268,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.30000000000018,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 8,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 59.98800239952008,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.799999999999727,
+        "p99Ms": 16.799999999999727,
+        "maxMs": 16.799999999999727,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 168.5,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 22507752,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 43.41675203668473,
+        "p50Ms": 16.700000000000273,
+        "p95Ms": 50,
+        "p99Ms": 66.69999999999982,
+        "maxMs": 66.69999999999982,
+        "over25Ms": 26,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 54.540496318516524,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.399999999999636,
+        "p99Ms": 33.399999999999636,
+        "maxMs": 33.399999999999636,
+        "over25Ms": 2,
+        "count": 20
+      },
+      "restorationMs": 158.30000001192093,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 2359.9000000059605,
+            "duration": 67
+          },
+          {
+            "start": 4043,
+            "duration": 52
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": [
+          {
+            "start": 4242.4000000059605,
+            "duration": 61
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2144,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 44321788,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 41.39919992557447,
+        "p50Ms": 16.700000000000273,
+        "p95Ms": 33.400000000000546,
+        "p99Ms": 66.59999999999991,
+        "maxMs": 66.59999999999991,
+        "over25Ms": 35,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 57.142857142857146,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.30000000000018,
+        "p99Ms": 33.30000000000018,
+        "maxMs": 33.30000000000018,
+        "over25Ms": 1,
+        "count": 20
+      },
+      "restorationMs": 174.5,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 4966.9000000059605,
+            "duration": 57
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 129,
+      "domNodes": 2209,
+      "overscanPreviews": 32,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 35885324,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 49.907474906073006,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.399999999999636,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 18,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.02400960384158,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.700000000000273,
+        "p99Ms": 16.700000000000273,
+        "maxMs": 16.700000000000273,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 155.80000001192093,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 22579928,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "notes",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 48.546337206131014,
+        "p50Ms": 16.700000000000045,
+        "p95Ms": 33.40000000000009,
+        "p99Ms": 50,
+        "maxMs": 50,
+        "over25Ms": 18,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.02400960384158,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.700000000000273,
+        "p99Ms": 16.700000000000273,
+        "maxMs": 16.700000000000273,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 145.30000001192093,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 2496,
+            "duration": 52
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 35,
+      "domNodes": 657,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 23473684,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 44.8776906444638,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.399999999999636,
+        "p99Ms": 49.90000000000009,
+        "maxMs": 49.90000000000009,
+        "over25Ms": 29,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 57.142857142857146,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.400000000000546,
+        "p99Ms": 33.400000000000546,
+        "maxMs": 33.400000000000546,
+        "over25Ms": 1,
+        "count": 20
+      },
+      "restorationMs": 177,
+      "longTasks": {
+        "movement": [],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 129,
+      "domNodes": 2209,
+      "overscanPreviews": 32,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 48447144,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": false,
+      "movement": {
+        "fps": 48.99262358251679,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 33.30000000000018,
+        "p99Ms": 33.40000000000009,
+        "maxMs": 33.40000000000009,
+        "over25Ms": 20,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 52.178450300026064,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 50.100000000000364,
+        "p99Ms": 50.100000000000364,
+        "maxMs": 50.100000000000364,
+        "over25Ms": 2,
+        "count": 20
+      },
+      "restorationMs": 169.30000001192093,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 4007.7000000178814,
+            "duration": 55
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": [
+          {
+            "start": 4231.200000017881,
+            "duration": 71
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2144,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 44184836,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    }
+  ],
+  "tracedSamples": [
+    {
+      "board": "mixed",
+      "variant": "before",
+      "cpuSlowdown": 4,
+      "traced": true,
+      "movement": {
+        "fps": 40.45638438110823,
+        "p50Ms": 16.700000000000728,
+        "p95Ms": 33.400000000000546,
+        "p99Ms": 50,
+        "maxMs": 50,
+        "over25Ms": 39,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 50.01250312578138,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 66.69999999999982,
+        "p99Ms": 66.69999999999982,
+        "maxMs": 66.69999999999982,
+        "over25Ms": 2,
+        "count": 20
+      },
+      "restorationMs": 165.2999999821186,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 5252.0999999940395,
+            "duration": 52
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": [
+          {
+            "start": 5471.800000011921,
+            "duration": 74
+          }
+        ]
+      },
+      "mountedItems": 129,
+      "domNodes": 2144,
+      "overscanPreviews": 23,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 44578100,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "cpuSlowdown": 4,
+      "traced": true,
+      "movement": {
+        "fps": 39.26759320538275,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 50,
+        "p99Ms": 66.69999999999982,
+        "maxMs": 66.69999999999982,
+        "over25Ms": 38,
+        "count": 89
+      },
+      "afterRestoration": {
+        "fps": 60.00600060005997,
+        "p50Ms": 16.699999999999818,
+        "p95Ms": 16.800000000000182,
+        "p99Ms": 16.800000000000182,
+        "maxMs": 16.800000000000182,
+        "over25Ms": 0,
+        "count": 20
+      },
+      "restorationMs": 183.40000000596046,
+      "longTasks": {
+        "movement": [
+          {
+            "start": 6419.5999999940395,
+            "duration": 50
+          }
+        ],
+        "restoration": [],
+        "afterRestoration": []
+      },
+      "mountedItems": 129,
+      "domNodes": 2209,
+      "overscanPreviews": 32,
+      "visiblePreviews": 0,
+      "camera": "translate(-3960px, 39px) scale(1)",
+      "jsHeapUsedBytes": 55017152,
+      "gpuRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "gpuDevices": [
+        {
+          "deviceString": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+          "vendorString": "Google Inc. (Google)"
+        }
+      ]
+    }
+  ],
+  "traceSummaries": [
+    {
+      "board": "mixed",
+      "variant": "before",
+      "trace": {
+        "movement": {
+          "elapsedMs": 2210.06,
+          "events": [
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "Paint",
+              "count": 1905,
+              "totalMs": 384.79199999999736,
+              "maxMs": 8.025
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "Layerize",
+              "count": 89,
+              "totalMs": 372.45699999999994,
+              "maxMs": 10.835
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161228:161231",
+              "event": "RasterTask",
+              "count": 994,
+              "totalMs": 326.1049999999996,
+              "maxMs": 6.282
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161228:161235",
+              "event": "RasterTask",
+              "count": 907,
+              "totalMs": 307.81500000000005,
+              "maxMs": 8.626
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "UpdateLayoutTree",
+              "count": 103,
+              "totalMs": 107.49099999999997,
+              "maxMs": 10.132
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "Layout",
+              "count": 36,
+              "totalMs": 91.19800000000001,
+              "maxMs": 6.374
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161228:161242",
+              "event": "RasterTask",
+              "count": 27,
+              "totalMs": 12.954,
+              "maxMs": 2.404
+            }
+          ]
+        },
+        "restoration": {
+          "elapsedMs": 165.183,
+          "events": [
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161228:161231",
+              "event": "RasterTask",
+              "count": 35,
+              "totalMs": 12.783999999999999,
+              "maxMs": 1.398
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "UpdateLayoutTree",
+              "count": 2,
+              "totalMs": 10.633000000000001,
+              "maxMs": 10.105
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161228:161235",
+              "event": "RasterTask",
+              "count": 21,
+              "totalMs": 8.283999999999999,
+              "maxMs": 2.013
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "Layerize",
+              "count": 2,
+              "totalMs": 5.874,
+              "maxMs": 5.87
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "Layout",
+              "count": 2,
+              "totalMs": 5.838,
+              "maxMs": 3.365
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "Paint",
+              "count": 24,
+              "totalMs": 1.106,
+              "maxMs": 0.685
+            }
+          ]
+        },
+        "afterRestoration": {
+          "elapsedMs": 411.089,
+          "events": [
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161228:161231",
+              "event": "RasterTask",
+              "count": 17,
+              "totalMs": 7.591,
+              "maxMs": 1.554
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "UpdateLayoutTree",
+              "count": 1,
+              "totalMs": 5.997,
+              "maxMs": 5.997
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161228:161235",
+              "event": "RasterTask",
+              "count": 14,
+              "totalMs": 4.94,
+              "maxMs": 1.302
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "Paint",
+              "count": 13,
+              "totalMs": 4.547999999999999,
+              "maxMs": 2.589
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "Layout",
+              "count": 1,
+              "totalMs": 4.477,
+              "maxMs": 4.477
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161228:161228",
+              "event": "Layerize",
+              "count": 21,
+              "totalMs": 3.4300000000000015,
+              "maxMs": 3.367
+            }
+          ]
+        }
+      }
+    },
+    {
+      "board": "mixed",
+      "variant": "after",
+      "trace": {
+        "movement": {
+          "elapsedMs": 2279.057,
+          "events": [
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161351:161351",
+              "event": "Paint",
+              "count": 1873,
+              "totalMs": 378.4829999999978,
+              "maxMs": 8.105
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161351:161351",
+              "event": "Layerize",
+              "count": 89,
+              "totalMs": 327.43699999999995,
+              "maxMs": 8.081
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161351:161354",
+              "event": "RasterTask",
+              "count": 1036,
+              "totalMs": 320.72900000000016,
+              "maxMs": 7.727
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161351:161358",
+              "event": "RasterTask",
+              "count": 1016,
+              "totalMs": 271.3999999999996,
+              "maxMs": 6.023
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161351:161351",
+              "event": "UpdateLayoutTree",
+              "count": 102,
+              "totalMs": 118.09900000000005,
+              "maxMs": 9.969
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161351:161351",
+              "event": "Layout",
+              "count": 36,
+              "totalMs": 92.50400000000002,
+              "maxMs": 6.309
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161351:161361",
+              "event": "RasterTask",
+              "count": 9,
+              "totalMs": 2.443,
+              "maxMs": 0.76
+            }
+          ]
+        },
+        "restoration": {
+          "elapsedMs": 182.657,
+          "events": [
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161351:161351",
+              "event": "UpdateLayoutTree",
+              "count": 3,
+              "totalMs": 18.399,
+              "maxMs": 12.016
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161351:161351",
+              "event": "Layout",
+              "count": 3,
+              "totalMs": 5.553,
+              "maxMs": 1.911
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161351:161358",
+              "event": "RasterTask",
+              "count": 19,
+              "totalMs": 3.984,
+              "maxMs": 1.582
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161351:161354",
+              "event": "RasterTask",
+              "count": 11,
+              "totalMs": 3.37,
+              "maxMs": 1.371
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161351:161351",
+              "event": "Paint",
+              "count": 24,
+              "totalMs": 2.4979999999999984,
+              "maxMs": 2.185
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161351:161351",
+              "event": "Layerize",
+              "count": 2,
+              "totalMs": 1.3929999999999998,
+              "maxMs": 1.39
+            }
+          ]
+        },
+        "afterRestoration": {
+          "elapsedMs": 354.127,
+          "events": [
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161351:161361",
+              "event": "RasterTask",
+              "count": 15,
+              "totalMs": 6.621999999999999,
+              "maxMs": 2.078
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161351:161351",
+              "event": "Paint",
+              "count": 13,
+              "totalMs": 6.474999999999999,
+              "maxMs": 3.367
+            },
+            {
+              "thread": "ThreadPoolForegroundWorker",
+              "threadId": "161351:161358",
+              "event": "RasterTask",
+              "count": 16,
+              "totalMs": 5.448999999999999,
+              "maxMs": 1.219
+            },
+            {
+              "thread": "CrRendererMain",
+              "threadId": "161351:161351",
+              "event": "Layerize",
+              "count": 21,
+              "totalMs": 4.679,
+              "maxMs": 3.95
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

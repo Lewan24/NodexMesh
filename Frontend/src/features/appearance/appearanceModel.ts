@@ -66,8 +66,8 @@ export const defaultAppearance: Appearance = {
   dark: {
     primary: '#903df5',
     secondary: '#ff0000',
-    canvas: '#0b0b0c',
-    default: '#18181b',
+    canvas: '#1F1F22',
+    default: '#25252A',
     accent1: '#8272ba',
     accent2: '#6984a1',
     accent3: '#669297',
@@ -86,7 +86,7 @@ export function newPreferences(): AppearancePreferences {
     uiPrimary: '#8000ff',
     uiSecondary: '#6a00eb',
     inheritanceVersion: 1,
-    paletteVersion: 2,
+    paletteVersion: 3,
   };
 }
 export function activeAppearance(preferences: AppearancePreferences, projectId: string): Appearance {
@@ -140,20 +140,28 @@ export function migratePreferences(preferences: AppearancePreferences): Appearan
 }
 
 export function upgradeDefaultPalette(preferences: AppearancePreferences): AppearancePreferences {
-  if (preferences.paletteVersion === 2) return preferences;
+  if (preferences.paletteVersion === 3) return preferences;
   const next = structuredClone(preferences);
-  for (const mode of ['light', 'dark'] as const) {
-    const palette = next.defaults[mode];
-    if (['#6023b4', '#ab80e5'].includes(palette.primary)) palette.primary = '#5500cc';
-    if (['#176f86', '#57bdc8'].includes(palette.secondary)) palette.secondary = '#ff00f7';
-    if (!palette.gradients?.default && palette.default === (mode === 'light' ? '#ffffff' : '#241b30'))
-      palette.gradients = {
-        ...palette.gradients,
-        default: { from: 'accent1', to: 'accent5', angle: 120, kind: 'linear' },
-      };
+  if (preferences.paletteVersion !== 2) {
+    for (const mode of ['light', 'dark'] as const) {
+      const palette = next.defaults[mode];
+      if (['#6023b4', '#ab80e5'].includes(palette.primary)) palette.primary = '#5500cc';
+      if (['#176f86', '#57bdc8'].includes(palette.secondary)) palette.secondary = '#ff00f7';
+      if (!palette.gradients?.default && palette.default === (mode === 'light' ? '#ffffff' : '#241b30'))
+        palette.gradients = {
+          ...palette.gradients,
+          default: { from: 'accent1', to: 'accent5', angle: 120, kind: 'linear' },
+        };
+    }
+    if (next.uiPrimary === '#6023b4') next.uiPrimary = '#5500cc';
+    if (next.uiSecondary === '#176f86') next.uiSecondary = '#ff00f7';
   }
-  if (next.uiPrimary === '#6023b4') next.uiPrimary = '#5500cc';
-  if (next.uiSecondary === '#176f86') next.uiSecondary = '#ff00f7';
-  next.paletteVersion = 2;
+  for (const appearance of [next.defaults, ...Object.values(next.projects)]) {
+    const palette = appearance.dark;
+    if (!palette) continue;
+    if (!palette.gradients?.canvas && palette.canvas?.toLowerCase() === '#0b0b0c') palette.canvas = '#1F1F22';
+    if (!palette.gradients?.default && palette.default?.toLowerCase() === '#18181b') palette.default = '#25252A';
+  }
+  next.paletteVersion = 3;
   return next;
 }

@@ -3,6 +3,11 @@ export interface CanvasPoint {
   y: number;
 }
 
+export interface DragGeometry extends CanvasPoint {
+  x2?: number;
+  y2?: number;
+}
+
 export interface FrameDraft {
   x: number;
   y: number;

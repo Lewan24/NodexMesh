@@ -11,7 +11,7 @@ public sealed class AppearanceProfile
     public string UiPrimary { get; set; } = "#8000ff";
     public string UiSecondary { get; set; } = "#6a00eb";
     public int InheritanceVersion { get; set; } = 1;
-    public int PaletteVersion { get; set; } = 2;
+    public int PaletteVersion { get; set; } = 3;
     public string LightTheme { get; set; } = "{}"; // jsonb: primary/secondary/canvas/default/accent1-5/gradients
     public string DarkTheme { get; set; } = "{}";
     public DateTimeOffset UpdatedAt { get; set; }

@@ -215,6 +215,7 @@ export function useItemResize({
       document.addEventListener('mouseup', handleUp);
     },
     [
+      collaboratorLockedIds,
       projectRef,
       zoomRef,
       measuredSizes,

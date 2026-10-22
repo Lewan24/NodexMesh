@@ -36,6 +36,7 @@ export default function TaskDialog({
   const formRef = useRef<HTMLFormElement>(null);
   const titleId = useId();
   const errorId = useId();
+  const editingCategories = categories !== null;
   useEffect(() => {
     const previous = document.activeElement;
     const previousOverflow = document.body.style.overflow;
@@ -68,13 +69,13 @@ export default function TaskDialog({
     // Keep focus in the dialog when switching views without opening mobile keyboards.
     const selector = window.matchMedia?.('(pointer: coarse)').matches
       ? 'button:not(:disabled)'
-      : categories
+      : editingCategories
         ? '.task-category-editor input:not(:disabled)'
         : '[name="taskName"]:not(:disabled)';
     (form.querySelector<HTMLElement>(selector) ?? form.querySelector<HTMLElement>('button:not(:disabled)'))?.focus({
       preventScroll: true,
     });
-  }, [categories !== null, saving]);
+  }, [editingCategories, saving]);
 
   useEffect(() => {
     if (error) errorRef.current?.scrollIntoView?.({ block: 'nearest' });
@@ -97,7 +98,7 @@ export default function TaskDialog({
     }
     if (close && !draft.text.trim()) {
       setError(translate('Enter a task name before saving.'));
-      formRef.current?.querySelector<HTMLInputElement>('[name="taskName"]')?.focus();
+      formRef.current?.querySelector<HTMLTextAreaElement>('[name="taskName"]')?.focus();
       return;
     }
     savingRef.current = true;

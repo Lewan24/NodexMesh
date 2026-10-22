@@ -6,7 +6,7 @@ import AdminEmailPanel from './AdminEmailPanel';
 import { locale, displayLabel, translate } from '@/shared/i18n';
 import LanguageSelect from '@/shared/i18n/LanguageSelect';
 import { useTranslation } from 'react-i18next';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import type { AdminAppearanceResetScope, AdminProject, AdminUser } from '@/features/auth/types';
@@ -48,24 +48,34 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [newUser, setNewUser] = useState({ email: '', displayName: '', password: '', isAdmin: false });
+  const loadRequest = useRef(0);
+  const { adminUsers, adminProjects, registrationEnabled } = auth;
 
-  const load = async () => {
-    try {
-      const [nextUsers, nextProjects, enabled] = await Promise.all([
-        auth.adminUsers(),
-        auth.adminProjects(),
-        auth.registrationEnabled(),
-      ]);
-      setUsers(nextUsers);
-      setProjects(nextProjects);
-      setRegistration(enabled);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : translate('Unable to load administration data.'));
-    }
-  };
+  const load = useCallback(
+    async (signal?: AbortSignal) => {
+      const request = ++loadRequest.current;
+      try {
+        const [nextUsers, nextProjects, enabled] = await Promise.all([
+          adminUsers(),
+          adminProjects(),
+          registrationEnabled(),
+        ]);
+        if (signal?.aborted || request !== loadRequest.current) return;
+        setUsers(nextUsers);
+        setProjects(nextProjects);
+        setRegistration(enabled);
+      } catch (cause) {
+        if (signal?.aborted || request !== loadRequest.current) return;
+        setError(cause instanceof Error ? cause.message : translate('Unable to load administration data.'));
+      }
+    },
+    [adminUsers, adminProjects, registrationEnabled],
+  );
   useEffect(() => {
-    void load();
-  }, []);
+    const abort = new AbortController();
+    void load(abort.signal);
+    return () => abort.abort();
+  }, [load]);
 
   const run = async (action: () => Promise<unknown>, success: string) => {
     setError('');

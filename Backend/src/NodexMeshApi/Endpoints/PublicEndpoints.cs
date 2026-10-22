@@ -88,6 +88,14 @@ public static class PublicEndpoints
         // their own, and the owner's per-project override is what makes it look right.
         var appearance = await BuildAppearanceAsync(db, project.OwnerId, projectId, ct);
 
+        var assignedStatuses = new HashSet<Guid>();
+        foreach (var item in items)
+        {
+            using var appearanceJson = JsonDocument.Parse(item.Appearance);
+            if (appearanceJson.RootElement.TryGetProperty("statusId", out var status) &&
+                status.ValueKind == JsonValueKind.String && status.TryGetGuid(out var statusId))
+                assignedStatuses.Add(statusId);
+        }
         return TypedResults.Ok(new PublicBoardSnapshotDto(
             new PublicProjectDto(project.Id, project.Name, project.Color, project.UpdatedAt),
             new PublicBoardDto(board.Id, board.Name, board.SortOrder),
@@ -95,7 +103,8 @@ public static class PublicEndpoints
             links.Select(l => new ItemLinkDto(l.SourceItemId, l.TargetItemId, ToWireKind(l.Kind))).ToList(),
             tags.Select(t => new TagRecordDto(t.Id, t.ProjectId, t.Name, t.NormalizedName)).ToList(),
             itemTags.Select(t => new ItemTagDto(t.ItemId, t.TagId)).ToList(),
-            appearance));
+            appearance,
+            Models.ProjectStatusDefinitions.Read(project.ItemStatuses).Where(s => assignedStatuses.Contains(s.Id)).ToList()));
     }
 
     private static async Task<PublicAppearanceDto?> BuildAppearanceAsync(

@@ -25,6 +25,8 @@ export default function FilePreviewDialog({
 }) {
   useTranslation();
   const reference = parseLibrarySource(source);
+  const assetId = reference?.id;
+  const projectId = reference?.projectId;
   const kind = filePreviewKind(name, contentType);
   const docxHost = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ export default function FilePreviewDialog({
 
   useEffect(() => {
     const client = httpClient;
-    if (!reference || !client) {
+    if (!assetId || !projectId || !client) {
       setLoading(false);
       setError(translate('File preview is unavailable.'));
       return;
@@ -47,8 +49,13 @@ export default function FilePreviewDialog({
     const load = async () => {
       setLoading(true);
       setError('');
+      setObjectUrl('');
+      setText('');
+      setTruncated(false);
+      setSheets([]);
+      setActiveSheet(0);
       try {
-        const blob = (await client.request(`/projects/${reference.projectId}/library/${reference.id}/content`, {
+        const blob = (await client.request(`/projects/${projectId}/library/${assetId}/content`, {
           responseType: 'blob',
           signal: controller.signal,
         })) as Blob;
@@ -79,7 +86,9 @@ export default function FilePreviewDialog({
             );
         } else if (kind === 'text') {
           const previewLimit = 1024 * 1024;
-          setText(await blob.slice(0, previewLimit).text());
+          const previewText = await blob.slice(0, previewLimit).text();
+          if (controller.signal.aborted) return;
+          setText(previewText);
           setTruncated(blob.size > previewLimit);
         }
       } catch {
@@ -93,7 +102,7 @@ export default function FilePreviewDialog({
       controller.abort();
       if (url) URL.revokeObjectURL(url);
     };
-  }, [contentType, kind, name, reference?.id, reference?.projectId]);
+  }, [kind, name, assetId, projectId]);
 
   const download = async () => {
     if (!reference || !httpClient) return;
@@ -114,17 +123,22 @@ export default function FilePreviewDialog({
     ['document', 'other'].includes(kind) || (kind === 'spreadsheet' && !name.toLowerCase().endsWith('.xlsx'));
 
   return (
-    <Modal onClose={onClose} centered label={translate('File preview')}>
+    <Modal readOnlyAction onClose={onClose} centered label={translate('File preview')}>
       <div className="file-preview-dialog" onMouseDown={(event) => event.stopPropagation()}>
         <header>
           <div className="min-w-0">
             <h2 title={name}>{name}</h2>
             <span>{formatFileSize(size)}</span>
           </div>
-          <button type="button" onClick={() => void download()} title={translate('Download')}>
+          <button
+            type="button"
+            onClick={() => void download()}
+            title={translate('Download')}
+            aria-label={translate('Download')}
+          >
             <Download size={17} />
           </button>
-          <button type="button" onClick={onClose} title={translate('Close')}>
+          <button type="button" onClick={onClose} title={translate('Close')} aria-label={translate('Close')}>
             <X size={19} />
           </button>
         </header>

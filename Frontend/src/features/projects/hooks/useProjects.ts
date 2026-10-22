@@ -9,7 +9,7 @@ import { importProjectJson, exportWorkspaceProject, persistImportedProject } fro
 import { browserRecoveryStore } from '../services/recoveryDrafts';
 import { toast } from 'sonner';
 import { WorkspaceController, type WorkspaceState } from '../services/workspaceController';
-import { registerSaveGuard } from '@/shared/api/pendingChanges';
+import { registerPersistentSaveGuard } from '@/shared/api/pendingChanges';
 
 interface UseProjectsResult {
   status: WorkspaceState['status'];
@@ -32,7 +32,7 @@ interface UseProjectsResult {
     itemId: string,
     comments: import('@/entities/board/types').ItemComment[],
   ) => Promise<void>;
-  listBoards: (projectId: string) => Promise<import('@/entities/board/records').BoardRecord[]>;
+  listBoards: (projectId: string, signal?: AbortSignal) => Promise<import('@/entities/board/records').BoardRecord[]>;
   createBoard: (projectId: string, name: string) => Promise<import('@/entities/board/records').BoardSnapshot>;
   renameBoard: (
     projectId: string,
@@ -95,21 +95,22 @@ export function useProjects(userId: string): UseProjectsResult {
       }
       if (!abort.signal.aborted) await controller.load(abort.signal);
     })();
-    const unregister = registerSaveGuard(async (retryFailedSaves) => {
+    const hasPendingChanges = () =>
+      ['pending', 'saving', 'error', 'conflict'].includes(controller.getSnapshot().status);
+    const save = async (retryFailedSaves?: boolean) => {
       if (retryFailedSaves && ['error', 'conflict'].includes(controller.getSnapshot().status)) await controller.retry();
       else await controller.flush();
-      return controller.getSnapshot().status === 'saved';
-    });
-    const beforeUnload = (event: BeforeUnloadEvent) => {
-      if (['pending', 'saving', 'error', 'conflict'].includes(controller.getSnapshot().status)) event.preventDefault();
+      const saved = controller.getSnapshot().status === 'saved';
+      return saved;
     };
-    window.addEventListener('beforeunload', beforeUnload);
+    const detach = registerPersistentSaveGuard(save, hasPendingChanges);
     return () => {
       abort.abort();
-      unregister();
-      window.removeEventListener('beforeunload', beforeUnload);
+      // Error boundaries unmount failed screens. Retain their save guard until
+      // the controller finishes saving, so recovery cannot discard unsent edits.
+      detach();
     };
-  }, [controller]);
+  }, [controller, userId]);
 
   const activeProject =
     projects.find((project) => project.id === controller.resolveProjectId(activeProjectId) && !project.deletedAt) ??
@@ -194,12 +195,15 @@ export function useProjects(userId: string): UseProjectsResult {
     },
     [setProjects],
   );
-  const restoreProject = useCallback((id: string) => {
-    setProjects((previous) =>
-      previous.map((project) => (project.id === id ? { ...project, deletedAt: undefined } : project)),
-    );
-    setActiveProjectId(id);
-  }, []);
+  const restoreProject = useCallback(
+    (id: string) => {
+      setProjects((previous) =>
+        previous.map((project) => (project.id === id ? { ...project, deletedAt: undefined } : project)),
+      );
+      setActiveProjectId(id);
+    },
+    [setProjects],
+  );
 
   const removeProjects = async (ids: string[]) => {
     await controller.flush();
@@ -277,7 +281,10 @@ export function useProjects(userId: string): UseProjectsResult {
     (projectId: string, boardId: string) => controller.switchBoard(projectId, boardId),
     [controller],
   );
-  const listBoards = useCallback((projectId: string) => controller.listBoards(projectId), [controller]);
+  const listBoards = useCallback(
+    (projectId: string, signal?: AbortSignal) => controller.listBoards(projectId, signal),
+    [controller],
+  );
   const createBoard = useCallback(
     (projectId: string, name: string) => controller.createBoard(projectId, name),
     [controller],

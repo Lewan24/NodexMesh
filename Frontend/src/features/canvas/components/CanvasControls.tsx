@@ -5,10 +5,10 @@ import { MousePointerClick, Trash2 } from 'lucide-react';
 
 interface CanvasControlsProps {
   zoom: number;
+  getZoom?: () => number;
   snapEnabled: boolean;
   placeOnItems: boolean;
   onZoomChange: (zoom: number) => void;
-  onPanChange: (pan: { x: number; y: number }) => void;
   onToggleSnap: () => void;
   onTogglePlaceOnItems: () => void;
   onFitView: () => void;
@@ -21,10 +21,10 @@ interface CanvasControlsProps {
 
 export default function CanvasControls({
   zoom,
+  getZoom,
   snapEnabled,
   placeOnItems,
   onZoomChange,
-  onPanChange,
   onToggleSnap,
   onTogglePlaceOnItems,
   onFitView,
@@ -36,20 +36,15 @@ export default function CanvasControls({
 }: CanvasControlsProps) {
   useTranslation();
   const zoomOut = () => {
-    const nextZoom = Math.max(ZOOM_MIN, Number((zoom - 0.1).toFixed(2)));
+    const nextZoom = Math.max(ZOOM_MIN, Number(((getZoom?.() ?? zoom) - 0.1).toFixed(2)));
 
     onZoomChange(nextZoom);
   };
 
   const zoomIn = () => {
-    const nextZoom = Math.min(ZOOM_MAX, Number((zoom + 0.1).toFixed(2)));
+    const nextZoom = Math.min(ZOOM_MAX, Number(((getZoom?.() ?? zoom) + 0.1).toFixed(2)));
 
     onZoomChange(nextZoom);
-  };
-
-  const resetView = () => {
-    onZoomChange(1);
-    onPanChange({ x: 0, y: 0 });
   };
 
   return (
@@ -118,6 +113,8 @@ export default function CanvasControls({
           color: snapEnabled ? 'white' : 'var(--color-text-secondary)',
           backdropFilter: 'blur(8px)',
         }}
+        aria-pressed={snapEnabled}
+        aria-label={translate('Snap to grid')}
         title={snapEnabled ? translate('Snap to grid: on') : translate('Snap to grid: off')}
       >
         <svg
@@ -163,20 +160,25 @@ export default function CanvasControls({
           </svg>
         </button>
 
-        <button
-          onClick={resetView}
-          className="px-2.5 h-8 text-[10px] font-bold font-mono transition-colors border-x"
-          style={{ color: '#4a6070', borderColor: 'var(--color-border-soft)', minWidth: 52 }}
-          onMouseEnter={(event) => {
-            event.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)';
+        <select
+          aria-label={translate('Zoom')}
+          value={zoom}
+          onChange={(event) => onZoomChange(Number(event.target.value))}
+          className="px-2 h-8 text-[10px] font-bold font-mono border-x"
+          style={{
+            color: 'var(--color-text-primary)',
+            background: 'var(--color-surface)',
+            borderColor: 'var(--color-border-soft)',
           }}
-          onMouseLeave={(event) => {
-            event.currentTarget.style.backgroundColor = 'transparent';
-          }}
-          title={translate('Reset zoom')}
         >
-          {Math.round(zoom * 100)}%
-        </button>
+          {Array.from(new Set([0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, zoom]))
+            .sort((a, b) => a - b)
+            .map((value) => (
+              <option key={value} value={value}>
+                {Math.round(value * 100)}%
+              </option>
+            ))}
+        </select>
 
         <button
           onClick={zoomIn}

@@ -24,3 +24,8 @@ dist-ssr
 
 # Private media uploaded during local development
 **/App_Data/
+
+# Browser performance fixtures and test artifacts
+Frontend/dist-performance/
+Frontend/test-results/
+Frontend/playwright-report/

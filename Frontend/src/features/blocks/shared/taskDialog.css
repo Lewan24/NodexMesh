@@ -121,10 +121,14 @@
   font-size: 20px;
   font-weight: 600;
 }
-.task-description {
+.task-multiline {
   resize: vertical;
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.task-description {
   min-height: 106px;
-  max-height: 300px;
 }
 .task-details-grid {
   display: grid;

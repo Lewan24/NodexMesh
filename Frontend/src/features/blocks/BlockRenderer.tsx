@@ -7,6 +7,7 @@ import SectionTitleBlock from './section-title/SectionTitleBlock';
 import type { BoardItem } from '@/entities/board/types';
 import type { ProjectParticipant } from '@/entities/project/shareTypes';
 import { lazy, Suspense } from 'react';
+import ErrorBoundary from '@/shared/components/ErrorBoundary';
 
 import ChecklistBlock from '@/features/blocks/checklist/ChecklistBlock';
 import ColumnBlock from '@/features/blocks/column/ColumnBlock';
@@ -235,7 +236,9 @@ export default function BlockRenderer(props: BlockRendererProps) {
   return (
     <TypographyContext.Provider value={props.item.typography}>
       <ItemCssScope item={props.item}>
-        <BlockContent {...props} />
+        <ErrorBoundary resetKey={props.item.id}>
+          <BlockContent {...props} />
+        </ErrorBoundary>
       </ItemCssScope>
     </TypographyContext.Provider>
   );

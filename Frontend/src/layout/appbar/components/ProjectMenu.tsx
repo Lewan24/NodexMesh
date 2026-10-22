@@ -71,7 +71,8 @@ export default function ProjectMenu(props: ProjectMenuProps) {
           onKeyDown={(event) => {
             if (event.key === 'Escape') {
               event.stopPropagation();
-              editing ? setEditing(null) : close();
+              if (editing) setEditing(null);
+              else close();
             }
           }}
         >

@@ -1,3 +1,5 @@
+import { validateStatuses } from '@/features/statuses/statusModel';
+import type { StatusRepository } from './contracts';
 import { translate } from '@/shared/i18n';
 import type { HttpClient } from '@/shared/api/httpClient';
 import type { BoardSnapshot } from '@/entities/board/records';
@@ -43,7 +45,24 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
     projects.set(project.id, project);
     return { project, board };
   };
+  const statuses: StatusRepository = {
+    async get(projectId) {
+      const value = (await client.request(`/projects/${segment(projectId)}/statuses`)) as Awaited<
+        ReturnType<StatusRepository['get']>
+      >;
+      validateStatuses(value.statuses);
+      return value;
+    },
+    async save(projectId, revision, statuses) {
+      validateStatuses(statuses);
+      return (await client.request(`/projects/${segment(projectId)}/statuses`, {
+        method: 'PUT',
+        body: { expectedRevision: revision, statuses },
+      })) as Awaited<ReturnType<StatusRepository['get']>>;
+    },
+  };
   return {
+    statuses,
     async sync(previous, signal) {
       const id = previous.project.id;
       const [projectValue, value] = await Promise.all([

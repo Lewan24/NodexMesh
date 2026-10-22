@@ -121,7 +121,7 @@ export default function ColumnBlock({
   const isHorizontal = layout === 'horizontal';
   const isGrid = layout === 'grid';
 
-  const items = item.items ?? [];
+  const items = item.items;
   const columnContentWidth = item.width - 32;
   const nestedControlsWidth = 24 + 24 + 16;
 

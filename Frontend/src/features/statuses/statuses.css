@@ -1,0 +1,491 @@
+.item-status-section select {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  margin-top: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 12px;
+}
+.status-manage {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.status-manager {
+  display: flex;
+  flex-direction: column;
+  width: min(820px, calc(100vw - 32px));
+  height: min(660px, calc(100dvh - 48px));
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 22%);
+}
+.status-manager-accent {
+  height: 3px;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, var(--color-accent), #c084fc, #ffbd65);
+}
+.status-manager-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border-soft);
+  background: var(--edit-bar-bg, var(--color-surface));
+}
+.status-manager-heading-icon,
+.status-editor-heading-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 14%, transparent);
+  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+}
+.status-manager-header h2 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.status-manager-header p {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+.status-manager-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: var(--color-text-muted);
+  background: var(--edit-bar-control, var(--color-surface-alt));
+}
+.status-manager-close:hover {
+  color: var(--color-text-primary);
+  background: var(--color-accent-soft);
+}
+.status-manager-body {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+.status-manager-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 14px;
+  min-height: 0;
+  border-right: 1px solid var(--color-border-soft);
+  background: var(--edit-bar-panel, var(--color-surface-alt));
+}
+.status-manager-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-muted);
+}
+.status-manager-count {
+  border-radius: 6px;
+  padding: 3px 6px;
+  background: var(--color-surface);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.status-manager-new {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  border-radius: 10px;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+.status-manager-new:hover {
+  background: var(--color-accent-soft-strong, var(--color-accent-soft));
+}
+.status-manager-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px;
+}
+.status-manager-entry {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  text-align: left;
+  color: var(--color-text-secondary);
+}
+.status-manager-entry:hover {
+  background: var(--color-surface);
+}
+.status-manager-entry[aria-pressed='true'] {
+  background: var(--color-surface);
+  border-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  color: var(--color-accent);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 4%);
+}
+.status-manager-entry-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.65;
+}
+.status-manager-entry[aria-pressed='true'] .status-manager-entry-dot {
+  background: currentColor;
+  opacity: 1;
+}
+.status-manager-entry strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+}
+.status-manager-entry small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
+.status-manager-form,
+.status-manager-form fieldset {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+}
+.status-editor-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  padding: 22px 24px;
+  overflow-y: auto;
+}
+.status-editor-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.status-editor-heading-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+.status-editor-heading h3 {
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  font-weight: 600;
+}
+.status-editor-details {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.status-editor-field {
+  display: block;
+}
+.status-editor-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.status-editor-label small {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--color-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+.status-editor-field input,
+.status-editor-field textarea {
+  display: block;
+  width: 100%;
+  margin-top: 7px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--edit-bar-control, var(--color-surface-alt));
+  color: var(--color-text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.status-editor-field textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+.status-css-panel {
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--edit-bar-card, var(--color-surface));
+}
+.status-css-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+.status-css-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.status-css-heading svg {
+  color: var(--color-accent);
+}
+.status-css-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 28px;
+  cursor: pointer;
+}
+.status-css-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.status-css-toggle span {
+  display: block;
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+}
+.status-css-toggle span::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+.status-css-toggle input:checked + span {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.status-css-toggle input:checked + span::after {
+  transform: translateX(14px);
+  background: white;
+}
+.status-css-toggle input:focus-visible + span {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.status-manager .status-css-source {
+  display: block;
+  width: 100%;
+  min-height: 140px;
+  margin: 0;
+  padding: 14px;
+  border: 0;
+  border-radius: 0;
+  resize: vertical;
+  background: var(--edit-bar-control, var(--color-surface-alt));
+  color: var(--color-text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  tab-size: 2;
+}
+.status-css-source::placeholder {
+  color: var(--color-text-faint);
+}
+.status-css-help {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 12px 14px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border-soft);
+}
+.status-css-help svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.status-manager-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-border-soft);
+  background: var(--edit-bar-bg, var(--color-surface));
+}
+.status-primary,
+.status-manager-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.status-primary {
+  margin-left: auto;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: white;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+.status-primary:hover {
+  filter: brightness(1.08);
+}
+.status-manager-delete {
+  padding-left: 0;
+  color: #e14c64;
+}
+.status-manager-delete:hover {
+  text-decoration: underline;
+}
+.status-manager-error {
+  flex-shrink: 0;
+  padding: 10px 24px;
+  color: #e14c64;
+  font-size: 12px;
+  line-height: 1.5;
+}
+:is(.status-manager, .item-status-section) :is(button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.status-manager .status-css-source:focus-visible {
+  outline-offset: -2px;
+}
+:is(.status-manager, .item-status-section) :disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+@media (max-width: 600px) {
+  .status-manager {
+    width: calc(100vw - 20px);
+    height: calc(100dvh - 32px);
+    border-radius: 16px;
+  }
+  .status-manager-header {
+    padding: 16px;
+    gap: 10px;
+  }
+  .status-manager-header h2 {
+    font-size: 15px;
+  }
+  .status-manager-header p {
+    font-size: 11px;
+  }
+  .status-manager-heading-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .status-manager-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .status-manager-sidebar {
+    padding: 12px 16px;
+    gap: 8px;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border-soft);
+  }
+  .status-manager-list-heading {
+    display: none;
+  }
+  .status-manager-new {
+    align-self: flex-start;
+    padding: 0 10px;
+    min-height: 32px;
+  }
+  .status-manager-list {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .status-manager-entry {
+    width: auto;
+    max-width: 180px;
+    min-height: 36px;
+    padding: 8px 10px;
+  }
+  .status-manager-entry small {
+    display: none;
+  }
+  .status-editor-fields {
+    padding: 16px;
+    gap: 16px;
+  }
+  .status-manager-footer {
+    padding: 12px 16px;
+  }
+  .status-primary,
+  .status-manager-delete {
+    padding: 9px 10px;
+    font-size: 11px;
+  }
+}

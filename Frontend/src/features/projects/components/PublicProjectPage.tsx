@@ -1,3 +1,5 @@
+import { PublicStatusesProvider } from '@/features/statuses/ProjectStatusesContext';
+import type { ProjectStatus } from '@/features/statuses/types';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
@@ -15,6 +17,7 @@ export default function PublicProjectPage({ token }: { token: string }) {
   const [view, setView] = useState<{
     project: PublicProjectView;
     appearance: PublicBoardSnapshot['appearance'];
+    statuses: ProjectStatus[];
   } | null>(null);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
@@ -56,9 +59,10 @@ export default function PublicProjectPage({ token }: { token: string }) {
         if (active) {
           setView((previous) =>
             JSON.stringify(previous?.project) === JSON.stringify(project) &&
-            JSON.stringify(previous?.appearance) === JSON.stringify(value.appearance)
+            JSON.stringify(previous?.appearance) === JSON.stringify(value.appearance) &&
+            JSON.stringify(previous?.statuses) === JSON.stringify(value.statuses ?? [])
               ? previous
-              : { project, appearance: value.appearance },
+              : { project, appearance: value.appearance, statuses: value.statuses ?? [] },
           );
           setSnapshot((previous) => (previous ? { ...previous, project: value.project } : previous));
           setError('');
@@ -142,7 +146,9 @@ export default function PublicProjectPage({ token }: { token: string }) {
         </div>
       ) : view ? (
         <PublicAppearanceProvider appearance={view.appearance}>
-          <ReadOnlyBoard key={boardId} items={view.project.items} />
+          <PublicStatusesProvider statuses={view.statuses}>
+            <ReadOnlyBoard key={boardId} items={view.project.items} />
+          </PublicStatusesProvider>
         </PublicAppearanceProvider>
       ) : (
         <p className="p-8" role="status">

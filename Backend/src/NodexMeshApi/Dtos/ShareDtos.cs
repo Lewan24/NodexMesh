@@ -62,7 +62,8 @@ public sealed record PublicBoardSnapshotDto(
     IReadOnlyList<ItemLinkDto> Links,
     IReadOnlyList<TagRecordDto> Tags,
     IReadOnlyList<ItemTagDto> ItemTags,
-    PublicAppearanceDto? Appearance);
+    PublicAppearanceDto? Appearance,
+    IReadOnlyList<NodexMeshApi.Models.ProjectStatus>? Statuses = null);
 
 /// <summary>
 /// The owner's theme for this project, so a shared board looks the way the owner made it.

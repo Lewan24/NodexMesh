@@ -409,6 +409,68 @@ test('item dragging stays transient until one batched final commit', (t) => {
   assert.equal(projectRef.current.items[0].y, 16);
 });
 
+test('nested and explicitly selected frame descendants move once and stay transient until release', (t) => {
+  const { surface, renderFrame } = setup(t);
+  const frames = Array.from({ length: 100 }, (_, i) => ({
+    ...createCanvasItem('frame', 0, 0),
+    id: `frame-${i}`,
+    frameId: i ? `frame-${i - 1}` : null,
+  }));
+  const note = { ...createCanvasItem('note', 20, 40), frameId: frames.at(-1).id };
+  const line = { ...createCanvasItem('line', 30, 50), x2: -100, y2: -200, frameId: frames.at(-1).id };
+  const items = [...frames, note, line];
+  const projectRef = { current: { items } };
+  const commits = [];
+  let historySteps = 0;
+  let drag;
+  function Harness() {
+    drag = useItemDrag({
+      projectRef,
+      selectedIdsRef: { current: [frames[0].id, frames[50].id] },
+      zoomRef: { current: 1 },
+      measuredSizes: new Map(),
+      snapEnabled: false,
+      snapValue: (value) => value,
+      pushHistory() {
+        historySteps++;
+      },
+      onSelectItems() {},
+      onSelectTool() {},
+      onDropOnColumn() {},
+      clearColumnSelection() {},
+      onUpdateItems(updates) {
+        commits.push(updates);
+        projectRef.current.items = projectRef.current.items.map((item) => updates.get(item.id)?.(item) ?? item);
+      },
+    });
+    return null;
+  }
+  renderToStaticMarkup(createElement(Harness));
+  drag.handleItemMouseDown(frames[0].id, {
+    button: 0,
+    target: surface,
+    clientX: 0,
+    clientY: 0,
+    shiftKey: false,
+    preventDefault() {},
+    stopPropagation() {},
+  });
+  document.dispatchEvent(new MouseEvent('mousemove', { clientX: 45, clientY: 20 }));
+  renderFrame();
+  assert.equal(commits.length, 0);
+  assert.equal(projectRef.current.items, items);
+  document.dispatchEvent(new MouseEvent('mouseup', { clientX: 45, clientY: 20 }));
+  assert.equal(historySteps, 1);
+  assert.equal(commits.length, 1);
+  assert.equal(commits[0].size, items.length);
+  projectRef.current.items.forEach((moved, index) => {
+    assert.equal(moved.x, items[index].x + 45, moved.id);
+    assert.equal(moved.y, items[index].y + 20, moved.id);
+  });
+  assert.equal(projectRef.current.items.at(-1).x2, line.x2 + 45);
+  assert.equal(projectRef.current.items.at(-1).y2, line.y2 + 20);
+});
+
 test('moving a frame animates the frame without independently tilting its captured contents', () => {
   const capturedIds = new Set(['frame', 'child', 'nested-child']);
 

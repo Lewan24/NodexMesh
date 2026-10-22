@@ -11,6 +11,7 @@ export default function Modal({
   label = translate('Dialog'),
   boardHistory = false,
   closeOnBackdrop = false,
+  readOnlyAction = false,
 }: {
   children: ReactNode;
   onClose: () => void;
@@ -18,6 +19,7 @@ export default function Modal({
   label?: string;
   boardHistory?: boolean;
   closeOnBackdrop?: boolean;
+  readOnlyAction?: boolean;
 }) {
   useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -34,6 +36,7 @@ export default function Modal({
       className={`app-modal${centered ? ' app-modal-centered' : ''}`}
       aria-label={label}
       data-board-history={boardHistory || undefined}
+      data-read-only-action={readOnlyAction || undefined}
       onCancel={(event) => {
         event.preventDefault();
         event.stopPropagation();

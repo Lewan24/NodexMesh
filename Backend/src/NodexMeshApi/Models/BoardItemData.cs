@@ -15,7 +15,9 @@ public sealed record GeoPoint(double X, double Y, double? Pressure);
 public sealed record ItemAppearance(
     string? Color, string? ColorRole, GradientDto? Gradient, string? TopColor,
     TypographyDto? Typography, string? TextAlign, string? FontSize, bool? Bold, bool? Italic,
-    CustomCssDto? CustomCss = null, double? BackgroundOpacity = null);
+    CustomCssDto? CustomCss = null, double? BackgroundOpacity = null, BorderDto? Border = null, Guid? StatusId = null);
+public sealed record BorderDto(string Color, double Width, string Style, BorderGradientDto? Gradient = null, string? Animation = null);
+public sealed record BorderGradientDto(string From, string To, double Angle);
 public sealed record CustomCssDto(bool Enabled, string Source);
 public sealed record GradientDto(string From, string To, string Kind, double Angle);
 public sealed record TypographyDto(

@@ -100,6 +100,15 @@ public static class BoardValidator
             if (appearance?.BackgroundOpacity is { } backgroundOpacity &&
                 (!double.IsFinite(backgroundOpacity) || backgroundOpacity is < 0 or > 100))
                 throw new ApiException(422, "invalid_item", "Background opacity must be between 0 and 100.");
+            if (appearance?.Border is { } border &&
+                (!double.IsFinite(border.Width) || border.Width is < 0 or > 20 ||
+                 !ValidBorderColor(border.Color) || border.Style is not ("solid" or "dashed" or "dotted" or "double") ||
+                 border.Animation is not (null or "none" or "pulse") ||
+                 (border.Gradient is { } gradient && (border.Style != "solid" || !ValidBorderColor(gradient.From) ||
+                  !ValidBorderColor(gradient.To) || !double.IsFinite(gradient.Angle) || gradient.Angle is < 0 or > 360))))
+                throw new ApiException(422, "invalid_item", "Invalid item border.");
+            if (appearance?.StatusId == Guid.Empty)
+                throw new ApiException(422, "invalid_item", "Invalid item status.");
             if (appearance?.CustomCss is { } customCss && (customCss.Source is null || customCss.Source.Length > 10_000))
                 throw new ApiException(422, "invalid_item", "Custom CSS must contain at most 10,000 characters.");
         }
@@ -110,6 +119,9 @@ public static class BoardValidator
 
         ValidateUrlFields(item);
     }
+
+    private static bool ValidBorderColor(string? color) => color is not null &&
+        System.Text.RegularExpressions.Regex.IsMatch(color, "^#[0-9a-fA-F]{6}$");
 
     /// <summary>
     /// OWASP A10 (SSRF) / stored-XSS surface: image, link and embed items carry

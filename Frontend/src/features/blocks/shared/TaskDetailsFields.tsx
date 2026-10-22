@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import {
   CalendarDays,
   Check,
@@ -27,6 +28,31 @@ export default function TaskDetailsFields({
   disabled: boolean;
   onManageCategories: () => void;
 }) {
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const fields = [titleRef.current, descriptionRef.current];
+    const resize = () => {
+      for (const field of fields) {
+        if (!field) continue;
+        field.style.height = 'auto';
+        field.style.height = `${field.scrollHeight + 2}px`;
+      }
+    };
+    resize();
+    // Reflow wrapped text when the dialog changes width, without undoing manual height changes.
+    if (typeof ResizeObserver === 'undefined') return;
+    let width = titleRef.current?.clientWidth;
+    const observer = new ResizeObserver(() => {
+      const nextWidth = titleRef.current?.clientWidth;
+      if (width !== nextWidth) {
+        width = nextWidth;
+        resize();
+      }
+    });
+    if (titleRef.current) observer.observe(titleRef.current);
+    return () => observer.disconnect();
+  }, [draft.text, draft.description]);
   const project = useProjectTasks();
   const selectedIds = taskCategoryIds(draft);
   const subtasks = draft.subtasks ?? [];
@@ -37,11 +63,13 @@ export default function TaskDetailsFields({
     <fieldset disabled={disabled} className="task-details-fields">
       <label className="task-field task-title-field">
         <span>{translate('Task name')}</span>
-        <input
+        <textarea
+          ref={titleRef}
+          rows={1}
           name="taskName"
           required
           maxLength={200000}
-          className="task-input"
+          className="task-input task-multiline"
           value={draft.text}
           placeholder={translate('What needs to be done?')}
           onChange={(event) => patch({ text: event.target.value })}
@@ -53,9 +81,10 @@ export default function TaskDetailsFields({
           {translate('Description')}
         </span>
         <textarea
+          ref={descriptionRef}
           rows={3}
           maxLength={20000}
-          className="task-input task-description"
+          className="task-input task-multiline task-description"
           value={draft.description ?? ''}
           placeholder={translate('Add context, notes, or useful details…')}
           onChange={(event) => patch({ description: event.target.value || undefined })}

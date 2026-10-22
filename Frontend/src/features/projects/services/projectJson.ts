@@ -1,3 +1,4 @@
+import { validateStatuses } from '@/features/statuses/statusModel';
 import { translate } from '@/shared/i18n';
 import { createId } from '@/shared/lib/createId';
 import type { Project, ProjectBoard, ProjectSnapshot } from '@/entities/project/types';
@@ -5,7 +6,6 @@ import type { BoardSnapshot, ItemMutation } from '@/entities/board/records';
 import { canonicalJson } from '@/shared/api/canonicalJson';
 import type { BoardItem } from '@/entities/board/types';
 import { parseLibrarySource } from '@/features/library/librarySource';
-import { createMockWorkspace } from './mockWorkspace';
 import { flattenItems, renewProjectIds, toProjectView } from './boardAdapter';
 import type { WorkspaceServices } from './contracts';
 
@@ -69,6 +69,7 @@ export async function exportWorkspaceProject(api: WorkspaceServices, projectId: 
     boardId: records[0]!.id,
     items: boards[0]!.items,
     boards,
+    ...(api.statuses ? { statuses: (await api.statuses.get(projectId)).statuses } : {}),
   });
 }
 
@@ -96,6 +97,12 @@ export async function persistImportedProject(
     clientMutationId: createId(),
   });
   try {
+    if (project.statuses?.length) {
+      if (!api.statuses) throw new Error('Project statuses cannot be imported by this data source.');
+      const previous = await api.statuses.get(snapshot.project.id);
+      const saved = await api.statuses.save(snapshot.project.id, previous.revision, project.statuses);
+      snapshot.project.revision = saved.revision;
+    }
     const snapshots = [snapshot.board];
     await api.boards.rename(snapshot.project.id, snapshot.board.board.id, project.boards[0]!.name);
     for (const board of project.boards.slice(1))
@@ -139,6 +146,7 @@ export async function importProjectJson(text: string, userId: string): Promise<I
     throw new Error(translate('Unsupported project file. Expected NodexMesh project JSON version 1 or 2.'));
   }
   const source = value.project;
+  if (source?.statuses !== undefined) validateStatuses(source.statuses);
   if (
     !source ||
     typeof source.id !== 'string' ||
@@ -179,11 +187,14 @@ export async function importProjectJson(text: string, userId: string): Promise<I
     identities.add(id);
   };
   for (const board of ordered) claim(board.id);
+  const statusIds = new Set((source.statuses ?? []).map((status: { id: string }) => status.id));
   const claimItems = (items: BoardItem[]) => {
     if (!Array.isArray(items)) throw new Error(translate('Invalid project data.'));
     for (const item of items) {
       if (!item || typeof item !== 'object') throw new Error(translate('Invalid project data.'));
       claim(item.id);
+      if (item.statusId && !statusIds.has(item.statusId))
+        throw new Error('An item references a missing project status.');
       if (item.comments !== undefined && !Array.isArray(item.comments))
         throw new Error(translate('Invalid project data.'));
       for (const comment of item.comments ?? []) claim(comment?.id);
@@ -210,6 +221,7 @@ export async function importProjectJson(text: string, userId: string): Promise<I
     );
   const project = renewProjectIds<ImportedProject>({
     id: source.id,
+    statuses: source.statuses ?? [],
     name: source.name.trim(),
     color: source.color,
     items: [],
@@ -233,6 +245,8 @@ export async function importProjectJson(text: string, userId: string): Promise<I
       data = next;
     },
   };
+  // The mock persistence validator is needed for imports, not normal HTTP startup.
+  const { createMockWorkspace } = await import('./mockWorkspace');
   await persistImportedProject(
     createMockWorkspace(userId, storage, () => userId),
     project,

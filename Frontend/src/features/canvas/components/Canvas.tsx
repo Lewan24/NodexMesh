@@ -1,3 +1,5 @@
+import { isHeavyPreviewItem } from '../utils/heavyPreview';
+import { useCanvasCallbacks } from '../hooks/useCanvasCallbacks';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import CustomCssDialog from '@/features/blocks/custom-css/CustomCssDialog';
@@ -5,7 +7,7 @@ import { useCanvasTouch } from '../hooks/useCanvasTouch';
 import PasteStyleDialog from './PasteStyleDialog';
 import { copyItemStyle, pasteItemStyle } from '../utils/itemStyle';
 import type { ItemStyle } from '../utils/itemStyle';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import type { BoardItem, FrameItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
@@ -25,7 +27,13 @@ import CanvasHints from './CanvasHints';
 import CanvasEmptyState from './CanvasEmptyState';
 import ToolDragGhost from '@/features/canvas/components/ToolDragGhost';
 
-import { CANVAS_GRID_SIZE, CANVAS_MAJOR_GRID_SIZE, ZOOM_MAX, ZOOM_MIN } from '@/features/canvas/constants';
+import {
+  CANVAS_GRID_SIZE,
+  CANVAS_MAJOR_GRID_SIZE,
+  CANVAS_VIEWPORT_OVERSCAN,
+  ZOOM_MAX,
+  ZOOM_MIN,
+} from '@/features/canvas/constants';
 import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
 
 import { useCanvasHistory } from '@/features/canvas/hooks/useCanvasHistory';
@@ -57,9 +65,11 @@ import CanvasDropPreview from './CanvasDropPreview';
 import { useCanvasLostState } from '../hooks/useCanvasLostState';
 import CanvasLostPrompt from './CanvasLostPrompt';
 import CanvasAlignmentGuides from './CanvasAlignmentGuides';
-import { getColumnSearchResult, getSearchTargets, matchesItemSearch } from '@/features/search/utils/itemSearch';
+import { useProjectStatuses } from '@/features/statuses/ProjectStatusesContext';
+import { getBoardSearchResult } from '@/features/search/utils/itemSearch';
+import { useCanvasRenderModel } from '../hooks/useCanvasRenderModel';
 
-import { isItemInsideFrame, isFrameMovementLocked, wouldCreateFrameCycle } from '@/features/canvas/utils/frameGeometry';
+import { isItemInsideFrame, wouldCreateFrameCycle } from '@/features/canvas/utils/frameGeometry';
 
 import ItemInspector from '@/features/inspector/ItemInspector';
 import { useCanvasClipboard } from '../hooks/useCanvasClipboard';
@@ -67,13 +77,19 @@ import CanvasContextMenu from './CanvasContextMenu';
 import type { CanvasMenuState } from './CanvasContextMenu';
 import QuickConnectMenu from './QuickConnectMenu';
 import type { QuickConnectMenuState } from './QuickConnectMenu';
+import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
+import { useCanvasCamera, type CanvasCameraBindings } from '../hooks/useCanvasCamera';
+import { intersectsCanvasViewport, isCanvasItemVisible } from '../utils/viewportVisibility';
 import './contextMenu.css';
+
+const EMPTY_PARTICIPANTS: ProjectParticipant[] = [];
+const EMPTY_CURSORS: RemoteCursor[] = [];
 
 interface ToolDragGhostState extends ToolDragDetail {
   overCanvas: boolean;
 }
 
-interface CanvasProps {
+export interface CanvasProps {
   project: Project;
   projectParticipants?: ProjectParticipant[];
   remoteVersion?: number;
@@ -110,12 +126,12 @@ interface CanvasProps {
   onCursorMove?: (position: { x: number; y: number } | null) => void;
 }
 
-export default function Canvas({
+function CanvasContent({
   project,
-  projectParticipants = [],
+  projectParticipants = EMPTY_PARTICIPANTS,
   remoteVersion = 0,
   remotePresence,
-  remoteCursors = [],
+  remoteCursors = EMPTY_CURSORS,
   selectedTool,
   pan,
   zoom,
@@ -144,11 +160,33 @@ export default function Canvas({
   onRestoreTrashItem,
   onEditBarVisibilityChange,
   onCursorMove,
-}: CanvasProps) {
+  camera,
+  isNavigating,
+}: CanvasProps & { camera: CanvasCameraBindings; isNavigating: boolean }) {
   useTranslation();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const mobile = useMobileLayout();
+  const lowDetail = zoom <= (mobile ? 0.2 : 0.25);
+  const { containerRef, panRef, zoomRef } = camera;
+  const getLiveZoom = useCallback(() => zoomRef.current, [zoomRef]);
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
   const [spacePanActive, setSpacePanActive] = useState(false);
+  const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+  useEffect(() => {
+    const releaseFocus = (event: FocusEvent) => {
+      const target = event.target;
+      if (target instanceof Element && !target.closest('[data-board-item-id], dialog, [role="dialog"]')) {
+        setFocusedItemId(null);
+      }
+    };
+    document.addEventListener('focusin', releaseFocus);
+    return () => document.removeEventListener('focusin', releaseFocus);
+  }, []);
+  const scrollPositions = useRef(new Map<string, { left: number; top: number }[]>());
+  useEffect(() => {
+    if (!scrollPositions.current.size) return;
+    const ids = new Set(project.items.map((item) => item.id));
+    for (const id of scrollPositions.current.keys()) if (!ids.has(id)) scrollPositions.current.delete(id);
+  }, [project.items]);
   const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [placeOnItems, setPlaceOnItems] = useState(false);
@@ -174,6 +212,10 @@ export default function Canvas({
   } | null>(null);
 
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+  useLayoutEffect(() => {
+    camera.viewportRef.current = viewportSize;
+  }, [camera, viewportSize]);
+  useLayoutEffect(() => camera.present({ pan, zoom }));
   const collaboratorLockedIds = useMemo(
     () =>
       new Set(
@@ -183,12 +225,6 @@ export default function Canvas({
       ),
     [remotePresence],
   );
-
-  const panRef = useRef(pan);
-  panRef.current = pan;
-
-  const zoomRef = useRef(zoom);
-  zoomRef.current = zoom;
 
   useEffect(() => {
     const isInteractiveTarget = (target: EventTarget | null) =>
@@ -300,7 +336,7 @@ export default function Canvas({
       window.removeEventListener('mouseup', end);
       window.removeEventListener('blur', end);
     };
-  }, [resumeAutoLayout]);
+  }, [resumeAutoLayout, containerRef]);
   const restoreHistoryItems = useCallback(
     (items: BoardItem[]) => {
       suppressAutoLayout.current = true;
@@ -318,11 +354,11 @@ export default function Canvas({
 
   const { pendingDelete, requestDelete, confirmDelete, cancelDelete } = useDeleteConfirmation({ pushHistory });
 
-  const { measuredSizes, handleItemResize: handleMeasuredItemResize } = useCanvasMeasurements({
-    projectRef,
-    suppressAutoLayout,
-    onUpdateItem,
-  });
+  const {
+    measuredSizes,
+    measuredItems,
+    handleItemResize: handleMeasuredItemResize,
+  } = useCanvasMeasurements({ items: project.items, projectRef, suppressAutoLayout, onUpdateItem });
 
   const onAddItem = useCallback(
     (item: BoardItem) => {
@@ -346,10 +382,15 @@ export default function Canvas({
     [addItemRaw, onRestoreItems, measuredSizes],
   );
 
+  const handleResizeStart = useCallback(() => {
+    suppressAutoLayout.current = true;
+  }, []);
+  const handleFrameResizeEnd = useCallback(
+    (frameId: string, containedIds: string[]) => onSelectItems([frameId, ...containedIds]),
+    [onSelectItems],
+  );
   const { handleItemResize } = useItemResize({
-    onResizeStart: () => {
-      suppressAutoLayout.current = true;
-    },
+    onResizeStart: handleResizeStart,
     onResizeEnd: resumeAutoLayout,
     projectRef,
     zoomRef,
@@ -361,9 +402,7 @@ export default function Canvas({
 
     onFramePreviewChange: setFrameCapturePreviewIds,
 
-    onFrameResizeEnd: (frameId, containedIds) => {
-      onSelectItems([frameId, ...containedIds]);
-    },
+    onFrameResizeEnd: handleFrameResizeEnd,
   });
 
   const { attachHoverId, handleLineEndpointDrag, handleQuickConnectStart } = useLineDrag({
@@ -424,7 +463,7 @@ export default function Canvas({
 
       onEjectFromColumn(columnId, ejectedItem, { x, y });
     },
-    [onEjectFromColumn, screenToCanvas, snapValue],
+    [onEjectFromColumn, screenToCanvas, snapValue, containerRef],
   );
 
   useEffect(() => {
@@ -467,7 +506,7 @@ export default function Canvas({
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [containerRef]);
 
   useEffect(() => {
     const getDropPosition = (detail: ToolDragDetail) => {
@@ -573,7 +612,18 @@ export default function Canvas({
 
       window.removeEventListener(TOOL_DRAG_END_EVENT, handleToolDragEnd);
     };
-  }, [screenToCanvas, snapValue, pushHistory, onAddItem, triggerEnterAnimation, onSelectItems, onSelectTool]);
+  }, [
+    screenToCanvas,
+    snapValue,
+    pushHistory,
+    onAddItem,
+    triggerEnterAnimation,
+    onSelectItems,
+    onSelectTool,
+    containerRef,
+    panRef,
+    zoomRef,
+  ]);
 
   const { drawingDraft, frameDraft, lasso, isPanning, handleCanvasMouseDown } = useCanvasMouse({
     containerRef,
@@ -639,7 +689,7 @@ export default function Canvas({
         x: snapValue(((containerRef.current?.clientWidth ?? 800) / 2 - panRef.current.x) / zoomRef.current),
         y: snapValue(((containerRef.current?.clientHeight ?? 600) / 2 - panRef.current.y) / zoomRef.current),
       },
-    [snapValue],
+    [snapValue, containerRef, panRef, zoomRef],
   );
   const [pasteStyleOpen, setPasteStyleOpen] = useState(false);
   const [styleClipboard, setStyleClipboard] = useState<ItemStyle | null>(null);
@@ -763,7 +813,7 @@ export default function Canvas({
 
     const rect = getItemRect(firstItem, measuredSizes);
 
-    const targetZoom = Math.max(zoom, 0.8);
+    const targetZoom = Math.max(zoomRef.current, 0.8);
 
     onZoomChange(targetZoom);
 
@@ -774,7 +824,7 @@ export default function Canvas({
     });
 
     onSelectItems([firstItem.id]);
-  }, [project.items, measuredSizes, viewportSize, zoom, onPanChange, onZoomChange, onSelectItems]);
+  }, [project.items, measuredSizes, viewportSize, zoomRef, onPanChange, onZoomChange, onSelectItems]);
 
   const handleBlurActiveElement = useCallback((event: React.MouseEvent) => {
     if (event.button !== 0) return;
@@ -844,7 +894,12 @@ export default function Canvas({
   );
 
   const safeSelectedIds = selectedIds ?? [];
-  const joinableDrawings = project.items.filter((item) => selectedIds.includes(item.id));
+  const selectedItemIds = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const selectedItems = useMemo(
+    () => project.items.filter((item) => selectedItemIds.has(item.id)),
+    [project.items, selectedItemIds],
+  );
+  const joinableDrawings = selectedItems;
   const canJoinDrawings =
     !selectedColumnItem &&
     joinableDrawings.length > 1 &&
@@ -871,14 +926,18 @@ export default function Canvas({
     onSelectItems([joined.id]);
   };
 
-  const selectedItems = project.items.filter((item) => safeSelectedIds.includes(item.id));
-
+  const { statuses } = useProjectStatuses();
   const normalizedSearch = searchQuery.trim();
 
   const searchActive = normalizedSearch.length > 0;
-  const searchTargets = useMemo(
-    () => getSearchTargets(project.items, normalizedSearch),
-    [project.items, normalizedSearch],
+  const {
+    targets: searchTargets,
+    matchingIds,
+    nestedColumnMatches,
+    contextFrameIds,
+  } = useMemo(
+    () => getBoardSearchResult(project.items, normalizedSearch, statuses),
+    [project.items, normalizedSearch, statuses],
   );
   const searchIndex =
     searchCursor.query === normalizedSearch ? searchTargets.findIndex(({ item }) => item.id === searchCursor.id) : -1;
@@ -900,10 +959,10 @@ export default function Canvas({
         const bounds = element.getBoundingClientRect();
         rect = {
           ...rect,
-          x: (bounds.left - container.left - pan.x) / zoom,
-          y: (bounds.top - container.top - pan.y) / zoom,
-          width: bounds.width / zoom,
-          height: bounds.height / zoom,
+          x: (bounds.left - container.left - panRef.current.x) / zoomRef.current,
+          y: (bounds.top - container.top - panRef.current.y) / zoomRef.current,
+          width: bounds.width / zoomRef.current,
+          height: bounds.height / zoomRef.current,
         };
       }
       handleSelectColumnItem(target.columnId, target.item);
@@ -928,103 +987,82 @@ export default function Canvas({
     setSearchCursor({ query: normalizedSearch, id: target.item.id });
   };
 
-  const { matchingIds, nestedColumnMatches, contextFrameIds } = useMemo(() => {
-    const matchingIds = new Set<string>();
-
-    const nestedColumnMatches = new Map<string, Set<string>>();
-
-    for (const item of project.items) {
-      if (item.type === 'column') {
-        const result = getColumnSearchResult(item, normalizedSearch);
-
-        if (result.matches) {
-          matchingIds.add(item.id);
-        }
-
-        nestedColumnMatches.set(item.id, result.nestedMatchIds);
-
-        continue;
-      }
-
-      if (matchesItemSearch(item, normalizedSearch)) {
-        matchingIds.add(item.id);
-      }
-    }
-
-    const contextFrameIds = new Set<string>();
-
-    if (searchActive) {
-      const matchedItems = project.items.filter((item) => matchingIds.has(item.id));
-
-      for (const frame of project.items) {
-        if (frame.type !== 'frame') {
-          continue;
-        }
-
-        const containsMatch = matchedItems.some(
-          (matchedItem) => matchedItem.id !== frame.id && matchedItem.frameId === frame.id,
-        );
-
-        if (containsMatch) {
-          contextFrameIds.add(frame.id);
-        }
-      }
-    }
-
-    return { matchingIds, nestedColumnMatches, contextFrameIds };
-  }, [project.items, normalizedSearch, searchActive]);
-
-  const effectiveItems = useMemo(
-    () =>
-      dragOverrides.size === 0
-        ? project.items
-        : project.items.map((item) => {
-            const geometry = dragOverrides.get(item.id);
-            return geometry ? { ...item, ...geometry } : item;
-          }),
-    [project.items, dragOverrides],
+  const { frames, regularItems, renderedItems, lockedFrameIds } = useCanvasRenderModel(
+    project.items,
+    dragOverrides,
+    measuredSizes,
   );
-  const frames = useMemo(() => effectiveItems.filter((item) => item.type === 'frame'), [effectiveItems]);
-  const regularItems = useMemo(
-    () => project.items.filter((item) => item.type !== 'frame').sort((a, b) => a.zIndex - b.zIndex),
-    [project.items],
-  );
-  const effectiveItemsById = useMemo(() => new Map(effectiveItems.map((item) => [item.id, item])), [effectiveItems]);
-  const renderedItems = useMemo(
+  const retainedItemIds = useMemo(() => {
+    const ids = new Set(selectedItemIds);
+    for (const id of dragOverrides.keys()) ids.add(id);
+    for (const id of frameCapturePreviewIds) ids.add(id);
+    for (const id of Object.keys(remotePresence ?? {})) ids.add(id);
+    if (searchActive) for (const id of matchingIds) ids.add(id);
+    for (const id of [
+      focusedItemId,
+      selectedColumnItem?.columnId,
+      customCssTarget?.columnId,
+      customCssTarget?.itemId,
+      attachHoverId,
+      dragOverColumnId,
+    ]) {
+      if (id) ids.add(id);
+    }
+    return ids;
+  }, [
+    selectedItemIds,
+    dragOverrides,
+    frameCapturePreviewIds,
+    remotePresence,
+    searchActive,
+    matchingIds,
+    focusedItemId,
+    selectedColumnItem?.columnId,
+    customCssTarget,
+    attachHoverId,
+    dragOverColumnId,
+  ]);
+  const visibleItems = useMemo(
     () =>
-      new Map(
-        regularItems.map((item) => [
-          item.id,
-          item.type === 'line'
-            ? resolveLineItem(
-                (effectiveItemsById.get(item.id) as typeof item | undefined) ?? item,
-                effectiveItems,
-                measuredSizes,
-              )
-            : (effectiveItemsById.get(item.id) ?? item),
-        ]),
+      regularItems.filter((item) =>
+        isCanvasItemVisible(
+          item,
+          { pan, zoom, width: viewportSize.width, height: viewportSize.height },
+          measuredSizes,
+          measuredItems,
+          retainedItemIds,
+        ),
       ),
-    [regularItems, effectiveItems, effectiveItemsById, measuredSizes],
+    [regularItems, pan, zoom, viewportSize, measuredSizes, measuredItems, retainedItemIds],
   );
-  const lockedFrameIds = useMemo(
+
+  // Offscreen notes use cheap content; stateful blocks retain their editor DOM behind a preview.
+  const overscanPreviewIds = useMemo(
     () =>
       new Set(
-        frames.filter((frame) => isFrameMovementLocked(frame, project.items, measuredSizes)).map((frame) => frame.id),
+        visibleItems
+          .filter(
+            (item) =>
+              ((item.type === 'note' && Boolean(item.width && item.width > 0 && item.height && item.height > 0)) ||
+                (isHeavyPreviewItem(item) && measuredItems.get(item.id) === item)) &&
+              !intersectsCanvasViewport(item, { pan, zoom, ...viewportSize }, measuredSizes, 0),
+          )
+          .map((item) => item.id),
       ),
-    [frames, project.items, measuredSizes],
+    [visibleItems, pan, zoom, viewportSize, measuredSizes, measuredItems],
   );
 
-  const minorGridInterval = CANVAS_GRID_SIZE * zoom;
-
-  const majorGridInterval = CANVAS_MAJOR_GRID_SIZE * zoom;
-
-  const minorBackgroundX = ((pan.x % minorGridInterval) + minorGridInterval) % minorGridInterval;
-
-  const minorBackgroundY = ((pan.y % minorGridInterval) + minorGridInterval) % minorGridInterval;
-
-  const majorBackgroundX = ((pan.x % majorGridInterval) + majorGridInterval) % majorGridInterval;
-
-  const majorBackgroundY = ((pan.y % majorGridInterval) + majorGridInterval) % majorGridInterval;
+  // Measurement snapshots change gesture closures; they must not invalidate every block editor.
+  const itemCallbacks = useCanvasCallbacks({
+    onMouseDown: handleItemMouseDown,
+    onItemResize: handleItemResize,
+    onQuickConnectStart: handleQuickConnectStart,
+    onLineEndpointDrag: handleLineEndpointDrag,
+    onEjectFromColumn: handleEjectFromColumn,
+    onSelectColumnItem: handleSelectColumnItem,
+    onChecklistDropOutside: handleChecklistDropOutside,
+    onKanbanCardDropOutside: handleKanbanCardDropOutside,
+  });
 
   const cursorClass = isPanning
     ? 'cursor-grabbing'
@@ -1048,34 +1086,10 @@ export default function Canvas({
   return (
     <div
       data-canvas-root="true"
+      data-camera-moving={isNavigating}
       ref={containerRef}
       className={`flex-1 min-w-0 min-h-0 relative overflow-clip select-none ${cursorClass}`}
-      style={{
-        background: 'var(--canvas-background, var(--color-app-bg))',
-
-        backgroundImage: `
-          radial-gradient(
-            circle,
-            var(--color-canvas-dot) 1.8px,
-            transparent 2.1px
-          ),
-          radial-gradient(
-            circle,
-            var(--color-canvas-dot) 0.8px,
-            transparent 1.1px
-          )
-        `,
-
-        backgroundSize: `
-          ${majorGridInterval}px ${majorGridInterval}px,
-          ${minorGridInterval}px ${minorGridInterval}px
-        `,
-
-        backgroundPosition: `
-          ${majorBackgroundX - majorGridInterval / 2}px ${majorBackgroundY - majorGridInterval / 2}px,
-          ${minorBackgroundX - minorGridInterval / 2}px ${minorBackgroundY - minorGridInterval / 2}px
-        `,
-      }}
+      style={{ background: 'var(--canvas-background, var(--color-app-bg))' }}
       onMouseDownCapture={handleCanvasMouseDownCapture}
       onDragOver={(event) => {
         if (!event.dataTransfer.types.includes(TRASH_ITEM_MIME)) return;
@@ -1147,12 +1161,27 @@ export default function Canvas({
         setContextMenu({
           x: event.clientX,
           y: event.clientY,
-          canvasX: snapValue((event.clientX - rect.left - pan.x) / zoom),
-          canvasY: snapValue((event.clientY - rect.top - pan.y) / zoom),
+          canvasX: snapValue((event.clientX - rect.left - panRef.current.x) / zoomRef.current),
+          canvasY: snapValue((event.clientY - rect.top - panRef.current.y) / zoomRef.current),
           hasSelection: Boolean(id),
         });
       }}
     >
+      <div
+        ref={camera.gridRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute"
+        style={{
+          inset: -CANVAS_VIEWPORT_OVERSCAN,
+          transformOrigin: `${viewportSize.width / 2 + CANVAS_VIEWPORT_OVERSCAN}px ${viewportSize.height / 2 + CANVAS_VIEWPORT_OVERSCAN}px`,
+          willChange: 'transform',
+          backgroundSize: `${CANVAS_MAJOR_GRID_SIZE * zoom}px ${CANVAS_MAJOR_GRID_SIZE * zoom}px, ${CANVAS_GRID_SIZE * zoom}px ${CANVAS_GRID_SIZE * zoom}px`,
+          backgroundPosition: `${CANVAS_VIEWPORT_OVERSCAN - (CANVAS_MAJOR_GRID_SIZE * zoom) / 2}px ${CANVAS_VIEWPORT_OVERSCAN - (CANVAS_MAJOR_GRID_SIZE * zoom) / 2}px, ${CANVAS_VIEWPORT_OVERSCAN - (CANVAS_GRID_SIZE * zoom) / 2}px ${CANVAS_VIEWPORT_OVERSCAN - (CANVAS_GRID_SIZE * zoom) / 2}px`,
+          contain: 'strict',
+          backgroundImage:
+            'radial-gradient(circle, var(--color-canvas-dot) 1.8px, transparent 2.1px), radial-gradient(circle, var(--color-canvas-dot) 0.8px, transparent 1.1px)',
+        }}
+      />
       {searchActive && (
         <div
           data-canvas-ui="true"
@@ -1305,25 +1334,22 @@ export default function Canvas({
         onGoToFirstItem={handleGoToFirstItem}
       />
 
-      <div
-        className="absolute"
-        style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
-      >
+      <div ref={camera.sceneRef} data-canvas-scene="true" className="absolute" style={{ transformOrigin: '0 0' }}>
         {frames.map((frame) => (
           <CanvasFrame
             key={frame.id}
             item={frame}
             projectParticipants={projectParticipants}
             movementLocked={lockedFrameIds.has(frame.id)}
-            onItemResize={handleItemResize}
+            onItemResize={itemCallbacks.onItemResize}
             zoom={zoom}
-            isSelected={safeSelectedIds.includes(frame.id)}
+            isSelected={selectedItemIds.has(frame.id)}
             isDragging={draggingIds.includes(frame.id)}
-            onQuickConnectStart={handleQuickConnectStart}
+            onQuickConnectStart={itemCallbacks.onQuickConnectStart}
             isAnimating={animatingIds.has(frame.id)}
             isAttachTarget={attachHoverId === frame.id}
             selectedIds={safeSelectedIds}
-            onMouseDown={handleItemMouseDown}
+            onMouseDown={itemCallbacks.onMouseDown}
             onAnimationEnd={clearEnterAnimation}
             onUpdateItem={onUpdateItem}
             onDeleteItem={onDeleteItem}
@@ -1336,7 +1362,7 @@ export default function Canvas({
           />
         ))}
 
-        {regularItems.map((item) => {
+        {visibleItems.map((item) => {
           const renderedItem = renderedItems.get(item.id) ?? item;
 
           return (
@@ -1346,6 +1372,7 @@ export default function Canvas({
               projectParticipants={projectParticipants}
               renderedItem={renderedItem}
               measuredSize={measuredSizes.get(item.id)}
+              measurementCurrent={measuredItems.get(item.id) === item}
               remotePresence={remotePresence?.[item.id]}
               collaboratorLocked={collaboratorLockedIds.has(item.id)}
               isFrameCapturePreview={frameCapturePreviewIds.includes(item.id)}
@@ -1354,27 +1381,30 @@ export default function Canvas({
               }
               isDragging={draggingIds.includes(item.id)}
               dragTilt={draggingIds.includes(item.id) ? dragTilt : 0}
-              onQuickConnectStart={handleQuickConnectStart}
-              zoom={zoom}
-              isSelected={safeSelectedIds.includes(item.id)}
+              onQuickConnectStart={itemCallbacks.onQuickConnectStart}
+              zoom={item.type === 'section-title' || selectedItemIds.has(item.id) ? zoom : 1}
+              lowDetail={lowDetail && !retainedItemIds.has(item.id)}
+              motionPreview={(isNavigating || overscanPreviewIds.has(item.id)) && !retainedItemIds.has(item.id)}
+              scrollPositions={scrollPositions.current}
+              isSelected={selectedItemIds.has(item.id)}
               isAttachTarget={attachHoverId === item.id}
               isDragOver={dragOverColumnId === item.id}
               isAnimating={animatingIds.has(item.id)}
               selectedIds={safeSelectedIds}
-              onMouseDown={handleItemMouseDown}
+              onMouseDown={itemCallbacks.onMouseDown}
               onAnimationEnd={clearEnterAnimation}
               onResize={handleMeasuredItemResize}
-              onItemResize={handleItemResize}
+              onFocusItem={setFocusedItemId}
+              onItemResize={itemCallbacks.onItemResize}
               onUpdateItem={onUpdateItem}
               onDeleteItem={onDeleteItem}
               onSelectItems={onSelectItems}
               onRequestDelete={requestDelete}
-              onLineEndpointDrag={handleLineEndpointDrag}
-              onEjectFromColumn={handleEjectFromColumn}
-              onSelectColumnItem={handleSelectColumnItem}
-              onChecklistDropOutside={handleChecklistDropOutside}
-              onKanbanCardDropOutside={handleKanbanCardDropOutside}
-              pushHistory={pushHistory}
+              onLineEndpointDrag={itemCallbacks.onLineEndpointDrag}
+              onEjectFromColumn={itemCallbacks.onEjectFromColumn}
+              onSelectColumnItem={itemCallbacks.onSelectColumnItem}
+              onChecklistDropOutside={itemCallbacks.onChecklistDropOutside}
+              onKanbanCardDropOutside={itemCallbacks.onKanbanCardDropOutside}
               searchActive={searchActive}
               isSearchMatch={!searchActive || matchingIds.has(item.id)}
               nestedSearchMatchIds={item.type === 'column' ? nestedColumnMatches.get(item.id) : undefined}
@@ -1582,24 +1612,24 @@ export default function Canvas({
           setContextMenu({
             x: rect.right - 240,
             y: rect.bottom - 420,
-            canvasX: snapValue((centerX - pan.x) / zoom),
-            canvasY: snapValue((centerY - pan.y) / zoom),
+            canvasX: snapValue((centerX - panRef.current.x) / zoomRef.current),
+            canvasY: snapValue((centerY - panRef.current.y) / zoomRef.current),
             hasSelection: inspectorItems.length > 0,
           });
         }}
         zoom={zoom}
+        getZoom={getLiveZoom}
         snapEnabled={snapEnabled}
         placeOnItems={placeOnItems}
         onZoomChange={(nextZoom) => {
           const centerX = viewportSize.width / 2;
           const centerY = viewportSize.height / 2;
           onPanChange({
-            x: centerX - (centerX - pan.x) * (nextZoom / zoom),
-            y: centerY - (centerY - pan.y) * (nextZoom / zoom),
+            x: centerX - (centerX - panRef.current.x) * (nextZoom / zoomRef.current),
+            y: centerY - (centerY - panRef.current.y) * (nextZoom / zoomRef.current),
           });
           onZoomChange(nextZoom);
         }}
-        onPanChange={onPanChange}
         onFitView={handleReturnToBoard}
         selectionMode={touchSelectionMode}
         onToggleSelectionMode={() => setTouchSelectionMode((current) => !current)}
@@ -1608,5 +1638,14 @@ export default function Canvas({
         onTogglePlaceOnItems={() => setPlaceOnItems((previous) => !previous)}
       />
     </div>
+  );
+}
+
+const MemoCanvasContent = memo(CanvasContent);
+
+export default function Canvas(props: CanvasProps) {
+  const { snapshot, camera, isNavigating } = useCanvasCamera(props.pan, props.zoom);
+  return (
+    <MemoCanvasContent {...props} pan={snapshot.pan} zoom={snapshot.zoom} camera={camera} isNavigating={isNavigating} />
   );
 }
