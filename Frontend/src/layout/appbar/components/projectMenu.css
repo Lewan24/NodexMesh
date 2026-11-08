@@ -42,8 +42,8 @@
 }
 .project-action:hover,
 .project-tab:hover {
-  background: #ffffff18;
-  color: white;
+  background: var(--color-chrome-hover);
+  color: var(--color-chrome-text-strong);
 }
 .project-action:disabled {
   opacity: 0.35;
@@ -56,8 +56,8 @@
   transition: background 0.15s;
 }
 .project-tab[aria-pressed='true'] {
-  background: var(--color-accent);
-  color: white;
+  background: var(--color-accent-fill, var(--color-accent));
+  color: var(--color-on-accent);
 }
 .project-row {
   display: flex;

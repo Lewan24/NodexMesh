@@ -7,6 +7,8 @@ import { normalizeFrameMembership } from '@/features/canvas/utils/frameGeometry'
 import { canonicalJson } from '@/shared/api/canonicalJson';
 
 const appearanceKeys = [
+  'groupId',
+  'todo',
   'color',
   'backgroundOpacity',
   'colorRole',
@@ -157,6 +159,7 @@ export function toProjectView(snapshot: ProjectSnapshot): Project {
     role: project.role,
     name: project.name,
     color: project.color,
+    todoDisplay: project.todoDisplay,
     itemCount: project.itemCount,
     ...(snapshot.unloaded ? { itemsLoading: true } : {}),
     deletedAt: project.deletedAt ?? undefined,
@@ -196,6 +199,8 @@ export function renewProjectIds<T extends Project>(project: T): T {
   function collect(value: unknown): void {
     if (!value || typeof value !== 'object') return;
     if ('id' in value && typeof value.id === 'string') ids.set(value.id, createId());
+    if ('groupId' in value && typeof value.groupId === 'string' && !ids.has(value.groupId))
+      ids.set(value.groupId, createId());
     Object.values(value).forEach(collect);
   }
   collect(project);
@@ -210,6 +215,7 @@ export function renewProjectIds<T extends Project>(project: T): T {
             'id',
             'boardId',
             'frameId',
+            'groupId',
             'statusId',
             'dispenserId',
             'startItemId',

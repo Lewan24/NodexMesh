@@ -24,10 +24,10 @@
   height: 66px;
   flex: none;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-border));
+  border: 1px solid color-mix(in srgb, var(--color-secondary) 24%, var(--color-border));
   border-radius: 12px 12px 12px 4px;
-  background: color-mix(in srgb, var(--color-accent) 11%, var(--color-surface));
-  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-secondary) 11%, var(--color-surface));
+  color: var(--color-secondary-ink);
   box-shadow: 0 6px 18px #00000010;
 }
 .file-block-copy {
@@ -66,7 +66,7 @@
 }
 .file-block-change:hover {
   background: var(--color-accent-soft);
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
 }
 .file-block-open {
   flex: none;

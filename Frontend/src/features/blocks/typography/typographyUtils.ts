@@ -4,8 +4,8 @@ import type { BoardItem, FontFamily, TypographySettings } from '@/entities/board
 export const SANS_FONT_STACK = '"DM Sans", Arial, sans-serif';
 export const SERIF_FONT_STACK = '"Noto Serif", Georgia, Cambria, serif';
 export const MONO_FONT_STACK = '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
-// Several decorative fonts only provide basic Latin. Use shipped fonts for missing glyphs
-// instead of the device's unpredictable generic cursive face.
+// Primary faces include Polish glyphs. Keep a shipped backup for download failures
+// and characters outside their coverage instead of the device's generic cursive face.
 const handwritingFont = (family: string) => `"${family}", "Patrick Hand", ${SANS_FONT_STACK}`;
 
 export const FONT_FAMILIES: { value: FontFamily; label: string; css: string }[] = [
@@ -50,7 +50,7 @@ export const FONT_FAMILIES: { value: FontFamily; label: string; css: string }[] 
     get label() {
       return translate('Short Stack · Playful');
     },
-    css: handwritingFont('Short Stack'),
+    css: handwritingFont('Nodex Stack'),
   },
   {
     value: 'shantell-sans',
@@ -71,7 +71,7 @@ export const FONT_FAMILIES: { value: FontFamily; label: string; css: string }[] 
     get label() {
       return translate('Schoolbell · Notes');
     },
-    css: handwritingFont('Schoolbell'),
+    css: handwritingFont('Nodex Schoolbell'),
   },
   {
     value: 'mansalva',
@@ -85,7 +85,7 @@ export const FONT_FAMILIES: { value: FontFamily; label: string; css: string }[] 
     get label() {
       return translate('Walter Turncoat · Rough');
     },
-    css: handwritingFont('Walter Turncoat'),
+    css: handwritingFont('Nodex Turncoat'),
   },
   {
     value: 'patrick-hand-sc',
@@ -144,7 +144,7 @@ export const MAX_FONT_SIZE = 96;
 export const DEFAULT_FONT_FAMILY: FontFamily = 'short-stack';
 
 export function getFontFamilyCss(family?: FontFamily): string {
-  if (!family) return `var(--project-font, ${handwritingFont('Short Stack')})`;
+  if (!family) return `var(--project-font, ${handwritingFont('Nodex Stack')})`;
   return FONT_FAMILIES.find((option) => option.value === family)?.css ?? SANS_FONT_STACK;
 }
 

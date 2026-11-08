@@ -1,6 +1,7 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import ItemCssScope from './custom-css/ItemCssScope';
+import ItemTodo from './shared/ItemTodo';
 import { TypographyContext } from './typography/TypographyContext';
 import IconBlock from './icon/IconBlock';
 import SectionTitleBlock from './section-title/SectionTitleBlock';
@@ -159,7 +160,9 @@ function BlockContent({
     case 'dispenser':
       return <DispenserBlock item={item} onUpdate={onUpdate} onDelete={onDelete} />;
     case 'note':
-      return <NoteBlock item={item} isSelected={isSelected} onUpdate={onUpdate} onDelete={onDelete} />;
+      return (
+        <NoteBlock item={item} readOnly={readOnly} isSelected={isSelected} onUpdate={onUpdate} onDelete={onDelete} />
+      );
 
     case 'kanban':
       return (
@@ -235,11 +238,13 @@ export default function BlockRenderer(props: BlockRendererProps) {
   useTranslation();
   return (
     <TypographyContext.Provider value={props.item.typography}>
-      <ItemCssScope item={props.item}>
-        <ErrorBoundary resetKey={props.item.id}>
-          <BlockContent {...props} />
-        </ErrorBoundary>
-      </ItemCssScope>
+      <ItemTodo item={props.item}>
+        <ItemCssScope item={props.item}>
+          <ErrorBoundary resetKey={props.item.id}>
+            <BlockContent {...props} />
+          </ErrorBoundary>
+        </ItemCssScope>
+      </ItemTodo>
     </TypographyContext.Provider>
   );
 }

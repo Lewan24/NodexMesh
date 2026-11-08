@@ -9,6 +9,7 @@ import { getItemSize } from '@/features/canvas/utils/itemGeometry';
 import { getFrameMovementLockedIds, isItemInsideFrame, wouldCreateFrameCycle } from '../utils/frameGeometry';
 import { AlignmentGuide, findAlignmentSnap } from '../utils/alignmentGuides';
 import { snapToGrid } from '../utils/gridSnap';
+import { expandGroupSelection } from '../utils/itemGroups';
 
 export interface ItemDropPreview {
   x: number;
@@ -105,19 +106,22 @@ export function useItemDrag({
       clearColumnSelection();
       onSelectTool('select');
 
+      const items = projectRef.current.items;
+      const clickedGroupIds = new Set(expandGroupSelection(items, [id]));
       const currentSelected = selectedIdsRef.current;
       const isSelected = currentSelected.includes(id);
-      const newSelected = event.shiftKey
+      const nextSelection = event.shiftKey
         ? isSelected
-          ? currentSelected.filter((currentId) => currentId !== id)
+          ? currentSelected.filter((currentId) => !clickedGroupIds.has(currentId))
           : [...currentSelected, id]
         : isSelected
           ? currentSelected
           : [id];
 
+      const newSelected = expandGroupSelection(items, nextSelection);
       onSelectItems(newSelected);
+      if (event.shiftKey && isSelected) return;
       const dragIds = newSelected.includes(id) ? newSelected : [id];
-      const items = projectRef.current.items;
       const byId = new Map(items.map((item) => [item.id, item]));
       const dragIdSet = new Set(dragIds);
       const clickedItem = byId.get(id);
@@ -128,6 +132,14 @@ export function useItemDrag({
         (item.type === 'frame' && (lockedFrameIds ??= getFrameMovementLockedIds(items)).has(item.id));
 
       if (clickedItem && movementLocked(clickedItem)) return;
+      // A locked member prevents the entire logical group from separating.
+      if (
+        dragIds.some((dragId) => {
+          const member = byId.get(dragId);
+          return member?.groupId && items.some((item) => item.groupId === member.groupId && movementLocked(item));
+        })
+      )
+        return;
 
       const captureMap = new Map<string, DragCapture>();
       const capture = (item: BoardItem) => {
@@ -175,6 +187,21 @@ export function useItemDrag({
         }
       }
 
+      // Follow group memberships reached through frame descendants as well.
+      const checkedGroups = new Set<string>();
+      for (const capturedId of captureMap.keys()) {
+        const groupId = byId.get(capturedId)?.groupId;
+        if (!groupId || checkedGroups.has(groupId)) continue;
+        checkedGroups.add(groupId);
+        const members = items.filter((item) => item.groupId === groupId);
+        if (members.some(movementLocked)) return;
+        for (const member of members) {
+          if (captureMap.has(member.id)) continue;
+          capture(member);
+          if (member.type === 'frame') captureFrameContents(member.id);
+        }
+      }
+
       if (captureMap.size === 0) return;
 
       const capturedIds = new Set(captureMap.keys());
@@ -205,7 +232,11 @@ export function useItemDrag({
           // A frame moves its descendants as one unit. Applying an independent
           // tilt/scale animation to every captured child makes the group appear
           // to separate and jump when horizontal direction changes.
-          setDraggingIds(getDragEffectIds(dragIds, capturedIds));
+          setDraggingIds(
+            [...captureMap.keys()].some((dragId) => byId.get(dragId)?.groupId)
+              ? []
+              : getDragEffectIds(dragIds, capturedIds),
+          );
         }
         hasMoved = true;
         lastDx = (moveEvent.clientX - startX) / currentZoom;

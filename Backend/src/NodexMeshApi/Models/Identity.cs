@@ -7,6 +7,8 @@ public sealed class ApplicationUser : IdentityUser<Guid>
     public string MfaPreferredMethod { get; set; } = "email";
     public string? MfaSecretProtected { get; set; }
     public long? MfaLastAcceptedStep { get; set; }
+    public Guid? AvatarId { get; set; }
+    public string? AvatarContentType { get; set; }
     public string DisplayName { get; set; } = string.Empty;
     public bool IsAdmin { get; set; }
     public bool IsBlocked { get; set; }
@@ -18,6 +20,9 @@ public sealed class ApplicationUser : IdentityUser<Guid>
 public sealed class SystemSettings
 {
     public int Id { get; set; }
+    public string ApplicationName { get; set; } = "NodexMesh";
+    public Guid? LogoId { get; set; }
+    public string? LogoContentType { get; set; }
     public bool RegistrationEnabled { get; set; } = true;
     public bool EmailEnabled { get; set; }
     public string EmailHost { get; set; } = string.Empty;

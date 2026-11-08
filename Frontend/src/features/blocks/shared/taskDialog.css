@@ -55,7 +55,7 @@
   flex-shrink: 0;
   border-radius: 14px;
   background: var(--color-accent-soft);
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
 }
 .task-dialog-body {
   min-height: 0;
@@ -156,7 +156,7 @@
 }
 .task-input:focus-visible {
   outline: none;
-  border-color: var(--color-accent);
+  border-color: var(--color-accent-ink);
   box-shadow: 0 0 0 3px var(--color-accent-soft);
 }
 .task-button,
@@ -178,8 +178,8 @@
   padding: 10px 16px;
 }
 .task-button-primary {
-  background: var(--color-accent);
-  color: white;
+  background: var(--color-accent-fill, var(--color-accent));
+  color: var(--color-on-accent);
 }
 .task-button-secondary {
   border: 1px solid var(--color-border);
@@ -199,7 +199,7 @@
   opacity: 0.9;
 }
 .task-text-button {
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
   padding: 7px 10px;
   margin-top: 8px;
 }
@@ -239,7 +239,7 @@
   outline-offset: 2px;
 }
 .task-category-option.is-selected {
-  border-color: var(--color-accent);
+  border-color: var(--color-accent-ink);
   background: var(--color-accent-soft);
 }
 .task-category-dot {
@@ -267,10 +267,10 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  accent-color: var(--color-accent);
+  accent-color: var(--color-accent-ink);
 }
 .task-complete-option.is-completed {
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
 }
 .task-count {
   margin-left: auto;
@@ -287,7 +287,7 @@
 .task-progress > span {
   display: block;
   height: 100%;
-  background: var(--color-accent);
+  background: var(--color-accent-fill, var(--color-accent));
   transition: width 180ms;
 }
 .task-subtask-list {

@@ -21,6 +21,8 @@ export function hasLibraryMedia(project: Project): boolean {
       if (item.type === 'image') return !!parseLibrarySource(item.url);
       if (item.type === 'file') return !!parseLibrarySource(item.source);
       if (item.type === 'icon') return !!parseLibrarySource(item.source);
+      if (item.type === 'board')
+        return item.boardIcon?.iconMode === 'library' && !!parseLibrarySource(item.boardIcon.source);
       return false;
     });
   return project.boards?.length ? project.boards.some((board) => contains(board.items)) : contains(project.items);
@@ -97,6 +99,16 @@ export async function persistImportedProject(
     clientMutationId: createId(),
   });
   try {
+    if (project.todoDisplay) {
+      snapshot.project = await api.projects.update(snapshot.project.id, {
+        name: project.name,
+        color: project.color,
+        todoDisplay: project.todoDisplay,
+        deletedAt: null,
+        expectedRevision: snapshot.project.revision,
+        clientMutationId: createId(),
+      });
+    }
     if (project.statuses?.length) {
       if (!api.statuses) throw new Error('Project statuses cannot be imported by this data source.');
       const previous = await api.statuses.get(snapshot.project.id);
@@ -146,6 +158,8 @@ export async function importProjectJson(text: string, userId: string): Promise<I
     throw new Error(translate('Unsupported project file. Expected NodexMesh project JSON version 1 or 2.'));
   }
   const source = value.project;
+  if (source?.todoDisplay !== undefined && !['checkbox', 'checkmark', 'strike'].includes(source.todoDisplay))
+    throw new Error('Invalid TODO display.');
   if (source?.statuses !== undefined) validateStatuses(source.statuses);
   if (
     !source ||
@@ -224,6 +238,7 @@ export async function importProjectJson(text: string, userId: string): Promise<I
     statuses: source.statuses ?? [],
     name: source.name.trim(),
     color: source.color,
+    todoDisplay: source.todoDisplay,
     items: [],
     ownerId: userId,
     boardId: ordered[0]!.id,

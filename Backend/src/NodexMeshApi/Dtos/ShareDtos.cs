@@ -30,7 +30,7 @@ public sealed record CreatedShareLinkDto(ShareLinkDto Link, string Token);
 /// them, and ownerId/createdBy are user identifiers that would leak who owns the board.
 /// </summary>
 public sealed record PublicProjectDto(
-    Guid Id, string Name, string? Color, DateTimeOffset UpdatedAt);
+    Guid Id, string Name, string? Color, DateTimeOffset UpdatedAt, string TodoDisplay = "checkbox");
 
 public sealed record PublicBoardDto(Guid Id, string Name, int SortOrder);
 

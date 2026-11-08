@@ -151,7 +151,7 @@ export default function DocumentBlock({
           )}
           <button
             type="button"
-            className="shrink-0 rounded px-2 py-1 text-xs hover:bg-violet-500/10"
+            className="shrink-0 rounded px-2 py-1 text-xs hover:bg-accent-soft"
             aria-pressed={autoHeight}
             title={translate('Fit content and grow automatically while writing')}
             onMouseDown={(e) => e.stopPropagation()}
@@ -165,7 +165,7 @@ export default function DocumentBlock({
           </button>
           <button
             type="button"
-            className="shrink-0 rounded px-2 py-1 text-xs hover:bg-violet-500/10"
+            className="shrink-0 rounded px-2 py-1 text-xs hover:bg-accent-soft"
             onMouseDown={(e) => e.stopPropagation()}
             disabled={item.locked}
             onClick={() => setEditing(!editing)}
@@ -192,7 +192,7 @@ export default function DocumentBlock({
               aria-label={command.title}
               aria-pressed={command.active}
               onClick={command.run}
-              className="px-2 py-1 rounded text-xs hover:bg-violet-500/15"
+              className="px-2 py-1 rounded text-xs hover:bg-accent-soft"
               style={{ background: command.active ? 'var(--color-accent-soft-strong)' : undefined }}
             >
               {command.label}

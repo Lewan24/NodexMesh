@@ -7,28 +7,21 @@
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-/* ────────────────────────────────────────────────────────────────────────
-   THEME TOKENS
-   Single source of truth for color. The whole palette is derived from the
-   sidebar's deep violet (--color-chrome-bg) — that's the one color that
-   never changes between themes; everything else (accent, surfaces, text)
-   is tuned to sit well next to it. Light is the default theme; dark
-   overrides live in [data-theme="dark"]. Change a value here and it
-   updates everywhere it's referenced via var(--token-name).
-
-   Per-item colors that users pick on the canvas (note/frame/card colors)
-   are intentionally left as user data, not theme.
-   ──────────────────────────────────────────────────────────────────────── */
-
-/* ── Chrome / sidebar / floating panels ──────────────────────────────── */
-/* Brand-anchored, same in both themes */
+/* Fallback tokens before preferences load. ThemeProvider supplies palette roles;
+   application chrome uses personal UI colors. Explicit item colors remain user data. */
 
 :root {
-  --color-chrome-bg: #15131c;
-  --color-chrome-bg-alt: #111016;
-  --color-chrome-panel: #1c1924;
+  --color-secondary: #b64a25;
+  --color-on-accent: #fff;
+  --color-on-secondary: #fff;
+  --color-accent-ink: #334c5c;
+  --color-secondary-ink: #b64a25;
+  --color-secondary-soft: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+  --color-chrome-bg: #151c22;
+  --color-chrome-bg-alt: #11181e;
+  --color-chrome-panel: #1b242b;
 
-  --color-chrome-border: #302a3d;
+  --color-chrome-border: #303b43;
   --color-chrome-border-soft: rgba(255, 255, 255, 0.07);
 
   --color-chrome-text: #c9c3d4;
@@ -36,7 +29,7 @@
   --color-chrome-text-faint: #756e82;
   --color-chrome-text-strong: #f7f5fa;
 
-  --color-chrome-hover: #24202d;
+  --color-chrome-hover: #25313a;
 
   /* Semantic */
   --color-success: #66836d;
@@ -55,11 +48,11 @@
   --color-item-default: #ffffff;
 
   /* Brand */
-  --color-accent: #5b3df5;
-  --color-accent-hover: #4f33d9;
+  --color-accent: #334c5c;
+  --color-accent-hover: #2d4351;
 
-  --color-accent-soft: rgba(91, 61, 245, 0.1);
-  --color-accent-soft-strong: rgba(91, 61, 245, 0.17);
+  --color-accent-soft: rgba(51, 76, 92, 0.1);
+  --color-accent-soft-strong: rgba(51, 76, 92, 0.17);
 
   /* Base */
   --color-app-bg: #f5f5f7;
@@ -98,11 +91,11 @@
   --color-item-default: #25252a;
 
   /* Brand */
-  --color-accent: #735cff;
-  --color-accent-hover: #846fff;
+  --color-accent: #334c5c;
+  --color-accent-hover: #2d4351;
 
-  --color-accent-soft: rgba(115, 92, 255, 0.16);
-  --color-accent-soft-strong: rgba(115, 92, 255, 0.24);
+  --color-accent-soft: rgba(51, 76, 92, 0.16);
+  --color-accent-soft-strong: rgba(51, 76, 92, 0.24);
 
   /* Base */
   --color-app-bg: #1f1f22;
@@ -176,19 +169,44 @@ body {
   color: var(--color-text-muted);
 }
 .text-theme-accent {
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
 }
 .text-theme-inverse {
   color: var(--color-chrome-text-strong);
 }
 
 .btn-accent {
-  background-color: var(--color-accent);
-  color: white;
+  background: var(--color-accent-fill, var(--color-accent));
+  color: var(--color-on-accent, white);
   transition: background-color 0.15s ease;
 }
 .btn-accent:hover {
-  background-color: var(--color-accent-hover);
+  filter: brightness(1.06);
+}
+
+.btn-secondary {
+  background: var(--color-secondary-fill, #b64a25);
+  color: var(--color-on-secondary, #fff);
+}
+.btn-secondary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.bg-accent-soft {
+  background: var(--color-accent-soft);
+}
+.bg-accent-soft-strong {
+  background: var(--color-accent-soft-strong);
+}
+.hover\:bg-accent-soft:hover {
+  background: var(--color-accent-soft);
+}
+.hover\:bg-accent-soft-strong:hover {
+  background: var(--color-accent-soft-strong);
+}
+.ring-accent,
+.focus\:ring-accent:focus,
+.focus-visible\:ring-accent:focus-visible {
+  --tw-ring-color: var(--color-accent);
 }
 
 .btn-ghost {
@@ -198,7 +216,7 @@ body {
     color 0.15s ease;
 }
 .btn-ghost:hover {
-  background-color: rgba(124, 58, 237, 0.08);
+  background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
 .card-surface {
@@ -224,7 +242,7 @@ body {
 }
 .input-theme:focus {
   outline: none;
-  border-color: var(--color-accent);
+  border-color: var(--color-accent-ink);
 }
 
 ::-webkit-scrollbar {
@@ -235,11 +253,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(124, 58, 237, 0.4);
+  background: color-mix(in srgb, var(--color-accent) 40%, transparent);
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent);
+  background: var(--color-accent-fill, var(--color-accent));
 }
 
 @keyframes fade-in {
@@ -330,12 +348,7 @@ body {
 [data-app-bar='true'],
 .tool-sidebar {
   background: var(--chrome-gradient) !important;
-  color: #eee7f8;
-}
-.tool-sidebar {
-  --color-chrome-text: #e0d5ee;
-  --color-chrome-text-dim: #cfc0e2;
-  --color-chrome-text-faint: #b8a9ce;
+  color: var(--color-chrome-text);
 }
 button,
 input,
@@ -345,7 +358,7 @@ textarea {
 }
 
 .bg-violet-600 {
-  background-color: var(--color-accent);
+  background: var(--color-accent-fill, var(--color-accent));
   color: var(--color-on-accent, #fff);
 }
 :root {
@@ -355,20 +368,26 @@ textarea {
 /* App chrome is personal UI, independent of the active board palette. */
 [data-app-bar='true'],
 .tool-sidebar {
-  --color-accent: var(--ui-accent, #6023b4);
+  --color-accent: var(--ui-accent, #334c5c);
+  --color-accent-fill: var(--ui-accent-fill, var(--ui-accent, #334c5c));
+  --color-secondary-fill: var(--ui-secondary-fill, var(--ui-secondary, #b64a25));
   --color-on-accent: var(--ui-on-accent, #fff);
-  --color-accent-hover: var(--ui-accent, #6023b4);
-  --color-accent-soft: color-mix(in srgb, var(--ui-accent, #6023b4) 20%, transparent);
-  --color-accent-soft-strong: color-mix(in srgb, var(--ui-accent, #6023b4) 32%, transparent);
-  --color-secondary: var(--ui-secondary, #176f86);
-  --color-text-primary: #f5f0fc;
-  --color-text-secondary: #d2c4e4;
-  --color-text-muted: #b6a5ca;
-  --color-text-faint: #a695ba;
-  --color-surface: #241b30;
-  --color-surface-alt: #39264f;
-  --color-border: #ffffff1a;
-  --color-border-soft: #ffffff12;
+  --color-on-secondary: var(--ui-on-secondary, #fff);
+  --color-accent-ink: var(--ui-accent-ink);
+  --color-secondary-ink: var(--ui-secondary-ink);
+  --color-secondary-soft: color-mix(in srgb, var(--ui-secondary) 12%, transparent);
+  --color-accent-hover: var(--ui-accent, #334c5c);
+  --color-accent-soft: color-mix(in srgb, var(--ui-accent, #334c5c) 20%, transparent);
+  --color-accent-soft-strong: color-mix(in srgb, var(--ui-accent, #334c5c) 32%, transparent);
+  --color-secondary: var(--ui-secondary, #b64a25);
+  --color-text-primary: var(--color-chrome-text);
+  --color-text-secondary: var(--color-chrome-text);
+  --color-text-muted: var(--color-chrome-text);
+  --color-text-faint: var(--color-chrome-text);
+  --color-surface: var(--color-chrome-panel);
+  --color-surface-alt: var(--color-chrome-bg-alt);
+  --color-border: var(--color-chrome-border);
+  --color-border-soft: var(--color-chrome-border-soft);
 }
 [role='tab'][aria-selected='true'] {
   box-shadow: inset 0 -2px var(--color-accent);

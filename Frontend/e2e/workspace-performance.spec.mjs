@@ -209,8 +209,8 @@ test('the production shell edits and persists notes and camera through real mous
   await expect(page.locator('[data-canvas-scene]')).toHaveAttribute('style', /translate\(-60px, 90px\)/);
   const note = page.locator('[data-board-item-id="10000000-0000-4000-8000-000000000010"]');
   await note.locator('[data-touch-content] > div').dblclick();
-  await note.locator('textarea').fill('A persisted performance regression check');
-  await note.locator('textarea').press('Tab');
+  await note.locator('.tiptap').fill('A persisted performance regression check');
+  await note.locator('.tiptap').press('Tab');
   await expect
     .poll(() =>
       page.evaluate(() => {
@@ -220,7 +220,7 @@ test('the production shell edits and persists notes and camera through real mous
         ).data.content;
       }),
     )
-    .toBe('A persisted performance regression check');
+    .toBe('<p>A persisted performance regression check</p>');
   await page.reload();
   await expect(page.locator('[data-canvas-scene]')).toHaveAttribute('style', /translate\(-60px, 90px\)/);
   await expect(note).toContainText('A persisted performance regression check');

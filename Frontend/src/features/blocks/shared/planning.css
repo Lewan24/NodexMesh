@@ -29,8 +29,8 @@
   transform: translateY(-1px);
 }
 .planning-button[aria-pressed='true'] {
-  background: var(--color-accent);
-  color: white;
+  background: var(--color-accent-fill, var(--color-accent));
+  color: var(--color-on-accent);
 }
 .planning-button:disabled {
   opacity: 0.4;
@@ -72,12 +72,12 @@
   border: 0;
 }
 .timeline-primary-button {
-  background: var(--color-accent);
-  color: white;
+  background: var(--color-accent-fill, var(--color-accent));
+  color: var(--color-on-accent);
   box-shadow: 0 5px 14px color-mix(in srgb, var(--color-accent) 28%, transparent);
 }
 .timeline-primary-button:hover {
-  background: color-mix(in srgb, var(--color-accent) 88%, black);
+  filter: brightness(1.06);
 }
 .timeline-title-progress {
   display: inline-flex;
@@ -99,7 +99,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--color-accent), #22c55e);
+  background: var(--color-secondary-fill);
 }
 .timeline-milestone-list {
   position: relative;
@@ -172,9 +172,9 @@
   max-width: 180px;
   gap: 6px;
   padding: 3px 8px 3px 3px;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 20%, var(--color-border));
+  border: 1px solid color-mix(in srgb, var(--color-secondary) 20%, var(--color-border));
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+  background: color-mix(in srgb, var(--color-secondary) 8%, var(--color-surface));
   color: var(--color-text-primary);
   font-size: 11px;
   font-weight: 650;
@@ -193,8 +193,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-accent), #4f46e5);
-  color: white;
+  background: var(--color-secondary-fill);
+  color: var(--color-on-secondary);
   font-size: 8px;
   font-weight: 800;
   box-shadow: 0 0 0 2px var(--color-surface);
@@ -337,7 +337,7 @@
   background: linear-gradient(135deg, var(--color-surface-alt), var(--color-surface));
 }
 .timeline-dialog-eyebrow {
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -486,7 +486,7 @@
 .diagram-node .react-flow__handle {
   width: 12px;
   height: 12px;
-  background: var(--color-accent);
+  background: var(--color-accent-fill, var(--color-accent));
   border: 2px solid white;
 }
 /* Keep the routing endpoint on the shape boundary, at the port's outer edge. */
@@ -522,5 +522,5 @@
 }
 
 .diagram-node .react-flow__handle:hover {
-  box-shadow: 0 0 0 5px #8b5cf640;
+  box-shadow: 0 0 0 5px var(--color-accent-soft-strong);
 }

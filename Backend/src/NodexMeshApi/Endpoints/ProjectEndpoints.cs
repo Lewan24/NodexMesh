@@ -143,6 +143,12 @@ public static class ProjectEndpoints
 
         if (request.Name is not null) project.Name = request.Name;
         if (request.Color is not null) project.Color = request.Color;
+        if (request.TodoDisplay is not null)
+        {
+            if (request.TodoDisplay is not ("checkbox" or "checkmark" or "strike"))
+                throw new ApiException(422, "invalid_settings", "Invalid TODO display.");
+            project.TodoDisplay = request.TodoDisplay;
+        }
         project.Revision += 1;
         project.UpdatedAt = DateTimeOffset.UtcNow;
         project.UpdatedBy = userId;
@@ -272,16 +278,16 @@ public static class ProjectEndpoints
 
         var project = await db.Projects.AsNoTracking()
             .Where(p => p.Id == projectId)
-            .Join(db.Users, p => p.OwnerId, u => u.Id, (p, u) => new { p.OwnerId, OwnerName = u.DisplayName })
+            .Join(db.Users, p => p.OwnerId, u => u.Id, (p, u) => new { p.OwnerId, OwnerName = u.DisplayName, u.AvatarId })
             .SingleAsync(ct);
 
         var members = await db.ProjectMembers.AsNoTracking()
             .Where(m => m.ProjectId == projectId)
             .Join(db.Users, m => m.UserId, u => u.Id,
-                (m, u) => new ProjectParticipantDto(u.Id, u.DisplayName, m.Role.ToString()))
+                (m, u) => new ProjectParticipantDto(u.Id, u.DisplayName, m.Role.ToString(), u.AvatarId))
             .ToListAsync(ct);
 
-        members.Insert(0, new ProjectParticipantDto(project.OwnerId, project.OwnerName, ProjectRole.Owner.ToString()));
+        members.Insert(0, new ProjectParticipantDto(project.OwnerId, project.OwnerName, ProjectRole.Owner.ToString(), project.AvatarId));
         return TypedResults.Ok(members);
     }
 
@@ -306,6 +312,7 @@ public static class ProjectEndpoints
                 u.Id,
                 Email = u.Email!,
                 u.DisplayName,
+                u.AvatarId,
                 Role = m.Role,
                 m.CreatedAt
             })
@@ -319,7 +326,7 @@ public static class ProjectEndpoints
             isOwner || r.Id == userId ? r.Email : MaskEmail(r.Email),
             r.DisplayName,
             r.Role.ToString(),
-            r.CreatedAt)).ToList();
+            r.CreatedAt, r.AvatarId)).ToList();
 
         return TypedResults.Ok(members);
     }
@@ -413,7 +420,7 @@ public static class ProjectEndpoints
         await db.SaveChangesAsync(ct);
 
         return TypedResults.Ok(new ProjectMemberDto(
-            invitee.Id, invitee.Email!, invitee.DisplayName, role.ToString(), DateTimeOffset.UtcNow));
+            invitee.Id, invitee.Email!, invitee.DisplayName, role.ToString(), DateTimeOffset.UtcNow, invitee.AvatarId));
     }
 
     private static async Task<NoContent> UpdateMemberRoleAsync(
@@ -475,7 +482,7 @@ public static class ProjectEndpoints
 
     private static ProjectRecordDto ToDto(Project p, ProjectRole role, int itemCount = 0) => new(
         p.Id, p.OwnerId, p.Name, p.Color, p.Revision,
-        p.CreatedAt, p.UpdatedAt, p.CreatedBy, p.UpdatedBy, p.DeletedAt, role.ToString(), itemCount);
+        p.CreatedAt, p.UpdatedAt, p.CreatedBy, p.UpdatedBy, p.DeletedAt, role.ToString(), itemCount, p.TodoDisplay);
 
     private static Dictionary<string, string> EmailValues(string displayName, string projectName, string message) => new()
     {

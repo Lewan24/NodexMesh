@@ -38,8 +38,10 @@ export function createHttpAppearance(client: HttpClient) {
             uiFont: next.uiFont,
             uiPrimary: next.uiPrimary,
             uiSecondary: next.uiSecondary,
+            uiGradients: next.uiGradients ?? {},
+            uiBackground: next.uiBackground ?? {},
             inheritanceVersion: next.inheritanceVersion ?? 1,
-            paletteVersion: next.paletteVersion ?? 3,
+            paletteVersion: next.paletteVersion ?? 4,
           },
         });
       }

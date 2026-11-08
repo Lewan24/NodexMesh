@@ -18,6 +18,8 @@ if (localStorage.getItem(mockWorkspaceKey(DEMO_USER_ID)) !== null && localStorag
 }
 const parameters = new URLSearchParams(location.search);
 const mixed = parameters.get('board') === 'mixed';
+const interactions = parameters.get('board') === 'interactions';
+const dataset = interactions ? 'interactions' : mixed ? 'mixed' : 'notes';
 const identity = (index: number) => `10000000-0000-4000-8000-${String(index).padStart(12, '0')}`;
 const projectId = identity(1);
 const boardId = identity(2);
@@ -66,6 +68,22 @@ if (mixed) {
   }
   items.push(create('diagram', 200, 2400), create('mindmap', 1500, 2400));
 }
+if (interactions) {
+  items.length = 0;
+  sequence = 10;
+  const first = create('note', 0, 0, { content: 'First grouped note', width: 220, height: 170 });
+  const second = create('note', 350, 0, { content: 'Second grouped note', width: 220, height: 170 });
+  const frame = create('frame', 0, 350, { title: 'Existing frame', width: 700, height: 300 });
+  const child = create('note', 40, 400, { content: 'Frame child', width: 220, height: 170, frameId: frame.id });
+  const nested = create('note', 0, 0, { content: 'Nested TODO note', width: 220, height: 140 });
+  const column = create('column', 650, 0, { title: 'Nested tasks', width: 300, items: [nested] });
+  const boardCard = create('board', 650, 350, {
+    title: 'Research board',
+    description: 'Ideas and references for the next release.',
+  });
+  const iconCard = create('icon', 1050, 350);
+  items.push(first, second, frame, child, column, boardCard, iconCard);
+}
 const metadata = {
   revision: '1',
   createdAt: '2026-10-21T00:00:00Z',
@@ -88,7 +106,7 @@ const project: ProjectSnapshot = {
   project: { id: projectId, ownerId: DEMO_USER_ID, name: 'Rendering benchmark', color: '#7c3aed', ...metadata },
   board,
 };
-if (localStorage.getItem(datasetKey) !== (mixed ? 'mixed' : 'notes')) {
+if (localStorage.getItem(datasetKey) !== dataset) {
   localStorage.setItem(
     mockWorkspaceKey(DEMO_USER_ID),
     JSON.stringify({ formatVersion: 2, projects: [project], boards: { [projectId]: [board] }, receipts: {} }),
@@ -98,7 +116,8 @@ if (localStorage.getItem(datasetKey) !== (mixed ? 'mixed' : 'notes')) {
     viewportKey(DEMO_USER_ID, projectId, boardId)!,
     JSON.stringify({ pan: { x: 40, y: 40 }, zoom: 1 }),
   );
-  localStorage.setItem(datasetKey, mixed ? 'mixed' : 'notes');
+  localStorage.setItem(datasetKey, dataset);
 }
 await authService.login({ username: 'demo', password: 'demo123' });
-await import('@/main');
+if (parameters.get('media') === '1') await import('./identityMediaHarness');
+else await import('@/main');

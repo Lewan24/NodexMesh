@@ -1,3 +1,4 @@
+import { getNotePlainText } from '@/features/blocks/note/noteContent';
 import type { ProjectStatus } from '@/features/statuses/types';
 import type { BoardItem, ColumnItem, ChecklistEntry } from '@/entities/board/types';
 
@@ -55,7 +56,7 @@ export function getSearchableText(item: BoardItem): string {
     case 'dispenser':
       return item.title;
     case 'note':
-      return item.content;
+      return getNotePlainText(item);
 
     case 'section-title':
     case 'text':

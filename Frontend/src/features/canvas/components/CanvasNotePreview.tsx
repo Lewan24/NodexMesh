@@ -1,3 +1,6 @@
+import { ITEM_WIDTH } from '@/features/canvas/constants';
+import NoteContent from '@/features/blocks/note/noteContent';
+import '@/features/blocks/note/noteRichText.css';
 import type { NoteItem } from '@/entities/board/types';
 import { useCardAppearance } from '@/features/blocks/shared/cardAppearance';
 import { getTypographyStyle } from '@/features/blocks/typography/typographyUtils';
@@ -24,7 +27,7 @@ export default function CanvasNotePreview({
       data-camera-preview="true"
       className="item-rounded flex flex-col overflow-hidden"
       style={{
-        width: item.width ?? 220,
+        width: item.width ?? ITEM_WIDTH.note,
         height: item.height,
         background,
         contain: 'strict',
@@ -46,7 +49,7 @@ export default function CanvasNotePreview({
         }}
       >
         <div
-          className={`leading-relaxed whitespace-pre-wrap wrap-break-word ${NOTE_FONT_SIZE_CLASS[item.fontSize ?? 'base']}`}
+          className={`note-rich-text ${NOTE_FONT_SIZE_CLASS[item.fontSize ?? 'base']}`}
           style={{
             color: textColor,
             ...getTypographyStyle(item),
@@ -54,7 +57,7 @@ export default function CanvasNotePreview({
             ...getSectionStyle(item.typography, 'body'),
           }}
         >
-          {item.content}
+          <NoteContent item={item} />
         </div>
       </div>
     </div>

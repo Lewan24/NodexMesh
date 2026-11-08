@@ -15,7 +15,7 @@ export default function SectionTitleBlock({
 }) {
   useTranslation();
   const { appearance, theme } = useTheme();
-  const color = item.colorRole ? appearance[theme][item.colorRole] : (item.color ?? '#7C3AED');
+  const color = item.colorRole ? appearance[theme][item.colorRole] : (item.color ?? appearance[theme].primary);
   return (
     <div style={{ width: item.width ?? 320, height: 36, position: 'relative' }}>
       <div

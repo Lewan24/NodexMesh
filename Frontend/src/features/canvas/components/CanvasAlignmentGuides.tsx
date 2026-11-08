@@ -27,8 +27,10 @@ export default function CanvasAlignmentGuides({ guides }: CanvasAlignmentGuidesP
                 width: isCenter ? 2 : 1,
                 height: guide.end - guide.start,
                 transform: 'translateX(-50%)',
-                backgroundColor: isCenter ? 'var(--color-accent)' : 'rgba(124,58,237,0.65)',
-                boxShadow: isCenter ? '0 0 8px rgba(124,58,237,0.4)' : undefined,
+                backgroundColor: isCenter
+                  ? 'var(--color-accent)'
+                  : 'color-mix(in srgb, var(--color-accent) 65%, transparent)',
+                boxShadow: isCenter ? '0 0 8px color-mix(in srgb, var(--color-accent) 40%, transparent)' : undefined,
                 zIndex: 998,
               }}
             />
@@ -45,8 +47,10 @@ export default function CanvasAlignmentGuides({ guides }: CanvasAlignmentGuidesP
               width: guide.end - guide.start,
               height: isCenter ? 2 : 1,
               transform: 'translateY(-50%)',
-              backgroundColor: isCenter ? 'var(--color-accent)' : 'rgba(124,58,237,0.65)',
-              boxShadow: isCenter ? '0 0 8px rgba(124,58,237,0.4)' : undefined,
+              backgroundColor: isCenter
+                ? 'var(--color-accent)'
+                : 'color-mix(in srgb, var(--color-accent) 65%, transparent)',
+              boxShadow: isCenter ? '0 0 8px color-mix(in srgb, var(--color-accent) 40%, transparent)' : undefined,
               zIndex: 998,
             }}
           />

@@ -1,15 +1,21 @@
+import { ITEM_WIDTH } from '@/features/canvas/constants';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
 import { useCardAppearance } from '../shared/cardAppearance';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BoardItem, NoteItem } from '@/entities/board/types';
 
 import { NOTE_FONT_SIZE_CLASS, type NoteFontSize } from '@/features/blocks/note/utils/noteUtils';
 import { getTypographyStyle } from '../typography/typographyUtils';
 
+import NoteContent from './noteContent';
+import './noteRichText.css';
+const NoteRichEditor = lazy(() => import('./NoteRichEditor'));
+
 interface NoteBlockProps {
+  readOnly?: boolean;
   item: NoteItem;
   zoom?: number;
   isSelected: boolean;
@@ -17,7 +23,7 @@ interface NoteBlockProps {
   onDelete: () => void;
 }
 
-export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: NoteBlockProps) {
+export default function NoteBlock({ item, isSelected, onUpdate, onDelete, readOnly = false }: NoteBlockProps) {
   useTranslation();
   const [editing, setEditing] = useState(false);
   const typographyStyle = {
@@ -25,8 +31,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
     ...(item.dispenserId && !item.typography?.textAlign ? { textAlign: 'center' as const } : {}),
   };
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const noteRef = useRef<HTMLDivElement>(null);
 
   const { background, textColor, mutedColor } = useCardAppearance(
     item.color,
@@ -61,40 +66,19 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
     if (!isSelected) setEditing(false);
   }, [isSelected]);
 
-  /*
-   * Auto-grow only while no fixed/manual height exists.
-   */
-
-  const resizeTextarea = useCallback(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    textarea.style.height = 'auto';
-
-    if (item.height) {
-      const availableHeight = contentRef.current?.clientHeight ?? textarea.scrollHeight;
-
-      textarea.style.height = `${Math.min(textarea.scrollHeight, availableHeight)}px`;
-
-      return;
-    }
-
-    textarea.style.height = `${textarea.scrollHeight}px`;
-  }, [item.height]);
-
   useEffect(() => {
     if (!editing) return;
-
-    resizeTextarea();
-    textareaRef.current?.focus();
-  }, [editing, resizeTextarea]);
-
-  useEffect(() => {
-    resizeTextarea();
-  }, [item.content, item.typography, resizeTextarea]);
+    const outside = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Element && !noteRef.current?.contains(target) && !target.closest('dialog, [role="dialog"]'))
+        setEditing(false);
+    };
+    document.addEventListener('pointerdown', outside, true);
+    return () => document.removeEventListener('pointerdown', outside, true);
+  }, [editing]);
 
   return (
-    <div className="group relative" style={{ width: item.width ?? 220, height: item.height }}>
+    <div ref={noteRef} className="group relative" style={{ width: item.width ?? ITEM_WIDTH.note, height: item.height }}>
       <div
         className="item-rounded shadow-xl transition-shadow duration-150 group-hover:shadow-2xl flex flex-col"
         style={{
@@ -110,80 +94,65 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete }: Note
 
         {/* Header */}
 
-        <div className="absolute top-1 left-2 right-2 z-10 flex items-center justify-between pointer-events-none [&>button]:pointer-events-auto">
-          {item.height && (
+        {!editing && (
+          <div className="absolute top-1 left-2 right-2 z-10 flex items-center justify-between pointer-events-none [&>button]:pointer-events-auto">
+            {item.height && (
+              <button
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={() => update({ height: undefined })}
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5"
+                style={{ color: mutedColor }}
+                title={translate('Reset to auto height')}
+              >
+                {translate('Auto-fit')}
+              </button>
+            )}
+
             <button
               onMouseDown={(event) => event.stopPropagation()}
-              onClick={() => update({ height: undefined })}
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-[9px] font-semibold uppercase tracking-wide rounded-full px-1.5 py-0.5"
+              onClick={onDelete}
+              aria-label={translate('Delete')}
+              className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity rounded-full p-1 hover:bg-black/10"
               style={{ color: mutedColor }}
-              title={translate('Reset to auto height')}
             >
-              {translate('Auto-fit')}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
             </button>
-          )}
-
-          <button
-            onMouseDown={(event) => event.stopPropagation()}
-            onClick={onDelete}
-            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity rounded-full p-1 hover:bg-black/10"
-            style={{ color: mutedColor }}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+          </div>
+        )}
 
         {/* Content */}
 
         <div
-          ref={contentRef}
           data-touch-content={!editing}
           data-wheel-scroll={item.height ? 'true' : 'false'}
-          className="p-3 flex-1 min-h-0 flex flex-col"
-          style={{ overflow: editing ? 'hidden' : 'auto', justifyContent: verticalJustify }}
+          className={`p-3 flex-1 min-h-0 flex flex-col ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
+          style={{
+            overflow: 'auto',
+            justifyContent: editing ? 'flex-start' : verticalJustify,
+            color: textColor,
+            ...typographyStyle,
+            ...getSectionStyle(item.typography, 'body'),
+          }}
         >
           {editing ? (
-            <textarea
-              ref={textareaRef}
-              value={item.content}
-              onChange={(event) => {
-                update({ content: event.target.value });
-
-                resizeTextarea();
-              }}
-              onMouseDown={(event) => event.stopPropagation()}
-              onBlur={() => setEditing(false)}
-              onKeyDown={(event) => {
-                /*
-                 * Enter is intentionally preserved,
-                 * since notes are multiline.
-                 */
-                if (event.key === 'Escape') {
-                  event.currentTarget.blur();
-                  setEditing(false);
-                }
-              }}
-              className={`w-full bg-transparent resize-none outline-none wrap-break-word leading-relaxed ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
-              style={{
-                color: textColor,
-                resize: 'none',
-                maxHeight: '100%',
-                overflowY: 'auto',
-                ...typographyStyle,
-                ...getSectionStyle(item.typography, 'body'),
-              }}
-              placeholder={translate('Type your note…')}
-              rows={1}
-            />
+            <Suspense fallback={<div role="status">{translate('Loading…')}</div>}>
+              <NoteRichEditor
+                item={item}
+                onChange={(content) => update({ content, contentFormat: 'tiptap-html', contentVersion: 1 })}
+                onDone={() => setEditing(false)}
+              />
+            </Suspense>
           ) : (
             <div
-              onDoubleClick={() => setEditing(true)}
-              className={`leading-relaxed whitespace-pre-wrap wrap-break-word cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
+              onDoubleClick={() => {
+                if (!readOnly) setEditing(true);
+              }}
+              className={`note-rich-text cursor-text select-none ${NOTE_FONT_SIZE_CLASS[fontSize]}`}
               style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'body') }}
             >
-              {item.content || translate('Double-click to edit…')}
+              {item.content ? <NoteContent item={item} /> : translate('Double-click to edit…')}
             </div>
           )}
         </div>

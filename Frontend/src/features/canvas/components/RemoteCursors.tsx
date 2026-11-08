@@ -1,3 +1,4 @@
+import UserAvatar from '@/shared/components/UserAvatar';
 import { MousePointer2 } from 'lucide-react';
 
 import type { RemoteCursor } from '@/features/projects/hooks/useCollaborationPresence';
@@ -41,10 +42,13 @@ export default function RemoteCursors({ cursors, pan, zoom }: RemoteCursorsProps
               style={{ filter: 'drop-shadow(0 1px 2px rgb(0 0 0 / 0.45))' }}
             />
             <span
-              className="absolute left-4 top-5 max-w-44 truncate whitespace-nowrap rounded-md px-2 py-1 text-xs font-semibold text-white shadow-md"
+              className="absolute left-4 top-5 max-w-44 inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-xs font-semibold text-white shadow-md"
               style={{ backgroundColor: color }}
             >
-              {cursor.displayName}
+              {cursor.avatarId && (
+                <UserAvatar avatarId={cursor.avatarId} name={cursor.displayName} size={20} preview={false} />
+              )}
+              <span className="truncate">{cursor.displayName}</span>
             </span>
           </div>
         );

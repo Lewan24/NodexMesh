@@ -12,7 +12,7 @@ public sealed record ProjectRecordDto(
     [property: JsonConverter(typeof(RevisionJsonConverter))] long Revision,
     DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt,
     Guid? CreatedBy, Guid? UpdatedBy, DateTimeOffset? DeletedAt,
-    string Role, int ItemCount = 0);
+    string Role, int ItemCount = 0, string TodoDisplay = "checkbox");
 
 public sealed record ProjectSnapshotDto(ProjectRecordDto Project, BoardSnapshotDto Board);
 
@@ -23,10 +23,11 @@ public sealed record CreateProjectRequest(
 public sealed record UpdateProjectRequest(
     [property: MaxLength(200)] string? Name,
     [property: RegularExpression("^#[0-9a-fA-F]{6}$")] string? Color,
-    [property: Required, JsonConverter(typeof(RevisionJsonConverter))] long ExpectedRevision);
+    [property: Required, JsonConverter(typeof(RevisionJsonConverter))] long ExpectedRevision,
+    [property: RegularExpression("^(checkbox|checkmark|strike)$")] string? TodoDisplay = null);
 
-public sealed record ProjectMemberDto(Guid UserId, string Email, string? DisplayName, string Role, DateTimeOffset CreatedAt);
-public sealed record ProjectParticipantDto(Guid UserId, string DisplayName, string Role);
+public sealed record ProjectMemberDto(Guid UserId, string Email, string? DisplayName, string Role, DateTimeOffset CreatedAt, Guid? AvatarId = null);
+public sealed record ProjectParticipantDto(Guid UserId, string DisplayName, string Role, Guid? AvatarId = null);
 
 /// <summary>
 /// Invite by email rather than by user ID: the caller shouldn't be able to enumerate

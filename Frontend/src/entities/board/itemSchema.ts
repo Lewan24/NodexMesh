@@ -83,6 +83,8 @@ const sectionStyle = object({
   textAlign: optional(choice('left', 'center', 'right')),
 });
 const appearance = object({
+  groupId: optional(uuid),
+  todo: optional(object({ done: bool })),
   border: optional(validItemBorder),
   statusId: optional(uuid),
   customCss: optional(
@@ -128,10 +130,36 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
       title: text,
       description: text,
       icon: text,
+      boardIcon: optional((value) => {
+        if (
+          !object({
+            iconMode: choice('preset', 'emoji', 'svg', 'url', 'library'),
+            source: text,
+            label: text,
+            color: optional((color) => typeof color === 'string' && /^#[0-9a-f]{6}$/i.test(color)),
+          })(value)
+        )
+          return false;
+        const icon = value as { iconMode: string; source: string; label: string };
+        if (!icon.source.trim() || icon.label.length > 200) return false;
+        if (icon.iconMode === 'url') return url(icon.source);
+        if (icon.iconMode === 'library') return !!parseLibrarySource(icon.source);
+        if (icon.iconMode === 'svg') return /<svg[\s>]/i.test(icon.source);
+        return icon.source.length <= (icon.iconMode === 'emoji' ? 64 : 200);
+      }),
     }),
   },
   'section-title': { version: 1, canNest: false, validate: object({ content: text }) },
-  note: { version: 1, canNest: true, validate: object({ content: text }) },
+  note: {
+    version: 1,
+    canNest: true,
+    validate: (value) =>
+      object({ content: text, contentFormat: optional(choice('tiptap-html')), contentVersion: optional(choice(1)) })(
+        value,
+      ) &&
+      ((value as { contentFormat?: string }).contentFormat === undefined) ===
+        ((value as { contentVersion?: number }).contentVersion === undefined),
+  },
   text: { version: 1, canNest: true, validate: object({ content: text, size: choice('sm', 'md', 'lg', 'xl') }) },
   document: {
     version: 1,

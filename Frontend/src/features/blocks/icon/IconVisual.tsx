@@ -15,7 +15,7 @@ export default function IconVisual({ item, size }: { item: IconItem; size: numbe
   const [failedSource, setFailedSource] = useState<string | null>(null);
   if (item.iconMode === 'preset') {
     const Icon = getPresetIcon(item.source);
-    return <Icon size={size} color={item.color ?? '#7C3AED'} aria-label={item.label} role="img" />;
+    return <Icon size={size} color={item.color ?? 'var(--color-accent)'} aria-label={item.label} role="img" />;
   }
   if (item.iconMode === 'emoji') {
     return (

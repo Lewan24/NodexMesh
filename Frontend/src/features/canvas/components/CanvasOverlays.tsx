@@ -18,9 +18,9 @@ export default function CanvasOverlays({ frameDraft, lasso }: CanvasOverlaysProp
             top: frameDraft.y,
             width: frameDraft.width,
             height: frameDraft.height,
-            border: '2px dashed rgba(124, 58, 237, 0.7)',
+            border: '2px dashed color-mix(in srgb, var(--color-accent) 70%, transparent)',
             borderRadius: 12,
-            backgroundColor: 'rgba(124, 58, 237, 0.06)',
+            backgroundColor: 'color-mix(in srgb, var(--color-accent) 6%, transparent)',
           }}
         />
       )}
@@ -33,9 +33,9 @@ export default function CanvasOverlays({ frameDraft, lasso }: CanvasOverlaysProp
             top: lasso.y1,
             width: lasso.x2 - lasso.x1,
             height: lasso.y2 - lasso.y1,
-            border: '1.5px solid rgba(124, 58, 237, 0.8)',
+            border: '1.5px solid color-mix(in srgb, var(--color-accent) 80%, transparent)',
             borderRadius: 4,
-            backgroundColor: 'rgba(124, 58, 237, 0.07)',
+            backgroundColor: 'color-mix(in srgb, var(--color-accent) 7%, transparent)',
           }}
         />
       )}

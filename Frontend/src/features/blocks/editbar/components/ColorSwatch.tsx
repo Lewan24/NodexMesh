@@ -17,8 +17,8 @@ export default function ColorSwatch({ color, active = false, size = 12, onClick 
         width: active ? size + 3 : size,
         height: active ? size + 3 : size,
         background: color,
-        borderColor: active ? '#7C3AED' : 'rgba(0,0,0,0.15)',
-        boxShadow: active ? '0 0 0 2px rgba(124, 58, 237,0.4)' : 'none',
+        borderColor: active ? 'var(--color-accent)' : 'var(--color-border)',
+        boxShadow: active ? '0 0 0 2px color-mix(in srgb, var(--color-accent) 40%, transparent)' : 'none',
       }}
     />
   );

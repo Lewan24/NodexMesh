@@ -1,3 +1,5 @@
+import Brand from '@/features/branding/Brand';
+import { TodoDisplayContext } from '@/features/blocks/shared/ItemTodo';
 import { PublicStatusesProvider } from '@/features/statuses/ProjectStatusesContext';
 import type { ProjectStatus } from '@/features/statuses/types';
 import { translate } from '@/shared/i18n';
@@ -105,7 +107,9 @@ export default function PublicProjectPage({ token }: { token: string }) {
     >
       <meta name="referrer" content="no-referrer" />
       <header className="flex flex-wrap items-center gap-4 p-4 border-b">
-        <a href={import.meta.env.BASE_URL}>NodexMesh</a>
+        <a href={import.meta.env.BASE_URL}>
+          <Brand />
+        </a>
         <h1 className="font-semibold">{snapshot?.project.name ?? translate('Shared project')}</h1>
         <span>{translate('Public / Read-only')}</span>
         <span className="text-xs" role="status">
@@ -147,7 +151,9 @@ export default function PublicProjectPage({ token }: { token: string }) {
       ) : view ? (
         <PublicAppearanceProvider appearance={view.appearance}>
           <PublicStatusesProvider statuses={view.statuses}>
-            <ReadOnlyBoard key={boardId} items={view.project.items} />
+            <TodoDisplayContext.Provider value={view.project.todoDisplay ?? 'checkbox'}>
+              <ReadOnlyBoard key={boardId} items={view.project.items} />
+            </TodoDisplayContext.Provider>
           </PublicStatusesProvider>
         </PublicAppearanceProvider>
       ) : (

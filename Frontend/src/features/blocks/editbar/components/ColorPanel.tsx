@@ -19,8 +19,6 @@ interface ColorPanelProps {
 type FillMode = 'solid' | 'linear' | 'radial';
 type StripGradient = { kind: Exclude<FillMode, 'solid'>; from: string; to: string; angle: number };
 
-const DEFAULT_STRIP_GRADIENT: StripGradient = { kind: 'linear', from: '#7C3AED', to: '#FFBD65', angle: 90 };
-
 function getBackgroundColor(item: BoardItem): string | undefined {
   switch (item.type) {
     case 'board':
@@ -80,8 +78,8 @@ function stripGradientCss(gradient: StripGradient): string {
     : `linear-gradient(${gradient.angle}deg, ${gradient.from}, ${gradient.to})`;
 }
 
-function parseStripGradient(value?: string): StripGradient {
-  if (!value) return DEFAULT_STRIP_GRADIENT;
+function parseStripGradient(value: string | undefined, fallback: StripGradient): StripGradient {
+  if (!value) return fallback;
 
   const linear = value.match(
     /^linear-gradient\(\s*(?:(\d+(?:\.\d+)?)deg|to right)\s*,\s*(#[\da-fA-F]{6})\s*,\s*(#[\da-fA-F]{6})\s*\)$/,
@@ -95,7 +93,7 @@ function parseStripGradient(value?: string): StripGradient {
   );
   if (radial) return { kind: 'radial', angle: 90, from: radial[1]!, to: radial[2]! };
 
-  return { ...DEFAULT_STRIP_GRADIENT, from: /^#[\da-fA-F]{6}$/.test(value) ? value : DEFAULT_STRIP_GRADIENT.from };
+  return { ...fallback, from: /^#[\da-fA-F]{6}$/.test(value) ? value : fallback.from };
 }
 
 function ModePicker({
@@ -108,12 +106,16 @@ function ModePicker({
   label: string;
 }) {
   const modes: { mode: FillMode; title: string; preview: string }[] = [
-    { mode: 'solid', title: translate('Solid'), preview: '#7C3AED' },
-    { mode: 'linear', title: translate('Linear gradient'), preview: 'linear-gradient(135deg, #7C3AED, #FFBD65)' },
+    { mode: 'solid', title: translate('Solid'), preview: 'var(--color-accent)' },
+    {
+      mode: 'linear',
+      title: translate('Linear gradient'),
+      preview: 'linear-gradient(135deg, var(--color-accent), var(--color-secondary))',
+    },
     {
       mode: 'radial',
       title: translate('Radial gradient'),
-      preview: 'radial-gradient(circle at 35% 35%, #FFBD65, #7C3AED)',
+      preview: 'radial-gradient(circle at 35% 35%, var(--color-secondary), var(--color-accent))',
     },
   ];
 
@@ -183,7 +185,10 @@ function PanelTitle({ icon, children }: { icon: React.ReactNode; children: React
     <div className="flex items-center gap-2">
       <span
         className="flex h-7 w-7 items-center justify-center rounded-lg"
-        style={{ color: 'var(--color-accent)', background: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}
+        style={{
+          color: 'var(--color-accent-ink)',
+          background: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
+        }}
       >
         {icon}
       </span>
@@ -210,7 +215,12 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
     : item.topColor?.startsWith('radial-gradient')
       ? 'radial'
       : 'solid';
-  const stripGradient = parseStripGradient(item.topColor);
+  const stripGradient = parseStripGradient(item.topColor, {
+    kind: 'linear',
+    from: palette.primary,
+    to: palette.secondary,
+    angle: 90,
+  });
 
   const setBackgroundColor = (color: string | undefined) => {
     onUpdate((current) => ({ ...updateBackgroundColor(current, color), colorRole: undefined, gradient: undefined }));
@@ -271,7 +281,7 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
           ))}
         </div>
         <CustomColorInput
-          value={item.colorRole ? palette[item.colorRole] : (item.color ?? '#7C3AED')}
+          value={item.colorRole ? palette[item.colorRole] : (item.color ?? palette.primary)}
           onChange={setBackgroundColor}
           title={translate('Section label color')}
         />
@@ -329,7 +339,7 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
               min="0"
               max="100"
               step="1"
-              className="min-w-16 flex-1 accent-violet-600"
+              className="min-w-16 flex-1 accent-[var(--color-accent)]"
               value={item.backgroundOpacity ?? 100}
               onChange={(event) => {
                 const value = Number(event.target.value);
@@ -361,7 +371,7 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
                     min="0"
                     max="360"
                     step="15"
-                    className="min-w-16 flex-1 accent-violet-600"
+                    className="min-w-16 flex-1 accent-[var(--color-accent)]"
                     value={item.gradient.angle}
                     onChange={(event) => {
                       const angle = Number(event.target.value);
@@ -443,7 +453,7 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
                   min="0"
                   max="360"
                   step="15"
-                  className="min-w-16 flex-1 accent-violet-600"
+                  className="min-w-16 flex-1 accent-[var(--color-accent)]"
                   value={stripGradient.angle}
                   onChange={(event) => updateStripGradient({ angle: Number(event.target.value) })}
                 />

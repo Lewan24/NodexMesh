@@ -1,4 +1,12 @@
-import { isHeavyPreviewItem } from '../utils/heavyPreview';
+import { useTheme } from '@/app/providers/ThemeProvider';
+import { toast } from 'sonner';
+import {
+  getLayoutSelection,
+  planArrangement,
+  layoutUpdates,
+  type ArrangementOptions,
+  type LayoutUnit,
+} from '../utils/selectionLayout';
 import { useCanvasCallbacks } from '../hooks/useCanvasCallbacks';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +15,7 @@ import { useCanvasTouch } from '../hooks/useCanvasTouch';
 import PasteStyleDialog from './PasteStyleDialog';
 import { copyItemStyle, pasteItemStyle } from '../utils/itemStyle';
 import type { ItemStyle } from '../utils/itemStyle';
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import type { BoardItem, FrameItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
@@ -17,6 +25,7 @@ import type { RemoteCursor, RemotePresence } from '@/features/projects/hooks/use
 import { TRASH_ITEM_MIME } from '@/features/projects/components/ItemTrashPanel';
 
 import ConfirmDialog from '@/shared/components/dialogs/ConfirmDialog';
+import GroupSelection from './GroupSelection';
 import CanvasFrame from '@/features/canvas/components/CanvasFrame';
 import CanvasItem from '@/features/canvas/components/CanvasItem';
 import CanvasControls from '@/features/canvas/components/CanvasControls';
@@ -81,6 +90,8 @@ import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import { useCanvasCamera, type CanvasCameraBindings } from '../hooks/useCanvasCamera';
 import { intersectsCanvasViewport, isCanvasItemVisible } from '../utils/viewportVisibility';
 import './contextMenu.css';
+import { useSpacePan } from '../hooks/useSpacePan';
+import { expandGroupSelection, isSingleGroup } from '../utils/itemGroups';
 
 const EMPTY_PARTICIPANTS: ProjectParticipant[] = [];
 const EMPTY_CURSORS: RemoteCursor[] = [];
@@ -89,7 +100,11 @@ interface ToolDragGhostState extends ToolDragDetail {
   overCanvas: boolean;
 }
 
+const ArrangementDialog = lazy(() => import('./ArrangementDialog'));
+
 export interface CanvasProps {
+  onOpenAppearance?: () => void;
+  onOpenLibrary?: () => void;
   project: Project;
   projectParticipants?: ProjectParticipant[];
   remoteVersion?: number;
@@ -127,6 +142,8 @@ export interface CanvasProps {
 }
 
 function CanvasContent({
+  onOpenAppearance,
+  onOpenLibrary,
   project,
   projectParticipants = EMPTY_PARTICIPANTS,
   remoteVersion = 0,
@@ -139,7 +156,7 @@ function CanvasContent({
   onPanChange,
   onZoomChange,
   onSelectTool,
-  onSelectItems,
+  onSelectItems: selectItemsRaw,
   onGroupSelected,
   onAddItem: addItemRaw,
   onUpdateItem,
@@ -169,7 +186,11 @@ function CanvasContent({
   const { containerRef, panRef, zoomRef } = camera;
   const getLiveZoom = useCallback(() => zoomRef.current, [zoomRef]);
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
-  const [spacePanActive, setSpacePanActive] = useState(false);
+  const spacePanActive = useSpacePan();
+  const onSelectItems = useCallback(
+    (ids: string[]) => selectItemsRaw(expandGroupSelection(project.items, ids)),
+    [project.items, selectItemsRaw],
+  );
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   useEffect(() => {
     const releaseFocus = (event: FocusEvent) => {
@@ -188,9 +209,11 @@ function CanvasContent({
     for (const id of scrollPositions.current.keys()) if (!ids.has(id)) scrollPositions.current.delete(id);
   }, [project.items]);
   const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
+  const { theme, toggleTheme } = useTheme();
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [placeOnItems, setPlaceOnItems] = useState(false);
   const [customCssTarget, setCustomCssTarget] = useState<{ itemId: string; columnId?: string } | null>(null);
+  const [arrangementIds, setArrangementIds] = useState<string[] | null>(null);
   const [contextMenu, setContextMenu] = useState<CanvasMenuState | null>(null);
   const [quickConnectMenu, setQuickConnectMenu] = useState<QuickConnectMenuState | null>(null);
   const pointerPosition = useRef<{ x: number; y: number } | null>(null);
@@ -225,45 +248,6 @@ function CanvasContent({
       ),
     [remotePresence],
   );
-
-  useEffect(() => {
-    const isInteractiveTarget = (target: EventTarget | null) =>
-      target instanceof HTMLInputElement ||
-      target instanceof HTMLTextAreaElement ||
-      target instanceof HTMLSelectElement ||
-      target instanceof HTMLButtonElement ||
-      (target instanceof HTMLElement && target.isContentEditable);
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.code !== 'Space' ||
-        event.defaultPrevented ||
-        isInteractiveTarget(event.target) ||
-        (event.target instanceof Element && event.target.closest('dialog, [role="dialog"], [role="menu"]'))
-      ) {
-        return;
-      }
-
-      event.preventDefault();
-      setSpacePanActive(true);
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.code === 'Space') setSpacePanActive(false);
-    };
-
-    const handleBlur = () => setSpacePanActive(false);
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('blur', handleBlur);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('blur', handleBlur);
-    };
-  }, []);
 
   useCanvasTouch({
     containerRef,
@@ -665,7 +649,7 @@ function CanvasContent({
     handleSelectColumnItem: selectColumnItem,
     handleUpdateColumnItem,
     deleteSelectedColumnItem,
-  } = useColumnSelection({ onSelectItems, onUpdateItem });
+  } = useColumnSelection({ items: project.items, onSelectItems, onUpdateItem });
 
   useLayoutEffect(() => {
     const visible = selectedIds.length > 0 || selectedColumnItem !== null;
@@ -899,6 +883,40 @@ function CanvasContent({
     () => project.items.filter((item) => selectedItemIds.has(item.id)),
     [project.items, selectedItemIds],
   );
+  const layoutSelection = useMemo(
+    () =>
+      contextMenu?.hasSelection
+        ? getLayoutSelection(project.items, selectedIds, measuredSizes, collaboratorLockedIds)
+        : { units: [], reason: undefined },
+    [contextMenu?.hasSelection, project.items, selectedIds, measuredSizes, collaboratorLockedIds],
+  );
+  const arrangementSelection = useMemo(
+    () =>
+      arrangementIds ? getLayoutSelection(project.items, arrangementIds, measuredSizes, collaboratorLockedIds) : null,
+    [project.items, arrangementIds, measuredSizes, collaboratorLockedIds],
+  );
+  const closeArrangement = () => {
+    setArrangementIds(null);
+    requestAnimationFrame(() => containerRef.current?.focus({ preventScroll: true }));
+  };
+  const commitLayout = (
+    ids: string[],
+    plan: (units: LayoutUnit[]) => Map<string, { x: number; y: number }>,
+  ): string | undefined => {
+    const items = projectRef.current.items;
+    const selection = getLayoutSelection(items, ids, measuredSizes, collaboratorLockedIds);
+    if (selection.reason) return selection.reason;
+    try {
+      const updates = layoutUpdates(items, selection.units, plan(selection.units), measuredSizes);
+      if (updates.size) {
+        pushHistory();
+        onUpdateItems(updates);
+      }
+      return undefined;
+    } catch (error) {
+      return error instanceof Error ? error.message : 'Cannot arrange this selection.';
+    }
+  };
   const joinableDrawings = selectedItems;
   const canJoinDrawings =
     !selectedColumnItem &&
@@ -1043,13 +1061,13 @@ function CanvasContent({
         visibleItems
           .filter(
             (item) =>
-              ((item.type === 'note' && Boolean(item.width && item.width > 0 && item.height && item.height > 0)) ||
-                (isHeavyPreviewItem(item) && measuredItems.get(item.id) === item)) &&
+              item.type === 'note' &&
+              Boolean(item.width && item.width > 0 && item.height && item.height > 0) &&
               !intersectsCanvasViewport(item, { pan, zoom, ...viewportSize }, measuredSizes, 0),
           )
           .map((item) => item.id),
       ),
-    [visibleItems, pan, zoom, viewportSize, measuredSizes, measuredItems],
+    [visibleItems, pan, zoom, viewportSize, measuredSizes],
   );
 
   // Measurement snapshots change gesture closures; they must not invalidate every block editor.
@@ -1086,6 +1104,7 @@ function CanvasContent({
   return (
     <div
       data-canvas-root="true"
+      tabIndex={-1}
       data-camera-moving={isNavigating}
       ref={containerRef}
       className={`flex-1 min-w-0 min-h-0 relative overflow-clip select-none ${cursorClass}`}
@@ -1252,8 +1271,40 @@ function CanvasContent({
           }}
         />
       )}
+      {arrangementIds && arrangementSelection && (
+        <Suspense fallback={null}>
+          <ArrangementDialog
+            units={arrangementSelection.units}
+            blockedReason={arrangementSelection.reason}
+            onClose={closeArrangement}
+            onApply={(options: ArrangementOptions) => {
+              const error = commitLayout(arrangementIds, (units) => planArrangement(units, options));
+              if (!error) closeArrangement();
+              return error;
+            }}
+          />
+        </Suspense>
+      )}
       {contextMenu && (
         <CanvasContextMenu
+          theme={theme}
+          onToggleTheme={toggleTheme}
+          onOpenAppearance={onOpenAppearance}
+          onOpenLibrary={onOpenLibrary}
+          layoutDisabledReason={layoutSelection.reason}
+          onSwapItems={() => {
+            if (selectedIdsRef.current.length !== 2) return;
+            const error = commitLayout(
+              [...selectedIdsRef.current],
+              (units) =>
+                new Map([
+                  [units[0]!.id, { x: units[1]!.rect.x, y: units[1]!.rect.y }],
+                  [units[1]!.id, { x: units[0]!.rect.x, y: units[0]!.rect.y }],
+                ]),
+            );
+            if (error) toast.error(translate(error));
+          }}
+          onArrangeItems={() => setArrangementIds([...selectedIdsRef.current])}
           onCustomCss={
             cssSelection && !cssSelectionLocked
               ? () => setCustomCssTarget({ itemId: cssSelection.id, columnId: selectedColumnItem?.columnId })
@@ -1298,7 +1349,35 @@ function CanvasContent({
             const locked = !selectedItems.every((item) => item.locked);
             onRestoreItems(project.items.map((item) => (selectedIds.includes(item.id) ? { ...item, locked } : item)));
           }}
-          onGroup={onGroupSelected}
+          grouped={isSingleGroup(selectedItems)}
+          allTodo={(selectedColumnItem ? [selectedColumnItem.item] : selectedItems).every((item) => !!item.todo)}
+          hasTodo={(selectedColumnItem ? [selectedColumnItem.item] : selectedItems).some((item) => item.todo)}
+          allDone={(selectedColumnItem ? [selectedColumnItem.item] : selectedItems)
+            .filter((item) => item.todo)
+            .every((item) => item.todo?.done)}
+          onToggleTodo={() => {
+            pushHistory();
+            const targets = selectedColumnItem ? [selectedColumnItem.item] : selectedItems;
+            const enabled = !targets.every((item) => !!item.todo);
+            const update = (item: BoardItem): BoardItem => ({
+              ...item,
+              todo: enabled ? (item.todo ?? { done: false }) : undefined,
+            });
+            if (selectedColumnItem) handleUpdateColumnItem(selectedColumnItem.columnId, update);
+            else onUpdateItems(new Map(targets.map((item) => [item.id, update])));
+          }}
+          onToggleDone={() => {
+            pushHistory();
+            const targets = selectedColumnItem ? [selectedColumnItem.item] : selectedItems;
+            const done = !targets.filter((item) => item.todo).every((item) => item.todo?.done);
+            const update = (item: BoardItem): BoardItem => (item.todo ? { ...item, todo: { done } } : item);
+            if (selectedColumnItem) handleUpdateColumnItem(selectedColumnItem.columnId, update);
+            else onUpdateItems(new Map(targets.map((item) => [item.id, update])));
+          }}
+          onGroup={() => {
+            pushHistory();
+            onGroupSelected();
+          }}
         />
       )}
       {quickConnectMenu && (
@@ -1414,6 +1493,12 @@ function CanvasContent({
           );
         })}
 
+        <GroupSelection
+          items={project.items}
+          selectedIds={selectedIds}
+          sizes={measuredSizes}
+          overrides={dragOverrides}
+        />
         <CanvasAlignmentGuides guides={alignmentGuides} />
 
         {dropPreview && (
@@ -1541,7 +1626,7 @@ function CanvasContent({
             </label>
           ) : selectedItems.length === 1 && selectedItems[0]!.type === 'frame' ? (
             <button
-              className="h-8 px-2 text-sm hover:bg-violet-500/20"
+              className="h-8 px-2 text-sm hover:bg-accent-soft-strong"
               disabled={selectedItems[0]!.locked}
               title={translate('Assign enclosed unlocked items to this frame, including items owned by another frame')}
               onClick={() => {

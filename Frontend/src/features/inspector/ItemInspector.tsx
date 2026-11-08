@@ -219,7 +219,7 @@ export default function ItemInspector({
                   key={tag}
                   className="flex items-center gap-1 rounded-lg px-2 py-1"
                   style={{
-                    color: 'var(--color-accent)',
+                    color: 'var(--color-accent-ink)',
 
                     backgroundColor: 'var(--color-accent-soft)',
 
@@ -292,7 +292,7 @@ export default function ItemInspector({
                 type="button"
                 onClick={handleAddTag}
                 className="px-3 py-2 text-xs font-semibold"
-                style={{ color: 'var(--color-accent)' }}
+                style={{ color: 'var(--color-accent-ink)' }}
               >
                 {translate('Add')}
               </button>

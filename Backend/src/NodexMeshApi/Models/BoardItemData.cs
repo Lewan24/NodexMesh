@@ -15,7 +15,9 @@ public sealed record GeoPoint(double X, double Y, double? Pressure);
 public sealed record ItemAppearance(
     string? Color, string? ColorRole, GradientDto? Gradient, string? TopColor,
     TypographyDto? Typography, string? TextAlign, string? FontSize, bool? Bold, bool? Italic,
-    CustomCssDto? CustomCss = null, double? BackgroundOpacity = null, BorderDto? Border = null, Guid? StatusId = null);
+    CustomCssDto? CustomCss = null, double? BackgroundOpacity = null, BorderDto? Border = null, Guid? StatusId = null,
+    Guid? GroupId = null, ItemTodoDto? Todo = null);
+public sealed record ItemTodoDto(bool Done);
 public sealed record BorderDto(string Color, double Width, string Style, BorderGradientDto? Gradient = null, string? Animation = null);
 public sealed record BorderGradientDto(string From, string To, double Angle);
 public sealed record CustomCssDto(bool Enabled, string Source);
@@ -29,8 +31,9 @@ public sealed record TextSectionsDto(
 
 // ---- item types, matching itemSchema.ts field-for-field ---------------
 public sealed record SectionTitleData(string Content);
-public sealed record BoardBlockData(Guid? BoardId, string Title, string Description, string Icon);
-public sealed record NoteData(string Content);
+public sealed record BoardBlockData(Guid? BoardId, string Title, string Description, string Icon, BoardIconData? BoardIcon = null);
+public sealed record BoardIconData(string IconMode, string Source, string Label, string? Color = null);
+public sealed record NoteData(string Content, string? ContentFormat = null, int? ContentVersion = null);
 public sealed record TextData(string Content, string Size); // 'sm'|'md'|'lg'|'xl'
 public sealed record DocumentData(string Title, string Content, string ContentFormat, int ContentVersion, bool? AutoHeight);
 public sealed record CodeData(string Content, string Language, bool? AutoHeight);

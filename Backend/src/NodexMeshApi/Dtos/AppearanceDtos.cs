@@ -14,7 +14,9 @@ public sealed record AppearanceUpdateDto(
     [SkipValidation] [property: SkipValidation] JsonElement Light,
     [SkipValidation] [property: SkipValidation] JsonElement Dark,
     [RegularExpression("^(light|dark)$")] string? Mode = null,
-    [Range(160, 400)] int SidebarWidth = 235);
+    [Range(160, 400)] int SidebarWidth = 235,
+    [SkipValidation] [property: SkipValidation] JsonElement? UiGradients = null,
+    [SkipValidation] [property: SkipValidation] JsonElement? UiBackground = null);
 
 public sealed record ProjectAppearanceUpdateDto(
     string? Font,

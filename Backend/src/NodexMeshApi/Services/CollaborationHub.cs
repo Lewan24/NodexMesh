@@ -25,7 +25,8 @@ public sealed record CollaboratorPresence(
     string Mode,
     double? CursorX,
     double? CursorY,
-    DateTimeOffset ExpiresAt);
+    DateTimeOffset ExpiresAt,
+    Guid? AvatarId = null);
 
 public interface ICollaborationClient
 {
@@ -51,7 +52,7 @@ public sealed class PresenceRegistry
         return true;
     }
 
-    public CollaboratorPresence Set(string connectionId, PresenceUpdate request, Guid userId, string displayName)
+    public CollaboratorPresence Set(string connectionId, PresenceUpdate request, Guid userId, string displayName, Guid? avatarId = null)
     {
         var value = new CollaboratorPresence(
             request.ProjectId,
@@ -62,7 +63,7 @@ public sealed class PresenceRegistry
             request.Mode,
             request.CursorX,
             request.CursorY,
-            Expiry);
+            Expiry, avatarId);
         states[connectionId] = value;
         return value;
     }
@@ -158,10 +159,11 @@ public sealed class CollaborationHub(
         if (role < Common.ProjectRole.Editor) request = request with { Mode = "selected" };
         var displayName = await db.Users.AsNoTracking()
             .Where(user => user.Id == userId)
-            .Select(user => user.DisplayName)
-            .SingleOrDefaultAsync(Context.ConnectionAborted) ?? "Collaborator";
-        var safeName = displayName.Length > 80 ? displayName[..80] : displayName;
-        var value = presence.Set(Context.ConnectionId, request with { ItemIds = request.ItemIds.Distinct().Take(MaxItems).ToArray() }, userId, safeName);
+            .Select(user => new { user.DisplayName, user.AvatarId })
+            .SingleOrDefaultAsync(Context.ConnectionAborted);
+        var name = displayName?.DisplayName ?? "Collaborator";
+        var safeName = name.Length > 80 ? name[..80] : name;
+        var value = presence.Set(Context.ConnectionId, request with { ItemIds = request.ItemIds.Distinct().Take(MaxItems).ToArray() }, userId, safeName, displayName?.AvatarId);
         await Clients.OthersInGroup(Group(request.ProjectId)).PresenceChanged(value);
         await ClearExpired(request.ProjectId);
     }

@@ -1,3 +1,4 @@
+import UserAvatar from '@/shared/components/UserAvatar';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import LanguageSelect from '@/shared/i18n/LanguageSelect';
@@ -41,45 +42,49 @@ export default function AccountMenu({
 
   return (
     <div className="relative mr-3">
-      <button
-        ref={buttonRef}
-        onClick={onToggle}
-        className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-colors"
-        style={{ backgroundColor: open ? 'var(--color-accent-soft)' : 'transparent' }}
-        onMouseEnter={(e) => {
-          if (!open) e.currentTarget.style.backgroundColor = 'var(--color-chrome-hover)';
-        }}
-        onMouseLeave={(e) => {
-          if (!open) e.currentTarget.style.backgroundColor = 'transparent';
-        }}
-      >
-        <div
-          className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold"
-          style={{ backgroundColor: 'var(--color-accent-soft)', color: 'var(--color-accent)' }}
+      <div className="flex items-center gap-1.5">
+        <UserAvatar
+          avatarId={user?.avatarId}
+          name={user?.name ?? ''}
+          size={32}
+          onClick={user?.avatarId ? undefined : onToggle}
+          label={user?.avatarId ? undefined : translate('Open account menu')}
+        />
+        <button
+          ref={buttonRef}
+          aria-label={translate('Account menu')}
+          aria-expanded={open}
+          onClick={onToggle}
+          className="flex min-h-10 items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-colors"
+          style={{ backgroundColor: open ? 'var(--color-accent-soft)' : 'transparent' }}
+          onMouseEnter={(e) => {
+            if (!open) e.currentTarget.style.backgroundColor = 'var(--color-chrome-hover)';
+          }}
+          onMouseLeave={(e) => {
+            if (!open) e.currentTarget.style.backgroundColor = 'transparent';
+          }}
         >
-          {user?.name?.charAt(0).toUpperCase()}
-        </div>
+          <div className="hidden sm:block text-left max-w-32">
+            <div className="text-xs font-semibold truncate" style={{ color: 'var(--color-chrome-text)' }}>
+              {user?.name}
+            </div>
 
-        <div className="hidden sm:block text-left max-w-32">
-          <div className="text-xs font-semibold truncate" style={{ color: 'var(--color-chrome-text)' }}>
-            {user?.name}
+            <div className="text-[10px] truncate" style={{ color: 'var(--color-chrome-text-faint)' }}>
+              @{user?.username}
+            </div>
           </div>
 
-          <div className="text-[10px] truncate" style={{ color: 'var(--color-chrome-text-faint)' }}>
-            @{user?.username}
-          </div>
-        </div>
-
-        <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-          <path
-            d={open ? 'M1 5l4-4 4 4' : 'M1 1l4 4 4-4'}
-            stroke="var(--color-chrome-text-dim)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+            <path
+              d={open ? 'M1 5l4-4 4 4' : 'M1 1l4 4 4-4'}
+              stroke="var(--color-chrome-text-dim)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
 
       {open && (
         <div
@@ -92,6 +97,9 @@ export default function AccountMenu({
           }}
         >
           <div className="px-4 py-3.5" style={{ borderBottom: '1px solid var(--color-chrome-border-soft)' }}>
+            <div className="mb-2">
+              <UserAvatar avatarId={user?.avatarId} name={user?.name ?? ''} size={48} preview={false} />
+            </div>
             <p className="text-sm font-semibold truncate" style={{ color: 'var(--color-chrome-text-strong)' }}>
               {user?.name}
             </p>

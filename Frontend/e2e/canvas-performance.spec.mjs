@@ -122,20 +122,21 @@ test('a focused composing editor keeps its DOM, draft and inverse-scaled control
   await openFixture(page, 500);
   const note = page.locator('[data-board-item-id="note-0"]');
   await note.locator('[data-touch-content] > div').dblclick();
-  const editor = note.locator('textarea');
+  const editor = note.locator('.tiptap');
   await expect(editor).toBeFocused();
   await editor.fill('A retained draft\n'.repeat(25));
+  const retainedText = await editor.textContent();
   await editor.dispatchEvent('compositionstart', { data: 'draft' });
   await editor.evaluate((element) => {
     window.retainedEditor = element;
-    element.scrollTop = 30;
+    element.closest('.note-rich-input').scrollTop = 30;
   });
   await page.evaluate(() => window.canvasFixture.setCamera({ x: -5000, y: -4000 }, 0.1));
   expect(
     await page.evaluate(() => window.retainedEditor.isConnected && document.activeElement === window.retainedEditor),
   ).toBe(true);
-  await expect(editor).toHaveValue('A retained draft\n'.repeat(25));
-  expect(await editor.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await expect(editor).toHaveText(retainedText);
+  expect(await editor.evaluate((element) => element.closest('.note-rich-input').scrollTop)).toBeGreaterThan(0);
   await editor.dispatchEvent('compositionend', { data: 'draft' });
   await page.evaluate(() => window.canvasFixture.setCamera({ x: 40, y: 40 }, 0.5));
   await expect(note.locator('.canvas-item-move-handle')).toHaveAttribute('style', /scale\(2\)/);
@@ -347,9 +348,9 @@ test('navigation previews restore scroll and retain auto-sized, custom and focus
   );
   const editor = page.locator('[data-board-item-id="editing"]');
   await editor.locator('[data-touch-content] > div').dblclick();
-  await expect(editor.locator('textarea')).toBeFocused();
+  await expect(editor.locator('.tiptap')).toBeFocused();
   const result = await page.evaluate(() => {
-    const textarea = document.querySelector('textarea');
+    const textarea = document.querySelector('.note-rich-text .tiptap');
     const auto = document.querySelector('[data-board-item-id="auto"] [data-touch-content]');
     window.canvasFixture.setCamera({ x: 60, y: 50 });
     return {

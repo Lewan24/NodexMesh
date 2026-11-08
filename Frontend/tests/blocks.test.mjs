@@ -302,10 +302,10 @@ test('dispenser creates centered flashcards without forcing a placement lattice'
   assert.equal(second.y, 87);
 });
 
-test('documents start at one and a half note widths and grow from 600px', () => {
+test('documents start at two note widths plus a grid gap and grow from 600px', () => {
   const document = createCanvasItem('document', 0, 0);
   const note = createCanvasItem('note', 0, 0);
-  assert.equal(document.width, note.width * 1.5);
+  assert.equal(document.width, note.width * 2 + CANVAS_GRID_SIZE);
   assert.equal(document.height, 600);
   assert.equal(document.autoHeight, true);
 });
@@ -890,7 +890,7 @@ test('native text undo does not leave an empty board undo step', () => {
 
 test('default item widths span complete grid cells', () => {
   for (const [type, width] of Object.entries(ITEM_WIDTH)) assert.equal(width % CANVAS_GRID_SIZE, 0, type);
-  assert.equal(ITEM_WIDTH.document / ITEM_WIDTH.note, 1.5);
+  assert.equal(ITEM_WIDTH.document, ITEM_WIDTH.note * 2 + CANVAS_GRID_SIZE);
 });
 
 test('automatic growth pushes a vertical chain while preserving other columns and overlaps', () => {
@@ -1243,7 +1243,8 @@ test('column creation and drop support agree for compact content blocks', () => 
   }
   for (const kind of ['timeline', 'diagram', 'database', 'kanban', 'column', 'frame'])
     assert.equal(DROPPABLE_ON_COLUMN.has(kind), false);
-  assert.equal(ITEM_WIDTH.column - 32 - 64, ITEM_WIDTH.note);
+  assert.equal(ITEM_WIDTH.column, ITEM_WIDTH.note * 2 + CANVAS_GRID_SIZE);
+  assert.ok(ITEM_WIDTH.column - 32 - 64 >= ITEM_WIDTH.note);
 });
 
 test('section titles retain their text and presentation and scale like frame labels', () => {

@@ -1,3 +1,4 @@
+import { ITEM_WIDTH } from '@/features/canvas/constants';
 import type { TextItem } from '@/entities/board/types';
 
 export const TEXT_SIZE_STYLES: Record<TextItem['size'], string> = {
@@ -9,7 +10,7 @@ export const TEXT_SIZE_STYLES: Record<TextItem['size'], string> = {
 
 export const TEXT_SIZE_LABELS: TextItem['size'][] = ['sm', 'md', 'lg', 'xl'];
 
-export const DEFAULT_TEXT_CARD_WIDTH = 220;
+export const DEFAULT_TEXT_CARD_WIDTH = ITEM_WIDTH.text;
 
 export function isLightColor(hex: string): boolean {
   const red = parseInt(hex.slice(1, 3), 16);

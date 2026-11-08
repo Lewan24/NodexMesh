@@ -423,7 +423,13 @@ export class WorkspaceController {
         this.publish({
           projects: this.state.projects.map((project) =>
             project.id === id
-              ? { ...view, name: project.name, color: project.color, deletedAt: project.deletedAt }
+              ? {
+                  ...view,
+                  name: project.name,
+                  color: project.color,
+                  todoDisplay: project.todoDisplay,
+                  deletedAt: project.deletedAt,
+                }
               : project,
           ),
         });
@@ -576,12 +582,14 @@ export class WorkspaceController {
       const metadataChanged =
         previous.project.name !== desired.name ||
         previous.project.color !== desired.color ||
+        (previous.project.todoDisplay ?? 'checkbox') !== (desired.todoDisplay ?? 'checkbox') ||
         Boolean(previous.project.deletedAt) !== Boolean(desired.deletedAt);
       const boardMutation = previous.unloaded ? null : diffBoard(previous.board, desired.items);
       if (metadataChanged && (previous.project.deletedAt || !boardMutation)) {
         const input = {
           name: desired.name,
           color: desired.color,
+          todoDisplay: desired.todoDisplay,
           deletedAt: desired.deletedAt ?? null,
           expectedRevision: previous.project.revision,
           clientMutationId: createId(),

@@ -5,7 +5,7 @@ using NodexMeshApi.Common;
 namespace NodexMeshApi.Dtos;
 
 public sealed record AdminUserDto(
-    Guid Id, string Email, string DisplayName, bool IsAdmin, bool IsBlocked, DateTimeOffset CreatedAt, DateTimeOffset? DeletionRequestedAt, DateTimeOffset? PermanentDeletionAt);
+    Guid Id, string Email, string DisplayName, bool IsAdmin, bool IsBlocked, DateTimeOffset CreatedAt, DateTimeOffset? DeletionRequestedAt, DateTimeOffset? PermanentDeletionAt, Guid? AvatarId = null);
 
 public sealed record AdminCreateUserRequest(
     [property: Required, EmailAddress, MaxLength(256)] string Email,
@@ -33,7 +33,7 @@ public sealed record AdminResetAppearanceRequest([property: Required] string Sco
 
 public sealed record AdminRegistrationRequest(bool Enabled);
 
-public sealed record AdminProjectMemberDto(Guid UserId, string Email, string DisplayName, string Role);
+public sealed record AdminProjectMemberDto(Guid UserId, string Email, string DisplayName, string Role, Guid? AvatarId = null);
 
 public sealed record AdminProjectDto(
     Guid Id, string Name, Guid OwnerId, string OwnerEmail, DateTimeOffset CreatedAt,

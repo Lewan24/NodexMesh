@@ -6,6 +6,7 @@ import type { ItemAppearance, ItemDataMap, ItemLink, Revision } from '@/entities
 export type MemberRole = 'Editor' | 'Commenter' | 'Viewer';
 
 export interface ProjectMember {
+  avatarId?: string | null;
   userId: string;
   /** Masked to e.g. "a***e@example.com" for everyone except the project owner and the
    * member's own row — see API.md §6.2. Never assume this is the full address. */
@@ -16,6 +17,7 @@ export interface ProjectMember {
 }
 
 export interface ProjectParticipant {
+  avatarId?: string | null;
   userId: string;
   displayName: string;
   role: MemberRole | 'Owner';
@@ -43,6 +45,7 @@ export interface CreatedShareLink {
 // ---------------- anonymous, read-only ----------------
 
 export interface PublicProject {
+  todoDisplay?: import('./types').TodoDisplay;
   id: string;
   name: string;
   color: string | null;
@@ -104,6 +107,7 @@ export interface PublicProjectSnapshot {
 /** Read-only canvas projection for the public viewer — the same shape as the
  * authenticated `Project` type, minus fields a public viewer has no use for. */
 export interface PublicProjectView {
+  todoDisplay?: import('./types').TodoDisplay;
   id: string;
   name: string;
   color: string;

@@ -53,6 +53,7 @@ export interface AuthService {
   requestPasswordReset(email: string): Promise<void>;
   resetPassword(input: { userId: string; token: string; password: string; confirmPassword: string }): Promise<void>;
   me(): Promise<User | null>;
+  refreshProfile(): Promise<User>;
   login(input: LoginInput): Promise<User | MfaChallenge>;
   mfaSettings(): Promise<MfaSettings>;
   startMfaChange(input: MfaChange): Promise<MfaChallenge>;
@@ -111,6 +112,10 @@ export function createMockAuthService(): AuthService & { currentUserId(): string
   };
   return {
     currentUserId: () => current?.id ?? null,
+    async refreshProfile() {
+      if (!current) return fail(401, 'unauthorized', 'Sign in again.');
+      return current;
+    },
     async mfaSettings() {
       return fail(501, 'unsupported', translate('MFA is unavailable in demo mode.'));
     },
