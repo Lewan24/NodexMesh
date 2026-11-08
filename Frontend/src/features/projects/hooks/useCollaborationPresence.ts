@@ -50,8 +50,8 @@ export function useCollaborationPresence(
     const activeItem = activeElement?.closest<HTMLElement>('[data-board-item-id]')?.dataset.boardItemId;
     const editing = Boolean(
       activeItem &&
-        selectedRef.current.includes(activeItem) &&
-        activeElement?.matches('textarea, input, [contenteditable="true"]'),
+      selectedRef.current.includes(activeItem) &&
+      activeElement?.matches('textarea, input, [contenteditable="true"]'),
     );
     lastPublishedAt.current = Date.now();
     void active
@@ -157,8 +157,8 @@ export function useCollaborationPresence(
       clearTimeout(retryTimer);
       clearTimeout(publishTimer.current);
       publishTimer.current = undefined;
-      if (next.state === HubConnectionState.Connected)
-        void next.invoke('ClearPresence', projectId).catch(() => undefined);
+      // OnDisconnectedAsync clears presence server-side. Invoking ClearPresence
+      // immediately before stop() races with cancellation of the IP-ban lookup.
       void next.stop().catch(() => undefined);
       connection.current = undefined;
       setRemote({});

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { translate } from '@/shared/i18n';
 import Modal from '@/shared/components/dialogs/Modal';
@@ -27,6 +27,7 @@ export default function PhotoEditor({
   const [preview, setPreview] = useState<string>();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const saving = useRef(false);
   useEffect(() => {
     if (!file) {
       setPreview(undefined);
@@ -37,6 +38,8 @@ export default function PhotoEditor({
     return () => URL.revokeObjectURL(url);
   }, [file]);
   const save = async (value: File | null) => {
+    if (saving.current || disabled) return;
+    saving.current = true;
     setBusy(true);
     setError('');
     try {
@@ -45,6 +48,7 @@ export default function PhotoEditor({
     } catch (cause) {
       setError(errorMessage(cause));
     } finally {
+      saving.current = false;
       setBusy(false);
     }
   };

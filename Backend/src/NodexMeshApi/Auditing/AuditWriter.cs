@@ -57,10 +57,31 @@ public sealed class AuditMiddleware(RequestDelegate next)
         catch (OperationCanceledException) when (http.RequestAborted.IsCancellationRequested) { throw; }
         catch (Exception ex)
         {
-            var failure = AuditCapture.Create(http, "http.unhandled_exception", "diagnostic", "failure");
-            failure.Severity = "Error";
-            failure.StatusCode = 500;
-            failure.Metadata = System.Text.Json.JsonSerializer.Serialize(new { exceptionType = ex.GetType().Name });
+            var failureStatus = ex switch
+            {
+                Common.ApiException api => api.StatusCode,
+                BadHttpRequestException bad when bad.StatusCode is >= 400 and < 500 => bad.StatusCode,
+                _ => 500
+            };
+            if (failureStatus < 500 && http.Items.ContainsKey(AuditCapture.ExplicitEvent)) throw;
+            var eventType = failureStatus switch
+            {
+                400 or 413 or 422 => "http.validation_failed",
+                401 => "http.unauthenticated",
+                403 => "http.forbidden",
+                404 => route is null ? "http.unmatched" : "http.not_found",
+                429 => "http.rate_limited",
+                _ => "http.unhandled_exception"
+            };
+            var failure = AuditCapture.Create(http, eventType, failureStatus >= 500 ? "diagnostic" : "security", "failure");
+            if (failureStatus >= 500) failure.Severity = "Error";
+            failure.StatusCode = failureStatus;
+            failure.Metadata = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                exceptionType = ex.GetType().Name,
+                causeType = ex.GetBaseException().GetType().Name,
+                operationStage = http.Items["audit.operationStage"] as string
+            });
             await writer.WriteAsync(failure);
             throw;
         }
@@ -69,7 +90,7 @@ public sealed class AuditMiddleware(RequestDelegate next)
         if (status < 500 && http.Items.ContainsKey(AuditCapture.ExplicitEvent)) return;
         string? type = status switch
         {
-            400 or 422 => "http.validation_failed",
+            400 or 413 or 422 => "http.validation_failed",
             401 => "http.unauthenticated",
             403 => "http.forbidden",
             404 => route is null ? "http.unmatched" : "http.not_found",

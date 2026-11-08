@@ -159,6 +159,40 @@ test('invalid selection and failed upload keep the dialog and current photo avai
   }
 });
 
+test('repeated submissions while an image upload is pending produce only one API mutation', async () => {
+  let calls = 0;
+  let finish;
+  const pending = new Promise((resolve) => {
+    finish = resolve;
+  });
+  const cleanup = await mount(
+    createElement(PhotoEditor, {
+      title: 'Profile photo',
+      onClose() {},
+      onSave() {
+        calls++;
+        return pending;
+      },
+    }),
+  );
+  try {
+    await chooseFile(new File(['gif'], 'photo.gif'));
+    await act(async () => {
+      const form = document.querySelector('form');
+      form.dispatchEvent(new browser.Event('submit', { bubbles: true, cancelable: true }));
+      form.dispatchEvent(new browser.Event('submit', { bubbles: true, cancelable: true }));
+    });
+    assert.equal(calls, 1);
+    assert.equal(document.querySelector('button[type="submit"]').disabled, true);
+    await act(async () => {
+      finish();
+      await pending;
+    });
+  } finally {
+    await cleanup();
+  }
+});
+
 test('removing a photo is explicit and avatar click opens the original at a larger size', async () => {
   const saved = [];
   const cleanup = await mount(

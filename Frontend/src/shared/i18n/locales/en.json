@@ -1579,6 +1579,9 @@
   "Rosewood": "Rosewood",
   "Mono": "Mono",
   "Invalid UI background.": "Invalid UI background.",
+  "Image storage is unavailable. Contact the administrator.": "Image storage is unavailable. Contact the administrator.",
+  "Request body exceeds the upload limit.": "Request body exceeds the upload limit.",
+  "The request could not be processed.": "The request could not be processed.",
   "Invalid palette gradient.": "Invalid palette gradient.",
   "Use a six-digit hexadecimal color.": "Use a six-digit hexadecimal color."
 }

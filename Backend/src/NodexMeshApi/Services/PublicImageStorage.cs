@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using NodexMeshApi.Common;
 using NodexMeshApi.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace NodexMeshApi.Services;
 
@@ -20,6 +21,10 @@ public sealed class PublicImageStorage(IOptions<PublicImageOptions> options, IWe
 
     public async Task<(Guid Id, string ContentType)> WriteAsync(HttpRequest request, bool logo, CancellationToken ct)
     {
+        // Kestrel defaults to 5 MB for JSON requests. Image uploads have their own
+        // bounded 10 MiB limit, just like the library sets its separate file limit.
+        var bodyLimit = request.HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>();
+        if (bodyLimit is { IsReadOnly: false }) bodyLimit.MaxRequestBodySize = MaxBytes;
         if (request.ContentLength is > MaxBytes) throw new ApiException(413, "image_too_large", "Image must be smaller than 10 MB.");
         using var input = new MemoryStream();
         var buffer = new byte[81920];
@@ -34,12 +39,18 @@ public sealed class PublicImageStorage(IOptions<PublicImageOptions> options, IWe
             throw new ApiException(422, "invalid_image", "Use PNG, JPEG, GIF or WebP. Logos also support static SVG.");
         var contentType = LibraryStorage.Validate(input.GetBuffer().AsSpan(0, (int)Math.Min(input.Length, 32)).ToArray(), extension, input);
         var id = Guid.NewGuid();
-        Directory.CreateDirectory(Root);
         try
         {
+            Directory.CreateDirectory(Root);
             await using var output = new FileStream(FilePath(id), FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, true);
             input.Position = 0;
             await input.CopyToAsync(output, ct);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            Delete(id);
+            logger.LogError("Public image storage is unavailable; classification={ExceptionType}. Verify Media:Path, volume permissions and available disk space.", error.GetType().Name);
+            throw new ApiException(503, "image_storage_unavailable", "Image storage is unavailable. Contact the administrator.");
         }
         catch { Delete(id); throw; }
         return (id, contentType);

@@ -169,6 +169,7 @@ public class AuditTests
 
     [Theory]
     [InlineData(400, "http.validation_failed")]
+    [InlineData(413, "http.validation_failed")]
     [InlineData(401, "http.unauthenticated")]
     [InlineData(403, "http.forbidden")]
     [InlineData(404, "http.unmatched")]
@@ -188,6 +189,27 @@ public class AuditTests
         row.Route.Should().Be("/.env");
         row.ActorId.Should().BeNull();
         row.StatusCode.Should().Be(status);
+    }
+
+    [Theory]
+    [InlineData(413)]
+    [InlineData(422)]
+    public async Task ExpectedUploadExceptionsAreNotAuditedAsInternal500Errors(int status)
+    {
+        await using var factory = new TestWebApplicationFactory();
+        using var scope = factory.Services.CreateScope();
+        var http = new DefaultHttpContext { RequestServices = scope.ServiceProvider };
+        http.Request.Path = "/api/v1/auth/profile/avatar";
+        http.Items["audit.operationStage"] = "avatar.storage_write";
+        Exception error = status == 413 ? new BadHttpRequestException("private server detail", status)
+            : new ApiException(status, "invalid_image", "private server detail");
+        var middleware = new AuditMiddleware(_ => throw error);
+        Func<Task> action = () => middleware.InvokeAsync(http, scope.ServiceProvider.GetRequiredService<AuditWriter>(), NullLogger<AuditMiddleware>.Instance);
+        await action.Should().ThrowAsync<Exception>();
+        var row = await scope.ServiceProvider.GetRequiredService<AppDbContext>().AuditEvents
+            .SingleAsync(e => e.EventType == "http.validation_failed");
+        row.StatusCode.Should().Be(status);
+        row.Metadata.Should().Contain("avatar.storage_write").And.NotContain("private server detail");
     }
 
     [Fact]

@@ -26,6 +26,7 @@ WORKDIR /app
 
 ENV ASPNETCORE_URLS=http://+:8080 \
     ASPNETCORE_ENVIRONMENT=Production \
+    Media__Path=/app/storage/media \
     DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
 EXPOSE 8080
