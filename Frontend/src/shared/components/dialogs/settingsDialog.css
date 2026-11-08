@@ -20,7 +20,7 @@
   flex-shrink: 0;
   padding: 24px;
   border-bottom: 1px solid var(--color-border);
-  background: linear-gradient(120deg, var(--color-accent-soft), transparent 75%);
+  background: linear-gradient(120deg, var(--color-secondary-soft), transparent 75%);
 }
 .settings-dialog-icon {
   display: grid;
@@ -31,7 +31,7 @@
   border: 1px solid var(--color-border);
   border-radius: 16px;
   background: var(--color-surface);
-  color: var(--color-accent);
+  color: var(--color-secondary-ink);
 }
 .settings-eyebrow {
   margin-bottom: 4px;
@@ -39,7 +39,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-accent);
+  color: var(--color-secondary-ink);
 }
 .settings-dialog-header h2 {
   font-size: 22px;
@@ -89,7 +89,7 @@
   padding: 10px 16px;
   border: 1px solid transparent;
   border-radius: 12px;
-  background: var(--color-accent);
+  background: var(--color-accent-fill, var(--color-accent));
   color: var(--color-on-accent, white);
   font-size: 13px;
   font-weight: 600;
@@ -119,7 +119,7 @@
   padding: 12px 14px;
   border-radius: 12px;
   background: var(--color-accent-soft);
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
   font-size: 13px;
 }
 .settings-notice-error {
@@ -148,7 +148,7 @@
 }
 .settings-tab[aria-selected='true'] {
   background: var(--color-surface);
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
   box-shadow: 0 2px 6px rgb(0 0 0 / 6%);
   font-weight: 600;
 }
@@ -178,7 +178,7 @@
   cursor: pointer;
 }
 .appearance-dialog input[type='range'] {
-  accent-color: var(--color-accent);
+  accent-color: var(--color-accent-ink);
   margin: 12px 0;
 }
 .appearance-dialog .planning-input {
@@ -199,8 +199,8 @@
 }
 .appearance-dialog .planning-button[aria-pressed='true'] {
   background: var(--color-accent-soft);
-  color: var(--color-accent);
-  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+  border-color: var(--color-accent-ink);
 }
 .appearance-palette-card {
   border: 1px solid var(--color-border);
@@ -277,11 +277,11 @@
 }
 .appearance-font-option input {
   flex-shrink: 0;
-  accent-color: var(--color-accent);
+  accent-color: var(--color-accent-ink);
 }
 .appearance-font-option[data-selected='true'] {
   background: var(--color-accent-soft);
-  border-color: var(--color-accent);
+  border-color: var(--color-accent-ink);
 }
 .appearance-font-option:focus-within {
   outline: 2px solid var(--color-accent);

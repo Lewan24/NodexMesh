@@ -23,6 +23,8 @@ export interface CanvasMenuState {
   hasSelection: boolean;
 }
 export default function CanvasContextMenu({
+  onToggleTheme,
+  theme,
   onOpenAppearance,
   onOpenLibrary,
   onCustomCss,
@@ -157,7 +159,7 @@ export default function CanvasContextMenu({
       x={menu.x}
       y={menu.y}
       title={menu.hasSelection ? translate('{{value1}} selected', { value1: count }) : translate('Canvas')}
-      actions={[...actions, ...workspaceMenuActions({ onOpenAppearance, onOpenLibrary })]}
+      actions={[...actions, ...workspaceMenuActions({ onOpenAppearance, onOpenLibrary, onToggleTheme, theme })]}
       onClose={onClose}
     />
   );

@@ -1,3 +1,4 @@
+import { useTheme } from '@/app/providers/ThemeProvider';
 import UserAvatar from '@/shared/components/UserAvatar';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
@@ -98,6 +99,8 @@ export default function TimelineBlock({
   participants?: ProjectParticipant[];
 }) {
   useTranslation();
+  const { appearance: projectAppearance, theme } = useTheme();
+  const palette = projectAppearance[theme];
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<TimelineTask | null>(null);
   const movedBar = useRef(false);
@@ -154,7 +157,7 @@ export default function TimelineBlock({
       start: todayDate(),
       end: todayDate(),
       done: false,
-      color: '#7c3aed',
+      color: palette.secondary,
       assigneeUserId: undefined,
       checklist: [],
     });

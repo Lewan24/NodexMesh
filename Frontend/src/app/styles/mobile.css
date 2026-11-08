@@ -8,7 +8,7 @@
   margin: 0;
   padding: 0;
   border: 0;
-  background: transparent;
+  background: rgb(0 0 0 / 45%);
   color: var(--color-text-primary);
 }
 
@@ -27,8 +27,13 @@
     max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 }
 
-.app-modal-centered::backdrop {
-  background: rgba(0, 0, 0, 0.45);
+/* The fullscreen dialog paints its own scrim, avoiding intermittent native
+   backdrop compositing during repeated/nested opening. */
+.app-modal > .fixed.inset-0,
+.app-modal > .task-dialog-backdrop,
+.app-modal > .mobile-panel-backdrop {
+  background: transparent !important;
+  backdrop-filter: none !important;
 }
 
 .app-modal-centered > form {
@@ -151,7 +156,7 @@
   padding: 6px 10px;
   border-radius: 10px;
   background: var(--color-accent-soft);
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
   font-weight: 700;
 }
 
@@ -212,7 +217,7 @@
 }
 
 .touch-selection-toggle[aria-pressed='true'] {
-  background: var(--color-accent);
+  background: var(--color-accent-fill, var(--color-accent));
   color: white;
 }
 

@@ -1,3 +1,4 @@
+import { useTheme } from '@/app/providers/ThemeProvider';
 import { useContext } from 'react';
 import { LibraryContext } from '@/features/library/LibraryContext';
 import LibraryDialog from '@/features/library/LibraryDialog';
@@ -24,6 +25,8 @@ export default function IconDialog({
   onSave: (patch: IconPatch) => void;
 }) {
   useTranslation();
+  const { appearance: projectAppearance, theme } = useTheme();
+  const palette = projectAppearance[theme];
   const projectId = useContext(LibraryContext);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [mode, setMode] = useState(item.iconMode);
@@ -36,7 +39,7 @@ export default function IconDialog({
     [item.iconMode]: item.source,
   });
   const [label, setLabel] = useState(item.label);
-  const [color, setColor] = useState(item.color ?? '#7C3AED');
+  const [color, setColor] = useState(item.color ?? palette.primary);
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [preview, setPreview] = useState<IconPatch>({
@@ -109,7 +112,7 @@ export default function IconDialog({
               type="button"
               aria-pressed={mode === key}
               disabled={key === 'library' && !projectId}
-              className={`px-3 py-2 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${mode === key ? 'bg-violet-600 text-white' : 'hover:bg-violet-500/10'}`}
+              className={`px-3 py-2 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${mode === key ? 'btn-accent' : 'hover:bg-accent-soft'}`}
               onClick={() => {
                 setMode(key as IconItem['iconMode']);
                 setError('');
@@ -155,7 +158,7 @@ export default function IconDialog({
                       title={displayLabel(name)}
                       aria-label={displayLabel(name)}
                       aria-pressed={source === name}
-                      className={`h-11 flex items-center justify-center rounded-lg cursor-pointer ${source === name ? 'bg-violet-500/20 ring-2 ring-violet-500' : 'hover:bg-violet-500/10'}`}
+                      className={`h-11 flex items-center justify-center rounded-lg cursor-pointer ${source === name ? 'bg-accent-soft-strong ring-2 ring-accent' : 'hover:bg-accent-soft'}`}
                       onClick={() => choose(name)}
                     >
                       <Icon size={26} color={color} />
@@ -167,7 +170,7 @@ export default function IconDialog({
                     type="button"
                     aria-label={emoji}
                     aria-pressed={source === emoji}
-                    className={`h-11 text-2xl rounded-lg cursor-pointer ${source === emoji ? 'bg-violet-500/20 ring-2 ring-violet-500' : 'hover:bg-violet-500/10'}`}
+                    className={`h-11 text-2xl rounded-lg cursor-pointer ${source === emoji ? 'bg-accent-soft-strong ring-2 ring-accent' : 'hover:bg-accent-soft'}`}
                     onClick={() => choose(emoji)}
                   >
                     {emoji}

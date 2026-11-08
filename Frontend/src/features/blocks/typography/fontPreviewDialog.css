@@ -69,7 +69,7 @@
   background: var(--color-accent-soft);
 }
 .font-preview-list input {
-  accent-color: var(--color-accent);
+  accent-color: var(--color-accent-ink);
 }
 .font-preview-workspace {
   min-width: 0;
@@ -106,7 +106,7 @@
 }
 .font-preview-options input {
   max-width: 100px;
-  accent-color: var(--color-accent);
+  accent-color: var(--color-accent-ink);
 }
 .font-preview-output {
   min-height: 140px;

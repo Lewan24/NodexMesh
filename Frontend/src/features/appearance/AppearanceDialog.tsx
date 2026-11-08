@@ -13,6 +13,10 @@ import type { Project } from '@/entities/project/types';
 import type { Appearance } from './appearanceModel';
 import {
   activeAppearance,
+  accentPresentation,
+  DEFAULT_UI_BACKGROUND,
+  validatedUiBackground,
+  uiColorPresets,
   defaultAppearance,
   normalizeSidebarWidth,
   DEFAULT_SIDEBAR_WIDTH,
@@ -39,6 +43,7 @@ export default function AppearanceDialog({
   const [mode, setMode] = useState<'light' | 'dark'>('light');
   const customEnabled = !!settings.projects[scope];
   const draft = activeAppearance(settings, scope);
+  const uiBackground = validatedUiBackground(settings.uiBackground);
   const updateDraft = (next: Appearance) =>
     setSettings((current) =>
       scope && !current.projects[scope]
@@ -125,24 +130,119 @@ export default function AppearanceDialog({
                   'Your app bar and tool sidebar keep the same appearance across all projects, in both light and dark modes.',
                 )}
               </p>
-              <label className="appearance-color-setting">
-                {translate('UI primary color')}
-                <input
-                  aria-label={translate('UI primary color')}
-                  type="color"
-                  value={settings.uiPrimary}
-                  onChange={(event) => setSettings({ ...settings, uiPrimary: event.target.value })}
-                />
-              </label>
-              <label className="appearance-color-setting">
-                {translate('UI secondary color')}
-                <input
-                  aria-label={translate('UI secondary color')}
-                  type="color"
-                  value={settings.uiSecondary}
-                  onChange={(event) => setSettings({ ...settings, uiSecondary: event.target.value })}
-                />
-              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" aria-label={translate('Color presets')}>
+                {uiColorPresets.map((preset) => {
+                  const preview = accentPresentation(
+                    {
+                      ...defaultAppearance.light,
+                      primary: preset.background.color,
+                      gradients: { primary: preset.background.gradient },
+                    },
+                    'primary',
+                  );
+                  const selected =
+                    settings.uiPrimary === preset.primary &&
+                    settings.uiSecondary === preset.secondary &&
+                    JSON.stringify(settings.uiGradients ?? {}) === JSON.stringify(preset.gradients ?? {}) &&
+                    JSON.stringify(settings.uiBackground) === JSON.stringify(preset.background);
+                  return (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      className="appearance-preset min-w-0 rounded-xl border overflow-hidden text-left"
+                      aria-pressed={selected}
+                      style={{ borderColor: selected ? 'var(--color-accent)' : 'var(--color-border)' }}
+                      onClick={() =>
+                        setSettings({
+                          ...settings,
+                          uiPrimary: preset.primary,
+                          uiSecondary: preset.secondary,
+                          uiGradients: 'gradients' in preset ? structuredClone(preset.gradients) : {},
+                          uiBackground: structuredClone(preset.background),
+                        })
+                      }
+                    >
+                      <span
+                        className="flex items-center gap-2 px-3 py-4"
+                        style={{ background: preview.background, color: preview.foreground }}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="h-4 w-4 shrink-0 rounded-full"
+                          style={{
+                            background: `linear-gradient(135deg, ${preset.primary} 50%, ${preset.secondary} 50%)`,
+                          }}
+                        />
+                        <span className="min-w-0 break-words text-sm leading-snug">{translate(preset.name)}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs opacity-75">
+                {translate(
+                  'UI colors also apply to palette primary and secondary colors unless their override checkbox is enabled.',
+                )}
+              </p>
+              <PaletteEditor
+                mode="UI"
+                allowInheritance={false}
+                colorKeys={['primary', 'secondary']}
+                palette={{
+                  ...defaultAppearance.light,
+                  primary: settings.uiPrimary,
+                  secondary: settings.uiSecondary,
+                  gradients: settings.uiGradients,
+                }}
+                onChange={(palette) =>
+                  setSettings({
+                    ...settings,
+                    uiPrimary: palette.primary,
+                    uiSecondary: palette.secondary,
+                    uiGradients: { primary: palette.gradients?.primary, secondary: palette.gradients?.secondary },
+                  })
+                }
+              />
+              <section className="space-y-3" aria-label={translate('Interface background')}>
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input
+                    type="checkbox"
+                    checked={!!uiBackground}
+                    onChange={(event) =>
+                      setSettings({
+                        ...settings,
+                        uiBackground: event.target.checked ? structuredClone(DEFAULT_UI_BACKGROUND) : undefined,
+                      })
+                    }
+                  />
+                  {translate('Custom interface background')}
+                </label>
+                <p className="text-xs opacity-75">
+                  {translate(
+                    'Set a solid color or gradient for the app bar and sidebar, independently of accent colors. Turn off to blend the accent colors automatically.',
+                  )}
+                </p>
+                {uiBackground && (
+                  <PaletteEditor
+                    mode="UI"
+                    allowInheritance={false}
+                    colorKeys={['canvas']}
+                    labels={{ canvas: translate('Interface background') }}
+                    palette={{
+                      ...defaultAppearance.light,
+                      canvas: uiBackground.color,
+                      accent1: uiBackground.gradient?.to ?? '#20333c',
+                      gradients: { canvas: uiBackground.gradient },
+                    }}
+                    onChange={(palette) =>
+                      setSettings({
+                        ...settings,
+                        uiBackground: { color: palette.canvas, gradient: palette.gradients?.canvas },
+                      })
+                    }
+                  />
+                )}
+              </section>
               <label className="block">
                 {translate('Sidebar width')}
                 <input

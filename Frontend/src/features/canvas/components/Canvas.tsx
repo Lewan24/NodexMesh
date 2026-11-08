@@ -1,3 +1,4 @@
+import { useTheme } from '@/app/providers/ThemeProvider';
 import { toast } from 'sonner';
 import {
   getLayoutSelection,
@@ -6,7 +7,6 @@ import {
   type ArrangementOptions,
   type LayoutUnit,
 } from '../utils/selectionLayout';
-import { isHeavyPreviewItem } from '../utils/heavyPreview';
 import { useCanvasCallbacks } from '../hooks/useCanvasCallbacks';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
@@ -209,6 +209,7 @@ function CanvasContent({
     for (const id of scrollPositions.current.keys()) if (!ids.has(id)) scrollPositions.current.delete(id);
   }, [project.items]);
   const [searchCursor, setSearchCursor] = useState({ query: '', id: '' });
+  const { theme, toggleTheme } = useTheme();
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [placeOnItems, setPlaceOnItems] = useState(false);
   const [customCssTarget, setCustomCssTarget] = useState<{ itemId: string; columnId?: string } | null>(null);
@@ -1060,13 +1061,13 @@ function CanvasContent({
         visibleItems
           .filter(
             (item) =>
-              ((item.type === 'note' && Boolean(item.width && item.width > 0 && item.height && item.height > 0)) ||
-                (isHeavyPreviewItem(item) && measuredItems.get(item.id) === item)) &&
+              item.type === 'note' &&
+              Boolean(item.width && item.width > 0 && item.height && item.height > 0) &&
               !intersectsCanvasViewport(item, { pan, zoom, ...viewportSize }, measuredSizes, 0),
           )
           .map((item) => item.id),
       ),
-    [visibleItems, pan, zoom, viewportSize, measuredSizes, measuredItems],
+    [visibleItems, pan, zoom, viewportSize, measuredSizes],
   );
 
   // Measurement snapshots change gesture closures; they must not invalidate every block editor.
@@ -1286,6 +1287,8 @@ function CanvasContent({
       )}
       {contextMenu && (
         <CanvasContextMenu
+          theme={theme}
+          onToggleTheme={toggleTheme}
           onOpenAppearance={onOpenAppearance}
           onOpenLibrary={onOpenLibrary}
           layoutDisabledReason={layoutSelection.reason}
@@ -1623,7 +1626,7 @@ function CanvasContent({
             </label>
           ) : selectedItems.length === 1 && selectedItems[0]!.type === 'frame' ? (
             <button
-              className="h-8 px-2 text-sm hover:bg-violet-500/20"
+              className="h-8 px-2 text-sm hover:bg-accent-soft-strong"
               disabled={selectedItems[0]!.locked}
               title={translate('Assign enclosed unlocked items to this frame, including items owned by another frame')}
               onClick={() => {

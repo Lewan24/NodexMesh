@@ -1,7 +1,7 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import Modal from './Modal';
 
 const mobileQuery = '(max-width: 900px), (pointer: coarse) and (max-width: 1200px)';
 const subscribe = (callback: () => void) => {
@@ -36,13 +36,7 @@ export default function MobilePanel({
 
   useEffect(() => {
     if (!mobile || !open) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     panelRef.current?.focus({ preventScroll: true });
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
   }, [mobile, open]);
 
   useEffect(() => {
@@ -64,8 +58,8 @@ export default function MobilePanel({
       >
         {title}
       </button>
-      {open &&
-        createPortal(
+      {open && (
+        <Modal onClose={() => setOpen(false)}>
           <div
             className="mobile-panel-backdrop"
             data-canvas-ui="true"
@@ -103,9 +97,9 @@ export default function MobilePanel({
               </div>
               <div className="mobile-panel-body">{children}</div>
             </section>
-          </div>,
-          document.body,
-        )}
+          </div>
+        </Modal>
+      )}
     </>
   );
 }

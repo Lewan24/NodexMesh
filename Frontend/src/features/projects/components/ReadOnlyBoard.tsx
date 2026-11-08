@@ -1,3 +1,4 @@
+import { useTheme } from '@/app/providers/ThemeProvider';
 import CanvasActionMenu from '@/features/canvas/components/CanvasActionMenu';
 import { workspaceMenuActions, type WorkspaceMenuCallbacks } from '@/features/canvas/utils/workspaceMenuActions';
 import { translate, displayLabel } from '@/shared/i18n';
@@ -153,6 +154,7 @@ export default function ReadOnlyBoard({
 }) {
   useTranslation();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { theme, toggleTheme } = useTheme();
   const [workspaceMenu, setWorkspaceMenu] = useState<{ x: number; y: number } | null>(null);
   const flatten = (entries: BoardItem[]): BoardItem[] =>
     entries.flatMap((item) => [item, ...(item.type === 'column' ? flatten(item.items) : [])]);
@@ -228,7 +230,7 @@ export default function ReadOnlyBoard({
         <CanvasActionMenu
           {...workspaceMenu}
           title={translate('Project tools')}
-          actions={workspaceMenuActions({ onOpenAppearance, onOpenLibrary })}
+          actions={workspaceMenuActions({ onOpenAppearance, onOpenLibrary, theme, onToggleTheme: toggleTheme })}
           onClose={() => setWorkspaceMenu(null)}
         />
       )}

@@ -131,14 +131,23 @@ function CanvasFrame({
       {isSelected && (
         <div
           className="absolute pointer-events-none rounded-2xl"
-          style={{ inset: -4, boxShadow: '0 0 0 2px var(--color-accent), 0 0 12px rgba(124,58,237,0.25)' }}
+          style={{
+            inset: -4,
+            boxShadow:
+              '0 0 0 2px var(--color-accent), 0 0 12px color-mix(in srgb, var(--color-accent) 25%, transparent)',
+          }}
         />
       )}
 
       {searchActive && isSearchMatch && !isSelected && (
         <div
           className="absolute pointer-events-none rounded-2xl"
-          style={{ inset: -5, boxShadow: '0 0 0 3px var(--color-accent), 0 0 22px rgba(124,58,237,0.28)', zIndex: 40 }}
+          style={{
+            inset: -5,
+            boxShadow:
+              '0 0 0 3px var(--color-accent), 0 0 22px color-mix(in srgb, var(--color-accent) 28%, transparent)',
+            zIndex: 40,
+          }}
         />
       )}
 

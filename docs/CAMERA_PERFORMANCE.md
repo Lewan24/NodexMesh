@@ -1,5 +1,9 @@
 # Camera rendering and the 60 FPS target
 
+Current behavior (2026-11-08): column summary swapping has been removed to keep its content and geometry stable
+through navigation. The measurements below describe the earlier implementation; no new FPS claim is made for
+the restored full-column rendering. Camera transforms, culling, memoization and note previews remain enabled.
+
 This follow-up separates live camera presentation from React content refreshes, moves camera state below the application shell, and uses readable fixed-note previews during navigation. It reduces main-thread work substantially. The current diagnostic browser still does not sustain 60 FPS on the fast 1,000-note path; painting/compositing and mixed-board work remain.
 
 The subsequent [full-shell rendering study](WORKSPACE_RENDERING.md) adds alternating comparisons and traces, fixes grid texture invalidation and keeps offscreen overscan notes as previews at rest. The results below remain the earlier isolated Canvas study.

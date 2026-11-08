@@ -123,8 +123,8 @@ public static class PublicEndpoints
 
         return new PublicAppearanceDto(
             over?.Font ?? profile.Font,
-            Parse(lightJson),
-            Parse(darkJson));
+            AppearanceAccentValidator.ResolveSharedPalette(lightJson, profile),
+            AppearanceAccentValidator.ResolveSharedPalette(darkJson, profile));
     }
 
     private static JsonElement? Parse(string? json) =>

@@ -1,3 +1,4 @@
+import { useTheme } from '@/app/providers/ThemeProvider';
 import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pencil } from 'lucide-react';
@@ -15,6 +16,8 @@ export default function BoardIconControls({
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
 }) {
   useTranslation();
+  const { appearance: projectAppearance, theme } = useTheme();
+  const palette = projectAppearance[theme];
   const [editing, setEditing] = useState(false);
   const icon = getBoardIcon(item);
   const defaultIcon: IconItem = {
@@ -23,7 +26,7 @@ export default function BoardIconControls({
     iconMode: 'preset',
     source: 'folder',
     label: translate('Board'),
-    color: '#7C3AED',
+    color: palette.primary,
   };
 
   return (
@@ -44,7 +47,7 @@ export default function BoardIconControls({
                     ...current,
                     icon: '',
                     boardIcon: enabled
-                      ? { iconMode: 'preset', source: 'folder', label: translate('Board'), color: '#7C3AED' }
+                      ? { iconMode: 'preset', source: 'folder', label: translate('Board'), color: palette.primary }
                       : undefined,
                   }
                 : current,

@@ -149,7 +149,10 @@ export default function EditBar({
       }}
       onMouseDown={(event) => event.stopPropagation()}
     >
-      <div className="h-0.5 w-full shrink-0 bg-gradient-to-r from-violet-600 via-fuchsia-400 to-amber-300" />
+      <div
+        className="h-0.5 w-full shrink-0"
+        style={{ background: 'linear-gradient(90deg, var(--color-accent), var(--color-secondary))' }}
+      />
 
       <div
         className={`edit-bar-row edit-bar-actions flex min-h-11 items-center gap-1 overflow-x-auto px-2 py-1.5 ${
@@ -210,7 +213,7 @@ export default function EditBar({
           <button
             type="button"
             onClick={onJoinDrawings}
-            className="h-8 shrink-0 rounded-lg px-2.5 text-xs font-semibold hover:bg-violet-500/15"
+            className="h-8 shrink-0 rounded-lg px-2.5 text-xs font-semibold hover:bg-accent-soft"
           >
             {translate('Join drawings')}
           </button>
@@ -220,7 +223,7 @@ export default function EditBar({
             type="button"
             onClick={onGroupItems}
             className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold"
-            style={{ color: 'var(--color-accent)', background: 'var(--color-accent-soft)' }}
+            style={{ color: 'var(--color-accent-ink)', background: 'var(--color-accent-soft)' }}
             title={translate(isSingleGroup(selectedItems) ? 'Ungroup' : 'Group')}
           >
             <SlidersHorizontal size={14} />
@@ -338,7 +341,7 @@ export default function EditBar({
                 type="button"
                 onClick={() => onFitFrame(single.id)}
                 className="h-8 shrink-0 rounded-lg px-2.5 text-xs font-semibold"
-                style={{ color: 'var(--color-accent)', background: 'var(--color-accent-soft)' }}
+                style={{ color: 'var(--color-accent-ink)', background: 'var(--color-accent-soft)' }}
               >
                 {translate('Fit contents')}
               </button>
@@ -352,7 +355,7 @@ export default function EditBar({
               <button
                 type="button"
                 className="h-8 shrink-0 rounded-lg px-2.5 text-xs font-semibold"
-                style={{ color: 'var(--color-accent)', background: 'var(--color-accent-soft)' }}
+                style={{ color: 'var(--color-accent-ink)', background: 'var(--color-accent-soft)' }}
                 onClick={() =>
                   handleUpdate((current) =>
                     current.type === 'document' ? { ...current, autoHeight: true, height: undefined } : current,
@@ -371,7 +374,7 @@ export default function EditBar({
               <input
                 type="checkbox"
                 checked={single.showLabel}
-                className="accent-violet-600"
+                className="accent-[var(--color-accent)]"
                 onChange={(event) =>
                   handleUpdate((current) =>
                     current.type === 'embed' ? { ...current, showLabel: event.target.checked } : current,

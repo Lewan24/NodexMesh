@@ -1,5 +1,4 @@
-import CanvasHeavyPreview from './CanvasHeavyPreview';
-import { hasPreviewCustomCss, isHeavyPreviewItem } from '../utils/heavyPreview';
+import { isHeavyPreviewItem } from '../utils/heavyPreview';
 import CanvasNotePreview from './CanvasNotePreview';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
@@ -84,7 +83,6 @@ function CanvasItem({
   motionPreview = false,
   scrollPositions,
   measuredSize,
-  measurementCurrent = false,
   remotePresence,
   collaboratorLocked = false,
   item,
@@ -163,19 +161,6 @@ function CanvasItem({
     !hasFocus &&
     !remotePresence?.length &&
     !searchActive;
-  const previewCustomCss = useMemo(() => isHeavyPreviewItem(item) && hasPreviewCustomCss(item), [item]);
-  const previewHeavy =
-    (motionPreview || lowDetail) &&
-    isHeavyPreviewItem(item) &&
-    measurementCurrent &&
-    Boolean(measuredSize && measuredSize.width > 0 && measuredSize.height > 0) &&
-    !previewCustomCss &&
-    !isSelected &&
-    !isDragging &&
-    !isDragOver &&
-    !hasFocus &&
-    !remotePresence?.length &&
-    !searchActive;
   const approximateSize = getApproxItemSize(item);
   // Some blocks measure only their currently visible content (for example an
   // empty document or checklist). Keep the persisted/canonical item geometry
@@ -187,14 +172,14 @@ function CanvasItem({
   const showDragEffect = isDragging && item.type !== 'line';
   useLayoutEffect(() => {
     const saved = scrollPositions?.get(item.id);
-    if (simplified || previewNote || previewHeavy || !saved) return;
+    if (simplified || previewNote || !saved) return;
     elementRef.current?.querySelectorAll<HTMLElement>('[data-wheel-scroll]').forEach((element, index) => {
       const position = saved[index];
       if (!position) return;
       element.scrollLeft = position.left;
       element.scrollTop = position.top;
     });
-  }, [item.id, scrollPositions, simplified, previewNote, previewHeavy]);
+  }, [item.id, scrollPositions, simplified, previewNote]);
 
   // Only section titles change their content with the camera scale. Keep the
   // expensive block subtree intact while panning, pinching or animating its wrapper.
@@ -346,7 +331,11 @@ function CanvasItem({
       {isSelected && (
         <div
           className="absolute pointer-events-none rounded-sm"
-          style={{ inset: -2, boxShadow: '0 0 0 2px var(--color-accent), 0 0 12px rgba(124, 58, 237,0.25)' }}
+          style={{
+            inset: -2,
+            boxShadow:
+              '0 0 0 2px var(--color-accent), 0 0 12px color-mix(in srgb, var(--color-accent) 25%, transparent)',
+          }}
         />
       )}
 
@@ -371,7 +360,12 @@ function CanvasItem({
       {searchActive && isSearchMatch && !isSelected && (
         <div
           className="absolute pointer-events-none rounded-2xl"
-          style={{ inset: -5, boxShadow: '0 0 0 3px var(--color-accent), 0 0 22px rgba(124,58,237,0.32)', zIndex: 40 }}
+          style={{
+            inset: -5,
+            boxShadow:
+              '0 0 0 3px var(--color-accent), 0 0 22px color-mix(in srgb, var(--color-accent) 32%, transparent)',
+            zIndex: 40,
+          }}
         />
       )}
 
@@ -382,8 +376,8 @@ function CanvasItem({
             inset: -5,
             outline: '2px dashed var(--color-accent)',
             outlineOffset: 2,
-            backgroundColor: 'rgba(124, 58, 237, 0.06)',
-            boxShadow: '0 0 16px rgba(124, 58, 237, 0.2)',
+            backgroundColor: 'color-mix(in srgb, var(--color-accent) 6%, transparent)',
+            boxShadow: '0 0 16px color-mix(in srgb, var(--color-accent) 20%, transparent)',
             zIndex: 30,
           }}
         />
@@ -406,7 +400,11 @@ function CanvasItem({
       {isAttachTarget && (
         <div
           className="absolute pointer-events-none rounded-2xl"
-          style={{ inset: -6, boxShadow: '0 0 0 3px var(--color-accent), 0 0 18px rgba(124, 58, 237,0.35)' }}
+          style={{
+            inset: -6,
+            boxShadow:
+              '0 0 0 3px var(--color-accent), 0 0 18px color-mix(in srgb, var(--color-accent) 35%, transparent)',
+          }}
         />
       )}
 
@@ -434,24 +432,6 @@ function CanvasItem({
             <div className="h-2 w-full rounded-full" style={{ background: '#e2e8f0' }} />
             <div className="h-2 w-4/5 rounded-full" style={{ background: '#e2e8f0' }} />
             <div className="h-2 w-3/5 rounded-full" style={{ background: '#e2e8f0' }} />
-          </div>
-        ) : isHeavyPreviewItem(item) ? (
-          <div className="relative">
-            <div
-              data-canvas-retained-editor={String(previewHeavy)}
-              inert={previewHeavy || undefined}
-              aria-hidden={previewHeavy || undefined}
-              style={
-                previewHeavy
-                  ? { contentVisibility: 'hidden', width: measuredSize!.width, height: measuredSize!.height }
-                  : undefined
-              }
-            >
-              <ItemWatcher itemId={item.id} measurementKey={item} onResize={onResize} suspended={previewHeavy}>
-                {content}
-              </ItemWatcher>
-            </div>
-            {previewHeavy && <CanvasHeavyPreview item={item} />}
           </div>
         ) : (
           <ItemWatcher itemId={item.id} measurementKey={item} onResize={onResize}>

@@ -85,7 +85,7 @@ export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard 
       <button
         type="button"
         data-read-only-action="true"
-        className="board-block-open btn-accent"
+        className="board-block-open btn-secondary"
         style={getSectionStyle(item.typography, 'links')}
         disabled={!item.boardId || !onOpenBoard}
         onDoubleClick={(event) => event.stopPropagation()}

@@ -5,7 +5,7 @@ import { getSectionStyle } from '@/features/blocks/typography/sectionTypography'
 import { createId } from '@/shared/lib/createId';
 import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import Modal from '@/shared/components/dialogs/Modal';
 import {
   ReactFlow,
   Background,
@@ -44,10 +44,10 @@ function TableView({ data, selected }: NodeProps<TableNode>) {
         width: 288,
         background: 'var(--color-surface)',
         color: 'var(--color-text-primary)',
-        outline: selected ? '2px solid #8b5cf6' : undefined,
+        outline: selected ? '2px solid var(--color-accent)' : undefined,
       }}
     >
-      <div className="px-3 py-2 bg-violet-600 text-white font-semibold" style={labelStyle}>
+      <div className="px-3 py-2 btn-accent font-semibold" style={labelStyle}>
         {data.table.name || translate('Untitled table')}
       </div>
       {data.table.fields.map((field) => (
@@ -170,7 +170,7 @@ export default function DatabaseDiagramBlock({
         type: 'smoothstep',
         label: relation.cardinality,
         markerEnd: { type: MarkerType.ArrowClosed },
-        style: { stroke: '#8b5cf6', strokeWidth: 2 },
+        style: { stroke: 'var(--color-secondary)', strokeWidth: 2 },
         interactionWidth: 24,
         selected: relation.id === relationId,
       })),
@@ -363,7 +363,7 @@ export default function DatabaseDiagramBlock({
                 ))}
               </datalist>
               {table.fields.map((field, index) => (
-                <fieldset key={field.id} className="p-2 bg-violet-500/5 space-y-2 rounded-sm">
+                <fieldset key={field.id} className="p-2 bg-accent-soft space-y-2 rounded-sm">
                   <legend className="text-xs opacity-60">
                     {translate('Field') + ' '}
                     {index + 1}
@@ -560,7 +560,7 @@ export default function DatabaseDiagramBlock({
       {editing ? (
         <>
           <div className="planning-empty">{translate('Database schema is open in the editor.')}</div>
-          {createPortal(
+          <Modal boardHistory onClose={() => setEditing(false)}>
             <div
               className="fixed inset-0 bg-black/45 flex items-center justify-center p-4"
               style={{ zIndex: 200000 }}
@@ -607,9 +607,8 @@ export default function DatabaseDiagramBlock({
               >
                 {content}
               </div>
-            </div>,
-            document.body,
-          )}
+            </div>
+          </Modal>
         </>
       ) : (
         content

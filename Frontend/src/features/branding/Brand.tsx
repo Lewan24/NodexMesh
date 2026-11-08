@@ -15,7 +15,7 @@ export default function Brand({ chrome = false, vertical = false }: { chrome?: b
           height: vertical ? 44 : 32,
           background: '#ffffff',
           borderColor: '#ded8eb',
-          color: '#6023b4',
+          color: 'var(--ui-accent, #334c5c)',
         }}
       >
         {source && source !== failed ? (

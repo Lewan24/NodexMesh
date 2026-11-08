@@ -51,8 +51,8 @@ export default function UserAvatar({
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'var(--color-accent-soft)',
-    color: 'var(--color-accent)',
+    background: 'var(--color-secondary-fill)',
+    color: 'var(--color-on-secondary)',
     fontSize: Math.max(10, size / 3),
     fontWeight: 600,
   } as const;

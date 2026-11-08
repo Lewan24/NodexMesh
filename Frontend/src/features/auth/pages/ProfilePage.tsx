@@ -117,7 +117,7 @@ export default function ProfilePage({ onClose }: { onClose: () => void }) {
           <div className="min-w-0 flex-1">
             <p
               className="mb-1 text-[10px] font-bold uppercase tracking-[0.22em]"
-              style={{ color: 'var(--color-accent)' }}
+              style={{ color: 'var(--color-accent-ink)' }}
             >
               {applicationName} · {translate('Account settings')}
             </p>
@@ -177,7 +177,12 @@ export default function ProfilePage({ onClose }: { onClose: () => void }) {
                 style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
               >
                 <div>
-                  <UserRound size={20} className="mb-3" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+                  <UserRound
+                    size={20}
+                    className="mb-3"
+                    style={{ color: 'var(--color-accent-ink)' }}
+                    aria-hidden="true"
+                  />
                   <h2 className="text-lg font-semibold">{translate('Account details')}</h2>
                   <p className="mt-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
                     {translate('Enter your current password when changing your email address.')}
@@ -227,7 +232,12 @@ export default function ProfilePage({ onClose }: { onClose: () => void }) {
                 style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
               >
                 <div>
-                  <KeyRound size={20} className="mb-3" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+                  <KeyRound
+                    size={20}
+                    className="mb-3"
+                    style={{ color: 'var(--color-accent-ink)' }}
+                    aria-hidden="true"
+                  />
                   <h2 className="text-lg font-semibold">{translate('Change password')}</h2>
                   <p className="mt-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
                     {translate('Use 12+ characters with uppercase, lowercase, a number and a symbol.')}

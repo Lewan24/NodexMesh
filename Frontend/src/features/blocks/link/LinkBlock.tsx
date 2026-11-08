@@ -33,7 +33,9 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
   );
 
   const borderBase = light ? 'rgba(0,0,0,0.1)' : '#1a3040';
-  const borderHover = light ? 'rgba(124, 58, 237,0.5)' : 'rgba(124, 58, 237,0.4)';
+  const borderHover = light
+    ? 'color-mix(in srgb, var(--color-accent) 50%, transparent)'
+    : 'color-mix(in srgb, var(--color-accent) 40%, transparent)';
 
   const accentBackground = light ? '#f0fdf4' : '#112028';
   const inputBackground = light ? '#f8fafc' : '#071317';
@@ -93,7 +95,14 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                 className="w-6 h-6 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: accentBackground }}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--color-secondary-ink)"
+                  strokeWidth="2"
+                >
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                 </svg>
@@ -115,7 +124,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                 className="opacity-0 group-hover:opacity-100 transition-all"
                 style={{ color: mutedColor }}
                 onMouseEnter={(event) => {
-                  event.currentTarget.style.color = '#7C3AED';
+                  event.currentTarget.style.color = 'var(--color-accent)';
                 }}
                 onMouseLeave={(event) => {
                   event.currentTarget.style.color = mutedColor;
@@ -169,13 +178,13 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
                 onChange={(event) => update({ url: event.target.value })}
                 onKeyDown={handleEditorKeyDown}
                 placeholder="https://…"
-                className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border focus:border-[#7C3AED] transition-colors"
+                className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border focus:border-[var(--color-accent)] transition-colors"
                 style={{
                   ...typographyStyle,
                   backgroundColor: inputBackground,
                   color: textColor,
-                  borderColor: '#7C3AED',
-                  caretColor: '#7C3AED',
+                  borderColor: 'var(--color-accent)',
+                  caretColor: 'var(--color-accent)',
                   ...getSectionStyle(item.typography, 'links'),
                 }}
               />

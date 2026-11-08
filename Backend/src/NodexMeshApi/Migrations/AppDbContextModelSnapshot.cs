@@ -424,10 +424,20 @@ namespace NodexMeshApi.Migrations
                         .HasDefaultValue(235)
                         .HasColumnName("sidebar_width");
 
+                    b.Property<string>("UiBackground")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("ui_background");
+
                     b.Property<string>("UiFont")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("ui_font");
+
+                    b.Property<string>("UiGradients")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("ui_gradients");
 
                     b.Property<string>("UiPrimary")
                         .IsRequired()

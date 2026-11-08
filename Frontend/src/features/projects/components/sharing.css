@@ -11,13 +11,13 @@
   font-weight: 650;
 }
 .sharing-section h3 svg {
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
 }
 .sharing-count {
   padding: 2px 8px;
   border-radius: 8px;
   background: var(--color-accent-soft);
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
   font-size: 11px;
 }
 .sharing-section > p {
@@ -92,7 +92,7 @@
   height: 36px;
   border-radius: 12px;
   background: var(--color-accent-soft);
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
   font-weight: 700;
 }
 @media (max-width: 600px) {

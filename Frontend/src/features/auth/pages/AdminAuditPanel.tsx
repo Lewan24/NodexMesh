@@ -56,7 +56,7 @@ const severityTone = (severity: string) => {
   if (value.includes('error') || value.includes('critical'))
     return { color: 'var(--color-danger-strong)', background: 'rgba(255,107,138,.14)', icon: '!' };
   if (value.includes('warn')) return { color: '#b7791f', background: 'rgba(245,158,11,.16)', icon: '⚠' };
-  return { color: 'var(--color-accent)', background: 'var(--color-accent-soft)', icon: 'i' };
+  return { color: 'var(--color-accent-ink)', background: 'var(--color-accent-soft)', icon: 'i' };
 };
 
 function SeverityBadge({ severity }: { severity: string }) {
@@ -160,7 +160,7 @@ export default function AdminAuditPanel() {
           <div>
             <p
               className="mb-2 text-[10px] font-bold uppercase tracking-[.24em]"
-              style={{ color: 'var(--color-accent)' }}
+              style={{ color: 'var(--color-accent-ink)' }}
             >
               {applicationName} · {translate('Security')}
             </p>
@@ -187,7 +187,7 @@ export default function AdminAuditPanel() {
       {statistics && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { label: translate('Info logs'), value: infoCount, color: 'var(--color-accent)', icon: 'i' },
+            { label: translate('Info logs'), value: infoCount, color: 'var(--color-accent-ink)', icon: 'i' },
             { label: translate('Warning logs'), value: warningCount, color: '#b7791f', icon: '⚠' },
             { label: translate('Error logs'), value: errorCount, color: 'var(--color-danger-strong)', icon: '!' },
             {
@@ -474,7 +474,7 @@ export default function AdminAuditPanel() {
                 <div>
                   <p
                     className="mb-1 text-[10px] font-bold uppercase tracking-[.2em]"
-                    style={{ color: 'var(--color-accent)' }}
+                    style={{ color: 'var(--color-accent-ink)' }}
                   >
                     {translate('Audit event')}
                   </p>

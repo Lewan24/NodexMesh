@@ -1,3 +1,5 @@
+import { uiChromeTokens } from '@/features/appearance/uiChromeTokens';
+import { paletteAccentTokens } from '@/features/appearance/appearanceTokens';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { registerPersistentSaveGuard } from '@/shared/api/pendingChanges';
@@ -9,6 +11,9 @@ import { readableText, contrastRatio } from '@/features/blocks/typography/textCo
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   paletteBackground,
+  accentPresentation,
+  gradientBackground,
+  validatedGradient,
   withAppearanceMode,
   activeAppearance,
   newPreferences,
@@ -141,7 +146,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setPreferences(value);
     }
   }, []);
-  const appearance = activeAppearance(preferences, scope.projectId);
+  const appearance = useMemo(() => activeAppearance(preferences, scope.projectId), [preferences, scope.projectId]);
   const theme = appearance.mode ?? globalTheme;
   const change = useCallback(
     (fn: (current: AppearancePreferences) => AppearancePreferences) => {
@@ -203,27 +208,50 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const root = document.documentElement,
       palette = appearance[theme];
     root.dataset.theme = theme;
+    const uiPalette = {
+      ...palette,
+      primary: preferences.uiPrimary,
+      secondary: preferences.uiSecondary,
+      gradients: preferences.uiGradients,
+    };
+    const uiPrimary = accentPresentation(uiPalette, 'primary');
+    const uiSecondary = accentPresentation(uiPalette, 'secondary');
+    const secondaryGradient = validatedGradient(uiPalette, 'secondary');
+    const secondaryTint = gradientBackground({
+      kind: secondaryGradient?.kind ?? 'linear',
+      angle: secondaryGradient?.angle ?? 135,
+      from: `color-mix(in srgb, ${secondaryGradient?.from ?? preferences.uiSecondary} 38%, transparent)`,
+      to: `color-mix(in srgb, ${secondaryGradient?.to ?? preferences.uiSecondary} 38%, transparent)`,
+    });
     const text = readableText(palette.default);
     const mutedCandidate = text === '#000000' ? '#4b4654' : '#cfc8da';
     const muted = contrastRatio(mutedCandidate, palette.default) >= 4.5 ? mutedCandidate : text;
     const vars: Record<string, string> = {
-      '--color-accent': palette.primary,
-      '--color-on-accent': readableText(palette.primary),
-      '--ui-on-accent': readableText(preferences.uiPrimary),
+      ...paletteAccentTokens(palette),
+      '--ui-on-accent': uiPrimary.foreground,
+      '--ui-on-secondary': uiSecondary.foreground,
       '--color-accent-hover': palette.primary,
-      '--color-accent-soft': `color-mix(in srgb, ${palette.primary} 14%, transparent)`,
-      '--color-accent-soft-strong': `color-mix(in srgb, ${palette.primary} 24%, transparent)`,
+      '--ui-accent-fill': uiPrimary.background,
+      '--ui-secondary-fill': uiSecondary.background,
       '--color-text-primary': text,
       '--color-text-secondary': muted,
       '--color-text-muted': muted,
       '--color-text-faint': muted,
       '--canvas-background': paletteBackground(palette, 'canvas'),
-      '--color-secondary': palette.secondary,
       '--color-app-bg': palette.canvas,
       '--color-surface': palette.default,
       '--color-surface-alt': surfaceAltColor(palette.default),
       '--color-surface-translucent': `color-mix(in srgb, ${palette.default} 94%, transparent)`,
-      '--chrome-gradient': `linear-gradient(135deg, color-mix(in srgb, ${preferences.uiPrimary} 35%, #10071d), color-mix(in srgb, ${preferences.uiSecondary} 15%, #130921))`,
+      ...uiChromeTokens(
+        {
+          uiBackground: preferences.uiBackground,
+          uiPrimary: preferences.uiPrimary,
+          uiSecondary: preferences.uiSecondary,
+        },
+        preferences.uiGradients?.primary || preferences.uiGradients?.secondary
+          ? `linear-gradient(rgb(10 18 23 / 80%), rgb(10 18 23 / 85%)), ${secondaryTint}, ${uiPrimary.background}`
+          : `linear-gradient(135deg, color-mix(in srgb, ${preferences.uiPrimary} 32%, #101a1f), color-mix(in srgb, ${preferences.uiSecondary} 18%, #11191d))`,
+      ),
       '--ui-accent': preferences.uiPrimary,
       '--ui-secondary': preferences.uiSecondary,
       '--project-font': getFontFamilyCss(appearance.font),
@@ -231,7 +259,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
     Object.entries(vars).forEach(([key, value]) => root.style.setProperty(key, value));
     return () => Object.keys(vars).forEach((key) => root.style.removeProperty(key));
-  }, [appearance, theme, preferences.uiFont, preferences.uiPrimary, preferences.uiSecondary]);
+  }, [
+    appearance,
+    theme,
+    preferences.uiFont,
+    preferences.uiPrimary,
+    preferences.uiSecondary,
+    preferences.uiGradients,
+    preferences.uiBackground,
+  ]);
   const value = useMemo(
     () => ({
       theme,
@@ -290,15 +326,14 @@ export function PublicAppearanceProvider({
         className="flex min-h-0 flex-1 flex-col"
         style={
           {
+            ...paletteAccentTokens(palette),
             '--canvas-background': paletteBackground(palette, 'canvas'),
             '--color-surface': palette.default,
             '--color-text-primary': readableText(palette.default),
             '--color-text-secondary': readableText(palette.default),
             '--color-text-muted': readableText(palette.default),
             '--color-text-faint': readableText(palette.default),
-            '--color-on-accent': readableText(palette.primary),
             '--color-surface-alt': surfaceAltColor(palette.default),
-            '--color-accent': palette.primary,
             '--project-font': getFontFamilyCss(appearance.font),
           } as React.CSSProperties
         }

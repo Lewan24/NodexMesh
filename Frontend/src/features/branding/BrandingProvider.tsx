@@ -6,7 +6,7 @@ import { publicImageUrl } from '@/shared/lib/publicImage';
 const defaultIcon =
   'data:image/svg+xml,' +
   encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="white"/><g fill="#6023b4"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></g></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="white"/><g fill="#334c5c"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></g></svg>',
   );
 const defaults: Branding = { applicationName: 'NodexMesh', logoId: null };
 const Context = createContext({ ...defaults, update: (_value: Branding) => {} });

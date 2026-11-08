@@ -34,7 +34,7 @@ export default function DrawingControls({
         {items.length > 1 ? translate('{{value1}} drawings', { value1: items.length }) : translate('Ink')}
       </span>
       <button
-        className="px-2 py-1 rounded hover:bg-violet-500/10 text-xs whitespace-nowrap disabled:opacity-40"
+        className="px-2 py-1 rounded hover:bg-accent-soft text-xs whitespace-nowrap disabled:opacity-40"
         title={translate('Smooth mouse jitter and reduce points in selected drawings')}
         disabled={items.every((item) => item.locked)}
         onClick={() =>

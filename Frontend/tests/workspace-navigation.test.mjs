@@ -128,7 +128,7 @@ test('old dark defaults upgrade globally and per project while custom colors and
   assert.equal(next.projects.custom.dark.canvas, '#123456');
   assert.deepEqual(next.projects.custom.dark.gradients, previous.projects.custom.dark.gradients);
   assert.equal(previous.defaults.dark.canvas, '#0b0b0c');
-  assert.equal(next.paletteVersion, 3);
+  assert.equal(next.paletteVersion, 4);
   assert.deepEqual(upgradeDefaultPalette(next), next);
 });
 
@@ -202,7 +202,7 @@ test('read-only workspace context menu opens shared tools without exposing editi
     let buttons = [...document.querySelectorAll('[role="menu"] button')];
     assert.deepEqual(
       buttons.map((button) => button.textContent),
-      ['Change application appearance', 'Open library'],
+      ['Change application appearance', 'Open library', 'Dark theme'],
     );
     await act(async () => buttons[1].click());
     assert.equal(library, 1);

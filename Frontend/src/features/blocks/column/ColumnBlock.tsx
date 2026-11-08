@@ -44,7 +44,7 @@ function DropIndicator({ layout }: { layout: 'vertical' | 'horizontal' | 'grid' 
           minHeight: 80,
           borderColor: 'var(--color-accent)',
           backgroundColor: 'var(--color-accent-soft)',
-          boxShadow: '0 0 12px rgba(124,58,237,0.18)',
+          boxShadow: '0 0 12px color-mix(in srgb, var(--color-accent) 18%, transparent)',
         }}
       />
     );
@@ -54,7 +54,11 @@ function DropIndicator({ layout }: { layout: 'vertical' | 'horizontal' | 'grid' 
     return (
       <div
         className="w-1 self-stretch rounded-full mx-1"
-        style={{ minHeight: 60, backgroundColor: 'var(--color-accent)', boxShadow: '0 0 8px rgba(124,58,237,0.5)' }}
+        style={{
+          minHeight: 60,
+          backgroundColor: 'var(--color-accent)',
+          boxShadow: '0 0 8px color-mix(in srgb, var(--color-accent) 50%, transparent)',
+        }}
       />
     );
   }
@@ -62,7 +66,10 @@ function DropIndicator({ layout }: { layout: 'vertical' | 'horizontal' | 'grid' 
   return (
     <div
       className="h-1 rounded-full mx-1 my-1.5"
-      style={{ backgroundColor: 'var(--color-accent)', boxShadow: '0 0 8px rgba(124,58,237,0.5)' }}
+      style={{
+        backgroundColor: 'var(--color-accent)',
+        boxShadow: '0 0 8px color-mix(in srgb, var(--color-accent) 50%, transparent)',
+      }}
     />
   );
 }
@@ -298,7 +305,12 @@ export default function ColumnBlock({
       {isDragOver && (
         <div
           className="absolute pointer-events-none rounded-sm"
-          style={{ inset: -4, boxShadow: '0 0 0 3px var(--color-accent), 0 0 24px rgba(124,58,237,0.3)', zIndex: 1 }}
+          style={{
+            inset: -4,
+            boxShadow:
+              '0 0 0 3px var(--color-accent), 0 0 24px color-mix(in srgb, var(--color-accent) 30%, transparent)',
+            zIndex: 1,
+          }}
         />
       )}
 
@@ -484,7 +496,8 @@ export default function ColumnBlock({
                     className="absolute pointer-events-none rounded-sm"
                     style={{
                       inset: -3,
-                      boxShadow: '0 0 0 2px var(--color-accent), 0 0 14px rgba(124,58,237,0.25)',
+                      boxShadow:
+                        '0 0 0 2px var(--color-accent), 0 0 14px color-mix(in srgb, var(--color-accent) 25%, transparent)',
                       zIndex: 20,
                     }}
                   />
@@ -592,18 +605,20 @@ export default function ColumnBlock({
             onClick={() => setShowAddMenu((previous) => !previous)}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 item-rounded text-sm font-semibold transition-all cursor-pointer"
             style={{
-              color: 'var(--color-accent)',
-              backgroundColor: columnLight ? 'rgba(124,58,237,0.07)' : 'rgba(124,58,237,0.12)',
-              border: '1.5px dashed rgba(124,58,237,0.35)',
+              color: 'var(--color-accent-ink)',
+              backgroundColor: columnLight
+                ? 'color-mix(in srgb, var(--color-accent) 7%, transparent)'
+                : 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
+              border: '1.5px dashed color-mix(in srgb, var(--color-accent) 35%, transparent)',
             }}
             onMouseEnter={(event) => {
-              event.currentTarget.style.backgroundColor = 'rgba(124,58,237,0.14)';
+              event.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--color-accent) 14%, transparent)';
               event.currentTarget.style.borderStyle = 'solid';
             }}
             onMouseLeave={(event) => {
               event.currentTarget.style.backgroundColor = columnLight
-                ? 'rgba(124,58,237,0.07)'
-                : 'rgba(124,58,237,0.12)';
+                ? 'color-mix(in srgb, var(--color-accent) 7%, transparent)'
+                : 'color-mix(in srgb, var(--color-accent) 12%, transparent)';
               event.currentTarget.style.borderStyle = 'dashed';
             }}
           >

@@ -338,3 +338,63 @@ exposed in image URLs. No user-supplied filesystem path or arbitrary image URL i
 Routes: PUT/DELETE `/auth/profile/avatar`, admin PUT/DELETE `/admin/users/{userId}/avatar`, public GET `/branding`,
 admin PUT `/admin/settings/branding` and PUT/DELETE `/admin/settings/branding/logo` (all under `/api/v1`).
 The local demo shows preview/settings entry points but cannot upload files or change server branding.
+
+### Stable dialogs, columns and shared UI accents
+
+Common dialogs use the native Modal top layer, including task, Kanban-column, diagram/database and mobile
+editors. Modal opens in a layout effect and paints a 45% fullscreen scrim on the dialog element; the native
+pseudo-backdrop stays transparent. Legacy child overlay wrappers retain layout/click handling but their own
+scrims/blur are neutralized. A shared registry locks body scrolling until the last dialog closes and restores
+focus only into the surviving top dialog.
+
+Columns retain complete content during camera movement and low-detail navigation. Their previous retained
+editor/summary swap is no longer rendered. Camera transforms, memoization, culling and existing note previews
+remain. The final authenticated canvas context action toggles light/dark mode through personal theme settings,
+including on read-only boards. Anonymous public boards keep their native context menu.
+
+Palette version 4 links primary/secondary roles to global UI colors by default. Each light/dark palette has
+independent `overrides.primary` / `overrides.secondary` booleans. An override freezes a local color and gradient.
+Global `uiGradients` stores optional primary/secondary linear or radial fills. Solids remain available as
+foreground/tint fallbacks; gradient-aware fill tokens paint buttons and chrome. Gradient labels choose a
+contrasting foreground; extreme mixed-lightness fills receive a protective scrim.
+
+Charcoal (slate/copper, solid #20262b chrome) is the default, with Lagoon, Chocolate and Cyberpunk presets. Preference upgrades
+replace only recognized former UI defaults and infer overrides for customized palette colors. Card colors,
+accent slots, project customizations and gradients remain. Public palettes resolve inherited roles against
+their owner's UI preferences without exposing unrelated UI data.
+
+Deploy API and frontend together. Migration `20261108145433_AddUiAccentGradients` adds JSONB global gradients
+with an empty-object default. The API validates colors, stops, kind, angle, size and override flags; CSS image
+URLs are rejected. Rendering also rejects malformed legacy gradient values. Tests cover inheritance, overrides,
+migration, persistence, contrast and unsafe CSS. Browser tests sample darkened pixels on repeated openings,
+exercise nested mobile dialogs, verify column DOM/geometry while panning and check persisted theme choices.
+
+### Color roles across the interface
+
+`appearanceTokens.ts` defines the same primary and secondary tokens for personal and public boards.
+Primary (`accent`) marks editing actions, selection, active controls and focus. Secondary marks board
+navigation, avatars, metadata, dialog/library identity and timeline progress. Neutral secondary actions
+(Cancel, Close) remain neutral; success, danger, warning and explicit user content colors retain their meaning.
+
+Use `*-fill` with `--color-on-*` for filled controls so gradients and readable labels work together.
+Use `*-ink` for accent text on the palette surface: it preserves the chosen color unless contrast requires
+moving it toward black or white. Soft backgrounds and outlines use the solid role color. Application chrome
+maps these roles to personal UI colors, while board tools and public views use the active project palette.
+New border, icon, diagram and timeline color choices start from that palette; saved custom colors remain.
+
+### Independent interface backgrounds and presets
+
+Twelve UI presets set primary, secondary, optional accent gradients and `uiBackground` together. The
+background is a `{ color, gradient? }` object; it is independent of canvas light/dark mode and project palettes.
+An absent value (or `{}` from the API) retains automatic accent blending for older preferences. The editor
+can enable/disable a custom background and configure solid, linear or radial fills. Selecting a preset
+changes the draft only; Save persists it. Editing accents leaves a custom background unchanged.
+
+`uiChromeTokens.ts` derives chrome text, panel, border and icon tokens for light and dark backgrounds.
+Mixed black/white gradients use the same contrast-protecting scrim as accent fills. Preset cards preview
+the actual background and expose the current selection with `aria-pressed`.
+
+Migration `20261108160027_AddUiBackground` adds JSONB `ui_background`, with `{}` for existing accounts so
+their UI remains automatic. Newly created profiles and default/all appearance resets use Charcoal. Resets persist a fresh default profile in the API instead of relying on client fallbacks. Omitted API fields preserve saved settings;
+an empty object restores automatic blending. The API validates colors and bounded gradient data, rejecting
+external CSS URLs. Deploy the API and frontend together.

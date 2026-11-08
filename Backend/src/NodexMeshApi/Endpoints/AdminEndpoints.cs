@@ -157,9 +157,10 @@ public static class AdminEndpoints
 
         if (request.Scope is "Defaults" or "All")
         {
-            // No stored override means the client uses appearanceModel.defaultAppearance.
-            var profiles = await db.AppearanceProfiles.Where(entry => entry.UserId == userId).ToListAsync(ct);
-            db.AppearanceProfiles.RemoveRange(profiles);
+            var defaults = DefaultThemes.CreateProfile(userId, DateTimeOffset.UtcNow);
+            var profile = await db.AppearanceProfiles.SingleOrDefaultAsync(entry => entry.UserId == userId, ct);
+            if (profile is null) db.AppearanceProfiles.Add(defaults);
+            else db.Entry(profile).CurrentValues.SetValues(defaults);
         }
 
         if (request.Scope is "ProjectOverrides" or "All")

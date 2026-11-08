@@ -35,7 +35,7 @@ export default function TypographyControls({
       >
         <span
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-          style={{ color: 'var(--color-accent)', background: 'var(--color-accent-soft)' }}
+          style={{ color: 'var(--color-accent-ink)', background: 'var(--color-accent-soft)' }}
         >
           <Type size={15} />
         </span>
@@ -64,7 +64,7 @@ export default function TypographyControls({
         </label>
         <button
           type="button"
-          className="h-8 w-8 shrink-0 rounded-lg hover:bg-violet-500/15"
+          className="h-8 w-8 shrink-0 rounded-lg hover:bg-accent-soft"
           title={translate('Preview fonts')}
           aria-label={translate('Preview fonts')}
           aria-haspopup="dialog"

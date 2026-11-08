@@ -226,7 +226,7 @@ export default function CommentsDialog({
                   onClick={add}
                   disabled={!text.trim()}
                   className="h-9 px-4 rounded-xl text-xs font-semibold transition-opacity disabled:opacity-40"
-                  style={{ color: 'white', backgroundColor: 'var(--color-accent)' }}
+                  style={{ color: 'var(--color-on-accent)', background: 'var(--color-accent-fill)' }}
                 >
                   {translate('Add comment')}
                 </button>

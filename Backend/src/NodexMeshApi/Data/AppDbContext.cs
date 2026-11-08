@@ -343,6 +343,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
         {
             e.HasKey(x => x.UserId);
             e.Property(x => x.SidebarWidth).HasDefaultValue(235);
+            e.Property(x => x.UiGradients).HasColumnType("jsonb");
+            e.Property(x => x.UiBackground).HasColumnType("jsonb");
             e.Property(x => x.LightTheme).HasColumnType("jsonb");
             e.Property(x => x.DarkTheme).HasColumnType("jsonb");
         });

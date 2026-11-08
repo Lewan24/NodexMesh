@@ -686,15 +686,15 @@ public static class AuthEndpoints
 internal static class DefaultThemes
 {
     public const string Light = """
-        {"primary":"#903df5","secondary":"#ff0000","canvas":"#f5f5f7","default":"#ffffff",
+        {"primary":"#334c5c","secondary":"#b64a25","canvas":"#f5f5f7","default":"#ffffff",
         "accent1":"#6e5fa8","accent2":"#56718f","accent3":"#537f83","accent4":"#66836d","accent5":"#946a6a",
-        "gradients":{}}
+        "gradients":{},"overrides":{"primary":false,"secondary":false}}
         """;
 
     public const string Dark = """
-        {"primary":"#903df5","secondary":"#ff0000","canvas":"#1F1F22","default":"#25252A",
+        {"primary":"#334c5c","secondary":"#b64a25","canvas":"#1F1F22","default":"#25252A",
         "accent1":"#8272ba","accent2":"#6984a1","accent3":"#669297","accent4":"#78967f","accent5":"#aa7d7d",
-        "gradients":{}}
+        "gradients":{},"overrides":{"primary":false,"secondary":false}}
         """;
 
     public static AppearanceProfile CreateProfile(Guid userId, DateTimeOffset updatedAt) => new()
@@ -702,10 +702,10 @@ internal static class DefaultThemes
         UserId = userId,
         Font = "short-stack",
         UiFont = "sans",
-        UiPrimary = "#8000ff",
-        UiSecondary = "#6a00eb",
+        UiPrimary = "#334c5c",
+        UiSecondary = "#b64a25",
         InheritanceVersion = 1,
-        PaletteVersion = 3,
+        PaletteVersion = 4,
         LightTheme = Light,
         DarkTheme = Dark,
         UpdatedAt = updatedAt

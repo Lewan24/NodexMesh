@@ -41,7 +41,7 @@ export default function NestedDragGhost({ payload, clientX, clientY }: NestedDra
 
         borderColor: 'var(--color-accent)',
 
-        boxShadow: '0 14px 32px rgba(0,0,0,0.2), 0 0 0 2px rgba(124,58,237,0.08)',
+        boxShadow: '0 14px 32px rgba(0,0,0,0.2), 0 0 0 2px color-mix(in srgb, var(--color-accent) 8%, transparent)',
 
         backdropFilter: 'blur(10px)',
 

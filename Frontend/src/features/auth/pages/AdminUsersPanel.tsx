@@ -121,7 +121,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
           <div className="min-w-0">
             <p
               className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em]"
-              style={{ color: 'var(--color-accent)' }}
+              style={{ color: 'var(--color-accent-ink)' }}
             >
               {applicationName}
             </p>
@@ -616,7 +616,7 @@ function AdminUserRow({
             >
               <p
                 className="mb-1 text-[10px] font-bold uppercase tracking-[.2em]"
-                style={{ color: 'var(--color-accent)' }}
+                style={{ color: 'var(--color-accent-ink)' }}
               >
                 {applicationName} · {translate('Administration')}
               </p>
@@ -917,7 +917,7 @@ function ProjectCard({
               <div>
                 <p
                   className="mb-1 text-[10px] font-bold uppercase tracking-[.2em]"
-                  style={{ color: 'var(--color-accent)' }}
+                  style={{ color: 'var(--color-accent-ink)' }}
                 >
                   {translate('Project')}
                 </p>

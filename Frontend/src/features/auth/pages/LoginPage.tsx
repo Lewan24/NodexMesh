@@ -46,7 +46,8 @@ export default function LoginPage() {
             borderRadius: '50%',
             top: -180,
             left: -160,
-            background: 'radial-gradient(circle, rgba(124, 58, 237,0.25), transparent 70%)',
+            background:
+              'radial-gradient(circle, color-mix(in srgb, var(--color-accent) 25%, transparent), transparent 70%)',
           }}
         />
 
@@ -199,7 +200,7 @@ export default function LoginPage() {
             <div
               role="status"
               className="rounded-xl px-3 py-2 text-xs md:col-span-2"
-              style={{ color: 'var(--color-accent)', backgroundColor: 'var(--color-accent-soft)' }}
+              style={{ color: 'var(--color-accent-ink)', backgroundColor: 'var(--color-accent-soft)' }}
             >
               {message}
             </div>

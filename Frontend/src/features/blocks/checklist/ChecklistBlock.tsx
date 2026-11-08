@@ -30,7 +30,10 @@ function DropLine() {
   return (
     <div
       className="h-1 rounded-full mx-1 my-1"
-      style={{ backgroundColor: 'var(--color-accent)', boxShadow: '0 0 8px rgba(124,58,237,0.5)' }}
+      style={{
+        backgroundColor: 'var(--color-accent)',
+        boxShadow: '0 0 8px color-mix(in srgb, var(--color-accent) 50%, transparent)',
+      }}
     />
   );
 }
