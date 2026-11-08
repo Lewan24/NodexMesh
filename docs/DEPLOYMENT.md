@@ -92,6 +92,18 @@ The default stack reads credentials from `.env`. `docker-compose.secrets.yml` ca
 
 ## Media library
 
+If avatar/logo uploads return 500 on an older image, check the audit exception classification and API
+storage configuration. An `UnauthorizedAccessException` while writing images commonly means `Media__Path`
+was omitted and `/app/App_Data/media` cannot be created by non-root UID 1654. Set API environment
+`Media__Path=/app/storage/media`, retain the writable persistent `/app/storage` volume, and recreate the API
+container. Merely adding `MEDIA_PATH` to `.env` does not inject `Media__Path` into a custom Compose service.
+Current API images supply this default themselves. Do not run the API as root to bypass storage permissions.
+
+Ordinary authenticated browsing/uploads use the per-user global quota (default 1,000 requests/minute),
+not the 5/IP/minute login quota. A rate rejection is 429 with Retry-After; an IP ban is 403. A 500 from
+`PUT /auth/profile/avatar` must be diagnosed as a server error. Identity images have a separate 10 MiB
+body limit; they do not inherit the library's 500 MiB file limit.
+
 Defaults:
 
 ```dotenv

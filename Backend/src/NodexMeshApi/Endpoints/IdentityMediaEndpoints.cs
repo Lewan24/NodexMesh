@@ -52,17 +52,20 @@ public static class IdentityMediaEndpoints
     {
         var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Id == userId, ct)
             ?? throw new ApiException(404, "not_found", "User not found.");
+        context.Items["audit.operationStage"] = "avatar.storage_write";
         var image = remove ? ((Guid Id, string ContentType)?)null : await storage.WriteAsync(context.Request, false, ct);
         var id = image?.Id;
         var concurrencyStamp = Guid.NewGuid().ToString();
         try
         {
+            context.Items["audit.operationStage"] = "avatar.database_update";
             var changed = await db.Users.Where(u => u.Id == userId && u.AvatarId == user.AvatarId).ExecuteUpdateAsync(s => s
                 .SetProperty(u => u.AvatarId, id).SetProperty(u => u.AvatarContentType, image == null ? null : image.Value.ContentType)
                 .SetProperty(u => u.ConcurrencyStamp, concurrencyStamp), ct);
             if (changed != 1 && !await db.Users.AnyAsync(u => u.Id == userId && u.AvatarId == id, ct)) throw new ApiException(409, "image_changed", "The image changed in another session. Try again.");
         }
         catch (ApiException) { storage.Delete(id); throw; }
+        context.Items["audit.operationStage"] = "avatar.storage_cleanup";
         storage.Delete(user.AvatarId);
         return Results.Ok(new { avatarId = id });
     }

@@ -1579,6 +1579,9 @@
   "Rosewood": "Drzewo różane",
   "Mono": "Monochromatyczny",
   "Invalid UI background.": "Nieprawidłowe tło interfejsu.",
+  "Image storage is unavailable. Contact the administrator.": "Magazyn zdjęć jest niedostępny. Skontaktuj się z administratorem.",
+  "Request body exceeds the upload limit.": "Żądanie przekracza limit rozmiaru przesyłanych danych.",
+  "The request could not be processed.": "Nie udało się przetworzyć żądania.",
   "Invalid palette gradient.": "Nieprawidłowy gradient palety.",
   "Use a six-digit hexadecimal color.": "Użyj sześciocyfrowego koloru szesnastkowego."
 }

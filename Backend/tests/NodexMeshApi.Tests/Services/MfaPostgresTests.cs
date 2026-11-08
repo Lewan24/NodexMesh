@@ -76,10 +76,14 @@ public sealed class MfaPostgresTests
             await migrator.MigrateAsync("20261006073236_BindRefreshTokensToSecurityStamp");
             var formerDefault = Guid.NewGuid();
             var customWidth = Guid.NewGuid();
-            db.AppearanceProfiles.AddRange(
-                new AppearanceProfile { UserId = formerDefault, SidebarWidth = 184, UpdatedAt = DateTimeOffset.UtcNow },
-                new AppearanceProfile { UserId = customWidth, SidebarWidth = 320, UpdatedAt = DateTimeOffset.UtcNow });
-            await db.SaveChangesAsync();
+            // Seed the historical schema without today's EF model, which includes
+            // columns introduced after the migration being tested (e.g. ui_background).
+            foreach (var (id, width) in new[] { (formerDefault, 184), (customWidth, 320) })
+                await db.Database.ExecuteSqlInterpolatedAsync($$"""
+                    INSERT INTO appearance_profiles
+                    (user_id, font, ui_font, ui_primary, ui_secondary, inheritance_version, palette_version, light_theme, dark_theme, updated_at, sidebar_width)
+                    VALUES ({{id}}, 'short-stack', 'sans', '#334c5c', '#b64a25', 1, 4, '{}'::jsonb, '{}'::jsonb, {{DateTimeOffset.UtcNow}}, {{width}})
+                    """);
             db.ChangeTracker.Clear();
             await migrator.MigrateAsync();
             db.Database.HasPendingModelChanges().Should().BeFalse();

@@ -326,6 +326,20 @@ applies EF migrations. Back up both the database and image files. `Media:Path` d
 Docker Compose sets `Media__Path` / `MEDIA_PATH` to `/app/storage/media` on the existing persistent storage
 volume. These instance images are separate from private project-library assets and quotas.
 
+The API image also defaults `Media__Path` to `/app/storage/media` so older/custom Compose stacks do not
+attempt to create `App_Data/media` inside root-owned `/app`. An explicit `Media__Path` still overrides it.
+Keep `/app/storage` writable by container UID 1654 (`app`) and backed by a persistent volume.
+
+Image routes set a bounded 10 MiB Kestrel body limit before reading; the general JSON limit remains 5 MB.
+Storage write failures return `503 image_storage_unavailable`; validation/oversize errors remain 4xx in
+both HTTP responses and the audit. Failed avatar audit metadata includes an internal operation stage
+(`avatar.storage_write`, `avatar.database_update`, `avatar.storage_cleanup`) and exception classifications,
+without SQL, file contents, original filenames or exception messages.
+
+Leaving the workspace stops SignalR without a competing `ClearPresence` call: the hub already clears
+presence on disconnect. The IP filter skips closed sockets and handles cancellation only when that socket's
+connection token is canceled. Active-connection DB failures and banned-IP rejections still fail closed.
+
 Uploads use bearer-authorized raw binary PUTs with a filename query used only to select a whitelisted format.
 The API bounds reads, checks signatures and generates opaque GUID filenames outside the web root. It writes
 and validates the new file first, then compares the current DB image reference before replacing it and removing

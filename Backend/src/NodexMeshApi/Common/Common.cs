@@ -81,6 +81,10 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         var (status, title, detail) = exception switch
         {
             ApiException api => (api.StatusCode, api.Code, api.Message),
+            BadHttpRequestException bad when bad.StatusCode == StatusCodes.Status413PayloadTooLarge =>
+                (bad.StatusCode, "request_too_large", "Request body exceeds the upload limit."),
+            BadHttpRequestException bad when bad.StatusCode is >= 400 and < 500 =>
+                (bad.StatusCode, "invalid_request", "The request could not be processed."),
             // Anything unexpected is reported generically. The real exception goes to the
             // log, never to the client (OWASP A05 — information disclosure via stack traces).
             _ => (StatusCodes.Status500InternalServerError, "internal_error", "An unexpected error occurred.")

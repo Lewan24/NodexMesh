@@ -127,8 +127,7 @@ export function useLineDrag({
       event.stopPropagation();
 
       const item = projectRef.current.items.find((current) => current.id === id && current.type === 'line') as
-        | LineItem
-        | undefined;
+        LineItem | undefined;
 
       if (!item || item.locked) {
         return;

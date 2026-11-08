@@ -17,7 +17,7 @@ public sealed class IpProtectionPostgresTests
         await using var db = new AppDbContext(options);
         await db.Database.MigrateAsync();
         db.Database.HasPendingModelChanges().Should().BeFalse();
-        var ip = $"2001:db8::{Guid.NewGuid().ToString("N")[..8].Insert(4, ":")}";
+        var ip = IpProtectionService.Normalize($"2001:db8::{Guid.NewGuid().ToString("N")[..8].Insert(4, ":")}");
         var settings = Microsoft.Extensions.Options.Options.Create(new IpProtectionOptions { FailedLoginThreshold = 20 });
         try
         {

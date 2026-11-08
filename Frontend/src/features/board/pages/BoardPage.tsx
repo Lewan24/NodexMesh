@@ -432,8 +432,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
           }
 
           const column = project.items.find((item) => item.id === columnId && item.type === 'column') as
-            | ColumnItem
-            | undefined;
+            ColumnItem | undefined;
 
           if (!column) {
             return project;
