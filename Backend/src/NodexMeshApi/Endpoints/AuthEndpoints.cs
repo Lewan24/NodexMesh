@@ -668,7 +668,7 @@ public static class AuthEndpoints
         new(accessToken, expiresAtUtc, ToProfile(user));
 
     private static UserProfileResponse ToProfile(ApplicationUser user) =>
-        new(user.Id, user.Email!, user.DisplayName, user.IsAdmin);
+        new(user.Id, user.Email!, user.DisplayName, user.IsAdmin, user.AvatarId);
 
     private static string AccountActionLink(string publicBaseUrl, string action, Guid userId, string token)
     {

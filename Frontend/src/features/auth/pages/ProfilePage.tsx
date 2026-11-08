@@ -1,3 +1,8 @@
+import UserAvatar from '@/shared/components/UserAvatar';
+import PhotoEditor from '@/features/identity-media/PhotoEditor';
+import { identityMedia } from '@/features/identity-media/api';
+import { isMockDataSource } from '@/app/services';
+import { useBranding } from '@/features/branding/BrandingProvider';
 import { ArrowLeft, KeyRound, Moon, Sun, UserRound, ShieldCheck } from 'lucide-react';
 import MfaSettingsSection from '../components/MfaSettingsSection';
 import SecurityNotice from '../components/SecurityNotice';
@@ -13,7 +18,9 @@ import { errorMessage } from '@/shared/api/errors';
 
 export default function ProfilePage({ onClose }: { onClose: () => void }) {
   useTranslation();
+  const { applicationName } = useBranding();
   const auth = useAuth();
+  const [avatarEditing, setAvatarEditing] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [profile, setProfile] = useState({
     displayName: auth.currentUser?.name ?? '',
@@ -88,18 +95,31 @@ export default function ProfilePage({ onClose }: { onClose: () => void }) {
           className="mb-6 flex flex-wrap items-center gap-5 rounded-3xl border p-6 shadow-sm sm:p-8"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
         >
-          <div
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-2xl font-bold"
-            style={{ background: 'var(--color-accent-soft)', color: 'var(--color-accent)' }}
-          >
-            {auth.currentUser?.name?.trim().slice(0, 1).toUpperCase() || <UserRound size={28} aria-hidden="true" />}
-          </div>
+          <UserAvatar
+            avatarId={auth.currentUser?.avatarId}
+            name={auth.currentUser?.name ?? ''}
+            size={64}
+            label={translate('Change profile photo')}
+            onClick={() => setAvatarEditing(true)}
+          />
+          {avatarEditing && (
+            <PhotoEditor
+              title={translate('Profile photo')}
+              imageId={auth.currentUser?.avatarId}
+              disabled={isMockDataSource}
+              onClose={() => setAvatarEditing(false)}
+              onSave={async (file) => {
+                await identityMedia.avatar(file);
+                await auth.refreshProfile();
+              }}
+            />
+          )}
           <div className="min-w-0 flex-1">
             <p
               className="mb-1 text-[10px] font-bold uppercase tracking-[0.22em]"
               style={{ color: 'var(--color-accent)' }}
             >
-              NodexMesh · {translate('Account settings')}
+              {applicationName} · {translate('Account settings')}
             </p>
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{translate('Your profile')}</h1>
             <p className="mt-2 break-all text-sm" style={{ color: 'var(--color-text-muted)' }}>

@@ -1,3 +1,4 @@
+import { useBranding } from '@/features/branding/BrandingProvider';
 import { useEffect, useState } from 'react';
 import { httpClient } from '@/app/services';
 import { translate } from '@/shared/i18n';
@@ -77,6 +78,7 @@ function SeverityBadge({ severity }: { severity: string }) {
 }
 
 export default function AdminAuditPanel() {
+  const { applicationName } = useBranding();
   const [filters, setFilters] = useState<Record<string, string>>({ severity: 'WarningAndAbove' });
   const [query, setQuery] = useState('severity=WarningAndAbove');
   const [page, setPage] = useState(1);
@@ -160,7 +162,7 @@ export default function AdminAuditPanel() {
               className="mb-2 text-[10px] font-bold uppercase tracking-[.24em]"
               style={{ color: 'var(--color-accent)' }}
             >
-              NodexMesh · {translate('Security')}
+              {applicationName} · {translate('Security')}
             </p>
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               {translate('Audit and security monitoring')}

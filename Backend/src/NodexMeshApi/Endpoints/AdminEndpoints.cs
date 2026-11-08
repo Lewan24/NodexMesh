@@ -181,7 +181,7 @@ public static class AdminEndpoints
             project.CreatedAt, project.UpdatedAt, project.DeletedAt,
             project.Members.Select(member => new AdminProjectMemberDto(
                 member.UserId, users.GetValueOrDefault(member.UserId)?.Email ?? "unknown",
-                users.GetValueOrDefault(member.UserId)?.DisplayName ?? "Unknown", member.Role.ToString())).ToList(),
+                users.GetValueOrDefault(member.UserId)?.DisplayName ?? "Unknown", member.Role.ToString(), users.GetValueOrDefault(member.UserId)?.AvatarId)).ToList(),
             project.UserDeletedAt, project.UserDeletedAt is not null ? "userdeleted" : project.DeletedAt is not null ? "trashed" : "active")).ToList();
         return TypedResults.Ok(result);
     }
@@ -204,7 +204,7 @@ public static class AdminEndpoints
             ProjectValues(user.DisplayName, project.Name,
                 $"You now have {role} access to the project '{project.Name}'."), ct);
         await db.SaveChangesAsync(ct);
-        return TypedResults.Ok(new AdminProjectMemberDto(user.Id, user.Email!, user.DisplayName, role.ToString()));
+        return TypedResults.Ok(new AdminProjectMemberDto(user.Id, user.Email!, user.DisplayName, role.ToString(), user.AvatarId));
     }
 
     private static async Task<NoContent> RemoveMemberAsync(
@@ -439,7 +439,7 @@ public static class AdminEndpoints
         return settings;
     }
 
-    private static AdminUserDto ToUser(ApplicationUser user) => new(user.Id, user.Email!, user.DisplayName, user.IsAdmin, user.IsBlocked, user.CreatedAt, user.DeletionRequestedAt, user.DeletionRequestedAt + AccountDeletionService.Retention);
+    private static AdminUserDto ToUser(ApplicationUser user) => new(user.Id, user.Email!, user.DisplayName, user.IsAdmin, user.IsBlocked, user.CreatedAt, user.DeletionRequestedAt, user.DeletionRequestedAt + AccountDeletionService.Retention, user.AvatarId);
 
     private static Dictionary<string, string> ProjectValues(string displayName, string projectName, string message) => new()
     {

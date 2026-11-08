@@ -40,6 +40,7 @@ services:
     environment:
       # Development keeps the local HTTP stack from redirecting to HTTPS. Set
       # Production when TLS is terminated by an external reverse proxy.
+      Media__Path: ${MEDIA_PATH:-/app/storage/media}
       Library__Path: ${LIBRARY_PATH:-/app/storage/library}
       Library__MaxFileBytes: ${LIBRARY_MAX_FILE_BYTES:-52428800}
       Library__MaxProjectBytes: ${LIBRARY_MAX_PROJECT_BYTES:-1073741824}

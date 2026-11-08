@@ -345,6 +345,8 @@ try
         .Validate(o => !string.IsNullOrWhiteSpace(o.Path) && o.MaxFileBytes > 0 && o.MaxProjectBytes >= o.MaxFileBytes)
         .ValidateOnStart();
     builder.Services.AddSingleton<LibraryStorage>();
+    builder.Services.Configure<PublicImageOptions>(builder.Configuration.GetSection("Media"));
+    builder.Services.AddSingleton<PublicImageStorage>();
     builder.Services.AddMemoryCache();
     builder.Services.AddHttpClient("GitHubReleases", client =>
     {
@@ -438,6 +440,7 @@ try
     app.MapAuditEndpoints();
     app.MapProjectEndpoints();
     app.MapLibraryEndpoints();
+    app.MapIdentityMediaEndpoints();
     app.MapBoardEndpoints();
     app.MapStatusEndpoints();
     app.MapCommentEndpoints();

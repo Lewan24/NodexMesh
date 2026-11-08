@@ -1,3 +1,4 @@
+import UserAvatar from '@/shared/components/UserAvatar';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { readableText } from '../typography/textContrast';
@@ -25,22 +26,19 @@ import {
 } from './timelineUtils';
 import '../shared/planning.css';
 
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
-
-function AssigneeBadge({ participant, compact = false }: { participant?: ProjectParticipant; compact?: boolean }) {
+function AssigneeBadge({
+  participant,
+  compact = false,
+  preview = true,
+}: {
+  participant?: ProjectParticipant;
+  compact?: boolean;
+  preview?: boolean;
+}) {
   if (!participant) return null;
   return (
     <span className={`timeline-assignee ${compact ? 'timeline-assignee-compact' : ''}`} title={participant.displayName}>
-      <span className="timeline-avatar" aria-hidden="true">
-        {initials(participant.displayName)}
-      </span>
+      <UserAvatar avatarId={participant.avatarId} name={participant.displayName} size={20} preview={preview} />
       {!compact && <span className="truncate">{participant.displayName}</span>}
     </span>
   );
@@ -616,7 +614,11 @@ export default function TimelineBlock({
                             {task.title}
                           </span>
                           <span className="timeline-bar-avatar">
-                            <AssigneeBadge participant={participantsById.get(task.assigneeUserId ?? '')} compact />
+                            <AssigneeBadge
+                              participant={participantsById.get(task.assigneeUserId ?? '')}
+                              compact
+                              preview={false}
+                            />
                           </span>
                           {editing && (
                             <div

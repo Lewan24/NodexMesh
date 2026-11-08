@@ -26,8 +26,8 @@ public sealed record UpdateProjectRequest(
     [property: Required, JsonConverter(typeof(RevisionJsonConverter))] long ExpectedRevision,
     [property: RegularExpression("^(checkbox|checkmark|strike)$")] string? TodoDisplay = null);
 
-public sealed record ProjectMemberDto(Guid UserId, string Email, string? DisplayName, string Role, DateTimeOffset CreatedAt);
-public sealed record ProjectParticipantDto(Guid UserId, string DisplayName, string Role);
+public sealed record ProjectMemberDto(Guid UserId, string Email, string? DisplayName, string Role, DateTimeOffset CreatedAt, Guid? AvatarId = null);
+public sealed record ProjectParticipantDto(Guid UserId, string DisplayName, string Role, Guid? AvatarId = null);
 
 /// <summary>
 /// Invite by email rather than by user ID: the caller shouldn't be able to enumerate

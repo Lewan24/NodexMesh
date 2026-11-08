@@ -1,3 +1,5 @@
+import Brand from '@/features/branding/Brand';
+import { useBranding } from '@/features/branding/BrandingProvider';
 import LanguageSelect from '@/shared/i18n/LanguageSelect';
 import SecurityNotice from '../components/SecurityNotice';
 import { translate } from '@/shared/i18n';
@@ -7,6 +9,7 @@ import { useLoginForm } from '@/features/auth/hooks/useLoginForm';
 
 export default function LoginPage() {
   useTranslation();
+  const branding = useBranding();
   const {
     code,
     setCode,
@@ -74,28 +77,11 @@ export default function LoginPage() {
         {/* Logo */}
 
         <div className="mb-6 flex flex-col items-center gap-2">
-          <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center"
-            style={{ backgroundColor: 'var(--color-accent)' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="3" width="7" height="7" rx="1.5" fill="white" />
-              <rect x="14" y="3" width="7" height="7" rx="1.5" fill="white" opacity="0.6" />
-              <rect x="3" y="14" width="7" height="7" rx="1.5" fill="white" opacity="0.6" />
-              <rect x="14" y="14" width="7" height="7" rx="1.5" fill="white" opacity="0.3" />
-            </svg>
-          </div>
-
-          <span
-            className="text-sm font-bold"
-            style={{ color: 'var(--color-accent)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-          >
-            NodexMesh
-          </span>
+          <Brand vertical />
 
           <p className="text-sm text-center mt-1" style={{ color: 'var(--color-text-muted)' }}>
             {mode === 'register'
-              ? translate('Create your NodexMesh account')
+              ? translate('Create your {{value1}} account', { value1: branding.applicationName })
               : mode === 'forgot'
                 ? translate('Request a password reset')
                 : mode === 'resend'

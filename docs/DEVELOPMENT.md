@@ -299,3 +299,42 @@ HTTP(S) URLs without credentials and structured library references. SVG is rende
 image through IconVisual, never injected as live markup. No database migration is required; deploy API and
 frontend together before using the optional schema field. The shared picker renders the primary project
 library button below the source tabs, consistently with other source-specific controls.
+
+### Profile photos and instance branding
+
+Clicking the avatar in Profile opens a photo editor with a local preview and explicit Save/Cancel. PNG, JPEG,
+WebP and animated GIF are supported up to 10 MiB; original GIF animation is retained. Administrators can
+preview, replace or remove a user's avatar from Administration > Users. Shared UserAvatar renders the same
+photo in the account menu, sharing dialog, user lists and timeline assignees, with initials for missing images.
+Clicking an avatar opens a larger preview where the surrounding control permits it; the workspace avatar
+opens its preview directly and the adjacent account trigger opens the profile menu. Live cursor labels also carry photos.
+
+`avatarId` is returned in authentication/profile, admin-user, project-member, participant and presence data.
+Own uploads refresh the auth context immediately. Visible authenticated sessions recheck their profile on
+focus and once per minute, including moderation changes. Presence publishes current server-side photo IDs.
+
+Administration > Branding configures the public application name and optional logo. Logos accept the same
+raster formats plus static SVG up to 1 MB, using the existing strict SVG allowlist. Branding is shared by the
+app bar, login/register screens, profile/admin headings, appearance settings, public-board header and browser
+title/favicon. The app-bar wordmark uses the contrasting chrome text token; the default mark sits on a light
+badge. Logo images preserve their own colors. Branding refreshes on focus, every visible minute and across
+tabs after a local change. Existing technical MFA issuer and API identifiers remain stable.
+
+Deploy API and frontend together. Migration `20261108132551_AddIdentityMediaAndBranding` adds nullable user
+photo references and instance settings; existing installations retain the NodexMesh name. Production startup
+applies EF migrations. Back up both the database and image files. `Media:Path` defaults to `App_Data/media`;
+Docker Compose sets `Media__Path` / `MEDIA_PATH` to `/app/storage/media` on the existing persistent storage
+volume. These instance images are separate from private project-library assets and quotas.
+
+Uploads use bearer-authorized raw binary PUTs with a filename query used only to select a whitelisted format.
+The API bounds reads, checks signatures and generates opaque GUID filenames outside the web root. It writes
+and validates the new file first, then compares the current DB image reference before replacing it and removing
+the previous file. Failed validation keeps the old image. Unreferenced files left by interrupted writes or
+temporarily blocked deletion are retried by hourly cleanup after a 24-hour grace period. Only current DB image
+references are served at public opaque `/api/v1/media/images/{id}` URLs, with correct MIME, nosniff, restrictive
+CSP (including sandbox for SVG) and cache revalidation. Photos are intended for display to other users; original names and user IDs are not
+exposed in image URLs. No user-supplied filesystem path or arbitrary image URL is accepted by the photo editor.
+
+Routes: PUT/DELETE `/auth/profile/avatar`, admin PUT/DELETE `/admin/users/{userId}/avatar`, public GET `/branding`,
+admin PUT `/admin/settings/branding` and PUT/DELETE `/admin/settings/branding/logo` (all under `/api/v1`).
+The local demo shows preview/settings entry points but cannot upload files or change server branding.

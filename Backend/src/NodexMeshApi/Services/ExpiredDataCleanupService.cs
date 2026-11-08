@@ -85,6 +85,7 @@ public sealed class ExpiredDataCleanupService(
                     File.Delete(path);
             }
         }
+        await scope.ServiceProvider.GetRequiredService<PublicImageStorage>().CleanUnreferencedAsync(db, ct);
         var accounts = await AccountDeletionService.CleanExpiredAsync(db, now, ct);
         if (accounts > 0) logger.LogInformation("Permanently removed {Count} accounts after 90 days of account deletion.", accounts);
         var projects = await ProjectDeletionService.CleanExpiredAsync(db, now, ct);

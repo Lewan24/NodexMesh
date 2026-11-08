@@ -460,6 +460,14 @@ namespace NodexMeshApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("access_failed_count");
 
+                    b.Property<string>("AvatarContentType")
+                        .HasColumnType("text")
+                        .HasColumnName("avatar_content_type");
+
+                    b.Property<Guid?>("AvatarId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("avatar_id");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text")
@@ -558,6 +566,9 @@ namespace NodexMeshApi.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_asp_net_users");
+
+                    b.HasIndex("AvatarId")
+                        .HasDatabaseName("ix_users_avatar_id");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -1478,6 +1489,12 @@ namespace NodexMeshApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApplicationName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("application_name");
+
                     b.Property<bool>("EmailAdminAlertsEnabled")
                         .HasColumnType("boolean")
                         .HasColumnName("email_admin_alerts_enabled");
@@ -1531,6 +1548,14 @@ namespace NodexMeshApi.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("email_username");
+
+                    b.Property<string>("LogoContentType")
+                        .HasColumnType("text")
+                        .HasColumnName("logo_content_type");
+
+                    b.Property<Guid?>("LogoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("logo_id");
 
                     b.Property<bool>("RegistrationEnabled")
                         .HasColumnType("boolean")

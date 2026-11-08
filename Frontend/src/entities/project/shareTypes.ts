@@ -6,6 +6,7 @@ import type { ItemAppearance, ItemDataMap, ItemLink, Revision } from '@/entities
 export type MemberRole = 'Editor' | 'Commenter' | 'Viewer';
 
 export interface ProjectMember {
+  avatarId?: string | null;
   userId: string;
   /** Masked to e.g. "a***e@example.com" for everyone except the project owner and the
    * member's own row — see API.md §6.2. Never assume this is the full address. */
@@ -16,6 +17,7 @@ export interface ProjectMember {
 }
 
 export interface ProjectParticipant {
+  avatarId?: string | null;
   userId: string;
   displayName: string;
   role: MemberRole | 'Owner';

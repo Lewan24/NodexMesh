@@ -68,6 +68,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
     {
         base.OnModelCreating(b);
         b.Entity<ApplicationUser>().Property(x => x.MfaLastAcceptedStep).IsConcurrencyToken();
+        b.Entity<ApplicationUser>().HasIndex(x => x.AvatarId).HasDatabaseName("ix_users_avatar_id");
         b.Entity<MfaChallenge>(e =>
         {
             e.HasKey(x => x.Id);
@@ -176,6 +177,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
         b.Entity<SystemSettings>(e =>
         {
             e.HasKey(x => x.Id);
+            e.Property(x => x.ApplicationName).HasMaxLength(100);
             e.Property(x => x.EmailHost).HasMaxLength(255);
             e.Property(x => x.EmailUsername).HasMaxLength(255);
             e.Property(x => x.EmailFromAddress).HasMaxLength(256);

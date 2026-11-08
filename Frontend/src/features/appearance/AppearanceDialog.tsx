@@ -1,3 +1,4 @@
+import { useBranding } from '@/features/branding/BrandingProvider';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import PaletteEditor from './PaletteEditor';
@@ -29,6 +30,7 @@ export default function AppearanceDialog({
   onTodoDisplayChange?: (projectId: string, value: NonNullable<Project['todoDisplay']>) => void;
 }) {
   useTranslation();
+  const { applicationName } = useBranding();
   const { preferences, savePreferences } = useTheme();
   const [todoSettings, setTodoSettings] = useState<Record<string, NonNullable<Project['todoDisplay']>>>({});
   const [settings, setSettings] = useState(() => structuredClone(preferences));
@@ -62,7 +64,7 @@ export default function AppearanceDialog({
             <Palette size={22} aria-hidden="true" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="settings-eyebrow">NodexMesh</p>
+            <p className="settings-eyebrow">{applicationName}</p>
             <h2>{translate('Appearance')}</h2>
             <p className="settings-description">{translate('Make your workspace feel like yours.')}</p>
           </div>

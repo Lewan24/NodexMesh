@@ -119,4 +119,5 @@ if (localStorage.getItem(datasetKey) !== dataset) {
   localStorage.setItem(datasetKey, dataset);
 }
 await authService.login({ username: 'demo', password: 'demo123' });
-await import('@/main');
+if (parameters.get('media') === '1') await import('./identityMediaHarness');
+else await import('@/main');

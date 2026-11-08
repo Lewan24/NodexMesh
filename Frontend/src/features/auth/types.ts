@@ -41,6 +41,7 @@ export interface AddUserInput {
 export type AuthResult = { ok: true } | { ok: false; error: string; challenge?: MfaChallenge };
 
 export interface AdminUser {
+  avatarId?: string | null;
   deletionRequestedAt?: string | null;
   permanentDeletionAt?: string | null;
   id: string;
@@ -54,6 +55,7 @@ export interface AdminUser {
 export type AdminAppearanceResetScope = 'Defaults' | 'ProjectOverrides' | 'All';
 
 export interface AdminProjectMember {
+  avatarId?: string | null;
   userId: string;
   email: string;
   displayName: string;

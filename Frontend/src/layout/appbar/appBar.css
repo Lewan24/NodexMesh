@@ -85,7 +85,7 @@
   padding: 0;
 }
 @media (max-width: 1023px) {
-  .workspace-app-bar .app-logo > span {
+  .workspace-app-bar .app-logo .instance-brand-name {
     display: none;
   }
   .workspace-app-bar .app-logo {

@@ -8,7 +8,7 @@ namespace NodexMeshApi.Dtos;
 /// so JavaScript — and therefore XSS — can never read it. Only the short-lived access
 /// token goes in the JSON body, where the SPA holds it in memory.
 /// </summary>
-public record UserProfileResponse(Guid Id, string Email, string DisplayName, bool IsAdmin);
+public record UserProfileResponse(Guid Id, string Email, string DisplayName, bool IsAdmin, Guid? AvatarId = null);
 
 public record AuthResponse(string AccessToken, DateTime ExpiresAtUtc, UserProfileResponse User);
 

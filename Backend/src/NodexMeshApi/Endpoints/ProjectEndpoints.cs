@@ -278,16 +278,16 @@ public static class ProjectEndpoints
 
         var project = await db.Projects.AsNoTracking()
             .Where(p => p.Id == projectId)
-            .Join(db.Users, p => p.OwnerId, u => u.Id, (p, u) => new { p.OwnerId, OwnerName = u.DisplayName })
+            .Join(db.Users, p => p.OwnerId, u => u.Id, (p, u) => new { p.OwnerId, OwnerName = u.DisplayName, u.AvatarId })
             .SingleAsync(ct);
 
         var members = await db.ProjectMembers.AsNoTracking()
             .Where(m => m.ProjectId == projectId)
             .Join(db.Users, m => m.UserId, u => u.Id,
-                (m, u) => new ProjectParticipantDto(u.Id, u.DisplayName, m.Role.ToString()))
+                (m, u) => new ProjectParticipantDto(u.Id, u.DisplayName, m.Role.ToString(), u.AvatarId))
             .ToListAsync(ct);
 
-        members.Insert(0, new ProjectParticipantDto(project.OwnerId, project.OwnerName, ProjectRole.Owner.ToString()));
+        members.Insert(0, new ProjectParticipantDto(project.OwnerId, project.OwnerName, ProjectRole.Owner.ToString(), project.AvatarId));
         return TypedResults.Ok(members);
     }
 
@@ -312,6 +312,7 @@ public static class ProjectEndpoints
                 u.Id,
                 Email = u.Email!,
                 u.DisplayName,
+                u.AvatarId,
                 Role = m.Role,
                 m.CreatedAt
             })
@@ -325,7 +326,7 @@ public static class ProjectEndpoints
             isOwner || r.Id == userId ? r.Email : MaskEmail(r.Email),
             r.DisplayName,
             r.Role.ToString(),
-            r.CreatedAt)).ToList();
+            r.CreatedAt, r.AvatarId)).ToList();
 
         return TypedResults.Ok(members);
     }
@@ -419,7 +420,7 @@ public static class ProjectEndpoints
         await db.SaveChangesAsync(ct);
 
         return TypedResults.Ok(new ProjectMemberDto(
-            invitee.Id, invitee.Email!, invitee.DisplayName, role.ToString(), DateTimeOffset.UtcNow));
+            invitee.Id, invitee.Email!, invitee.DisplayName, role.ToString(), DateTimeOffset.UtcNow, invitee.AvatarId));
     }
 
     private static async Task<NoContent> UpdateMemberRoleAsync(

@@ -33,6 +33,7 @@ services:
       db:
         condition: service_healthy
     environment:
+      Media__Path: ${MEDIA_PATH:-/app/storage/media}
       Library__Path: ${LIBRARY_PATH:-/app/storage/library}
       Library__MaxFileBytes: ${LIBRARY_MAX_FILE_BYTES:-52428800}
       Library__MaxProjectBytes: ${LIBRARY_MAX_PROJECT_BYTES:-1073741824}
