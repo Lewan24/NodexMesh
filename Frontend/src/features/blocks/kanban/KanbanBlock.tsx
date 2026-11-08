@@ -43,7 +43,10 @@ function DropLine() {
   return (
     <div
       className="h-1 rounded-full my-1"
-      style={{ backgroundColor: 'var(--color-accent)', boxShadow: '0 0 8px rgba(124,58,237,0.5)' }}
+      style={{
+        backgroundColor: 'var(--color-accent)',
+        boxShadow: '0 0 8px color-mix(in srgb, var(--color-accent) 50%, transparent)',
+      }}
     />
   );
 }
@@ -87,7 +90,7 @@ export default function KanbanBlock({
   const doneColor = mutedColor;
   const cardBackground = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(7,19,23,0.5)';
   const cardBorder = isLight ? 'rgba(0,0,0,0.08)' : '#1a3040';
-  const cardBorderHover = 'rgba(124,58,237,0.35)';
+  const cardBorderHover = 'color-mix(in srgb, var(--color-accent) 35%, transparent)';
   const trackBackground = isLight ? 'rgba(0,0,0,0.08)' : '#1a3040';
   const borderColor = isLight ? 'rgba(0,0,0,0.1)' : '#1a3040';
   const accentColor = 'var(--color-accent)';
@@ -350,7 +353,7 @@ export default function KanbanBlock({
               type="button"
               onClick={() => updateColumns(equalizeKanbanColumns)}
               disabled={item.columns.length < 2}
-              className="w-8 h-8 flex items-center justify-center rounded-xl cursor-pointer hover:bg-violet-500/10 disabled:opacity-30 disabled:cursor-default"
+              className="w-8 h-8 flex items-center justify-center rounded-xl cursor-pointer hover:bg-accent-soft disabled:opacity-30 disabled:cursor-default"
               style={{ color: mutedColor }}
               title={translate('Equalize column widths')}
               aria-label={translate('Equalize column widths')}
@@ -572,7 +575,7 @@ export default function KanbanBlock({
               </div>
 
               <button
-                className="text-xs text-left py-1.5 px-2 mb-1 hover:bg-violet-500/10"
+                className="text-xs text-left py-1.5 px-2 mb-1 hover:bg-accent-soft"
                 style={{ color: mutedColor, order: -2 }}
                 aria-label={translate('Add card at top of {{value1}}', { value1: column.title })}
                 onMouseDown={(event) => event.stopPropagation()}
@@ -590,9 +593,13 @@ export default function KanbanBlock({
                 style={{
                   minHeight: 40,
                   backgroundColor:
-                    dropTarget?.columnId === column.id && draggingCardId ? 'rgba(124,58,237,0.06)' : 'transparent',
+                    dropTarget?.columnId === column.id && draggingCardId
+                      ? 'color-mix(in srgb, var(--color-accent) 6%, transparent)'
+                      : 'transparent',
                   outline:
-                    dropTarget?.columnId === column.id && draggingCardId ? '1.5px dashed rgba(124,58,237,0.4)' : 'none',
+                    dropTarget?.columnId === column.id && draggingCardId
+                      ? '1.5px dashed color-mix(in srgb, var(--color-accent) 40%, transparent)'
+                      : 'none',
                   outlineOffset: -2,
                 }}
               >

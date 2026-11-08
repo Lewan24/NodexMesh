@@ -11,9 +11,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const fontCss = await readFile(resolve(root, 'src/app/styles/fonts.css'), 'utf8');
 const faces = [];
+const cssSources = [{ path: resolve(root, 'src/app/styles/fonts.css'), css: fontCss }];
 for (const [, imported] of fontCss.matchAll(/@import '([^']+)';/g)) {
-  const cssPath = resolve(root, 'node_modules', imported);
-  const css = await readFile(cssPath, 'utf8');
+  const path = resolve(root, 'node_modules', imported);
+  cssSources.push({ path, css: await readFile(path, 'utf8') });
+}
+for (const { path: cssPath, css } of cssSources) {
   for (const [, face] of css.matchAll(/@font-face\s*\{([^}]+)\}/g)) {
     const ranges = /unicode-range:\s*([^;]+);/.exec(face)?.[1];
     faces.push({
@@ -21,7 +24,7 @@ for (const [, imported] of fontCss.matchAll(/@import '([^']+)';/g)) {
       weight: Number(/font-weight:\s*(\d+)/.exec(face)[1]),
       style: /font-style:\s*(\w+)/.exec(face)[1],
       display: /font-display:\s*(\w+)/.exec(face)[1],
-      path: resolve(dirname(cssPath), /url\(([^)]+\.woff2)\)/.exec(face)[1]),
+      path: resolve(dirname(cssPath), /url\(['"]?([^)'"]+\.woff2?)['"]?\)/.exec(face)[1]),
       ranges: ranges
         ? ranges.split(',').map((range) => {
             const [start, end = start] = range.trim().slice(2).split('-');
@@ -86,11 +89,25 @@ test('every selectable font has shipped Polish glyphs without any installed devi
   }
 });
 
-test('default handwriting fallback covers Polish letters that Short Stack does not contain', async () => {
-  assert.ok((await missingCharacters('Short Stack', 'ĄĆĘŁŃŚŹŻąćęłńśźż')).length > 0);
-  assert.deepEqual(await missingCharacters(getFontFamilyCss('short-stack'), 'ĄĆĘŁŃÓŚŹŻąćęłńóśźż'), []);
-  assert.match(getFontFamilyCss(), /var\(--project-font,.*Patrick Hand/);
-  assert.deepEqual(await missingCharacters(getFontFamilyCss('unknown'), 'ĄĆĘŁŃÓŚŹŻąćęłńóśźż'), []);
+test('every primary font provides the entire Polish alphabet without mixing families', async () => {
+  for (const font of FONT_FAMILIES) {
+    const primary = font.css.split(',')[0].trim();
+    if (['Arial', 'Georgia', 'Verdana', '\"Trebuchet MS\"'].includes(primary)) continue;
+    for (const weight of [400, 700])
+      for (const style of ['normal', 'italic']) {
+        assert.deepEqual(
+          await missingCharacters(
+            primary,
+            '\u0104\u0106\u0118\u0141\u0143\u00d3\u015a\u0179\u017b\u0105\u0107\u0119\u0142\u0144\u00f3\u015b\u017a\u017c',
+            weight,
+            style,
+          ),
+          [],
+          `${font.value} ${weight} ${style}`,
+        );
+      }
+  }
+  assert.match(getFontFamilyCss(), /Nodex Stack/);
 });
 
 test('decorative fonts retain Polish coverage even if the preferred face fails to load', async () => {

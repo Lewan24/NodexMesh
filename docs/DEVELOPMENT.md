@@ -189,3 +189,212 @@ Item borders are edited in Appearance, including for multiple selected items and
 Status definitions live in `projects.item_statuses` (migration `AddProjectItemStatuses`). Authenticated clients refresh definitions on focus and every 15 seconds while visible; saving a definition updates the current workspace immediately. The mock adapter stores definitions alongside project data. Archives carry definitions and remap status references on import. Pasting into another project discards unavailable status references.
 
 Search supports status titles/descriptions as plain text, `status:done` (item statuses and the existing comment-status filter), `item-status:done` (item statuses only), and `comment-status:resolved` (comments only). Nested-column items participate in the same search results and highlighting.
+
+## Logical groups, item TODO and keyboard navigation
+
+Group/Ungroup in the edit bar and canvas context menu assign/remove a shared UUID (`appearance.groupId`).
+This is independent of FrameBlock and `frameId`; grouping adds no new board item, background or frame.
+Selecting or dragging any member selects/moves its sibling group, with a dashed outline only while selected.
+The drag commits once, moves line endpoints, follows frame descendants and refuses to split a locked group.
+Clipboard and import renew group UUIDs so pasted items do not rejoin their source group.
+
+Every item can enable TODO (`appearance.todo: { done: boolean }`). The canvas context menu enables/removes
+TODO and toggles Done. TODO controls are absent from the edit bar. Completed items are dimmed and show either
+a centered green checkmark or a diagonal strike inside their own bounds. The overlays ignore pointer events;
+no external checkbox can cover adjacent items. Project tools > Appearance > Canvas > Canvas settings for >
+project selects the completion presentation. Older `checkbox` preferences render as the checkmark for compatibility. This setting is shared project metadata (`projects.todo_display`), requires Editor/Owner, and uses the
+existing project revision/save/conflict path. Viewers/public links can see completion but cannot change it.
+Apply migration `AddProjectTodoDisplay` when deploying. Export/import retain the setting and item completion.
+
+Space plus left-drag pans even when a button is focused. A short Space press retains native keyboard activation;
+a hold of 250 ms, key repetition, or a mouse gesture suppresses activation. Text inputs, editable content and
+modal/menu interactions keep their normal keyboard behavior. Window blur clears the held-key state.
+
+Fontsource subsets remain for fonts that include Polish. Comic Neue uses the full upstream font; Short Stack,
+Schoolbell and Walter Turncoat use locally generated derivatives with their own outlines for missing Polish
+letters. `Frontend/src/assets/fonts/README.md` documents sources, hashes, licenses and the rebuild script.
+Tests inspect the primary font family for every Polish letter in normal/bold/italic styles, preventing fallback
+from hiding missing glyphs.
+
+Regression coverage: `Frontend/tests/item-groups-todo-space.test.mjs`, `canvas-touch.test.mjs`, `fonts.test.mjs`,
+`Frontend/e2e/editor-interactions.spec.mjs`, `BoardValidatorTests` and `ProjectEndpointsTests`.
+
+## Font previews and rich notes
+
+The edit bar keeps its quick font-family select and adds Preview fonts. The modal lists the same families,
+accepts up to 2,000 characters of sample text, and previews size, bold and italic. Only Use font commits the
+chosen family; Cancel/Escape leaves item typography unchanged. The preview uses React text, including when
+the sample looks like HTML. The dialog uses native modal focus management and keyboard-accessible radios.
+
+Double-clicking a note opens a lazy-loaded Tiptap editor inside its existing sticky-note shell. The local
+formatting bar supports selected-word bold, italic, underline, strikethrough, headings, lists, quotes, inline
+code and clearing formatting. Done, Escape, deselection and outside clicks end editing. Changes save through
+the normal item adapter while typing; panning/zooming preserves the editor DOM and selection.
+
+Legacy notes remain plain text (including literal HTML-looking snippets) until edited. Rich notes persist
+`contentFormat: "tiptap-html"` and `contentVersion: 1` together in note data. Both client and API reject unknown
+or unpaired formats/versions. No database migration is required for this JSONB extension; deploy API and
+frontend together before saving rich notes. Copies, archives and nested notes retain formatting.
+
+Rich-note display and editor initialization pass through an inert-template allowlist of formatting tags.
+No attributes, styles, URLs, active elements or embedded media are retained. The renderer creates React
+nodes rather than injecting HTML into the live page. Search, drag summaries and camera previews use the same
+content helpers. Acknowledgements of our own edits never replace the editor document or reset selection.
+
+### Workspace tools in the context menu
+
+Right-clicking the canvas background or an item exposes Change application appearance and Open library,
+separated from item actions. Both reuse the existing project tools dialogs and the active project. The same
+workspace shortcuts are available on authenticated read-only boards; anonymous public pages retain their
+native menu. Text fields keep native editing menus. Library stays disabled in the local demo, and existing
+server authorization and file-management permissions continue to apply. App-bar and context-menu library
+entry points share the same dialog state. Long menus scroll inside the viewport and retain keyboard navigation.
+
+### Selection layout and modular default widths
+
+The canvas context menu offers Swap positions for exactly two selected root items and Distribute evenly
+for two or more. A logical group or a frame with its descendants is one rigid layout unit: members are
+never translated twice or rearranged internally. Two members of the same unit cannot be swapped independently.
+Locked items, locked frame ancestors/descendants, nested column locks and collaboration locks disable these
+operations. Attached lines must share a rigid unit with their endpoints; independent attached lines are
+disabled to avoid breaking connections. Free lines translate both endpoints.
+
+The lazy-loaded arrangement dialog previews changes without saving. Spacing is a positive integer number
+of 16px grid steps (default one). Rows wrap either after a selected number of units or at a maximum width
+of N note modules: `N * 320 + (N - 1) * 16` pixels. Six modules mean 2000px. The maximum width is fixed by
+this formula even when the chosen spacing is larger. Existing sizes remain intact; oversized units occupy
+their own row. Layout uses current measured sizes, rounds occupied cells up to the grid and processes units
+in top-to-bottom/left-to-right order. Both axes use the chosen minimum gap. The top-left selection anchor
+snaps to the grid. Cancel/Escape makes no changes.
+
+Both actions revalidate the latest board and locks before committing one update map and one undo boundary.
+Moved frame ownership stays intact; independently moved items re-evaluate containment. Inputs are bounded
+to whole numbers 1–1000 and finite board coordinates. Persistence and permissions use existing board mutations;
+no new endpoint, HTML injection or database migration is involved.
+
+New item widths share `ITEM_WIDTH`: notes, checklists, dispensers, board links, section titles, drawings,
+text, images, files and links use 320px; documents, code, embeds, columns and frames use 656px; timelines,
+diagrams, mind maps, databases and Kanban use 992px. Icons retain a compact 96px width (three icons plus two
+grid gaps fit one note). Freehand drawings derive their actual bounds from strokes, and lines from endpoints.
+Saved explicit dimensions and the existing 320px note default remain unchanged. Render fallbacks use the same
+width constants. Selection geometry tests and editor interaction tests cover swaps, packing, locks, rigid units,
+line endpoints, frame membership, validation, persistence, undo, cancellation and narrow-screen dialogs.
+
+### Board card appearance and optional icons
+
+Board cards use a compact heading/description layout and a full-width primary navigation button. The title
+wraps through a content-sized textarea; descriptions grow with content. Existing typography sections, fill,
+gradients, background opacity, borders and optional top accent remain supported. Navigation also remains
+available on read-only boards, with text edits blocked by the existing canvas interaction guard.
+
+New cards and empty siblings have no icon and no instructional description. Appearance in the edit bar
+offers Show board icon and Choose board icon. The picker is shared with IconBlock: presets, emoji, custom
+SVG, image URL and project library. Disabling the icon clears it. Existing `icon` strings (dashboard or emoji)
+remain compatible; new choices store optional `data.boardIcon: { iconMode, source, label, color? }` and clear
+the legacy string. Icon changes do not recolor the card. Archives retain private library references and warn
+that files and their permissions are not included.
+
+Frontend and API validate the optional board icon, including its mode, bounded source/label, hex color,
+HTTP(S) URLs without credentials and structured library references. SVG is rendered only as an isolated
+image through IconVisual, never injected as live markup. No database migration is required; deploy API and
+frontend together before using the optional schema field. The shared picker renders the primary project
+library button below the source tabs, consistently with other source-specific controls.
+
+### Profile photos and instance branding
+
+Clicking the avatar in Profile opens a photo editor with a local preview and explicit Save/Cancel. PNG, JPEG,
+WebP and animated GIF are supported up to 10 MiB; original GIF animation is retained. Administrators can
+preview, replace or remove a user's avatar from Administration > Users. Shared UserAvatar renders the same
+photo in the account menu, sharing dialog, user lists and timeline assignees, with initials for missing images.
+Clicking an avatar opens a larger preview where the surrounding control permits it; the workspace avatar
+opens its preview directly and the adjacent account trigger opens the profile menu. Live cursor labels also carry photos.
+
+`avatarId` is returned in authentication/profile, admin-user, project-member, participant and presence data.
+Own uploads refresh the auth context immediately. Visible authenticated sessions recheck their profile on
+focus and once per minute, including moderation changes. Presence publishes current server-side photo IDs.
+
+Administration > Branding configures the public application name and optional logo. Logos accept the same
+raster formats plus static SVG up to 1 MB, using the existing strict SVG allowlist. Branding is shared by the
+app bar, login/register screens, profile/admin headings, appearance settings, public-board header and browser
+title/favicon. The app-bar wordmark uses the contrasting chrome text token; the default mark sits on a light
+badge. Logo images preserve their own colors. Branding refreshes on focus, every visible minute and across
+tabs after a local change. Existing technical MFA issuer and API identifiers remain stable.
+
+Deploy API and frontend together. Migration `20261108132551_AddIdentityMediaAndBranding` adds nullable user
+photo references and instance settings; existing installations retain the NodexMesh name. Production startup
+applies EF migrations. Back up both the database and image files. `Media:Path` defaults to `App_Data/media`;
+Docker Compose sets `Media__Path` / `MEDIA_PATH` to `/app/storage/media` on the existing persistent storage
+volume. These instance images are separate from private project-library assets and quotas.
+
+Uploads use bearer-authorized raw binary PUTs with a filename query used only to select a whitelisted format.
+The API bounds reads, checks signatures and generates opaque GUID filenames outside the web root. It writes
+and validates the new file first, then compares the current DB image reference before replacing it and removing
+the previous file. Failed validation keeps the old image. Unreferenced files left by interrupted writes or
+temporarily blocked deletion are retried by hourly cleanup after a 24-hour grace period. Only current DB image
+references are served at public opaque `/api/v1/media/images/{id}` URLs, with correct MIME, nosniff, restrictive
+CSP (including sandbox for SVG) and cache revalidation. Photos are intended for display to other users; original names and user IDs are not
+exposed in image URLs. No user-supplied filesystem path or arbitrary image URL is accepted by the photo editor.
+
+Routes: PUT/DELETE `/auth/profile/avatar`, admin PUT/DELETE `/admin/users/{userId}/avatar`, public GET `/branding`,
+admin PUT `/admin/settings/branding` and PUT/DELETE `/admin/settings/branding/logo` (all under `/api/v1`).
+The local demo shows preview/settings entry points but cannot upload files or change server branding.
+
+### Stable dialogs, columns and shared UI accents
+
+Common dialogs use the native Modal top layer, including task, Kanban-column, diagram/database and mobile
+editors. Modal opens in a layout effect and paints a 45% fullscreen scrim on the dialog element; the native
+pseudo-backdrop stays transparent. Legacy child overlay wrappers retain layout/click handling but their own
+scrims/blur are neutralized. A shared registry locks body scrolling until the last dialog closes and restores
+focus only into the surviving top dialog.
+
+Columns retain complete content during camera movement and low-detail navigation. Their previous retained
+editor/summary swap is no longer rendered. Camera transforms, memoization, culling and existing note previews
+remain. The final authenticated canvas context action toggles light/dark mode through personal theme settings,
+including on read-only boards. Anonymous public boards keep their native context menu.
+
+Palette version 4 links primary/secondary roles to global UI colors by default. Each light/dark palette has
+independent `overrides.primary` / `overrides.secondary` booleans. An override freezes a local color and gradient.
+Global `uiGradients` stores optional primary/secondary linear or radial fills. Solids remain available as
+foreground/tint fallbacks; gradient-aware fill tokens paint buttons and chrome. Gradient labels choose a
+contrasting foreground; extreme mixed-lightness fills receive a protective scrim.
+
+Charcoal (slate/copper, solid #20262b chrome) is the default, with Lagoon, Chocolate and Cyberpunk presets. Preference upgrades
+replace only recognized former UI defaults and infer overrides for customized palette colors. Card colors,
+accent slots, project customizations and gradients remain. Public palettes resolve inherited roles against
+their owner's UI preferences without exposing unrelated UI data.
+
+Deploy API and frontend together. Migration `20261108145433_AddUiAccentGradients` adds JSONB global gradients
+with an empty-object default. The API validates colors, stops, kind, angle, size and override flags; CSS image
+URLs are rejected. Rendering also rejects malformed legacy gradient values. Tests cover inheritance, overrides,
+migration, persistence, contrast and unsafe CSS. Browser tests sample darkened pixels on repeated openings,
+exercise nested mobile dialogs, verify column DOM/geometry while panning and check persisted theme choices.
+
+### Color roles across the interface
+
+`appearanceTokens.ts` defines the same primary and secondary tokens for personal and public boards.
+Primary (`accent`) marks editing actions, selection, active controls and focus. Secondary marks board
+navigation, avatars, metadata, dialog/library identity and timeline progress. Neutral secondary actions
+(Cancel, Close) remain neutral; success, danger, warning and explicit user content colors retain their meaning.
+
+Use `*-fill` with `--color-on-*` for filled controls so gradients and readable labels work together.
+Use `*-ink` for accent text on the palette surface: it preserves the chosen color unless contrast requires
+moving it toward black or white. Soft backgrounds and outlines use the solid role color. Application chrome
+maps these roles to personal UI colors, while board tools and public views use the active project palette.
+New border, icon, diagram and timeline color choices start from that palette; saved custom colors remain.
+
+### Independent interface backgrounds and presets
+
+Twelve UI presets set primary, secondary, optional accent gradients and `uiBackground` together. The
+background is a `{ color, gradient? }` object; it is independent of canvas light/dark mode and project palettes.
+An absent value (or `{}` from the API) retains automatic accent blending for older preferences. The editor
+can enable/disable a custom background and configure solid, linear or radial fills. Selecting a preset
+changes the draft only; Save persists it. Editing accents leaves a custom background unchanged.
+
+`uiChromeTokens.ts` derives chrome text, panel, border and icon tokens for light and dark backgrounds.
+Mixed black/white gradients use the same contrast-protecting scrim as accent fills. Preset cards preview
+the actual background and expose the current selection with `aria-pressed`.
+
+Migration `20261108160027_AddUiBackground` adds JSONB `ui_background`, with `{}` for existing accounts so
+their UI remains automatic. Newly created profiles and default/all appearance resets use Charcoal. Resets persist a fresh default profile in the API instead of relying on client fallbacks. Omitted API fields preserve saved settings;
+an empty object restores automatic blending. The API validates colors and bounded gradient data, rejecting
+external CSS URLs. Deploy the API and frontend together.

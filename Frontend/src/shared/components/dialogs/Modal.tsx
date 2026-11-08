@@ -1,7 +1,10 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useLayoutEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+
+const openDialogs = new Set<HTMLDialogElement>();
+let bodyOverflow = '';
 
 /** Native modal stacking keeps confirmations usable above mobile tool panels. */
 export default function Modal({
@@ -24,10 +27,22 @@ export default function Modal({
   useTranslation();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const dialog = dialogRef.current;
-    dialog?.showModal();
-    return () => dialog?.close();
+    if (!dialog) return;
+    const previous = document.activeElement;
+    if (!dialog.open) dialog.showModal();
+    if (!openDialogs.size) bodyOverflow = document.body.style.overflow;
+    openDialogs.add(dialog);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      dialog.close();
+      openDialogs.delete(dialog);
+      if (!openDialogs.size) document.body.style.overflow = bodyOverflow;
+      const top = [...openDialogs].at(-1);
+      if (previous instanceof HTMLElement && previous.isConnected && (!top || top.contains(previous)))
+        previous.focus({ preventScroll: true });
+    };
   }, []);
 
   return createPortal(

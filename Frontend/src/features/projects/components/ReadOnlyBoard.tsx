@@ -1,3 +1,6 @@
+import { useTheme } from '@/app/providers/ThemeProvider';
+import CanvasActionMenu from '@/features/canvas/components/CanvasActionMenu';
+import { workspaceMenuActions, type WorkspaceMenuCallbacks } from '@/features/canvas/utils/workspaceMenuActions';
 import { translate, displayLabel } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { memo, useCallback, useMemo, useRef, useState, type SyntheticEvent } from 'react';
@@ -123,6 +126,8 @@ const ReadOnlyBlock = memo(function ReadOnlyBlock({
 });
 
 export default function ReadOnlyBoard({
+  onOpenAppearance,
+  onOpenLibrary,
   items,
   skeletons = emptySkeletons,
   inspect = false,
@@ -134,7 +139,7 @@ export default function ReadOnlyBoard({
   remoteCursors = [],
   onCursorMove,
   projectParticipants = [],
-}: {
+}: WorkspaceMenuCallbacks & {
   items: BoardItem[];
   skeletons?: ItemSkeleton[];
   inspect?: boolean;
@@ -149,6 +154,8 @@ export default function ReadOnlyBoard({
 }) {
   useTranslation();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { theme, toggleTheme } = useTheme();
+  const [workspaceMenu, setWorkspaceMenu] = useState<{ x: number; y: number } | null>(null);
   const flatten = (entries: BoardItem[]): BoardItem[] =>
     entries.flatMap((item) => [item, ...(item.type === 'column' ? flatten(item.items) : [])]);
   const selected = flatten(items).filter((item) => selectedIds.includes(item.id));
@@ -205,7 +212,28 @@ export default function ReadOnlyBoard({
   const offsetX = touchMode ? minX : origin.current.x;
   const offsetY = touchMode ? minY : origin.current.y;
   return (
-    <section className="relative flex min-h-0 min-w-0 flex-1 flex-col" aria-label={translate('Read-only board')}>
+    <section
+      className="relative flex min-h-0 min-w-0 flex-1 flex-col"
+      aria-label={translate('Read-only board')}
+      onContextMenu={(event) => {
+        if (event.defaultPrevented || (!onOpenAppearance && !onOpenLibrary)) return;
+        if (
+          !(event.target instanceof Element) ||
+          event.target.closest('input,textarea,select,[contenteditable="true"],dialog,[role="dialog"],[role="menu"],a')
+        )
+          return;
+        event.preventDefault();
+        setWorkspaceMenu({ x: event.clientX, y: event.clientY });
+      }}
+    >
+      {workspaceMenu && (
+        <CanvasActionMenu
+          {...workspaceMenu}
+          title={translate('Project tools')}
+          actions={workspaceMenuActions({ onOpenAppearance, onOpenLibrary, theme, onToggleTheme: toggleTheme })}
+          onClose={() => setWorkspaceMenu(null)}
+        />
+      )}
       <div className="flex items-center gap-3 p-2 border-b" style={{ background: 'var(--color-surface)' }}>
         {inspect && (
           <button disabled={!selected.length} onClick={copySelection}>

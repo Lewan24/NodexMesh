@@ -1,3 +1,9 @@
+import UserAvatar from '@/shared/components/UserAvatar';
+import PhotoEditor from '@/features/identity-media/PhotoEditor';
+import { identityMedia } from '@/features/identity-media/api';
+import { isMockDataSource } from '@/app/services';
+import AdminBrandingPanel from '@/features/branding/AdminBrandingPanel';
+import { useBranding } from '@/features/branding/BrandingProvider';
 import { authService } from '@/app/services';
 import AdminAuditPanel from './AdminAuditPanel';
 import AdminIpPanel from './AdminIpPanel';
@@ -14,6 +20,7 @@ import Modal from '@/shared/components/dialogs/Modal';
 
 export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
   useTranslation();
+  const { applicationName } = useBranding();
   const auth = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -44,7 +51,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
       ),
   );
   const [registration, setRegistration] = useState(true);
-  const [tab, setTab] = useState<'users' | 'projects' | 'email' | 'audit' | 'security'>('users');
+  const [tab, setTab] = useState<'users' | 'projects' | 'email' | 'audit' | 'security' | 'branding'>('users');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [newUser, setNewUser] = useState({ email: '', displayName: '', password: '', isAdmin: false });
@@ -114,9 +121,9 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
           <div className="min-w-0">
             <p
               className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em]"
-              style={{ color: 'var(--color-accent)' }}
+              style={{ color: 'var(--color-accent-ink)' }}
             >
-              NodexMesh
+              {applicationName}
             </p>
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{translate('Administration')}</h1>
             <p className="break-all text-sm" style={{ color: 'var(--color-text-muted)' }}>
@@ -142,11 +149,11 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
         </header>
         <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
           <div
-            className="grid min-w-0 grid-cols-5 gap-2 sm:flex"
+            className="grid min-w-0 grid-cols-3 gap-2 sm:flex"
             role="tablist"
             aria-label={translate('Administration')}
           >
-            {(['users', 'projects', 'email', 'audit', 'security'] as const).map((value) => (
+            {(['users', 'projects', 'email', 'audit', 'security', 'branding'] as const).map((value) => (
               <button
                 key={value}
                 id={`admin-tab-${value}`}
@@ -155,7 +162,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                 aria-controls="admin-tab-content"
                 tabIndex={tab === value ? 0 : -1}
                 onKeyDown={(event) => {
-                  const tabs = ['users', 'projects', 'email', 'audit', 'security'] as const;
+                  const tabs = ['users', 'projects', 'email', 'audit', 'security', 'branding'] as const;
                   const index = tabs.indexOf(value);
                   const next =
                     event.key === 'ArrowRight'
@@ -221,7 +228,9 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
               {error || message}
             </p>
           )}
-          {tab === 'security' ? (
+          {tab === 'branding' ? (
+            <AdminBrandingPanel />
+          ) : tab === 'security' ? (
             <AdminIpPanel />
           ) : tab === 'audit' ? (
             <AdminAuditPanel />
@@ -301,6 +310,10 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
                           key={user.id}
                           user={user}
                           currentUserId={auth.currentUser?.id}
+                          onAvatarUpdated={async () => {
+                            await load();
+                            if (user.id === auth.currentUser?.id) await auth.refreshProfile();
+                          }}
                           onSave={(input) =>
                             run(() => auth.updateAdminUser(user.id, input), translate('User updated.'))
                           }
@@ -409,6 +422,7 @@ function AdminUserRow({
   onSave,
   onResetPassword,
   onResetAppearance,
+  onAvatarUpdated,
   onToggleBlocked,
   onRestore,
   onPurge,
@@ -418,11 +432,14 @@ function AdminUserRow({
   onSave: (input: { email: string; displayName: string; isAdmin: boolean }) => Promise<boolean>;
   onResetPassword: (password: string) => Promise<boolean>;
   onResetAppearance: (scope: AdminAppearanceResetScope) => Promise<boolean>;
+  onAvatarUpdated: () => Promise<void>;
   onToggleBlocked: () => Promise<boolean>;
   onRestore: () => Promise<boolean>;
   onPurge: () => Promise<boolean>;
 }) {
   useTranslation();
+  const { applicationName } = useBranding();
+  const [avatarEditing, setAvatarEditing] = useState(false);
   const [purgeOpen, setPurgeOpen] = useState(false);
   const [accountBusy, setAccountBusy] = useState(false);
   const [dialog, setDialog] = useState<'edit' | 'password' | 'appearance' | null>(null);
@@ -436,12 +453,27 @@ function AdminUserRow({
         className="group flex flex-wrap items-center gap-3 rounded-2xl border p-3 transition-colors"
         style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
       >
-        <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-bold"
-          style={{ backgroundColor: 'var(--color-accent-soft)', color: 'var(--color-accent)' }}
+        <UserAvatar avatarId={user.avatarId} name={user.displayName} size={40} />
+        <button
+          type="button"
+          className="btn-ghost rounded-lg px-2 py-2 text-xs"
+          aria-label={translate('Change profile photo of {{value1}}', { value1: user.displayName })}
+          onClick={() => setAvatarEditing(true)}
         >
-          {user.displayName.slice(0, 1).toUpperCase()}
-        </div>
+          {translate('Change photo')}
+        </button>
+        {avatarEditing && (
+          <PhotoEditor
+            title={translate('Profile photo')}
+            imageId={user.avatarId}
+            disabled={isMockDataSource}
+            onClose={() => setAvatarEditing(false)}
+            onSave={async (file) => {
+              await identityMedia.avatar(file, user.id);
+              await onAvatarUpdated();
+            }}
+          />
+        )}
         <div className="min-w-0 flex-1">
           <p className="break-all font-semibold">{user.displayName}</p>
           <p className="break-all text-xs" style={{ color: 'var(--color-text-muted)' }}>
@@ -584,9 +616,9 @@ function AdminUserRow({
             >
               <p
                 className="mb-1 text-[10px] font-bold uppercase tracking-[.2em]"
-                style={{ color: 'var(--color-accent)' }}
+                style={{ color: 'var(--color-accent-ink)' }}
               >
-                NodexMesh · {translate('Administration')}
+                {applicationName} · {translate('Administration')}
               </p>
               <h2 className="mb-4 text-xl font-bold">
                 {dialog === 'edit'
@@ -885,7 +917,7 @@ function ProjectCard({
               <div>
                 <p
                   className="mb-1 text-[10px] font-bold uppercase tracking-[.2em]"
-                  style={{ color: 'var(--color-accent)' }}
+                  style={{ color: 'var(--color-accent-ink)' }}
                 >
                   {translate('Project')}
                 </p>

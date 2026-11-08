@@ -1,14 +1,16 @@
+import { useBranding } from '@/features/branding/BrandingProvider';
 import { ShieldCheck } from 'lucide-react';
 import { translate } from '@/shared/i18n';
 
 export default function SecurityNotice() {
+  const { applicationName } = useBranding();
   return (
     <aside
       className="rounded-2xl border p-4 text-left sm:p-5"
       style={{ background: 'var(--color-accent-soft)', borderColor: 'var(--color-border)' }}
     >
       <div className="mb-3 flex items-center gap-2.5">
-        <ShieldCheck size={20} className="shrink-0" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+        <ShieldCheck size={20} className="shrink-0" style={{ color: 'var(--color-accent-ink)' }} aria-hidden="true" />
         <h2 className="text-sm font-semibold">{translate('Security data collection')}</h2>
       </div>
       <div className="space-y-3 text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
@@ -19,7 +21,8 @@ export default function SecurityNotice() {
         </p>
         <p>
           {translate(
-            'This collection is required to use NodexMesh. Security records have a separate retention policy and may remain after account deletion.',
+            'This collection is required to use {{value1}}. Security records have a separate retention policy and may remain after account deletion.',
+            { value1: applicationName },
           )}
         </p>
       </div>

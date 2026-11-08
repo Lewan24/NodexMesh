@@ -239,6 +239,7 @@ export function createHttpWorkspace(client: HttpClient): WorkspaceServices {
             body: {
               name: input.name,
               color: input.color,
+              todoDisplay: input.todoDisplay,
               expectedRevision: current?.revision ?? input.expectedRevision,
             },
           }),

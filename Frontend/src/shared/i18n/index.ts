@@ -105,6 +105,7 @@ const displayLabels: Record<string, string> = {
   admin: 'Administrator',
   user: 'User',
   users: 'Users',
+  branding: 'Branding',
   projects: 'Projects',
   board: 'Board',
   drawing: 'Drawing',

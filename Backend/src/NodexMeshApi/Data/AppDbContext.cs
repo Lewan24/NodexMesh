@@ -68,6 +68,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
     {
         base.OnModelCreating(b);
         b.Entity<ApplicationUser>().Property(x => x.MfaLastAcceptedStep).IsConcurrencyToken();
+        b.Entity<ApplicationUser>().HasIndex(x => x.AvatarId).HasDatabaseName("ix_users_avatar_id");
         b.Entity<MfaChallenge>(e =>
         {
             e.HasKey(x => x.Id);
@@ -176,6 +177,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
         b.Entity<SystemSettings>(e =>
         {
             e.HasKey(x => x.Id);
+            e.Property(x => x.ApplicationName).HasMaxLength(100);
             e.Property(x => x.EmailHost).HasMaxLength(255);
             e.Property(x => x.EmailUsername).HasMaxLength(255);
             e.Property(x => x.EmailFromAddress).HasMaxLength(256);
@@ -205,6 +207,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
         // ---------------- Project ----------------
         b.Entity<Project>(e =>
         {
+            e.Property(x => x.TodoDisplay).HasMaxLength(20).HasDefaultValue("checkbox");
             e.Property(x => x.ItemStatuses).HasDefaultValue("[]");
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(200);
@@ -340,6 +343,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
         {
             e.HasKey(x => x.UserId);
             e.Property(x => x.SidebarWidth).HasDefaultValue(235);
+            e.Property(x => x.UiGradients).HasColumnType("jsonb");
+            e.Property(x => x.UiBackground).HasColumnType("jsonb");
             e.Property(x => x.LightTheme).HasColumnType("jsonb");
             e.Property(x => x.DarkTheme).HasColumnType("jsonb");
         });

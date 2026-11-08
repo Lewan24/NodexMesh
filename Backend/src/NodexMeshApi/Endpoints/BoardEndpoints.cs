@@ -440,6 +440,8 @@ public static class BoardEndpoints
             uiFont = profile?.UiFont,
             uiPrimary = profile?.UiPrimary,
             uiSecondary = profile?.UiSecondary,
+            uiGradients = System.Text.Json.JsonDocument.Parse(profile?.UiGradients ?? "{}").RootElement,
+            uiBackground = System.Text.Json.JsonDocument.Parse(profile?.UiBackground ?? "{}").RootElement,
             inheritanceVersion = profile?.InheritanceVersion,
             paletteVersion = profile?.PaletteVersion
         });
@@ -457,6 +459,14 @@ public static class BoardEndpoints
             db.AppearanceProfiles.Add(profile);
         }
 
+        AppearanceAccentValidator.ValidateColor(request.UiPrimary);
+        AppearanceAccentValidator.ValidateColor(request.UiSecondary);
+        AppearanceAccentValidator.ValidateUi(request.UiGradients);
+        AppearanceAccentValidator.ValidateBackground(request.UiBackground);
+        AppearanceAccentValidator.ValidatePalette(request.Light);
+        AppearanceAccentValidator.ValidatePalette(request.Dark);
+        profile.UiGradients = request.UiGradients?.GetRawText() ?? profile.UiGradients;
+        profile.UiBackground = request.UiBackground?.GetRawText() ?? profile.UiBackground;
         profile.SidebarWidth = request.SidebarWidth;
         profile.Font = request.Font;
         profile.Mode = request.Mode;
@@ -484,6 +494,8 @@ public static class BoardEndpoints
         var userId = CurrentUserId(principal);
         await access.RequireAsync(projectId, userId, ProjectRole.Viewer, ct);
 
+        AppearanceAccentValidator.ValidatePalette(request.Light);
+        AppearanceAccentValidator.ValidatePalette(request.Dark);
         var entity = await db.ProjectAppearanceOverrides
             .FirstOrDefaultAsync(o => o.UserId == userId && o.ProjectId == projectId, ct);
 

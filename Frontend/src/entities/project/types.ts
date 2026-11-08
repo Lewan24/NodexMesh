@@ -1,7 +1,10 @@
 import type { BoardItem } from '@/entities/board/types';
 import type { AuditFields, BoardSnapshot } from '@/entities/board/records';
 
+export type TodoDisplay = 'checkbox' | 'checkmark' | 'strike';
+
 export interface ProjectRecord extends AuditFields {
+  todoDisplay?: TodoDisplay;
   userDeletedAt?: string | null;
   role?: 'Owner' | 'Editor' | 'Commenter' | 'Viewer';
   id: string;
@@ -36,6 +39,7 @@ export interface ProjectBoard {
 
 /** Canvas projection. Persistence uses ProjectRecord + BoardSnapshot, never this tree. */
 export interface Project {
+  todoDisplay?: TodoDisplay;
   statuses?: import('@/features/statuses/types').ProjectStatus[];
   itemsLoading?: boolean;
   loadingError?: string;

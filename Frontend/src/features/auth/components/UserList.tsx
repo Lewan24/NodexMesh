@@ -1,3 +1,4 @@
+import UserAvatar from '@/shared/components/UserAvatar';
 import { displayLabel, translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/features/auth/hooks/useAuth';
@@ -10,12 +11,7 @@ export default function UserList() {
     <div className="max-h-64 overflow-y-auto py-1.5">
       {users.map((user) => (
         <div key={user.id} className="flex items-center gap-3 px-5 py-2.5">
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-            style={{ backgroundColor: 'var(--color-accent-soft)', color: 'var(--color-accent)' }}
-          >
-            {user.name.charAt(0).toUpperCase()}
-          </div>
+          <UserAvatar avatarId={user.avatarId} name={user.name} size={28} />
 
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>

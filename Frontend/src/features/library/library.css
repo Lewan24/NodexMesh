@@ -1,5 +1,5 @@
 .media-library {
-  --library-accent: #8b5cf6;
+  --library-accent: var(--color-accent);
   --library-soft: color-mix(in srgb, var(--library-accent) 10%, transparent);
   width: min(1120px, calc(100vw - 32px));
   height: min(800px, 90dvh);
@@ -49,15 +49,15 @@
   width: 54px;
   height: 54px;
   border-radius: 17px;
-  color: #a78bfa;
-  background: var(--library-soft);
-  border: 1px solid color-mix(in srgb, var(--library-accent) 25%, transparent);
+  color: var(--color-secondary-ink);
+  background: var(--color-secondary-soft);
+  border: 1px solid color-mix(in srgb, var(--color-secondary) 25%, transparent);
 }
 .library-eyebrow {
   font-size: 9px;
   letter-spacing: 0.16em;
   font-weight: 700;
-  color: var(--library-accent);
+  color: var(--color-accent-ink);
 }
 .library-header h2 {
   font-size: 24px;
@@ -84,12 +84,12 @@
   font-weight: 600;
 }
 .library-primary {
-  background: #7c3aed;
-  color: white;
-  box-shadow: 0 3px 10px #7c3aed25;
+  background: var(--color-accent-fill);
+  color: var(--color-on-accent);
+  box-shadow: 0 3px 10px var(--color-accent-soft);
 }
 .library-primary:hover:not(:disabled) {
-  background: #8b5cf6;
+  filter: brightness(1.06);
 }
 .library-secondary {
   border: 1px solid var(--color-border);
@@ -123,7 +123,7 @@
 }
 .library-summary .library-privacy {
   margin-left: auto;
-  color: var(--library-accent);
+  color: var(--color-accent-ink);
 }
 .library-workspace {
   display: flex;
@@ -151,11 +151,11 @@
 }
 .library-dropzone.is-dragging,
 .library-dropzone:hover:not(:disabled) {
-  border-color: var(--library-accent);
+  border-color: var(--color-accent-ink);
   background: color-mix(in srgb, var(--library-accent) 18%, transparent);
 }
 .library-drop-icon {
-  color: var(--library-accent);
+  color: var(--color-accent-ink);
 }
 .library-dropzone strong {
   display: block;
@@ -170,7 +170,7 @@
 }
 .library-drop-plus {
   margin-left: auto;
-  color: var(--library-accent);
+  color: var(--color-accent-ink);
   font-size: 24px;
 }
 .library-tools {
@@ -217,7 +217,7 @@
 }
 .library-filters button[aria-pressed='true'] {
   background: var(--library-soft);
-  color: var(--library-accent);
+  color: var(--color-accent-ink);
   font-weight: 600;
 }
 .library-gallery {
@@ -245,7 +245,7 @@
   box-shadow: 0 4px 16px #00000010;
 }
 .library-card.is-selected {
-  border-color: var(--library-accent);
+  border-color: var(--color-accent-ink);
   box-shadow: 0 0 0 2px var(--library-soft);
 }
 .library-thumbnail,
@@ -294,8 +294,8 @@
   bottom: 8px;
   padding: 3px;
   border-radius: 50%;
-  background: #7c3aed;
-  color: white;
+  background: var(--color-accent-fill);
+  color: var(--color-on-accent);
 }
 .library-card-caption {
   padding: 11px 12px;
@@ -319,7 +319,7 @@
   align-items: center;
   flex-direction: column;
   gap: 8px;
-  color: var(--library-accent);
+  color: var(--color-accent-ink);
   font-size: 10px;
 }
 .library-file-tile,
@@ -329,7 +329,7 @@
   justify-content: center;
   flex-direction: column;
   gap: 8px;
-  color: var(--library-accent);
+  color: var(--color-accent-ink);
   font-size: 10px;
   font-weight: 700;
 }
@@ -508,7 +508,7 @@
   place-items: center;
   width: 64px;
   height: 64px;
-  color: var(--library-accent);
+  color: var(--color-accent-ink);
   border: 1px solid var(--color-border);
   border-radius: 19px;
   background: var(--color-surface);
@@ -549,7 +549,7 @@
   gap: 8px;
   align-items: center;
   padding: 7px 24px;
-  color: var(--library-accent);
+  color: var(--color-accent-ink);
   background: var(--library-soft);
   font-size: 11px;
 }

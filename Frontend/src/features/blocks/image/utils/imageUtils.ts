@@ -1,4 +1,5 @@
-export const DEFAULT_IMAGE_WIDTH = 220;
+import { ITEM_WIDTH } from '@/features/canvas/constants';
+export const DEFAULT_IMAGE_WIDTH = ITEM_WIDTH.image;
 export const DEFAULT_IMAGE_HEIGHT = 178;
 export const DEFAULT_IMAGE_BACKGROUND = '#ffffff';
 

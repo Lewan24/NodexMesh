@@ -15,11 +15,19 @@ export function cloneItems(items: BoardItem[], dx: number, dy: number, firstZInd
     Object.values(record).forEach(collect);
   };
   collect(items);
+  const collectGroups = (children: BoardItem[]) => {
+    for (const item of children) {
+      if (item.groupId && !ids.has(item.groupId)) ids.set(item.groupId, createId());
+      if (item.type === 'column') collectGroups(item.items);
+    }
+  };
+  collectGroups(items);
   const copy = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(copy);
     if (!value || typeof value !== 'object') return value;
     return Object.fromEntries(
       Object.entries(value).map(([key, entry]) => {
+        if (key === 'groupId' && typeof entry === 'string') return [key, ids.get(entry)];
         if (key === 'frameId') return [key, typeof entry === 'string' ? (ids.get(entry) ?? null) : null];
         if (key === 'id' && typeof entry === 'string') return [key, ids.get(entry)];
         if (['startItemId', 'endItemId', 'dispenserId'].includes(key) && typeof entry === 'string') {

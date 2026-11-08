@@ -128,8 +128,10 @@ public class AdminEndpointsTests : IDisposable
         createdUser.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth!.AccessToken);
         var appearance = await createdUser.GetFromJsonAsync<JsonElement>("/api/v1/appearance");
         appearance.GetProperty("defaults").GetProperty("font").GetString().Should().Be("short-stack");
-        appearance.GetProperty("uiPrimary").GetString().Should().Be("#8000ff");
-        appearance.GetProperty("paletteVersion").GetInt32().Should().Be(3);
+        appearance.GetProperty("uiPrimary").GetString().Should().Be("#334c5c");
+        appearance.GetProperty("uiSecondary").GetString().Should().Be("#b64a25");
+        appearance.GetProperty("uiBackground").GetProperty("color").GetString().Should().Be("#20262b");
+        appearance.GetProperty("paletteVersion").GetInt32().Should().Be(4);
     }
 
     [Fact]
@@ -270,6 +272,8 @@ public class AdminEndpointsTests : IDisposable
             uiFont = "mono",
             uiPrimary = "#112233",
             uiSecondary = "#334455",
+            uiGradients = new { primary = new { from = "#112233", to = "#334455", kind = "linear", angle = 90 } },
+            uiBackground = new { color = "#ffeedd", gradient = new { from = "#ffeedd", to = "#ddddff", kind = "radial", angle = 135 } },
             inheritanceVersion = 1,
             paletteVersion = 2,
             light = JsonDocument.Parse("""{"primary":"#111111"}""").RootElement,
@@ -283,13 +287,26 @@ public class AdminEndpointsTests : IDisposable
         (await admin.PostAsJsonAsync($"/api/v1/admin/users/{targetId}/appearance/reset",
             new AdminResetAppearanceRequest("Defaults"))).StatusCode.Should().Be(HttpStatusCode.NoContent);
         var defaultsReset = await target.GetFromJsonAsync<JsonElement>("/api/v1/appearance");
-        defaultsReset.GetProperty("defaults").ValueKind.Should().Be(JsonValueKind.Null);
+        defaultsReset.GetProperty("defaults").GetProperty("font").GetString().Should().Be("short-stack");
+        defaultsReset.GetProperty("uiPrimary").GetString().Should().Be("#334c5c");
+        defaultsReset.GetProperty("uiSecondary").GetString().Should().Be("#b64a25");
+        defaultsReset.GetProperty("uiBackground").GetProperty("color").GetString().Should().Be("#20262b");
+        defaultsReset.GetProperty("uiBackground").TryGetProperty("gradient", out _).Should().BeFalse();
+        defaultsReset.GetProperty("uiGradients").EnumerateObject().Should().BeEmpty();
         defaultsReset.GetProperty("projects").EnumerateObject().Should().ContainSingle();
 
         (await admin.PostAsJsonAsync($"/api/v1/admin/users/{targetId}/appearance/reset",
             new AdminResetAppearanceRequest("ProjectOverrides"))).StatusCode.Should().Be(HttpStatusCode.NoContent);
         var overridesReset = await target.GetFromJsonAsync<JsonElement>("/api/v1/appearance");
         overridesReset.GetProperty("projects").EnumerateObject().Should().BeEmpty();
+        overridesReset.GetProperty("uiPrimary").GetString().Should().Be("#334c5c");
+
+        (await admin.PostAsJsonAsync($"/api/v1/admin/users/{targetId}/appearance/reset",
+            new AdminResetAppearanceRequest("All"))).EnsureSuccessStatusCode();
+        var allReset = await target.GetFromJsonAsync<JsonElement>("/api/v1/appearance");
+        allReset.GetProperty("uiBackground").GetProperty("color").GetString().Should().Be("#20262b");
+        allReset.GetProperty("defaults").GetProperty("dark").GetProperty("secondary").GetString().Should().Be("#b64a25");
+        allReset.GetProperty("projects").EnumerateObject().Should().BeEmpty();
     }
 
     [Fact]

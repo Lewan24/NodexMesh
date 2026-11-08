@@ -15,7 +15,7 @@ export default function LayerControls({
 }: LayerControlsProps) {
   useTranslation();
   const buttonClass =
-    'w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer flex-shrink-0 hover:bg-violet-500/15';
+    'w-8 h-8 flex items-center justify-center rounded-lg transition-colors cursor-pointer flex-shrink-0 hover:bg-accent-soft';
 
   return (
     <div className="flex items-center gap-1 rounded-lg p-1" style={{ background: 'var(--edit-bar-control)' }}>

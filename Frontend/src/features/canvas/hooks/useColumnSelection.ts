@@ -8,17 +8,27 @@ export interface SelectedColumnItem {
 }
 
 interface UseColumnSelectionOptions {
+  items?: BoardItem[];
   onSelectItems: (ids: string[]) => void;
 
   onUpdateItem: (id: string, updater: (item: BoardItem) => BoardItem) => void;
 }
 
-export function useColumnSelection({ onSelectItems, onUpdateItem }: UseColumnSelectionOptions) {
+export function useColumnSelection({ items, onSelectItems, onUpdateItem }: UseColumnSelectionOptions) {
   const [selectedColumnItem, setSelectedColumnItem] = useState<SelectedColumnItem | null>(null);
 
   const selectedColumnItemRef = useRef<SelectedColumnItem | null>(null);
 
-  selectedColumnItemRef.current = selectedColumnItem;
+  const column = selectedColumnItem && items?.find((item) => item.id === selectedColumnItem.columnId);
+  const latestItem =
+    column?.type === 'column' ? column.items.find((item) => item.id === selectedColumnItem?.item.id) : undefined;
+  const currentSelection =
+    items && selectedColumnItem
+      ? latestItem
+        ? { ...selectedColumnItem, item: latestItem }
+        : null
+      : selectedColumnItem;
+  selectedColumnItemRef.current = currentSelection;
 
   const clearColumnSelection = useCallback(() => {
     setSelectedColumnItem(null);
@@ -81,7 +91,7 @@ export function useColumnSelection({ onSelectItems, onUpdateItem }: UseColumnSel
   }, [onUpdateItem]);
 
   return {
-    selectedColumnItem,
+    selectedColumnItem: currentSelection,
     clearColumnSelection,
     handleSelectColumnItem,
     handleUpdateColumnItem,

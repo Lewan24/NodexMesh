@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 export interface RemotePresence {
   userId: string;
   displayName: string;
+  avatarId?: string | null;
   itemIds: string[];
   mode: 'selected' | 'editing';
   cursorX?: number | null;
@@ -14,6 +15,7 @@ export interface RemotePresence {
 export interface RemoteCursor {
   userId: string;
   displayName: string;
+  avatarId?: string | null;
   x: number;
   y: number;
 }
@@ -203,7 +205,15 @@ export function useCollaborationPresence(
     () =>
       Object.values(remote).flatMap((presence) =>
         typeof presence.cursorX === 'number' && typeof presence.cursorY === 'number'
-          ? [{ userId: presence.userId, displayName: presence.displayName, x: presence.cursorX, y: presence.cursorY }]
+          ? [
+              {
+                userId: presence.userId,
+                displayName: presence.displayName,
+                ...(presence.avatarId ? { avatarId: presence.avatarId } : {}),
+                x: presence.cursorX,
+                y: presence.cursorY,
+              },
+            ]
           : [],
       ),
     [remote],

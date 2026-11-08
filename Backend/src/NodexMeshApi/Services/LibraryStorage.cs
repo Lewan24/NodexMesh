@@ -10,7 +10,7 @@ namespace NodexMeshApi.Services;
 public sealed class LibraryOptions
 {
     public string Path { get; set; } = "App_Data/library";
-    public long MaxFileBytes { get; set; } = 50 * 1024 * 1024;
+    public long MaxFileBytes { get; set; } = 500 * 1024 * 1024;
     public long MaxProjectBytes { get; set; } = 1024L * 1024 * 1024;
 }
 

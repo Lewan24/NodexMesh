@@ -21,6 +21,25 @@ public class ProjectEndpointsTests : IDisposable
     }
 
     [Fact]
+    public async Task TodoDisplay_IsSharedRevisionCheckedAndEditorOnly()
+    {
+        var (owner, _, _, _) = await _factory.CreateSeededUserAsync();
+        var (viewer, _, email, _) = await _factory.CreateSeededUserAsync();
+        var (stranger, _, _, _) = await _factory.CreateSeededUserAsync();
+        var project = await CreateProjectAsync(owner);
+        var path = $"/api/v1/projects/{project.Id}";
+        await owner.PostAsJsonAsync($"{path}/members", new InviteMemberRequest(email, "Viewer"));
+        var request = new { expectedRevision = project.Revision, todoDisplay = "strike" };
+        (await stranger.PatchAsJsonAsync(path, request)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await viewer.PatchAsJsonAsync(path, request)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await owner.PatchAsJsonAsync(path, new { expectedRevision = project.Revision, todoDisplay = "invalid" }))
+            .StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await owner.PatchAsJsonAsync(path, request)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await owner.PatchAsJsonAsync(path, request)).StatusCode.Should().Be(HttpStatusCode.Conflict);
+        (await viewer.GetFromJsonAsync<ProjectRecordDto>(path))!.TodoDisplay.Should().Be("strike");
+    }
+
+    [Fact]
     public async Task TaskCategories_AreProjectScopedValidatedAndRevisionProtected()
     {
         var (owner, _, _, _) = await _factory.CreateSeededUserAsync();

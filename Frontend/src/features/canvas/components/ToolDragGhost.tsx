@@ -196,7 +196,7 @@ export default function ToolDragGhost({ color, tool, clientX, clientY, overCanva
           style={{
             height: 2,
             backgroundColor: 'var(--color-accent)',
-            boxShadow: overCanvas ? '0 0 10px rgba(124,58,237,0.35)' : 'none',
+            boxShadow: overCanvas ? '0 0 10px color-mix(in srgb, var(--color-accent) 35%, transparent)' : 'none',
           }}
         />
 
@@ -232,7 +232,7 @@ export default function ToolDragGhost({ color, tool, clientX, clientY, overCanva
         border: overCanvas ? '2px solid var(--color-accent)' : '2px dashed var(--color-border)',
         backgroundColor: color ?? 'var(--color-surface-translucent)',
         boxShadow: overCanvas
-          ? '0 12px 36px rgba(0,0,0,0.18), 0 0 0 3px rgba(124,58,237,0.08)'
+          ? '0 12px 36px rgba(0,0,0,0.18), 0 0 0 3px color-mix(in srgb, var(--color-accent) 8%, transparent)'
           : '0 8px 20px rgba(0,0,0,0.1)',
         backdropFilter: 'blur(8px)',
         transition: 'opacity 100ms ease, transform 100ms ease, border-color 100ms ease',
@@ -241,7 +241,10 @@ export default function ToolDragGhost({ color, tool, clientX, clientY, overCanva
       {tool === 'frame' ? (
         <div
           className="absolute inset-2 rounded-xl"
-          style={{ border: '2px dashed var(--color-accent)', backgroundColor: 'rgba(124,58,237,0.05)' }}
+          style={{
+            border: '2px dashed var(--color-accent)',
+            backgroundColor: 'color-mix(in srgb, var(--color-accent) 5%, transparent)',
+          }}
         />
       ) : (
         <>

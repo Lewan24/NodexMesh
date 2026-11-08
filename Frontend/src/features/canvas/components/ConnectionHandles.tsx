@@ -57,7 +57,7 @@ function ConnectionHandle({ side, style, onStart }: ConnectionHandleProps) {
       style={{
         ...style,
 
-        color: 'var(--color-accent)',
+        color: 'var(--color-accent-ink)',
 
         backgroundColor: 'var(--color-surface)',
 

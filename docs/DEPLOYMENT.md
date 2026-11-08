@@ -100,7 +100,7 @@ LIBRARY_MAX_FILE_BYTES=52428800
 LIBRARY_MAX_PROJECT_BYTES=1073741824
 ```
 
-The API validates file signatures/extensions and stores bytes outside the web root. The frontend Nginx upload limit is 50 MiB; update it and the external proxy together if raising the API limit. Multiple API replicas require shared file storage.
+The API validates file signatures/extensions and stores bytes outside the web root. The frontend Nginx upload limit is 500 MiB; update it and the external proxy together if raising the API limit. Multiple API replicas require shared file storage.
 
 Back up PostgreSQL, `library-data`, and `data-protection-keys`. Project JSON exports do not contain
 file bytes. The hourly cleanup removes orphaned files older than one day; trashed projects retain

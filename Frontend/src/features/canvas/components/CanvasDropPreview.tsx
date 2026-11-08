@@ -18,8 +18,9 @@ export default function CanvasDropPreview({ x, y, width, height, label = transla
         className="absolute inset-0 rounded-2xl"
         style={{
           border: '2px dashed var(--color-accent)',
-          backgroundColor: 'rgba(124,58,237,0.07)',
-          boxShadow: 'inset 0 0 0 1px rgba(124,58,237,0.08), 0 0 18px rgba(124,58,237,0.12)',
+          backgroundColor: 'color-mix(in srgb, var(--color-accent) 7%, transparent)',
+          boxShadow:
+            'inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 8%, transparent), 0 0 18px color-mix(in srgb, var(--color-accent) 12%, transparent)',
         }}
       />
 
@@ -33,7 +34,7 @@ export default function CanvasDropPreview({ x, y, width, height, label = transla
           bottom: -14,
           width: 1,
           transform: 'translateX(-50%)',
-          backgroundColor: 'rgba(124,58,237,0.38)',
+          backgroundColor: 'color-mix(in srgb, var(--color-accent) 38%, transparent)',
         }}
       />
 
@@ -47,7 +48,7 @@ export default function CanvasDropPreview({ x, y, width, height, label = transla
           right: -14,
           height: 1,
           transform: 'translateY(-50%)',
-          backgroundColor: 'rgba(124,58,237,0.38)',
+          backgroundColor: 'color-mix(in srgb, var(--color-accent) 38%, transparent)',
         }}
       />
 
@@ -62,7 +63,7 @@ export default function CanvasDropPreview({ x, y, width, height, label = transla
           height: 8,
           transform: 'translate(-50%, -50%)',
           backgroundColor: 'var(--color-accent)',
-          boxShadow: '0 0 0 3px var(--color-app-bg), 0 0 10px rgba(124,58,237,0.45)',
+          boxShadow: '0 0 0 3px var(--color-app-bg), 0 0 10px color-mix(in srgb, var(--color-accent) 45%, transparent)',
         }}
       />
 
@@ -119,9 +120,9 @@ export default function CanvasDropPreview({ x, y, width, height, label = transla
         style={{
           top: -28,
           left: 0,
-          color: 'var(--color-accent)',
+          color: 'var(--color-accent-ink)',
           backgroundColor: 'var(--color-surface-translucent)',
-          border: '1px solid rgba(124,58,237,0.25)',
+          border: '1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)',
           backdropFilter: 'blur(6px)',
         }}
       >

@@ -8,10 +8,12 @@ public sealed class AppearanceProfile
     public string? Mode { get; set; }
     public string Font { get; set; } = "short-stack";
     public string UiFont { get; set; } = "sans";
-    public string UiPrimary { get; set; } = "#8000ff";
-    public string UiSecondary { get; set; } = "#6a00eb";
+    public string UiPrimary { get; set; } = "#334c5c";
+    public string UiSecondary { get; set; } = "#b64a25";
     public int InheritanceVersion { get; set; } = 1;
-    public int PaletteVersion { get; set; } = 3;
+    public int PaletteVersion { get; set; } = 4;
+    public string UiGradients { get; set; } = "{}";
+    public string UiBackground { get; set; } = """{"color":"#20262b"}""";
     public string LightTheme { get; set; } = "{}"; // jsonb: primary/secondary/canvas/default/accent1-5/gradients
     public string DarkTheme { get; set; } = "{}";
     public DateTimeOffset UpdatedAt { get; set; }

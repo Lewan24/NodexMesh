@@ -16,6 +16,7 @@ export interface ProjectRepository {
       name: string;
       color: string;
       deletedAt: string | null;
+      todoDisplay?: import('@/entities/project/types').TodoDisplay;
       expectedRevision: Revision;
       clientMutationId: string;
     },

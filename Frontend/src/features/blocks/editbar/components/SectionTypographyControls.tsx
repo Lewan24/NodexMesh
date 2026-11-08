@@ -36,7 +36,7 @@ function ControlButton({
       onClick={onClick}
       className="flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors"
       style={{
-        color: active ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+        color: active ? 'var(--color-accent-ink)' : 'var(--color-text-secondary)',
         background: active ? 'var(--color-accent-soft)' : 'var(--edit-bar-control)',
       }}
     >

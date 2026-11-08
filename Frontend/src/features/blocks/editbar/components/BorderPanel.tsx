@@ -1,3 +1,4 @@
+import { useTheme } from '@/app/providers/ThemeProvider';
 import { useId } from 'react';
 import { itemBorderRule } from '../../border/itemBorder';
 import { Square, X } from 'lucide-react';
@@ -6,7 +7,6 @@ import type { BoardItem, ItemBorder } from '@/entities/board/types';
 import { translate } from '@/shared/i18n';
 import './borderPanel.css';
 
-const initial: ItemBorder = { color: '#903df5', width: 2, style: 'solid', animation: 'none' };
 export default function BorderPanel({
   items,
   onUpdate,
@@ -15,6 +15,9 @@ export default function BorderPanel({
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
 }) {
   useTranslation();
+  const { appearance, theme } = useTheme();
+  const palette = appearance[theme];
+  const initial: ItemBorder = { color: palette.primary, width: 2, style: 'solid', animation: 'none' };
   const previewScope = useId().replace(/[^\w-]/g, '_');
   const border = items[0]?.border ?? initial;
   const mixed = items.some((item) => JSON.stringify(item.border) !== JSON.stringify(items[0]?.border));
@@ -42,7 +45,7 @@ export default function BorderPanel({
             onChange={(event) =>
               patch({
                 style: 'solid',
-                gradient: event.target.checked ? { from: border.color, to: '#ffbd65', angle: 90 } : undefined,
+                gradient: event.target.checked ? { from: border.color, to: palette.secondary, angle: 90 } : undefined,
               })
             }
           />

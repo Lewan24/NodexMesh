@@ -1,3 +1,4 @@
+import { BrandingProvider } from '@/features/branding/BrandingProvider';
 import '@/shared/i18n';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -19,20 +20,22 @@ const publicMatch = /^shared\/([^/]+)\/?$/.exec(publicPath);
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <ThemeProvider>
-        {publicMatch ? (
-          <React.Suspense fallback={<LoadingScreen />}>
-            <PublicProjectPage token={publicMatch[1]!} />
-          </React.Suspense>
-        ) : (
-          <>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
-            <AppUpdateDialog />
-          </>
-        )}
-      </ThemeProvider>
+      <BrandingProvider>
+        <ThemeProvider>
+          {publicMatch ? (
+            <React.Suspense fallback={<LoadingScreen />}>
+              <PublicProjectPage token={publicMatch[1]!} />
+            </React.Suspense>
+          ) : (
+            <>
+              <AuthProvider>
+                <App />
+              </AuthProvider>
+              <AppUpdateDialog />
+            </>
+          )}
+        </ThemeProvider>
+      </BrandingProvider>
     </ErrorBoundary>
   </React.StrictMode>,
 );

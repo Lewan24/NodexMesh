@@ -15,7 +15,7 @@
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
   background: var(--color-accent-soft);
 }
 .status-manager {
@@ -33,7 +33,7 @@
 .status-manager-accent {
   height: 3px;
   flex-shrink: 0;
-  background: linear-gradient(90deg, var(--color-accent), #c084fc, #ffbd65);
+  background: linear-gradient(90deg, var(--color-accent), var(--color-secondary));
 }
 .status-manager-header {
   display: flex;
@@ -48,7 +48,7 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
   background: var(--color-accent-soft);
   border: 1px solid color-mix(in srgb, var(--color-accent) 14%, transparent);
   border-radius: 12px;
@@ -123,7 +123,7 @@
   flex-shrink: 0;
   border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
   border-radius: 10px;
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
   background: var(--color-accent-soft);
   font-size: 12px;
   font-weight: 600;
@@ -158,7 +158,7 @@
 .status-manager-entry[aria-pressed='true'] {
   background: var(--color-surface);
   border-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
   box-shadow: 0 2px 6px rgb(0 0 0 / 4%);
 }
 .status-manager-entry-dot {
@@ -286,7 +286,7 @@
   color: var(--color-text-secondary);
 }
 .status-css-heading svg {
-  color: var(--color-accent);
+  color: var(--color-accent-ink);
 }
 .status-css-toggle {
   position: relative;
@@ -323,8 +323,8 @@
   background: var(--color-text-muted);
 }
 .status-css-toggle input:checked + span {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
+  background: var(--color-accent-fill, var(--color-accent));
+  border-color: var(--color-accent-ink);
 }
 .status-css-toggle input:checked + span::after {
   transform: translateX(14px);
@@ -392,8 +392,8 @@
 .status-primary {
   margin-left: auto;
   border: 1px solid var(--color-accent);
-  background: var(--color-accent);
-  color: white;
+  background: var(--color-accent-fill, var(--color-accent));
+  color: var(--color-on-accent);
   box-shadow: 0 3px 8px color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 .status-primary:hover {

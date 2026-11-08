@@ -13,12 +13,13 @@ import type {
   AuthResult,
   MfaProof,
 } from '@/features/auth/types';
-import { authService } from '@/app/services';
+import { authService, isMockDataSource } from '@/app/services';
 import { errorMessage } from '@/shared/api/errors';
 import { flushPendingChanges } from '@/shared/api/pendingChanges';
 
 interface AuthContextValue {
   currentUser: User | null;
+  refreshProfile: () => Promise<void>;
   users: User[];
   isAdmin: boolean;
   login: (username: string, password: string, proof?: MfaProof) => Promise<AuthResult>;
@@ -123,11 +124,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    setCurrentUser(await authService.refreshProfile());
+  }, []);
+
   const updateProfile = useCallback(async (input: { email: string; displayName: string; currentPassword?: string }) => {
     const updated = await authService.updateProfile(input);
     setCurrentUser(updated);
     return updated;
   }, []);
+  useEffect(() => {
+    if (!currentUser?.id || isMockDataSource) return;
+    let active = true;
+    const userId = currentUser.id;
+    const sync = () => {
+      if (document.hidden) return;
+      void authService
+        .refreshProfile()
+        .then((user) => {
+          if (active && user.id === userId) setCurrentUser(user);
+        })
+        .catch(() => {});
+    };
+    window.addEventListener('focus', sync);
+    const timer = setInterval(sync, 60000);
+    return () => {
+      active = false;
+      window.removeEventListener('focus', sync);
+      clearInterval(timer);
+    };
+  }, [currentUser?.id]);
+
   const changePassword = useCallback(
     async (input: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
       const updated = await authService.changePassword(input);
@@ -204,6 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       updateProfile,
+      refreshProfile,
       changePassword,
       addUser,
       removeUser,
@@ -228,6 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       updateProfile,
+      refreshProfile,
       changePassword,
       addUser,
       removeUser,

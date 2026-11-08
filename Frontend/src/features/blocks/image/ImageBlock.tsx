@@ -134,7 +134,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
             {projectId && (
               <button
                 type="button"
-                className="rounded-lg px-2 bg-violet-600 text-white text-xs"
+                className="rounded-lg px-2 btn-accent text-xs"
                 onMouseDown={(event) => event.stopPropagation()}
                 onClick={() => setLibraryOpen(true)}
               >
@@ -155,7 +155,9 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
                     className="w-7 h-7 flex items-center justify-center transition-colors"
                     style={{
                       color: !isSticker ? '#fff' : '#8aacb8',
-                      backgroundColor: !isSticker ? 'rgba(124,58,237,0.5)' : 'transparent',
+                      backgroundColor: !isSticker
+                        ? 'color-mix(in srgb, var(--color-accent) 50%, transparent)'
+                        : 'transparent',
                     }}
                     title={translate('Card with caption')}
                   >
@@ -170,7 +172,9 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
                     className="w-7 h-7 flex items-center justify-center transition-colors"
                     style={{
                       color: isSticker ? '#fff' : '#8aacb8',
-                      backgroundColor: isSticker ? 'rgba(124,58,237,0.5)' : 'transparent',
+                      backgroundColor: isSticker
+                        ? 'color-mix(in srgb, var(--color-accent) 50%, transparent)'
+                        : 'transparent',
                     }}
                     title={translate('Sticker (image only)')}
                   >
@@ -251,7 +255,7 @@ export default function ImageBlock({ item, onUpdate, onDelete }: ImageBlockProps
               }}
               onBlur={commitUrl}
               placeholder={translate('Paste image URL…')}
-              className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border border-[#7C3AED]/40 focus:border-[#7C3AED] transition-colors"
+              className="w-full text-sm px-2.5 py-1.5 rounded-xl outline-none border border-[var(--color-border)] focus:border-[var(--color-accent)] transition-colors"
               style={{
                 backgroundColor: isSticker ? 'var(--color-surface-alt)' : inputBackground,
                 color: isSticker ? 'var(--color-text-primary)' : textColor,

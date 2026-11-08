@@ -64,6 +64,12 @@ public static class BoardValidator
 
         // Strict deserialization: unknown/missing/wrong-typed fields throw (mass-assignment guard).
         var data = BoardItemTypes.Deserialize(item.Type, item.Data.GetRawText());
+        if (data is BoardBlockData { BoardIcon: { } boardIcon } && !ValidBoardIcon(boardIcon))
+            throw new ApiException(422, "invalid_item", "Invalid board icon.");
+        if (data is NoteData note && (!IsText(note.Content) ||
+            (note.ContentFormat is not null && (note.ContentFormat != "tiptap-html" || note.ContentVersion != 1)) ||
+            (note.ContentFormat is null && note.ContentVersion is not null)))
+            throw new ApiException(422, "invalid_item", "Invalid note content format.");
         static bool ValidEntries(IReadOnlyList<TaskEntry>? entries) => entries is not null && entries.Count <= 10_000
             && entries.All(e => e is not null && !string.IsNullOrWhiteSpace(e.Id) && IsText(e.Id) && IsText(e.Text)
                 && (e.Description is null || e.Description.Length <= 20_000)
@@ -94,6 +100,10 @@ public static class BoardValidator
             (file.Size < 0 || !IsText(file.Title) || !IsText(file.FileName) || !IsText(file.ContentType)))
             throw new ApiException(422, "invalid_item", "Invalid file content.");
 
+        if (item.Appearance.TryGetProperty("todo", out var todo) &&
+            (todo.ValueKind != JsonValueKind.Object || !todo.TryGetProperty("done", out var done) ||
+             done.ValueKind is not (JsonValueKind.True or JsonValueKind.False)))
+            throw new ApiException(422, "invalid_item", "Invalid item TODO.");
         try
         {
             var appearance = JsonSerializer.Deserialize<ItemAppearance>(item.Appearance.GetRawText(), BoardItemTypes.StrictOptions);
@@ -109,6 +119,8 @@ public static class BoardValidator
                 throw new ApiException(422, "invalid_item", "Invalid item border.");
             if (appearance?.StatusId == Guid.Empty)
                 throw new ApiException(422, "invalid_item", "Invalid item status.");
+            if (appearance?.GroupId == Guid.Empty)
+                throw new ApiException(422, "invalid_item", "Invalid item group.");
             if (appearance?.CustomCss is { } customCss && (customCss.Source is null || customCss.Source.Length > 10_000))
                 throw new ApiException(422, "invalid_item", "Custom CSS must contain at most 10,000 characters.");
         }
@@ -122,6 +134,21 @@ public static class BoardValidator
 
     private static bool ValidBorderColor(string? color) => color is not null &&
         System.Text.RegularExpressions.Regex.IsMatch(color, "^#[0-9a-fA-F]{6}$");
+
+    private static bool ValidBoardIcon(BoardIconData icon)
+    {
+        if (!IsText(icon.Source) || string.IsNullOrWhiteSpace(icon.Source) || !IsText(icon.Label) || icon.Label.Length > 200 ||
+            (icon.Color is not null && !ValidBorderColor(icon.Color))) return false;
+        return icon.IconMode switch
+        {
+            "preset" => icon.Source.Length <= 200,
+            "emoji" => icon.Source.Length <= 64,
+            "svg" => System.Text.RegularExpressions.Regex.IsMatch(icon.Source, "<svg[\\s>]", System.Text.RegularExpressions.RegexOptions.IgnoreCase),
+            "url" => IsUrl(icon.Source),
+            "library" => IsLibrarySource(icon.Source),
+            _ => false
+        };
+    }
 
     /// <summary>
     /// OWASP A10 (SSRF) / stored-XSS surface: image, link and embed items carry

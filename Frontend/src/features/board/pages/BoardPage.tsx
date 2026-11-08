@@ -1,3 +1,5 @@
+import { expandGroupSelection, isSingleGroup } from '@/features/canvas/utils/itemGroups';
+import { TodoDisplayContext } from '@/features/blocks/shared/ItemTodo';
 import { ProjectStatusesProvider } from '@/features/statuses/ProjectStatusesContext';
 import { ProjectTasksProvider } from '@/features/blocks/shared/ProjectTasksContext';
 import { LibraryContext } from '@/features/library/LibraryContext';
@@ -9,17 +11,17 @@ import { collaborationToken, isMockDataSource, sharingApi } from '@/app/services
 import { flushPendingChanges } from '@/shared/api/pendingChanges';
 import { createId } from '@/shared/lib/createId';
 const AppearanceDialog = lazy(() => import('@/features/appearance/AppearanceDialog'));
+import LibraryDialog from '@/features/library/LibraryDialog';
 import { useTheme } from '@/app/providers/ThemeProvider';
 import { useCallback, useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { BoardItem, ColumnItem, FrameItem } from '@/entities/board/types';
+import type { BoardItem, ColumnItem } from '@/entities/board/types';
 
 import { useWorkspaceHistory } from '@/features/board/hooks/useWorkspaceHistory';
 import { useBoardView } from '@/features/board/hooks/useBoardView';
 import { useProjectMetadata } from '@/features/board/hooks/useProjectMetadata';
-import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
 import { useProjectItems } from '@/features/projects/hooks/useProjectItems';
 import { useProjects } from '@/features/projects/hooks/useProjects';
 
@@ -112,6 +114,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
 
   const { setScope } = useTheme();
   const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [sharingOpen, setSharingOpen] = useState(false);
   const readOnly = activeProject?.role === 'Viewer' || activeProject?.role === 'Commenter';
   useEffect(() => {
@@ -466,51 +469,21 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
   );
 
   const handleGroupSelected = useCallback(() => {
-    if (selectedIds.length < 2 || !activeProject) {
-      return;
-    }
-
-    const selectedItems = activeProject.items.filter((item) => selectedIds.includes(item.id));
-
-    if (selectedItems.length < 2) {
-      return;
-    }
-
-    const padding = 32;
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    for (const item of selectedItems) {
-      const size = getApproxItemSize(item);
-
-      minX = Math.min(minX, item.x);
-      minY = Math.min(minY, item.y);
-
-      maxX = Math.max(maxX, item.x + size.width);
-      maxY = Math.max(maxY, item.y + size.height);
-    }
-
-    const frame: FrameItem = {
-      id: createId(),
-      type: 'frame',
-      x: minX - padding,
-      y: minY - padding,
-      zIndex: Math.max(0, Math.min(...selectedItems.map((item) => item.zIndex)) - 1),
-      title: translate('Group'),
-      width: maxX - minX + padding * 2,
-      height: maxY - minY + padding * 2,
-      color: '#7C3AED',
-    };
-
-    addItem(frame);
-    selectedItems
-      .filter((item) => item.type !== 'frame' && !item.locked)
-      .forEach((item) => updateItem(item.id, (current) => ({ ...current, frameId: frame.id })));
-    setSelectedIds([]);
-  }, [selectedIds, activeProject, addItem, updateItem, setSelectedIds]);
+    if (!activeProject || selectedIds.length < 1) return;
+    const ids = expandGroupSelection(activeProject.items, selectedIds);
+    const selected = activeProject.items.filter((item) => ids.includes(item.id));
+    if (selected.some((item) => item.locked)) return;
+    const groupId = isSingleGroup(selected) ? undefined : selected.length > 1 ? createId() : undefined;
+    if (!groupId && !isSingleGroup(selected)) return;
+    setProjects((projects) =>
+      projects.map((project) =>
+        project.id === activeProjectId
+          ? { ...project, items: project.items.map((item) => (ids.includes(item.id) ? { ...item, groupId } : item)) }
+          : project,
+      ),
+    );
+    setSelectedIds(ids);
+  }, [selectedIds, activeProject, activeProjectId, setProjects, setSelectedIds]);
 
   const appBar = (
     <>
@@ -523,6 +496,7 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
         }}
         liveStatus={liveStatus}
         onAppearance={() => setAppearanceOpen(true)}
+        onLibrary={() => setLibraryOpen(true)}
         projects={projects}
         activeProjectId={activeProjectId}
         onSelectProject={handleSelectProject}
@@ -571,9 +545,20 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
           }}
         />
       )}
+      {libraryOpen && activeProject && !isMockDataSource && (
+        <LibraryDialog key={activeProjectId} projectId={activeProjectId} onClose={() => setLibraryOpen(false)} />
+      )}
       {appearanceOpen && (
         <Suspense fallback={null}>
-          <AppearanceDialog projects={projects} onClose={() => setAppearanceOpen(false)} />
+          <AppearanceDialog
+            projects={projects}
+            onClose={() => setAppearanceOpen(false)}
+            onTodoDisplayChange={(id, todoDisplay) => {
+              setProjects((current) =>
+                current.map((project) => (project.id === id ? { ...project, todoDisplay } : project)),
+              );
+            }}
+          />
         </Suspense>
       )}
     </>
@@ -608,205 +593,211 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
       userId={userId}
       readOnly={readOnly}
     >
-      <ProjectTasksProvider
-        projectId={isMockDataSource ? '' : activeProjectId}
-        participants={projectParticipants}
-        readOnly={readOnly}
-      >
-        <LibraryContext.Provider value={isMockDataSource ? '' : activeProjectId}>
-          <div className="board-shell flex flex-col h-dvh w-full overflow-clip">
-            {appBar}
+      <TodoDisplayContext.Provider value={activeProject?.todoDisplay ?? 'checkbox'}>
+        <ProjectTasksProvider
+          projectId={isMockDataSource ? '' : activeProjectId}
+          participants={projectParticipants}
+          readOnly={readOnly}
+        >
+          <LibraryContext.Provider value={isMockDataSource ? '' : activeProjectId}>
+            <div className="board-shell flex flex-col h-dvh w-full overflow-clip">
+              {appBar}
 
-            <div
-              className="relative isolate z-0 flex flex-1 min-h-0 min-w-0 w-full overflow-hidden"
-              style={{ backgroundColor: 'var(--color-app-bg)' }}
-            >
-              {(boardTrail.length > 0 || boards.length > 1) && boardNavigationVisible && !editBarVisible && (
-                <div
-                  className="absolute left-1/2 top-9 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-lg"
-                  style={{
-                    background: 'var(--color-surface)',
-                    borderColor: 'var(--color-border)',
-                    color: 'var(--color-text)',
-                  }}
-                >
-                  <button
-                    type="button"
-                    className="font-medium hover:underline"
-                    onClick={() => {
-                      const mainBoardId = boards[0]?.id || boardTrail[0]?.id;
-                      if (mainBoardId) void handleSelectListedBoard(mainBoardId);
+              <div
+                className="relative isolate z-0 flex flex-1 min-h-0 min-w-0 w-full overflow-hidden"
+                style={{ backgroundColor: 'var(--color-app-bg)' }}
+              >
+                {(boardTrail.length > 0 || boards.length > 1) && boardNavigationVisible && !editBarVisible && (
+                  <div
+                    className="absolute left-1/2 top-9 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full border px-3 py-1.5 text-xs shadow-lg"
+                    style={{
+                      background: 'var(--color-surface)',
+                      borderColor: 'var(--color-border)',
+                      color: 'var(--color-text)',
                     }}
                   >
-                    {translate('← Main board')}
-                  </button>
-                  <span style={{ color: 'var(--color-text-muted)' }}>/</span>
-                  {boards.map((board) => (
-                    <span
-                      key={board.id}
-                      className={`inline-flex items-center rounded ${board.deletedAt ? 'cursor-not-allowed opacity-45' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
-                      title={
-                        board.deletedAt
-                          ? translate('This board is in item trash. Restore its board card to access it.')
-                          : undefined
-                      }
+                    <button
+                      type="button"
+                      className="font-medium hover:underline"
+                      onClick={() => {
+                        const mainBoardId = boards[0]?.id || boardTrail[0]?.id;
+                        if (mainBoardId) void handleSelectListedBoard(mainBoardId);
+                      }}
                     >
-                      <button
-                        type="button"
-                        className="rounded px-1.5 py-0.5"
-                        aria-current={board.id === activeProject.boardId ? 'page' : undefined}
-                        disabled={Boolean(board.deletedAt)}
-                        aria-label={
-                          board.deletedAt ? translate('{{value1}} (deleted)', { value1: board.name }) : board.name
+                      {translate('← Main board')}
+                    </button>
+                    <span style={{ color: 'var(--color-text-muted)' }}>/</span>
+                    {boards.map((board) => (
+                      <span
+                        key={board.id}
+                        className={`inline-flex items-center rounded ${board.deletedAt ? 'cursor-not-allowed opacity-45' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+                        title={
+                          board.deletedAt
+                            ? translate('This board is in item trash. Restore its board card to access it.')
+                            : undefined
                         }
-                        onClick={() => void handleSelectListedBoard(board.id)}
                       >
-                        {board.name}
-                      </button>
-                      {board.id !== boards[0]?.id && !board.deletedAt && (
                         <button
                           type="button"
-                          className="rounded px-1 text-[10px] opacity-50 hover:bg-rose-500/15 hover:text-rose-600 hover:opacity-100"
-                          aria-label={translate('Delete board {{value1}}', { value1: board.name })}
-                          title={translate('Delete board')}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void handleDeleteBoard(board.id);
-                          }}
+                          className="rounded px-1.5 py-0.5"
+                          aria-current={board.id === activeProject.boardId ? 'page' : undefined}
+                          disabled={Boolean(board.deletedAt)}
+                          aria-label={
+                            board.deletedAt ? translate('{{value1}} (deleted)', { value1: board.name }) : board.name
+                          }
+                          onClick={() => void handleSelectListedBoard(board.id)}
                         >
-                          ×
+                          {board.name}
                         </button>
-                      )}
-                    </span>
-                  ))}
+                        {board.id !== boards[0]?.id && !board.deletedAt && (
+                          <button
+                            type="button"
+                            className="rounded px-1 text-[10px] opacity-50 hover:bg-rose-500/15 hover:text-rose-600 hover:opacity-100"
+                            aria-label={translate('Delete board {{value1}}', { value1: board.name })}
+                            title={translate('Delete board')}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleDeleteBoard(board.id);
+                            }}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                    <button
+                      type="button"
+                      className="-mr-1 flex size-6 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10"
+                      aria-label={translate('Hide board navigation')}
+                      title={translate('Hide board navigation')}
+                      onClick={() => setBoardNavigationVisible(false)}
+                    >
+                      <ChevronUp size={16} aria-hidden="true" />
+                    </button>
+                  </div>
+                )}
+                {(boardTrail.length > 0 || boards.length > 1) && !boardNavigationVisible && !editBarVisible && (
                   <button
                     type="button"
-                    className="-mr-1 flex size-6 shrink-0 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10"
-                    aria-label={translate('Hide board navigation')}
-                    title={translate('Hide board navigation')}
-                    onClick={() => setBoardNavigationVisible(false)}
+                    className="absolute left-1/2 top-2 z-30 flex size-7 -translate-x-1/2 items-center justify-center rounded-full border shadow-md transition-transform hover:scale-105"
+                    style={{
+                      background: 'var(--color-surface)',
+                      borderColor: 'var(--color-border)',
+                      color: 'var(--color-text-primary)',
+                    }}
+                    aria-label={translate('Show board navigation')}
+                    title={translate('Show board navigation')}
+                    onClick={() => setBoardNavigationVisible(true)}
                   >
-                    <ChevronUp size={16} aria-hidden="true" />
+                    <ChevronDown size={17} aria-hidden="true" />
                   </button>
-                </div>
-              )}
-              {(boardTrail.length > 0 || boards.length > 1) && !boardNavigationVisible && !editBarVisible && (
-                <button
-                  type="button"
-                  className="absolute left-1/2 top-2 z-30 flex size-7 -translate-x-1/2 items-center justify-center rounded-full border shadow-md transition-transform hover:scale-105"
-                  style={{
-                    background: 'var(--color-surface)',
-                    borderColor: 'var(--color-border)',
-                    color: 'var(--color-text-primary)',
-                  }}
-                  aria-label={translate('Show board navigation')}
-                  title={translate('Show board navigation')}
-                  onClick={() => setBoardNavigationVisible(true)}
-                >
-                  <ChevronDown size={17} aria-hidden="true" />
-                </button>
-              )}
-              {!readOnly && !activeProject.itemsLoading && (
-                <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />
-              )}
+                )}
+                {!readOnly && !activeProject.itemsLoading && (
+                  <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />
+                )}
 
-              {activeProject.itemsLoading ? (
-                <div
-                  className="flex flex-1 min-w-0 min-h-0 items-center justify-center p-6"
-                  aria-busy={!activeProject.loadingError}
-                >
-                  <div role="status" className="max-w-md text-center">
-                    {!activeProject.loadingError && (
-                      <div
-                        className="mx-auto mb-5 size-9 animate-spin rounded-full border-[3px] border-t-transparent motion-reduce:animate-none"
-                        style={{ borderColor: 'var(--color-border)', borderTopColor: 'var(--color-accent)' }}
-                        aria-hidden="true"
-                      />
-                    )}
-                    <p className="text-lg font-semibold">
-                      {activeProject.loadingError || translate('Project is loading, please wait.')}
-                    </p>
-                    <p className="mt-2 break-all text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                      {activeProject.name}
-                    </p>
-                    {activeProject.loadingError && (
-                      <button
-                        type="button"
-                        className="btn-accent mt-4 rounded-xl px-4 py-2 text-sm"
-                        onClick={() => void retry()}
-                      >
-                        {translate('Retry')}
-                      </button>
-                    )}
+                {activeProject.itemsLoading ? (
+                  <div
+                    className="flex flex-1 min-w-0 min-h-0 items-center justify-center p-6"
+                    aria-busy={!activeProject.loadingError}
+                  >
+                    <div role="status" className="max-w-md text-center">
+                      {!activeProject.loadingError && (
+                        <div
+                          className="mx-auto mb-5 size-9 animate-spin rounded-full border-[3px] border-t-transparent motion-reduce:animate-none"
+                          style={{ borderColor: 'var(--color-border)', borderTopColor: 'var(--color-accent)' }}
+                          aria-hidden="true"
+                        />
+                      )}
+                      <p className="text-lg font-semibold">
+                        {activeProject.loadingError || translate('Project is loading, please wait.')}
+                      </p>
+                      <p className="mt-2 break-all text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                        {activeProject.name}
+                      </p>
+                      {activeProject.loadingError && (
+                        <button
+                          type="button"
+                          className="btn-accent mt-4 rounded-xl px-4 py-2 text-sm"
+                          onClick={() => void retry()}
+                        >
+                          {translate('Retry')}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ) : readOnly ? (
-                <ReadOnlyBoard
-                  key={`${activeProjectId}:${activeProject.boardId}`}
-                  items={activeProject.items}
-                  clipboardOwnerId={activeProject.ownerId}
-                  inspect
-                  canComment={activeProject.role === 'Commenter'}
-                  currentUserId={userId}
-                  projectParticipants={projectParticipants}
-                  onSaveComments={(itemId, comments) => saveComments(activeProjectId, itemId, comments)}
-                  onOpenBoard={(boardId) => {
-                    void selectBoard(activeProjectId, boardId).catch(() =>
-                      toast.error(translate('Could not open board.')),
-                    );
-                  }}
-                  remoteCursors={remoteCursors}
-                  onCursorMove={updateCollaborationCursor}
-                />
-              ) : (
-                <BoardCanvas
-                  userId={userId}
-                  key={`${activeProjectId}:${activeProject.boardId ?? ''}`}
-                  project={activeProject}
-                  projectParticipants={projectParticipants}
-                  remoteVersion={remoteVersion}
-                  remotePresence={remotePresence}
-                  remoteCursors={remoteCursors}
-                  onCursorMove={updateCollaborationCursor}
-                  selectedTool={selectedTool}
-                  selectedIds={selectedIds}
-                  onSelectTool={setSelectedTool}
-                  onSelectItems={setSelectedIds}
-                  onGroupSelected={handleGroupSelected}
-                  onAddItem={handleAddItem}
-                  onOpenBoard={handleOpenBoard}
-                  onRenameBoard={handleRenameBoard}
-                  onUpdateItem={updateItem}
-                  onUpdateItems={updateItemsById}
-                  onDeleteItem={handleDeleteItem}
-                  onDeleteItems={handleDeleteItems}
-                  onBringForward={bringForward}
-                  onSendBackward={sendBackward}
-                  onBringToFront={bringToFront}
-                  onSendToBack={sendToBack}
-                  onDropOnColumn={handleDropOnColumn}
-                  onEjectFromColumn={handleEjectFromColumn}
-                  onRestoreItems={restoreItems}
-                  searchQuery={searchQuery}
-                  onOpenTrash={handleOpenTrash}
-                  onRestoreTrashItem={handleRestoreTrashOnCanvas}
-                  onEditBarVisibilityChange={setEditBarVisible}
-                />
-              )}
-              {trashOpen && !readOnly && (
-                <ItemTrashPanel
-                  items={trashedItems}
-                  loading={trashLoading}
-                  onClose={() => setTrashOpen(false)}
-                  onRestore={(entry) => void handleRestoreTrashItem(entry)}
-                  onPurge={(entry) => void handlePurgeTrashItem(entry)}
-                  onEmpty={() => void handleEmptyItemTrash()}
-                />
-              )}
+                ) : readOnly ? (
+                  <ReadOnlyBoard
+                    onOpenAppearance={() => setAppearanceOpen(true)}
+                    onOpenLibrary={isMockDataSource ? undefined : () => setLibraryOpen(true)}
+                    key={`${activeProjectId}:${activeProject.boardId}`}
+                    items={activeProject.items}
+                    clipboardOwnerId={activeProject.ownerId}
+                    inspect
+                    canComment={activeProject.role === 'Commenter'}
+                    currentUserId={userId}
+                    projectParticipants={projectParticipants}
+                    onSaveComments={(itemId, comments) => saveComments(activeProjectId, itemId, comments)}
+                    onOpenBoard={(boardId) => {
+                      void selectBoard(activeProjectId, boardId).catch(() =>
+                        toast.error(translate('Could not open board.')),
+                      );
+                    }}
+                    remoteCursors={remoteCursors}
+                    onCursorMove={updateCollaborationCursor}
+                  />
+                ) : (
+                  <BoardCanvas
+                    onOpenAppearance={() => setAppearanceOpen(true)}
+                    onOpenLibrary={isMockDataSource ? undefined : () => setLibraryOpen(true)}
+                    userId={userId}
+                    key={`${activeProjectId}:${activeProject.boardId ?? ''}`}
+                    project={activeProject}
+                    projectParticipants={projectParticipants}
+                    remoteVersion={remoteVersion}
+                    remotePresence={remotePresence}
+                    remoteCursors={remoteCursors}
+                    onCursorMove={updateCollaborationCursor}
+                    selectedTool={selectedTool}
+                    selectedIds={selectedIds}
+                    onSelectTool={setSelectedTool}
+                    onSelectItems={setSelectedIds}
+                    onGroupSelected={handleGroupSelected}
+                    onAddItem={handleAddItem}
+                    onOpenBoard={handleOpenBoard}
+                    onRenameBoard={handleRenameBoard}
+                    onUpdateItem={updateItem}
+                    onUpdateItems={updateItemsById}
+                    onDeleteItem={handleDeleteItem}
+                    onDeleteItems={handleDeleteItems}
+                    onBringForward={bringForward}
+                    onSendBackward={sendBackward}
+                    onBringToFront={bringToFront}
+                    onSendToBack={sendToBack}
+                    onDropOnColumn={handleDropOnColumn}
+                    onEjectFromColumn={handleEjectFromColumn}
+                    onRestoreItems={restoreItems}
+                    searchQuery={searchQuery}
+                    onOpenTrash={handleOpenTrash}
+                    onRestoreTrashItem={handleRestoreTrashOnCanvas}
+                    onEditBarVisibilityChange={setEditBarVisible}
+                  />
+                )}
+                {trashOpen && !readOnly && (
+                  <ItemTrashPanel
+                    items={trashedItems}
+                    loading={trashLoading}
+                    onClose={() => setTrashOpen(false)}
+                    onRestore={(entry) => void handleRestoreTrashItem(entry)}
+                    onPurge={(entry) => void handlePurgeTrashItem(entry)}
+                    onEmpty={() => void handleEmptyItemTrash()}
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        </LibraryContext.Provider>
-      </ProjectTasksProvider>
+          </LibraryContext.Provider>
+        </ProjectTasksProvider>
+      </TodoDisplayContext.Provider>
     </ProjectStatusesProvider>
   );
 }

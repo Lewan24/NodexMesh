@@ -1,3 +1,4 @@
+import { getNotePlainText } from '@/features/blocks/note/noteContent';
 import type { BoardItem } from '@/entities/board/types';
 
 export type HeavyPreviewItem = Extract<BoardItem, { type: 'column' }>;
@@ -11,7 +12,16 @@ export function isHeavyPreviewItem(item: BoardItem): item is HeavyPreviewItem {
 export function getHeavyPreviewLines(item: HeavyPreviewItem): string[] {
   return item.items
     .slice(0, 8)
-    .map((child) => ('title' in child ? child.title : 'content' in child ? child.content : child.type).slice(0, 160));
+    .map((child) =>
+      (child.type === 'note'
+        ? getNotePlainText(child)
+        : 'title' in child
+          ? child.title
+          : 'content' in child
+            ? child.content
+            : child.type
+      ).slice(0, 160),
+    );
 }
 
 export function hasPreviewCustomCss(item: BoardItem): boolean {
@@ -21,7 +31,7 @@ export function hasPreviewCustomCss(item: BoardItem): boolean {
     const current = pending.pop()!;
     if (visited.has(current)) continue;
     visited.add(current);
-    if (current.customCss?.enabled || current.statusId || current.border) return true;
+    if (current.customCss?.enabled || current.statusId || current.border || current.todo) return true;
     if (current.type === 'column') for (const child of current.items) pending.push(child);
   }
   return false;

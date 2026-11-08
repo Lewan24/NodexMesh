@@ -26,11 +26,11 @@ export default function EditBarButton({
       className="h-8 min-w-8 px-2 flex items-center justify-center rounded-lg text-sm font-medium transition-colors flex-shrink-0"
       style={{
         opacity: disabled ? 0.35 : 1,
-        backgroundColor: active ? 'rgba(124, 58, 237,0.15)' : 'transparent',
-        color: active ? '#7C3AED' : '#4a6070',
+        backgroundColor: active ? 'color-mix(in srgb, var(--color-accent) 15%, transparent)' : 'transparent',
+        color: active ? 'var(--color-accent-ink)' : 'var(--color-text-secondary)',
       }}
       onMouseEnter={(e) => {
-        if (!active) e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.06)';
+        if (!active) e.currentTarget.style.backgroundColor = 'var(--color-accent-soft)';
       }}
       onMouseLeave={(e) => {
         if (!active) e.currentTarget.style.backgroundColor = 'transparent';

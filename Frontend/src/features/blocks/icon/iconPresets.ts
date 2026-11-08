@@ -35,9 +35,11 @@ import {
   Cloud,
   Music,
   Camera,
+  LayoutDashboard,
 } from 'lucide-react';
 
 export const ICON_PRESETS = {
+  'layout-dashboard': LayoutDashboard,
   star: Star,
   heart: Heart,
   check: Check,

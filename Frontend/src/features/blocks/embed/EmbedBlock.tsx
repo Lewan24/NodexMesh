@@ -72,7 +72,7 @@ export default function EmbedBlock({
           <button
             type="button"
             aria-pressed={interactive}
-            className={`text-xs font-medium px-2 py-1 rounded-sm shadow-md transition-colors ${interactive ? 'bg-violet-600 text-white' : 'bg-black/75 text-white hover:bg-black/90'}`}
+            className={`text-xs font-medium px-2 py-1 rounded-sm shadow-md transition-colors ${interactive ? 'btn-accent' : 'bg-black/75 text-white hover:bg-black/90'}`}
             title={
               interactive
                 ? translate('Return to click-to-play and drag-to-move mode')
@@ -163,7 +163,7 @@ export default function EmbedBlock({
               {error}
             </p>
           )}
-          <button type="submit" className="rounded px-3 py-2 bg-violet-600 text-white">
+          <button type="submit" className="rounded px-3 py-2 btn-accent">
             {translate('Apply')}
           </button>
           <p className="text-xs opacity-60">
@@ -188,7 +188,7 @@ export default function EmbedBlock({
             )}
             {!interactive && (
               <button
-                className="absolute bottom-3 right-3 rounded-full bg-violet-600 text-white text-xs px-3 py-2 shadow-lg"
+                className="absolute bottom-3 right-3 rounded-full btn-accent text-xs px-3 py-2 shadow-lg"
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => setInteractive(true)}
               >

@@ -1,7 +1,7 @@
 .mindmap-preview,
 .mindmap-canvas {
-  background-color: #f8fafc;
-  background-image: radial-gradient(#cbd5e1 0.8px, transparent 0.8px);
+  background-color: var(--color-surface-alt);
+  background-image: radial-gradient(var(--color-border) 0.8px, transparent 0.8px);
   background-size: 20px 20px;
 }
 .mindmap-preview {

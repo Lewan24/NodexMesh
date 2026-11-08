@@ -17,8 +17,8 @@ export default function CanvasHints({ selectedTool, hasSelection }: CanvasHintsP
             className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm shadow-lg"
             style={{
               backgroundColor: 'var(--color-surface-translucent)',
-              border: '1px solid rgba(124, 58, 237,0.3)',
-              color: 'var(--color-accent)',
+              border: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)',
+              color: 'var(--color-accent-ink)',
               backdropFilter: 'blur(8px)',
             }}
           >

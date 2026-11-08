@@ -310,21 +310,24 @@ public class BoardEndpointsTests : IDisposable
         var defaults = appearance.GetProperty("defaults");
         defaults.GetProperty("font").GetString().Should().Be("short-stack");
         appearance.GetProperty("uiFont").GetString().Should().Be("sans");
-        appearance.GetProperty("uiPrimary").GetString().Should().Be("#8000ff");
-        appearance.GetProperty("uiSecondary").GetString().Should().Be("#6a00eb");
+        appearance.GetProperty("uiPrimary").GetString().Should().Be("#334c5c");
+        appearance.GetProperty("uiSecondary").GetString().Should().Be("#b64a25");
+        appearance.GetProperty("uiBackground").GetProperty("color").GetString().Should().Be("#20262b");
+        appearance.GetProperty("uiBackground").TryGetProperty("gradient", out _).Should().BeFalse();
+        appearance.GetProperty("uiGradients").EnumerateObject().Should().BeEmpty();
         appearance.GetProperty("inheritanceVersion").GetInt32().Should().Be(1);
-        appearance.GetProperty("paletteVersion").GetInt32().Should().Be(3);
+        appearance.GetProperty("paletteVersion").GetInt32().Should().Be(4);
 
         var light = defaults.GetProperty("light");
-        light.GetProperty("primary").GetString().Should().Be("#903df5");
-        light.GetProperty("secondary").GetString().Should().Be("#ff0000");
+        light.GetProperty("primary").GetString().Should().Be("#334c5c");
+        light.GetProperty("secondary").GetString().Should().Be("#b64a25");
         light.GetProperty("canvas").GetString().Should().Be("#f5f5f7");
         light.GetProperty("accent1").GetString().Should().Be("#6e5fa8");
         light.GetProperty("accent5").GetString().Should().Be("#946a6a");
         light.GetProperty("gradients").EnumerateObject().Should().BeEmpty();
 
         var dark = defaults.GetProperty("dark");
-        dark.GetProperty("primary").GetString().Should().Be("#903df5");
+        dark.GetProperty("primary").GetString().Should().Be("#334c5c");
         dark.GetProperty("canvas").GetString().Should().Be("#1F1F22");
         dark.GetProperty("default").GetString().Should().Be("#25252A");
         dark.GetProperty("accent1").GetString().Should().Be("#8272ba");

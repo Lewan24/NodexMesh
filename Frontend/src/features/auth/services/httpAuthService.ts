@@ -8,12 +8,14 @@ import { createHttpClient } from '@/shared/api/httpClient';
 export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '/api/v1') {
   let accessToken = '';
   let user: User | null = null;
+  let profileGeneration = 0;
   let refreshing: Promise<void> | undefined;
   const listeners = new Set<() => void>();
   const anonymous = createHttpClient(async () => '', fetcher, undefined, baseUrl);
   const acceptToken = (value: unknown): User => {
     if (!value || typeof value !== 'object' || !('accessToken' in value) || typeof value.accessToken !== 'string')
       fail(422, 'invalid_token', translate('Invalid authentication response.'));
+    profileGeneration++;
     try {
       if ('user' in value && value.user && typeof value.user === 'object') {
         const profile = value.user as Record<string, unknown>;
@@ -29,6 +31,7 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
           username: profile.email,
           name: profile.displayName,
           role: profile.isAdmin ? 'admin' : 'user',
+          ...(typeof profile.avatarId === 'string' || profile.avatarId === null ? { avatarId: profile.avatarId } : {}),
         };
         accessToken = value.accessToken;
         return user;
@@ -147,6 +150,14 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
       accessToken = '';
       user = null;
     },
+    async refreshProfile() {
+      const request = ++profileGeneration;
+      const previousUser = user?.id;
+      const profile = await client.request('/auth/profile');
+      if (request !== profileGeneration || user?.id !== previousUser)
+        return user ?? fail(401, 'unauthorized', translate('Sign in again.'));
+      return acceptToken({ accessToken, user: profile });
+    },
     async updateProfile(input) {
       return acceptToken(await client.request('/auth/profile', { method: 'PUT', body: input }));
     },
@@ -155,11 +166,14 @@ export function createHttpAuthService(fetcher: typeof fetch = fetch, baseUrl = '
     },
     async listUsers() {
       return (
-        await admin<Array<{ id: string; email: string; displayName: string; isAdmin: boolean }>>('/admin/users')
+        await admin<
+          Array<{ id: string; email: string; displayName: string; isAdmin: boolean; avatarId?: string | null }>
+        >('/admin/users')
       ).map((item) => ({
         id: item.id,
         username: item.email,
         name: item.displayName,
+        ...(item.avatarId !== undefined ? { avatarId: item.avatarId } : {}),
         role: item.isAdmin ? 'admin' : 'user',
       }));
     },

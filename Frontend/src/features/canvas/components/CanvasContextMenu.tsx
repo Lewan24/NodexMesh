@@ -1,8 +1,19 @@
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Copy, CopyPlus, ClipboardPaste, Trash2, Layers, Lock, Unlock, Code } from 'lucide-react';
+import CanvasActionMenu from './CanvasActionMenu';
+import { workspaceMenuActions, type WorkspaceMenuCallbacks } from '../utils/workspaceMenuActions';
+import {
+  Copy,
+  CopyPlus,
+  ClipboardPaste,
+  Trash2,
+  Layers,
+  Lock,
+  Unlock,
+  Code,
+  ArrowLeftRight,
+  LayoutGrid,
+} from 'lucide-react';
 
 export interface CanvasMenuState {
   x: number;
@@ -12,6 +23,10 @@ export interface CanvasMenuState {
   hasSelection: boolean;
 }
 export default function CanvasContextMenu({
+  onToggleTheme,
+  theme,
+  onOpenAppearance,
+  onOpenLibrary,
   onCustomCss,
   onCopyStyle,
   onPasteStyle,
@@ -27,13 +42,25 @@ export default function CanvasContextMenu({
   onDelete,
   onLock,
   onGroup,
+  grouped = false,
+  allTodo = false,
+  allDone = false,
+  hasTodo = false,
+  onToggleTodo,
+  onToggleDone,
   onJoinDrawings,
-}: {
+  onSwapItems,
+  onArrangeItems,
+  layoutDisabledReason,
+}: WorkspaceMenuCallbacks & {
   onCustomCss?: () => void;
   onCopyStyle: () => void;
   onPasteStyle: () => void;
   canPasteStyle: boolean;
   onJoinDrawings?: () => void;
+  onSwapItems?: () => void;
+  onArrangeItems?: () => void;
+  layoutDisabledReason?: string;
   menu: CanvasMenuState;
   count: number;
   canPaste: boolean;
@@ -45,34 +72,14 @@ export default function CanvasContextMenu({
   onDelete: () => void;
   onLock: () => void;
   onGroup: () => void;
+  grouped?: boolean;
+  allTodo?: boolean;
+  allDone?: boolean;
+  hasTodo?: boolean;
+  onToggleTodo?: () => void;
+  onToggleDone?: () => void;
 }) {
   useTranslation();
-  const ref = useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: menu.x, y: menu.y });
-  useLayoutEffect(() => {
-    const rect = ref.current?.getBoundingClientRect();
-    if (rect)
-      setPosition({
-        x: Math.max(8, Math.min(menu.x, window.innerWidth - rect.width - 8)),
-        y: Math.max(8, Math.min(menu.y, window.innerHeight - rect.height - 8)),
-      });
-    ref.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
-  }, [menu.x, menu.y]);
-  useEffect(() => {
-    const outside = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) onClose();
-    };
-    window.addEventListener('pointerdown', outside);
-    window.addEventListener('resize', onClose);
-    return () => {
-      window.removeEventListener('pointerdown', outside);
-      window.removeEventListener('resize', onClose);
-    };
-  }, [onClose]);
-  const run = (action: () => void) => {
-    action();
-    onClose();
-  };
   const actions = [
     ...(menu.hasSelection
       ? [
@@ -100,60 +107,60 @@ export default function CanvasContextMenu({
             icon: allLocked ? Unlock : Lock,
             run: onLock,
           },
-          ...(count > 1 ? [{ name: translate('Group in frame'), keys: '', icon: Layers, run: onGroup }] : []),
+          ...(count === 2 && onSwapItems
+            ? [
+                {
+                  name: translate('Swap positions'),
+                  icon: ArrowLeftRight,
+                  keys: '',
+                  run: onSwapItems,
+                  disabled: !!layoutDisabledReason,
+                  title: layoutDisabledReason ? translate(layoutDisabledReason) : undefined,
+                },
+              ]
+            : []),
+          ...(count >= 2 && onArrangeItems
+            ? [
+                {
+                  name: translate('Distribute evenly'),
+                  icon: LayoutGrid,
+                  keys: '',
+                  run: onArrangeItems,
+                  disabled: !!layoutDisabledReason,
+                  title: layoutDisabledReason ? translate(layoutDisabledReason) : undefined,
+                },
+              ]
+            : []),
+          ...(count > 1 || grouped
+            ? [{ name: translate(grouped ? 'Ungroup' : 'Group'), keys: '', icon: Layers, run: onGroup }]
+            : []),
+          ...(onToggleTodo
+            ? [{ name: translate(allTodo ? 'Remove TODO' : 'TODO item'), keys: '', icon: Layers, run: onToggleTodo }]
+            : []),
+          ...(hasTodo && onToggleDone
+            ? [
+                {
+                  name: translate(allDone ? 'Mark as not done' : 'Mark as done'),
+                  keys: '',
+                  icon: Layers,
+                  run: onToggleDone,
+                },
+              ]
+            : []),
           ...(onJoinDrawings
             ? [{ name: translate('Join drawings'), keys: '', icon: Layers, run: onJoinDrawings }]
             : []),
-          { name: translate('Delete'), keys: 'Del', icon: Trash2, run: onDelete },
+          { name: translate('Delete'), keys: 'Del', icon: Trash2, run: onDelete, danger: true },
         ]
       : []),
   ];
-  return createPortal(
-    <div
-      ref={ref}
-      role="menu"
-      aria-label={translate('Canvas actions')}
-      className="canvas-context-menu"
-      style={{ left: position.x, top: position.y }}
-      onMouseDown={(event) => event.stopPropagation()}
-      onContextMenu={(event) => event.preventDefault()}
-      onKeyDown={(event) => {
-        event.stopPropagation();
-        if (event.key === 'Escape' || event.key === 'Tab') {
-          event.preventDefault();
-          onClose();
-        }
-        if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
-          event.preventDefault();
-          const buttons = Array.from(ref.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []);
-          const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
-          const next =
-            event.key === 'Home'
-              ? 0
-              : event.key === 'End'
-                ? buttons.length - 1
-                : (index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
-          buttons[next]?.focus();
-        }
-      }}
-    >
-      <div className="px-3 py-2 text-xs text-theme-muted">
-        {menu.hasSelection ? translate('{{value1}} selected', { value1: count }) : translate('Canvas')}
-      </div>
-      {actions.map((action) => (
-        <button
-          key={action.name}
-          role="menuitem"
-          disabled={action.disabled}
-          onClick={() => run(action.run)}
-          className={action.name === 'Delete' ? 'text-rose-500' : ''}
-        >
-          <action.icon size={15} />
-          <span className="flex-1 text-left">{action.name}</span>
-          <kbd>{action.keys}</kbd>
-        </button>
-      ))}
-    </div>,
-    document.body,
+  return (
+    <CanvasActionMenu
+      x={menu.x}
+      y={menu.y}
+      title={menu.hasSelection ? translate('{{value1}} selected', { value1: count }) : translate('Canvas')}
+      actions={[...actions, ...workspaceMenuActions({ onOpenAppearance, onOpenLibrary, onToggleTheme, theme })]}
+      onClose={onClose}
+    />
   );
 }

@@ -1,3 +1,4 @@
+import { useTheme } from '@/app/providers/ThemeProvider';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { useSectionStyle } from '../typography/TypographyContext';
@@ -8,7 +9,7 @@ import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import type { CSSProperties } from 'react';
 import { getTypographyStyle } from '../typography/typographyUtils';
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import Modal from '@/shared/components/dialogs/Modal';
 import {
   ReactFlow,
   Background,
@@ -125,6 +126,8 @@ export default function DiagramBlock({
   onDelete: BlockDeleteHandler;
 }) {
   useTranslation();
+  const { appearance: projectAppearance, theme } = useTheme();
+  const palette = projectAppearance[theme];
   const [layoutDirection, setLayoutDirection] = useState<'vertical' | 'horizontal'>('vertical');
   const [snap, setSnap] = useState(true);
   const mobile = useMobileLayout();
@@ -185,7 +188,7 @@ export default function DiagramBlock({
             x: Math.round((120 - viewport.x) / viewport.zoom / 16) * 16,
             y: Math.round((100 - viewport.y) / viewport.zoom / 16) * 16,
           },
-          data: { label: shapes.find((option) => option.value === shape)!.label, shape, color: '#7c3aed' },
+          data: { label: shapes.find((option) => option.value === shape)!.label, shape, color: palette.primary },
         },
       ],
       edges,
@@ -397,7 +400,7 @@ export default function DiagramBlock({
               minZoom={0.15}
               maxZoom={2}
             >
-              <Background gap={16} color="#8b7daa30" />
+              <Background gap={16} color="var(--color-border)" />
               {editing && <Controls showInteractive={false} />}
             </ReactFlow>
           )}
@@ -646,7 +649,7 @@ export default function DiagramBlock({
       {editing ? (
         <>
           <div className="planning-empty">{translate('Diagram is open in the editor.')}</div>
-          {createPortal(
+          <Modal boardHistory onClose={() => setEditing(false)}>
             <div
               className="fixed inset-0 flex items-center justify-center bg-black/45 p-4"
               style={{ zIndex: 200000 }}
@@ -706,9 +709,8 @@ export default function DiagramBlock({
                 </div>
                 {content}
               </div>
-            </div>,
-            document.body,
-          )}
+            </div>
+          </Modal>
         </>
       ) : (
         content

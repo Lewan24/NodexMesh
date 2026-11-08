@@ -22,6 +22,7 @@ export function toPublicProjectView(payload: PublicBoardSnapshot): PublicProject
     ownerId: '',
     name: project.name,
     color: project.color ?? '#7C3AED',
+    todoDisplay: project.todoDisplay,
     revision: '1',
     createdAt: project.updatedAt,
     updatedAt: project.updatedAt,
@@ -61,5 +62,5 @@ export function toPublicProjectView(payload: PublicBoardSnapshot): PublicProject
   parseBoardSnapshot(syntheticBoard);
   const view = toProjectView({ project: syntheticProject, board: syntheticBoard });
 
-  return { id: view.id, name: view.name, color: view.color, items: view.items };
+  return { id: view.id, name: view.name, color: view.color, items: view.items, todoDisplay: view.todoDisplay };
 }

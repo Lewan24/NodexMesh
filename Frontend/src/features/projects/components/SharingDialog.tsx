@@ -1,3 +1,4 @@
+import UserAvatar from '@/shared/components/UserAvatar';
 import { locale, displayLabel, translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
@@ -180,9 +181,7 @@ export default function SharingDialog({
             {!busy && !members.length && <p>{translate('No collaborators yet.')}</p>}
             {members.map((member) => (
               <div key={member.userId} className="sharing-row sharing-member">
-                <span className="sharing-avatar" aria-hidden="true">
-                  {(member.displayName || member.email).slice(0, 1).toUpperCase()}
-                </span>
+                <UserAvatar avatarId={member.avatarId} name={member.displayName || member.email} size={32} />
                 <span className="flex-1 min-w-0 break-all">
                   {member.displayName || member.email}
                   <small className="block">{member.displayName ? member.email : ''}</small>

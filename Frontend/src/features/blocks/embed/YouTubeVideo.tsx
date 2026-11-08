@@ -106,7 +106,7 @@ export default function YouTubeVideo({
           tabIndex={0}
           aria-label={`${!activated ? translate('Load') : playing ? translate('Pause') : translate('Play')} ${title || 'video'}`}
           aria-disabled={activated && !ready}
-          className="absolute inset-x-0 top-0 cursor-grab active:cursor-grabbing outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+          className="absolute inset-x-0 top-0 cursor-grab active:cursor-grabbing outline-none focus-visible:ring-2 focus-visible:ring-accent"
           style={{ bottom: ready ? 44 : 0 }}
           title={translate('Click to play or pause · Drag to move')}
           onMouseDown={(event) => {
