@@ -12,6 +12,7 @@ export interface CanvasMenuAction {
   disabled?: boolean;
   separatorBefore?: boolean;
   danger?: boolean;
+  title?: string;
 }
 
 export default function CanvasActionMenu({
@@ -86,6 +87,7 @@ export default function CanvasActionMenu({
             type="button"
             role="menuitem"
             disabled={action.disabled}
+            title={action.title}
             className={action.danger ? 'text-rose-500' : ''}
             onClick={() => {
               onClose();

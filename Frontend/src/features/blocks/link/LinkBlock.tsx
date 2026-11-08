@@ -1,3 +1,4 @@
+import { ITEM_WIDTH } from '@/features/canvas/constants';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
@@ -38,7 +39,7 @@ export default function LinkBlock({ item, onUpdate, onDelete }: LinkBlockProps) 
   const inputBackground = light ? '#f8fafc' : '#071317';
   const inputBorder = light ? 'rgba(0,0,0,0.12)' : '#1a3040';
 
-  const width = item.width ?? 260;
+  const width = item.width ?? ITEM_WIDTH.link;
 
   const update = useCallback(
     (patch: Partial<LinkItem>) => {

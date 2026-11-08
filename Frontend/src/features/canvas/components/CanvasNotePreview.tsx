@@ -1,3 +1,4 @@
+import { ITEM_WIDTH } from '@/features/canvas/constants';
 import NoteContent from '@/features/blocks/note/noteContent';
 import '@/features/blocks/note/noteRichText.css';
 import type { NoteItem } from '@/entities/board/types';
@@ -26,7 +27,7 @@ export default function CanvasNotePreview({
       data-camera-preview="true"
       className="item-rounded flex flex-col overflow-hidden"
       style={{
-        width: item.width ?? 220,
+        width: item.width ?? ITEM_WIDTH.note,
         height: item.height,
         background,
         contain: 'strict',

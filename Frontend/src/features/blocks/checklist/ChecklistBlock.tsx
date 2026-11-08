@@ -1,3 +1,4 @@
+import { ITEM_WIDTH } from '@/features/canvas/constants';
 import { saveTaskDetails } from '../shared/saveTaskDetails';
 import TaskDialog from '../shared/TaskDialog';
 import { useCompletedTasks } from '../shared/useCompletedTasks';
@@ -129,7 +130,7 @@ export default function ChecklistBlock({
   return (
     <div
       className="group relative transition-shadow duration-200 hover:shadow-2xl"
-      style={{ width: item.width ?? 220, height: item.height }}
+      style={{ width: item.width ?? ITEM_WIDTH.checklist, height: item.height }}
     >
       {editingTask && (
         <TaskDialog

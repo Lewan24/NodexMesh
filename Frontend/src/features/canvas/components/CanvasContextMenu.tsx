@@ -2,7 +2,18 @@ import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import CanvasActionMenu from './CanvasActionMenu';
 import { workspaceMenuActions, type WorkspaceMenuCallbacks } from '../utils/workspaceMenuActions';
-import { Copy, CopyPlus, ClipboardPaste, Trash2, Layers, Lock, Unlock, Code } from 'lucide-react';
+import {
+  Copy,
+  CopyPlus,
+  ClipboardPaste,
+  Trash2,
+  Layers,
+  Lock,
+  Unlock,
+  Code,
+  ArrowLeftRight,
+  LayoutGrid,
+} from 'lucide-react';
 
 export interface CanvasMenuState {
   x: number;
@@ -36,12 +47,18 @@ export default function CanvasContextMenu({
   onToggleTodo,
   onToggleDone,
   onJoinDrawings,
+  onSwapItems,
+  onArrangeItems,
+  layoutDisabledReason,
 }: WorkspaceMenuCallbacks & {
   onCustomCss?: () => void;
   onCopyStyle: () => void;
   onPasteStyle: () => void;
   canPasteStyle: boolean;
   onJoinDrawings?: () => void;
+  onSwapItems?: () => void;
+  onArrangeItems?: () => void;
+  layoutDisabledReason?: string;
   menu: CanvasMenuState;
   count: number;
   canPaste: boolean;
@@ -88,6 +105,30 @@ export default function CanvasContextMenu({
             icon: allLocked ? Unlock : Lock,
             run: onLock,
           },
+          ...(count === 2 && onSwapItems
+            ? [
+                {
+                  name: translate('Swap positions'),
+                  icon: ArrowLeftRight,
+                  keys: '',
+                  run: onSwapItems,
+                  disabled: !!layoutDisabledReason,
+                  title: layoutDisabledReason ? translate(layoutDisabledReason) : undefined,
+                },
+              ]
+            : []),
+          ...(count >= 2 && onArrangeItems
+            ? [
+                {
+                  name: translate('Distribute evenly'),
+                  icon: LayoutGrid,
+                  keys: '',
+                  run: onArrangeItems,
+                  disabled: !!layoutDisabledReason,
+                  title: layoutDisabledReason ? translate(layoutDisabledReason) : undefined,
+                },
+              ]
+            : []),
           ...(count > 1 || grouped
             ? [{ name: translate(grouped ? 'Ungroup' : 'Group'), keys: '', icon: Layers, run: onGroup }]
             : []),

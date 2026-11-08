@@ -1,3 +1,11 @@
+import { toast } from 'sonner';
+import {
+  getLayoutSelection,
+  planArrangement,
+  layoutUpdates,
+  type ArrangementOptions,
+  type LayoutUnit,
+} from '../utils/selectionLayout';
 import { isHeavyPreviewItem } from '../utils/heavyPreview';
 import { useCanvasCallbacks } from '../hooks/useCanvasCallbacks';
 import { translate } from '@/shared/i18n';
@@ -7,7 +15,7 @@ import { useCanvasTouch } from '../hooks/useCanvasTouch';
 import PasteStyleDialog from './PasteStyleDialog';
 import { copyItemStyle, pasteItemStyle } from '../utils/itemStyle';
 import type { ItemStyle } from '../utils/itemStyle';
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import type { BoardItem, FrameItem } from '@/entities/board/types';
 import type { Project } from '@/entities/project/types';
@@ -91,6 +99,8 @@ const EMPTY_CURSORS: RemoteCursor[] = [];
 interface ToolDragGhostState extends ToolDragDetail {
   overCanvas: boolean;
 }
+
+const ArrangementDialog = lazy(() => import('./ArrangementDialog'));
 
 export interface CanvasProps {
   onOpenAppearance?: () => void;
@@ -202,6 +212,7 @@ function CanvasContent({
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [placeOnItems, setPlaceOnItems] = useState(false);
   const [customCssTarget, setCustomCssTarget] = useState<{ itemId: string; columnId?: string } | null>(null);
+  const [arrangementIds, setArrangementIds] = useState<string[] | null>(null);
   const [contextMenu, setContextMenu] = useState<CanvasMenuState | null>(null);
   const [quickConnectMenu, setQuickConnectMenu] = useState<QuickConnectMenuState | null>(null);
   const pointerPosition = useRef<{ x: number; y: number } | null>(null);
@@ -871,6 +882,40 @@ function CanvasContent({
     () => project.items.filter((item) => selectedItemIds.has(item.id)),
     [project.items, selectedItemIds],
   );
+  const layoutSelection = useMemo(
+    () =>
+      contextMenu?.hasSelection
+        ? getLayoutSelection(project.items, selectedIds, measuredSizes, collaboratorLockedIds)
+        : { units: [], reason: undefined },
+    [contextMenu?.hasSelection, project.items, selectedIds, measuredSizes, collaboratorLockedIds],
+  );
+  const arrangementSelection = useMemo(
+    () =>
+      arrangementIds ? getLayoutSelection(project.items, arrangementIds, measuredSizes, collaboratorLockedIds) : null,
+    [project.items, arrangementIds, measuredSizes, collaboratorLockedIds],
+  );
+  const closeArrangement = () => {
+    setArrangementIds(null);
+    requestAnimationFrame(() => containerRef.current?.focus({ preventScroll: true }));
+  };
+  const commitLayout = (
+    ids: string[],
+    plan: (units: LayoutUnit[]) => Map<string, { x: number; y: number }>,
+  ): string | undefined => {
+    const items = projectRef.current.items;
+    const selection = getLayoutSelection(items, ids, measuredSizes, collaboratorLockedIds);
+    if (selection.reason) return selection.reason;
+    try {
+      const updates = layoutUpdates(items, selection.units, plan(selection.units), measuredSizes);
+      if (updates.size) {
+        pushHistory();
+        onUpdateItems(updates);
+      }
+      return undefined;
+    } catch (error) {
+      return error instanceof Error ? error.message : 'Cannot arrange this selection.';
+    }
+  };
   const joinableDrawings = selectedItems;
   const canJoinDrawings =
     !selectedColumnItem &&
@@ -1058,6 +1103,7 @@ function CanvasContent({
   return (
     <div
       data-canvas-root="true"
+      tabIndex={-1}
       data-camera-moving={isNavigating}
       ref={containerRef}
       className={`flex-1 min-w-0 min-h-0 relative overflow-clip select-none ${cursorClass}`}
@@ -1224,10 +1270,38 @@ function CanvasContent({
           }}
         />
       )}
+      {arrangementIds && arrangementSelection && (
+        <Suspense fallback={null}>
+          <ArrangementDialog
+            units={arrangementSelection.units}
+            blockedReason={arrangementSelection.reason}
+            onClose={closeArrangement}
+            onApply={(options: ArrangementOptions) => {
+              const error = commitLayout(arrangementIds, (units) => planArrangement(units, options));
+              if (!error) closeArrangement();
+              return error;
+            }}
+          />
+        </Suspense>
+      )}
       {contextMenu && (
         <CanvasContextMenu
           onOpenAppearance={onOpenAppearance}
           onOpenLibrary={onOpenLibrary}
+          layoutDisabledReason={layoutSelection.reason}
+          onSwapItems={() => {
+            if (selectedIdsRef.current.length !== 2) return;
+            const error = commitLayout(
+              [...selectedIdsRef.current],
+              (units) =>
+                new Map([
+                  [units[0]!.id, { x: units[1]!.rect.x, y: units[1]!.rect.y }],
+                  [units[1]!.id, { x: units[0]!.rect.x, y: units[0]!.rect.y }],
+                ]),
+            );
+            if (error) toast.error(translate(error));
+          }}
+          onArrangeItems={() => setArrangementIds([...selectedIdsRef.current])}
           onCustomCss={
             cssSelection && !cssSelectionLocked
               ? () => setCustomCssTarget({ itemId: cssSelection.id, columnId: selectedColumnItem?.columnId })

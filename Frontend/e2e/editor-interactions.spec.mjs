@@ -79,6 +79,73 @@ const contextAction = async (page, target, name) => {
   await page.getByRole('menuitem', { name, exact: true }).click();
 };
 
+const selectPair = async (page) => {
+  await item(page, 10).click({ position: { x: 100, y: 70 } });
+  await item(page, 11).click({ position: { x: 100, y: 70 }, modifiers: ['Shift'] });
+};
+const position = (target) => target.evaluate((node) => [parseFloat(node.style.left), parseFloat(node.style.top)]);
+
+test('layout menu respects selection counts and swapping persists and undoes in one step', async ({ page }) => {
+  await item(page, 10).click({ button: 'right', position: { x: 100, y: 70 } });
+  await expect(page.getByRole('menuitem', { name: 'Swap positions', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: 'Distribute evenly', exact: true })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await selectPair(page);
+  await contextAction(page, item(page, 10), 'Swap positions');
+  await expect.poll(() => position(item(page, 10))).toEqual([350, 0]);
+  await expect.poll(() => position(item(page, 11))).toEqual([0, 0]);
+  await page.keyboard.press('Control+z');
+  await expect.poll(() => position(item(page, 10))).toEqual([0, 0]);
+  await expect.poll(() => position(item(page, 11))).toEqual([350, 0]);
+  await contextAction(page, item(page, 10), 'Swap positions');
+  await expect(page.locator('.save-status')).toHaveCount(0);
+  await page.reload();
+  await expect.poll(() => position(item(page, 10))).toEqual([350, 0]);
+  await selectPair(page);
+  await item(page, 13).click({ position: { x: 100, y: 70 }, modifiers: ['Shift'] });
+  await item(page, 10).click({ button: 'right', position: { x: 100, y: 70 } });
+  await expect(page.getByRole('menuitem', { name: 'Swap positions', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: 'Distribute evenly', exact: true })).toBeEnabled();
+});
+
+test('arrangement previews without mutation, validates grid steps, applies and undoes atomically', async ({ page }) => {
+  await selectPair(page);
+  await contextAction(page, item(page, 10), 'Distribute evenly');
+  const dialog = page.getByRole('dialog', { name: 'Distribute evenly', exact: true });
+  await dialog.getByLabel('Maximum width in note modules').fill('6');
+  await expect(dialog.getByText('2000 px', { exact: true })).toBeVisible();
+  await expect.poll(() => position(item(page, 11))).toEqual([350, 0]);
+  await dialog.getByLabel('Spacing in grid steps').fill('1.5');
+  await expect(dialog.getByRole('button', { name: 'Apply arrangement' })).toBeDisabled();
+  await expect(dialog.getByRole('alert')).toContainText('whole numbers');
+  await dialog.getByLabel('Spacing in grid steps').fill('2');
+  await dialog.getByLabel('Row layout').selectOption('count');
+  await dialog.getByLabel('Items per row', { exact: true }).fill('1');
+  await dialog.getByRole('button', { name: 'Apply arrangement' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(() => position(item(page, 11))).toEqual([0, 208]);
+  await page.keyboard.press('Control+z');
+  await expect.poll(() => position(item(page, 11))).toEqual([350, 0]);
+  await contextAction(page, item(page, 10), 'Distribute evenly');
+  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect.poll(() => position(item(page, 11))).toEqual([350, 0]);
+});
+
+test('arrangement dialog remains usable in a narrow viewport and closes with Escape', async ({ page }) => {
+  await selectPair(page);
+  await contextAction(page, item(page, 10), 'Distribute evenly');
+  await page.setViewportSize({ width: 390, height: 700 });
+  const dialog = page.getByRole('dialog', { name: 'Distribute evenly', exact: true });
+  const bounds = await dialog.boundingBox();
+  expect(bounds.x).toBeGreaterThanOrEqual(0);
+  expect(bounds.x + bounds.width).toBeLessThanOrEqual(390);
+  await dialog.getByLabel('Spacing in grid steps').fill('3');
+  await expect(dialog.getByRole('button', { name: 'Apply arrangement' })).toBeInViewport();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator('[data-canvas-root]')).toBeFocused();
+});
+
 test('logical groups move from either member, persist and ungroup without creating frames', async ({ page }) => {
   await item(page, 10).click({ position: { x: 100, y: 70 } });
   await item(page, 11).click({ position: { x: 100, y: 70 }, modifiers: ['Shift'] });

@@ -1,3 +1,4 @@
+import { ITEM_WIDTH } from '@/features/canvas/constants';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
@@ -77,7 +78,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, readOn
   }, [editing]);
 
   return (
-    <div ref={noteRef} className="group relative" style={{ width: item.width ?? 220, height: item.height }}>
+    <div ref={noteRef} className="group relative" style={{ width: item.width ?? ITEM_WIDTH.note, height: item.height }}>
       <div
         className="item-rounded shadow-xl transition-shadow duration-150 group-hover:shadow-2xl flex flex-col"
         style={{

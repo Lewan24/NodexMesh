@@ -249,3 +249,33 @@ workspace shortcuts are available on authenticated read-only boards; anonymous p
 native menu. Text fields keep native editing menus. Library stays disabled in the local demo, and existing
 server authorization and file-management permissions continue to apply. App-bar and context-menu library
 entry points share the same dialog state. Long menus scroll inside the viewport and retain keyboard navigation.
+
+### Selection layout and modular default widths
+
+The canvas context menu offers Swap positions for exactly two selected root items and Distribute evenly
+for two or more. A logical group or a frame with its descendants is one rigid layout unit: members are
+never translated twice or rearranged internally. Two members of the same unit cannot be swapped independently.
+Locked items, locked frame ancestors/descendants, nested column locks and collaboration locks disable these
+operations. Attached lines must share a rigid unit with their endpoints; independent attached lines are
+disabled to avoid breaking connections. Free lines translate both endpoints.
+
+The lazy-loaded arrangement dialog previews changes without saving. Spacing is a positive integer number
+of 16px grid steps (default one). Rows wrap either after a selected number of units or at a maximum width
+of N note modules: `N * 320 + (N - 1) * 16` pixels. Six modules mean 2000px. The maximum width is fixed by
+this formula even when the chosen spacing is larger. Existing sizes remain intact; oversized units occupy
+their own row. Layout uses current measured sizes, rounds occupied cells up to the grid and processes units
+in top-to-bottom/left-to-right order. Both axes use the chosen minimum gap. The top-left selection anchor
+snaps to the grid. Cancel/Escape makes no changes.
+
+Both actions revalidate the latest board and locks before committing one update map and one undo boundary.
+Moved frame ownership stays intact; independently moved items re-evaluate containment. Inputs are bounded
+to whole numbers 1–1000 and finite board coordinates. Persistence and permissions use existing board mutations;
+no new endpoint, HTML injection or database migration is involved.
+
+New item widths share `ITEM_WIDTH`: notes, checklists, dispensers, board links, section titles, drawings,
+text, images, files and links use 320px; documents, code, embeds, columns and frames use 656px; timelines,
+diagrams, mind maps, databases and Kanban use 992px. Icons retain a compact 96px width (three icons plus two
+grid gaps fit one note). Freehand drawings derive their actual bounds from strokes, and lines from endpoints.
+Saved explicit dimensions and the existing 320px note default remain unchanged. Render fallbacks use the same
+width constants. Selection geometry tests and editor interaction tests cover swaps, packing, locks, rigid units,
+line endpoints, frame membership, validation, persistence, undo, cancellation and narrow-screen dialogs.
