@@ -130,6 +130,23 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
       title: text,
       description: text,
       icon: text,
+      boardIcon: optional((value) => {
+        if (
+          !object({
+            iconMode: choice('preset', 'emoji', 'svg', 'url', 'library'),
+            source: text,
+            label: text,
+            color: optional((color) => typeof color === 'string' && /^#[0-9a-f]{6}$/i.test(color)),
+          })(value)
+        )
+          return false;
+        const icon = value as { iconMode: string; source: string; label: string };
+        if (!icon.source.trim() || icon.label.length > 200) return false;
+        if (icon.iconMode === 'url') return url(icon.source);
+        if (icon.iconMode === 'library') return !!parseLibrarySource(icon.source);
+        if (icon.iconMode === 'svg') return /<svg[\s>]/i.test(icon.source);
+        return icon.source.length <= (icon.iconMode === 'emoji' ? 64 : 200);
+      }),
     }),
   },
   'section-title': { version: 1, canNest: false, validate: object({ content: text }) },

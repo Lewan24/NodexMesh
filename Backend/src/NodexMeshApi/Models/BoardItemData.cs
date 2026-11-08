@@ -31,7 +31,8 @@ public sealed record TextSectionsDto(
 
 // ---- item types, matching itemSchema.ts field-for-field ---------------
 public sealed record SectionTitleData(string Content);
-public sealed record BoardBlockData(Guid? BoardId, string Title, string Description, string Icon);
+public sealed record BoardBlockData(Guid? BoardId, string Title, string Description, string Icon, BoardIconData? BoardIcon = null);
+public sealed record BoardIconData(string IconMode, string Source, string Label, string? Color = null);
 public sealed record NoteData(string Content, string? ContentFormat = null, int? ContentVersion = null);
 public sealed record TextData(string Content, string Size); // 'sm'|'md'|'lg'|'xl'
 public sealed record DocumentData(string Title, string Content, string ContentFormat, int ContentVersion, bool? AutoHeight);

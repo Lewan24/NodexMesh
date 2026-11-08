@@ -9,6 +9,48 @@ namespace NodexMeshApi.Tests.Unit;
 
 public class BoardValidatorTests
 {
+    [Theory]
+    [InlineData("preset", "folder", true)]
+    [InlineData("emoji", "Hello", true)]
+    [InlineData("svg", "<svg viewBox=\"0 0 24 24\"><path d=\"M0 0\"/></svg>", true)]
+    [InlineData("url", "https://example.com/icon.svg", true)]
+    [InlineData("library", "library://10000000-0000-4000-8000-000000000001/10000000-0000-4000-8000-000000000002", true)]
+    [InlineData("url", "javascript:alert(1)", false)]
+    [InlineData("url", "data:image/svg+xml,<svg/>", false)]
+    [InlineData("url", "https://user:pass@example.com/icon.svg", false)]
+    [InlineData("library", "library://invalid", false)]
+    [InlineData("svg", "<script>alert(1)</script>", false)]
+    [InlineData("unknown", "star", false)]
+    [InlineData("preset", "", false)]
+    public void BoardIconsValidateSources(string mode, string source, bool valid)
+    {
+        var item = NoteItem(type: "board", data: Json(new {
+            boardId = (Guid?)null, title = "Research", description = "", icon = "",
+            boardIcon = new { iconMode = mode, source, label = "Research", color = "#123456" }
+        }));
+        Action act = () => BoardValidator.ValidateItem(item);
+        if (valid) act.Should().NotThrow();
+        else act.Should().Throw<ApiException>().Where(error => error.Code == "invalid_item");
+    }
+
+    [Fact]
+    public void BoardIconsKeepLegacyCompatibilityAndRejectUnknownNestedProperties()
+    {
+        var legacy = NoteItem(type: "board", data: Json(new { boardId = (Guid?)null, title = "Legacy", description = "", icon = "layout-dashboard" }));
+        BoardValidator.ValidateItem(legacy);
+        var item = legacy with { Data = Json(new {
+            boardId = (Guid?)null, title = "Test", description = "", icon = "",
+            boardIcon = new { iconMode = "preset", source = "star", label = "Star", admin = true }
+        }) };
+        Action act = () => BoardValidator.ValidateItem(item);
+        act.Should().Throw<ApiException>().Where(error => error.Code == "invalid_item");
+        item = legacy with { Data = Json(new {
+            boardId = (Guid?)null, title = "Test", description = "", icon = "",
+            boardIcon = new { iconMode = "preset", source = "star", label = new string('x', 201), color = "red" }
+        }) };
+        act.Should().Throw<ApiException>().Where(error => error.Code == "invalid_item");
+    }
+
     private static JsonElement Json(object value) => JsonSerializer.SerializeToElement(value);
     private static JsonElement EmptyObject() => JsonDocument.Parse("{}").RootElement;
 

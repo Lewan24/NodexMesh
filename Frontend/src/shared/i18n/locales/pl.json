@@ -1521,5 +1521,8 @@
   "Select at least two independent items or groups. Ungroup items to arrange their members separately.": "Zaznacz co najmniej dwa niezależne elementy lub grupy. Rozgrupuj elementy, aby rozmieścić je osobno.",
   "Select at least two independent items or groups.": "Zaznacz co najmniej dwa niezależne elementy lub grupy.",
   "Use whole numbers from 1 to 1000.": "Podaj liczby całkowite od 1 do 1000.",
-  "The layout is too large. Reduce spacing or the number of items.": "Układ jest zbyt duży. Zmniejsz odstępy lub liczbę elementów."
+  "The layout is too large. Reduce spacing or the number of items.": "Układ jest zbyt duży. Zmniejsz odstępy lub liczbę elementów.",
+  "Show board icon": "Pokaż ikonę tablicy",
+  "Choose board icon": "Wybierz ikonę tablicy",
+  "Add a short description": "Dodaj krótki opis"
 }

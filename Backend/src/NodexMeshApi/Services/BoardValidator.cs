@@ -64,6 +64,8 @@ public static class BoardValidator
 
         // Strict deserialization: unknown/missing/wrong-typed fields throw (mass-assignment guard).
         var data = BoardItemTypes.Deserialize(item.Type, item.Data.GetRawText());
+        if (data is BoardBlockData { BoardIcon: { } boardIcon } && !ValidBoardIcon(boardIcon))
+            throw new ApiException(422, "invalid_item", "Invalid board icon.");
         if (data is NoteData note && (!IsText(note.Content) ||
             (note.ContentFormat is not null && (note.ContentFormat != "tiptap-html" || note.ContentVersion != 1)) ||
             (note.ContentFormat is null && note.ContentVersion is not null)))
@@ -132,6 +134,21 @@ public static class BoardValidator
 
     private static bool ValidBorderColor(string? color) => color is not null &&
         System.Text.RegularExpressions.Regex.IsMatch(color, "^#[0-9a-fA-F]{6}$");
+
+    private static bool ValidBoardIcon(BoardIconData icon)
+    {
+        if (!IsText(icon.Source) || string.IsNullOrWhiteSpace(icon.Source) || !IsText(icon.Label) || icon.Label.Length > 200 ||
+            (icon.Color is not null && !ValidBorderColor(icon.Color))) return false;
+        return icon.IconMode switch
+        {
+            "preset" => icon.Source.Length <= 200,
+            "emoji" => icon.Source.Length <= 64,
+            "svg" => System.Text.RegularExpressions.Regex.IsMatch(icon.Source, "<svg[\\s>]", System.Text.RegularExpressions.RegexOptions.IgnoreCase),
+            "url" => IsUrl(icon.Source),
+            "library" => IsLibrarySource(icon.Source),
+            _ => false
+        };
+    }
 
     /// <summary>
     /// OWASP A10 (SSRF) / stored-XSS surface: image, link and embed items carry

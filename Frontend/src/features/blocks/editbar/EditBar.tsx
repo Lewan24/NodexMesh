@@ -9,6 +9,7 @@ import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 
 import { ITEM_TEXT_SECTIONS } from '../typography/sectionTypography';
 import BorderPanel from './components/BorderPanel';
+import BoardIconControls from './components/BoardIconControls';
 import ColorPanel from './components/ColorPanel';
 import ColumnLayoutControls from './components/ColumnLayoutControls';
 import DrawingControls from './components/DrawingControls';
@@ -269,6 +270,7 @@ export default function EditBar({
               <ColorPanel item={single} onUpdate={handleUpdate} />
             ))}
           <BorderPanel items={columnItem ? [columnItem] : selectedItems} onUpdate={handleUpdate} />
+          {single?.type === 'board' && <BoardIconControls key={single.id} item={single} onUpdate={handleUpdate} />}
         </div>
       )}
 

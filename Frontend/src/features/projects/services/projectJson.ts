@@ -21,6 +21,8 @@ export function hasLibraryMedia(project: Project): boolean {
       if (item.type === 'image') return !!parseLibrarySource(item.url);
       if (item.type === 'file') return !!parseLibrarySource(item.source);
       if (item.type === 'icon') return !!parseLibrarySource(item.source);
+      if (item.type === 'board')
+        return item.boardIcon?.iconMode === 'library' && !!parseLibrarySource(item.boardIcon.source);
       return false;
     });
   return project.boards?.length ? project.boards.some((board) => contains(board.items)) : contains(project.items);

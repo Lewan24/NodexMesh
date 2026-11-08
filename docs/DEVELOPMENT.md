@@ -279,3 +279,23 @@ grid gaps fit one note). Freehand drawings derive their actual bounds from strok
 Saved explicit dimensions and the existing 320px note default remain unchanged. Render fallbacks use the same
 width constants. Selection geometry tests and editor interaction tests cover swaps, packing, locks, rigid units,
 line endpoints, frame membership, validation, persistence, undo, cancellation and narrow-screen dialogs.
+
+### Board card appearance and optional icons
+
+Board cards use a compact heading/description layout and a full-width primary navigation button. The title
+wraps through a content-sized textarea; descriptions grow with content. Existing typography sections, fill,
+gradients, background opacity, borders and optional top accent remain supported. Navigation also remains
+available on read-only boards, with text edits blocked by the existing canvas interaction guard.
+
+New cards and empty siblings have no icon and no instructional description. Appearance in the edit bar
+offers Show board icon and Choose board icon. The picker is shared with IconBlock: presets, emoji, custom
+SVG, image URL and project library. Disabling the icon clears it. Existing `icon` strings (dashboard or emoji)
+remain compatible; new choices store optional `data.boardIcon: { iconMode, source, label, color? }` and clear
+the legacy string. Icon changes do not recolor the card. Archives retain private library references and warn
+that files and their permissions are not included.
+
+Frontend and API validate the optional board icon, including its mode, bounded source/label, hex color,
+HTTP(S) URLs without credentials and structured library references. SVG is rendered only as an isolated
+image through IconVisual, never injected as live markup. No database migration is required; deploy API and
+frontend together before using the optional schema field. The shared picker renders the primary project
+library button below the source tabs, consistently with other source-specific controls.

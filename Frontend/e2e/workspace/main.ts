@@ -77,7 +77,12 @@ if (interactions) {
   const child = create('note', 40, 400, { content: 'Frame child', width: 220, height: 170, frameId: frame.id });
   const nested = create('note', 0, 0, { content: 'Nested TODO note', width: 220, height: 140 });
   const column = create('column', 650, 0, { title: 'Nested tasks', width: 300, items: [nested] });
-  items.push(first, second, frame, child, column);
+  const boardCard = create('board', 650, 350, {
+    title: 'Research board',
+    description: 'Ideas and references for the next release.',
+  });
+  const iconCard = create('icon', 1050, 350);
+  items.push(first, second, frame, child, column, boardCard, iconCard);
 }
 const metadata = {
   revision: '1',

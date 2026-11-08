@@ -1,10 +1,15 @@
-import { translate } from '@/shared/i18n';
+import type { CSSProperties } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
-import { LayoutDashboard, ExternalLink } from 'lucide-react';
 import type { BoardBlockItem, BoardItem } from '@/entities/board/types';
-import { useCardAppearance } from '@/features/blocks/shared/cardAppearance';
-import { getTypographyStyle } from '@/features/blocks/typography/typographyUtils';
+import { translate } from '@/shared/i18n';
+import { ITEM_WIDTH } from '@/features/canvas/constants';
+import { useCardAppearance } from '../shared/cardAppearance';
+import { getTypographyStyle } from '../typography/typographyUtils';
+import { getSectionStyle } from '../typography/sectionTypography';
+import IconVisual from '../icon/IconVisual';
+import { getBoardIcon } from './boardIcon';
+import './boardBlock.css';
 
 interface BoardBlockProps {
   item: BoardBlockItem;
@@ -15,97 +20,83 @@ interface BoardBlockProps {
 
 export default function BoardBlock({ item, onUpdate, onOpenBoard, onRenameBoard }: BoardBlockProps) {
   useTranslation();
-  const color = item.color ?? '#7C3AED';
-  const appearance = useCardAppearance(color, item.gradient, item.colorRole, item.backgroundOpacity);
-  const typographyStyle = getTypographyStyle(item);
+  const appearance = useCardAppearance(item.color, item.gradient, item.colorRole, item.backgroundOpacity);
+  const typography = getTypographyStyle(item);
+  const icon = getBoardIcon(item);
   const open = () => {
     if (item.boardId) onOpenBoard?.(item.boardId);
   };
 
   return (
     <div
-      className="item-rounded border shadow-sm overflow-hidden select-none"
-      style={{
-        width: item.width,
-        minHeight: item.height ?? 190,
-        borderColor: `${appearance.solid}66`,
-        background: appearance.background,
-      }}
+      className="board-block item-rounded"
+      style={
+        {
+          width: item.width ?? ITEM_WIDTH.board,
+          minHeight: item.height ?? 190,
+          background: appearance.background,
+          '--board-text': appearance.textColor,
+          '--board-muted': appearance.mutedColor,
+          ...(item.topColor ? { borderTop: `3px solid ${item.topColor}` } : {}),
+        } as CSSProperties
+      }
       onDoubleClick={open}
-      title={item.boardId ? translate('Double-click to open board') : translate('This board is not connected yet')}
     >
-      {item.topColor ? (
-        <div className="h-2" style={{ background: item.topColor }} />
-      ) : (
-        <div className="h-2" style={{ background: appearance.solid }} />
-      )}
-      <div className="p-5">
-        <div className="flex items-start gap-3">
-          <div className="rounded-xl p-2.5" style={{ color: appearance.solid, background: `${appearance.solid}18` }}>
-            {item.icon === 'layout-dashboard' ? (
-              <LayoutDashboard size={25} />
-            ) : (
-              <span className="text-2xl">{item.icon}</span>
-            )}
+      <div className="board-block-header">
+        {icon && (
+          <div className="board-block-icon">
+            <IconVisual item={icon} size={28} />
           </div>
-          <div className="min-w-0 flex-1">
-            <input
-              aria-label={translate('Board block title')}
-              className="w-full bg-transparent font-semibold outline-none"
-              value={item.title}
-              onChange={(event) =>
-                onUpdate((current) => (current.type === 'board' ? { ...current, title: event.target.value } : current))
-              }
-              onDoubleClick={(event) => event.stopPropagation()}
-              onBlur={() => {
-                const name = item.title.trim();
-                if (item.boardId && name) onRenameBoard?.(item.boardId, name);
-              }}
-              style={{
-                ...typographyStyle,
-                color: appearance.textColor,
-                fontWeight: typographyStyle.fontWeight ?? 600,
-                ...getSectionStyle(item.typography, 'title'),
-              }}
-            />
-            <textarea
-              aria-label={translate('Board block description')}
-              className="mt-1 w-full resize-none bg-transparent text-sm outline-none"
-              rows={2}
-              value={item.description}
-              onChange={(event) =>
-                onUpdate((current) =>
-                  current.type === 'board' ? { ...current, description: event.target.value } : current,
-                )
-              }
-              onDoubleClick={(event) => event.stopPropagation()}
-              style={{
-                ...typographyStyle,
-                color: appearance.mutedColor,
-                ...getSectionStyle(item.typography, 'description'),
-              }}
-            />
-          </div>
+        )}
+        <div className="board-block-heading">
+          <span className="board-block-kind">{translate('Board')}</span>
+          <textarea
+            rows={1}
+            aria-label={translate('Board block title')}
+            className="board-block-title"
+            value={item.title}
+            maxLength={200}
+            onChange={(event) => {
+              const title = event.target.value.replace(/[\r\n]+/g, ' ');
+              onUpdate((current) => (current.type === 'board' ? { ...current, title } : current));
+            }}
+            onDoubleClick={(event) => event.stopPropagation()}
+            onBlur={() => {
+              const name = item.title.trim();
+              if (item.boardId && name) onRenameBoard?.(item.boardId, name);
+            }}
+            style={{ ...typography, ...getSectionStyle(item.typography, 'title') }}
+          />
         </div>
-        <button
-          type="button"
-          data-read-only-action="true"
-          className="mt-5 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
-          style={{
-            color: appearance.textColor,
-            borderColor: `${appearance.textColor}66`,
-            background: `${appearance.textColor}14`,
-            ...getSectionStyle(item.typography, 'links'),
-          }}
-          onClick={(event) => {
-            event.stopPropagation();
-            open();
-          }}
-          disabled={!item.boardId}
-        >
-          {item.boardId ? translate('Open board') : translate('Board setup pending')} <ExternalLink size={13} />
-        </button>
       </div>
+      <textarea
+        aria-label={translate('Board block description')}
+        className="board-block-description"
+        rows={2}
+        placeholder={translate('Add a short description')}
+        value={item.description}
+        maxLength={200_000}
+        onChange={(event) =>
+          onUpdate((current) => (current.type === 'board' ? { ...current, description: event.target.value } : current))
+        }
+        onDoubleClick={(event) => event.stopPropagation()}
+        style={{ ...typography, ...getSectionStyle(item.typography, 'description') }}
+      />
+      <button
+        type="button"
+        data-read-only-action="true"
+        className="board-block-open btn-accent"
+        style={getSectionStyle(item.typography, 'links')}
+        disabled={!item.boardId || !onOpenBoard}
+        onDoubleClick={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          open();
+        }}
+      >
+        <span>{item.boardId ? translate('Open board') : translate('Board setup pending')}</span>
+        <ArrowRight size={16} aria-hidden="true" />
+      </button>
     </div>
   );
 }

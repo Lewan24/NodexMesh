@@ -59,7 +59,7 @@ export default function IconDialog({
       const patch = {
         iconMode: mode,
         source: mode === 'svg' ? prepareIconSvg(value) : value,
-        label: label.trim(),
+        label: label.trim().slice(0, 200),
         color,
       };
       setError('');
@@ -101,16 +101,6 @@ export default function IconDialog({
             }}
           />
         )}
-        {mode === 'library' && (
-          <button
-            type="button"
-            disabled={!projectId}
-            onClick={() => setLibraryOpen(true)}
-            className="border rounded px-3 py-2"
-          >
-            {translate('Choose from project library')}
-          </button>
-        )}
         <h2 className="text-lg font-semibold">{translate('Choose icon')}</h2>
         <div className="flex flex-wrap gap-2" aria-label={translate('Icon source')}>
           {Object.entries(MODES).map(([key, title]) => (
@@ -129,6 +119,16 @@ export default function IconDialog({
             </button>
           ))}
         </div>
+        {mode === 'library' && (
+          <button
+            type="button"
+            disabled={!projectId}
+            onClick={() => setLibraryOpen(true)}
+            className="btn-accent inline-flex min-h-10 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {translate('Choose from project library')}
+          </button>
+        )}
         {mode === 'preset' && (
           <input
             autoFocus
@@ -263,7 +263,7 @@ export default function IconDialog({
           <button type="button" className="px-4 py-2 cursor-pointer" onClick={onClose}>
             {translate('Cancel')}
           </button>
-          <button type="submit" className="px-4 py-2 rounded-lg bg-violet-600 text-white cursor-pointer">
+          <button type="submit" className="btn-accent px-4 py-2 rounded-lg cursor-pointer">
             {translate('Save icon')}
           </button>
         </div>

@@ -18,6 +18,59 @@ test.beforeEach(async ({ page }) => {
   await expect(item(page, 10)).toBeVisible();
 });
 
+test('board card has a clear CTA and optional preset and isolated SVG icons that persist', async ({
+  page,
+}, testInfo) => {
+  const card = item(page, 16);
+  await expect(card.locator('.board-block-icon')).toHaveCount(0);
+  await card.screenshot({ path: testInfo.outputPath('board-card-default.png') });
+  await expect(card.getByRole('button', { name: 'Board setup pending' })).toBeDisabled();
+  const title = card.getByRole('textbox', { name: 'Board block title' });
+  await title.fill('Research and product planning board with a longer title');
+  await card
+    .getByRole('textbox', { name: 'Board block description' })
+    .fill('Ideas, references and decisions for the next release.');
+  await card.locator('.board-block-kind').click();
+  await page.getByRole('tab', { name: 'Appearance', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Choose board icon' })).toBeDisabled();
+  await page.getByRole('checkbox', { name: 'Show board icon' }).check();
+  await expect(card.locator('.board-block-icon svg')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Choose board icon' }).click();
+  const picker = page.getByRole('dialog', { name: 'Choose icon' });
+  await picker.getByRole('button', { name: 'Rocket', exact: true }).click();
+  await picker.getByRole('button', { name: 'Save icon', exact: true }).click();
+  await expect(card.locator('.board-block-icon [role="img"]')).toHaveAttribute('aria-label', 'Rocket');
+  const titleBounds = await title.boundingBox();
+  const ctaBounds = await card.locator('.board-block-open').boundingBox();
+  expect(ctaBounds.y).toBeGreaterThan(titleBounds.y + titleBounds.height);
+  await page.locator('[data-canvas-root]').click({ position: { x: 100, y: 300 } });
+  await card.screenshot({ path: testInfo.outputPath('board-card.png') });
+  await expect(page.locator('.save-status')).toHaveCount(0);
+  await page.reload();
+  await expect(title).toHaveValue('Research and product planning board with a longer title');
+  await expect(card.locator('.board-block-icon [role="img"]')).toHaveAttribute('aria-label', 'Rocket');
+  await card.locator('.board-block-kind').click();
+  await page.getByRole('tab', { name: 'Appearance', exact: true }).click();
+  await page.getByRole('button', { name: 'Choose board icon' }).click();
+  await picker.getByRole('button', { name: 'Custom SVG', exact: true }).click();
+  await picker
+    .getByLabel('Paste SVG')
+    .fill(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" onload="window.boardAttack=1"><script>window.boardAttack=1</script><circle cx="12" cy="12" r="10" fill="green"/></svg>',
+    );
+  await picker.getByRole('button', { name: 'Save icon', exact: true }).click();
+  await expect(card.locator('.board-block-icon img')).toHaveCount(1);
+  expect(await page.evaluate(() => window.boardAttack)).toBeUndefined();
+  await expect(card.locator('script, svg[onload]')).toHaveCount(0);
+  await expect(page.locator('.save-status')).toHaveCount(0);
+  await page.reload();
+  await expect(card.locator('.board-block-icon img')).toHaveCount(1);
+  await card.locator('.board-block-kind').click();
+  await page.getByRole('tab', { name: 'Appearance', exact: true }).click();
+  await page.getByRole('checkbox', { name: 'Show board icon' }).uncheck();
+  await expect(card.locator('.board-block-icon')).toHaveCount(0);
+});
+
 test('workspace tools are available on the background and items and open the existing appearance dialog', async ({
   page,
 }) => {

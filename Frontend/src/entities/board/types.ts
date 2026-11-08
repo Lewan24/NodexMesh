@@ -9,6 +9,7 @@ export interface BoardBlockItem extends BaseItem {
   title: string;
   description: string;
   icon: string;
+  boardIcon?: Pick<IconItem, 'iconMode' | 'source' | 'label' | 'color'>;
   color: string;
 }
 

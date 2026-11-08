@@ -50,13 +50,7 @@ export function createEmptySibling(source: BoardItem): BoardItem | null {
     case 'link':
       return { ...base, url: '', title: translate('New Link'), description: '' };
     case 'board':
-      return {
-        ...base,
-        boardId: null,
-        title: translate('New board'),
-        description: translate('Double-click to open this board'),
-        icon: 'layout-dashboard',
-      };
+      return { ...base, boardId: null, title: translate('New board'), description: '', icon: '', boardIcon: undefined };
     case 'column':
       return { ...base, title: translate('Column'), items: [] };
     case 'frame':

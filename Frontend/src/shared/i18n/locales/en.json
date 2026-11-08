@@ -1521,5 +1521,8 @@
   "Select at least two independent items or groups. Ungroup items to arrange their members separately.": "Select at least two independent items or groups. Ungroup items to arrange their members separately.",
   "Select at least two independent items or groups.": "Select at least two independent items or groups.",
   "Use whole numbers from 1 to 1000.": "Use whole numbers from 1 to 1000.",
-  "The layout is too large. Reduce spacing or the number of items.": "The layout is too large. Reduce spacing or the number of items."
+  "The layout is too large. Reduce spacing or the number of items.": "The layout is too large. Reduce spacing or the number of items.",
+  "Show board icon": "Show board icon",
+  "Choose board icon": "Choose board icon",
+  "Add a short description": "Add a short description"
 }
