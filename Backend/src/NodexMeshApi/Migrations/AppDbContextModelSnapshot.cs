@@ -1233,6 +1233,14 @@ namespace NodexMeshApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("task_categories");
 
+                    b.Property<string>("TodoDisplay")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("checkbox")
+                        .HasColumnName("todo_display");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");

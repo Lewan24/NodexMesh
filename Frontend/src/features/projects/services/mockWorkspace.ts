@@ -343,10 +343,13 @@ export function createMockWorkspace(
             fail(409, 'revision_conflict', translate('Project changed in another session.'));
           if (!input.name.trim() || input.name.length > 200)
             fail(422, 'invalid_name', translate('Project name must contain 1–200 characters.'));
+          if (input.todoDisplay !== undefined && !['checkbox', 'checkmark', 'strike'].includes(input.todoDisplay))
+            fail(422, 'invalid_settings', 'Invalid TODO display.');
           snapshot.project = {
             ...touch(snapshot.project, userId),
             name: input.name.trim(),
             color: input.color,
+            todoDisplay: input.todoDisplay ?? snapshot.project.todoDisplay ?? 'checkbox',
             deletedAt: input.deletedAt,
           };
           return snapshot.project;

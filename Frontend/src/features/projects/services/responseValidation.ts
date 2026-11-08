@@ -28,6 +28,8 @@ function audit(value: Record<string, unknown>) {
 export function parseProjectRecord(value: unknown): ProjectRecord {
   const project = record(value);
   audit(project);
+  if (project.todoDisplay !== undefined && !['checkbox', 'checkmark', 'strike'].includes(project.todoDisplay as string))
+    fail(422, 'invalid_response', 'Invalid TODO display.');
   if (project.color === null) project.color = '#7C3AED';
   for (const key of ['name', 'color', 'ownerId']) string(project[key]);
   if (project.itemCount !== undefined && (!Number.isInteger(project.itemCount) || (project.itemCount as number) < 0))

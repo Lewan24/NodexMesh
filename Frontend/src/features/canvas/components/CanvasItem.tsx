@@ -135,6 +135,7 @@ function CanvasItem({
     !isHeavyPreviewItem(item) &&
     !item.statusId &&
     !item.border &&
+    !item.todo &&
     item.type !== 'diagram' &&
     item.type !== 'database' &&
     item.type !== 'document' &&
@@ -155,6 +156,7 @@ function CanvasItem({
     !item.customCss?.enabled &&
     !item.statusId &&
     !item.border &&
+    !item.todo &&
     !isSelected &&
     !isDragging &&
     !isDragOver &&

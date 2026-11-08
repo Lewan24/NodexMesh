@@ -1,3 +1,4 @@
+import { getNotePlainText } from '@/features/blocks/note/noteContent';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { BoardItem } from '@/entities/board/types';
@@ -108,7 +109,7 @@ function getText(payload: NestedDragPayload): string {
 function getBoardItemText(item: BoardItem): string {
   switch (item.type) {
     case 'note':
-      return item.content || translate('Note');
+      return getNotePlainText(item) || translate('Note');
 
     case 'text':
       return item.content || translate('Text');

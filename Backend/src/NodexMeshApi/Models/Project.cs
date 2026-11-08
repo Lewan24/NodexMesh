@@ -16,6 +16,8 @@ public sealed class Project
     public DateTimeOffset? DeletedAt { get; set; }
     public DateTimeOffset? UserDeletedAt { get; set; }
 
+    public string TodoDisplay { get; set; } = "checkbox";
+
     public string ItemStatuses { get; set; } = "[]";
 
     public string TaskCategories { get; set; } = "[]";

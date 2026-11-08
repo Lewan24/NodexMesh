@@ -205,6 +205,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, IHttpCo
         // ---------------- Project ----------------
         b.Entity<Project>(e =>
         {
+            e.Property(x => x.TodoDisplay).HasMaxLength(20).HasDefaultValue("checkbox");
             e.Property(x => x.ItemStatuses).HasDefaultValue("[]");
             e.HasKey(x => x.Id);
             e.Property(x => x.Name).HasMaxLength(200);

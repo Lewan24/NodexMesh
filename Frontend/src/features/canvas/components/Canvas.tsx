@@ -17,6 +17,7 @@ import type { RemoteCursor, RemotePresence } from '@/features/projects/hooks/use
 import { TRASH_ITEM_MIME } from '@/features/projects/components/ItemTrashPanel';
 
 import ConfirmDialog from '@/shared/components/dialogs/ConfirmDialog';
+import GroupSelection from './GroupSelection';
 import CanvasFrame from '@/features/canvas/components/CanvasFrame';
 import CanvasItem from '@/features/canvas/components/CanvasItem';
 import CanvasControls from '@/features/canvas/components/CanvasControls';
@@ -81,6 +82,8 @@ import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 import { useCanvasCamera, type CanvasCameraBindings } from '../hooks/useCanvasCamera';
 import { intersectsCanvasViewport, isCanvasItemVisible } from '../utils/viewportVisibility';
 import './contextMenu.css';
+import { useSpacePan } from '../hooks/useSpacePan';
+import { expandGroupSelection, isSingleGroup } from '../utils/itemGroups';
 
 const EMPTY_PARTICIPANTS: ProjectParticipant[] = [];
 const EMPTY_CURSORS: RemoteCursor[] = [];
@@ -90,6 +93,8 @@ interface ToolDragGhostState extends ToolDragDetail {
 }
 
 export interface CanvasProps {
+  onOpenAppearance?: () => void;
+  onOpenLibrary?: () => void;
   project: Project;
   projectParticipants?: ProjectParticipant[];
   remoteVersion?: number;
@@ -127,6 +132,8 @@ export interface CanvasProps {
 }
 
 function CanvasContent({
+  onOpenAppearance,
+  onOpenLibrary,
   project,
   projectParticipants = EMPTY_PARTICIPANTS,
   remoteVersion = 0,
@@ -139,7 +146,7 @@ function CanvasContent({
   onPanChange,
   onZoomChange,
   onSelectTool,
-  onSelectItems,
+  onSelectItems: selectItemsRaw,
   onGroupSelected,
   onAddItem: addItemRaw,
   onUpdateItem,
@@ -169,7 +176,11 @@ function CanvasContent({
   const { containerRef, panRef, zoomRef } = camera;
   const getLiveZoom = useCallback(() => zoomRef.current, [zoomRef]);
   const [touchSelectionMode, setTouchSelectionMode] = useState(false);
-  const [spacePanActive, setSpacePanActive] = useState(false);
+  const spacePanActive = useSpacePan();
+  const onSelectItems = useCallback(
+    (ids: string[]) => selectItemsRaw(expandGroupSelection(project.items, ids)),
+    [project.items, selectItemsRaw],
+  );
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   useEffect(() => {
     const releaseFocus = (event: FocusEvent) => {
@@ -225,45 +236,6 @@ function CanvasContent({
       ),
     [remotePresence],
   );
-
-  useEffect(() => {
-    const isInteractiveTarget = (target: EventTarget | null) =>
-      target instanceof HTMLInputElement ||
-      target instanceof HTMLTextAreaElement ||
-      target instanceof HTMLSelectElement ||
-      target instanceof HTMLButtonElement ||
-      (target instanceof HTMLElement && target.isContentEditable);
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.code !== 'Space' ||
-        event.defaultPrevented ||
-        isInteractiveTarget(event.target) ||
-        (event.target instanceof Element && event.target.closest('dialog, [role="dialog"], [role="menu"]'))
-      ) {
-        return;
-      }
-
-      event.preventDefault();
-      setSpacePanActive(true);
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.code === 'Space') setSpacePanActive(false);
-    };
-
-    const handleBlur = () => setSpacePanActive(false);
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('blur', handleBlur);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('blur', handleBlur);
-    };
-  }, []);
 
   useCanvasTouch({
     containerRef,
@@ -665,7 +637,7 @@ function CanvasContent({
     handleSelectColumnItem: selectColumnItem,
     handleUpdateColumnItem,
     deleteSelectedColumnItem,
-  } = useColumnSelection({ onSelectItems, onUpdateItem });
+  } = useColumnSelection({ items: project.items, onSelectItems, onUpdateItem });
 
   useLayoutEffect(() => {
     const visible = selectedIds.length > 0 || selectedColumnItem !== null;
@@ -1254,6 +1226,8 @@ function CanvasContent({
       )}
       {contextMenu && (
         <CanvasContextMenu
+          onOpenAppearance={onOpenAppearance}
+          onOpenLibrary={onOpenLibrary}
           onCustomCss={
             cssSelection && !cssSelectionLocked
               ? () => setCustomCssTarget({ itemId: cssSelection.id, columnId: selectedColumnItem?.columnId })
@@ -1298,7 +1272,35 @@ function CanvasContent({
             const locked = !selectedItems.every((item) => item.locked);
             onRestoreItems(project.items.map((item) => (selectedIds.includes(item.id) ? { ...item, locked } : item)));
           }}
-          onGroup={onGroupSelected}
+          grouped={isSingleGroup(selectedItems)}
+          allTodo={(selectedColumnItem ? [selectedColumnItem.item] : selectedItems).every((item) => !!item.todo)}
+          hasTodo={(selectedColumnItem ? [selectedColumnItem.item] : selectedItems).some((item) => item.todo)}
+          allDone={(selectedColumnItem ? [selectedColumnItem.item] : selectedItems)
+            .filter((item) => item.todo)
+            .every((item) => item.todo?.done)}
+          onToggleTodo={() => {
+            pushHistory();
+            const targets = selectedColumnItem ? [selectedColumnItem.item] : selectedItems;
+            const enabled = !targets.every((item) => !!item.todo);
+            const update = (item: BoardItem): BoardItem => ({
+              ...item,
+              todo: enabled ? (item.todo ?? { done: false }) : undefined,
+            });
+            if (selectedColumnItem) handleUpdateColumnItem(selectedColumnItem.columnId, update);
+            else onUpdateItems(new Map(targets.map((item) => [item.id, update])));
+          }}
+          onToggleDone={() => {
+            pushHistory();
+            const targets = selectedColumnItem ? [selectedColumnItem.item] : selectedItems;
+            const done = !targets.filter((item) => item.todo).every((item) => item.todo?.done);
+            const update = (item: BoardItem): BoardItem => (item.todo ? { ...item, todo: { done } } : item);
+            if (selectedColumnItem) handleUpdateColumnItem(selectedColumnItem.columnId, update);
+            else onUpdateItems(new Map(targets.map((item) => [item.id, update])));
+          }}
+          onGroup={() => {
+            pushHistory();
+            onGroupSelected();
+          }}
         />
       )}
       {quickConnectMenu && (
@@ -1414,6 +1416,12 @@ function CanvasContent({
           );
         })}
 
+        <GroupSelection
+          items={project.items}
+          selectedIds={selectedIds}
+          sizes={measuredSizes}
+          overrides={dragOverrides}
+        />
         <CanvasAlignmentGuides guides={alignmentGuides} />
 
         {dropPreview && (

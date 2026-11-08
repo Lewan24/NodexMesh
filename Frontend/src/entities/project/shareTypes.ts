@@ -43,6 +43,7 @@ export interface CreatedShareLink {
 // ---------------- anonymous, read-only ----------------
 
 export interface PublicProject {
+  todoDisplay?: import('./types').TodoDisplay;
   id: string;
   name: string;
   color: string | null;
@@ -104,6 +105,7 @@ export interface PublicProjectSnapshot {
 /** Read-only canvas projection for the public viewer — the same shape as the
  * authenticated `Project` type, minus fields a public viewer has no use for. */
 export interface PublicProjectView {
+  todoDisplay?: import('./types').TodoDisplay;
   id: string;
   name: string;
   color: string;

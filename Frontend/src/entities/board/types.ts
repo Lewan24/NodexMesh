@@ -232,6 +232,9 @@ export interface ItemBorder {
 }
 
 export interface BaseItem {
+  /** Logical group membership, independent of spatial frame ownership. */
+  groupId?: string;
+  todo?: { done: boolean };
   taskSummary?: TaskSummary;
   customCss?: { enabled: boolean; source: string };
   border?: ItemBorder;
@@ -258,6 +261,8 @@ export interface BaseItem {
 }
 
 export interface NoteItem extends BaseItem {
+  contentFormat?: 'tiptap-html';
+  contentVersion?: 1;
   dispenserId?: string;
   type: 'note';
   content: string;

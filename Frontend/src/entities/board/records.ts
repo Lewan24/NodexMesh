@@ -14,6 +14,8 @@ export interface AuditFields {
 
 export type ItemAppearance = Pick<
   BaseItem,
+  | 'groupId'
+  | 'todo'
   | 'color'
   | 'backgroundOpacity'
   | 'colorRole'

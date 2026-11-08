@@ -480,3 +480,58 @@ test('moving a frame animates the frame without independently tilting its captur
     'explicit-note',
   ]);
 });
+
+for (const locked of [false, true]) {
+  test(`dragging any group member moves the group atomically (locked member: ${locked})`, (t) => {
+    const { surface, renderFrame } = setup(t);
+    const items = [
+      { ...createCanvasItem('note', 0, 0), id: 'first', groupId: 'group', locked },
+      { ...createCanvasItem('note', 600, 300), id: 'second', groupId: 'group' },
+      { ...createCanvasItem('line', 400, 200), id: 'line', groupId: 'group', x2: 500, y2: 260 },
+    ];
+    const projectRef = { current: { items } };
+    const commits = [];
+    let drag;
+    function Harness() {
+      drag = useItemDrag({
+        projectRef,
+        selectedIdsRef: { current: [] },
+        zoomRef: { current: 1 },
+        measuredSizes: new Map(),
+        snapEnabled: false,
+        snapValue: (value) => value,
+        pushHistory() {},
+        onSelectItems() {},
+        onSelectTool() {},
+        onDropOnColumn() {},
+        clearColumnSelection() {},
+        onUpdateItems(updates) {
+          commits.push(updates);
+          projectRef.current.items = projectRef.current.items.map((item) => updates.get(item.id)?.(item) ?? item);
+        },
+      });
+      return null;
+    }
+    renderToStaticMarkup(createElement(Harness));
+    drag.handleItemMouseDown('second', {
+      button: 0,
+      target: surface,
+      clientX: 0,
+      clientY: 0,
+      shiftKey: false,
+      preventDefault() {},
+      stopPropagation() {},
+    });
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 45, clientY: 20 }));
+    renderFrame();
+    assert.equal(commits.length, 0);
+    document.dispatchEvent(new MouseEvent('mouseup', { clientX: 45, clientY: 20 }));
+    assert.equal(commits.length, locked ? 0 : 1);
+    if (!locked) {
+      assert.equal(commits[0].size, 3);
+      assert.equal(projectRef.current.items[0].x, 45);
+      assert.equal(projectRef.current.items[1].x, 645);
+      assert.equal(projectRef.current.items[2].x2, 545);
+    }
+  });
+}

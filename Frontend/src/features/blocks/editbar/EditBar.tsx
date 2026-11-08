@@ -1,3 +1,4 @@
+import { isSingleGroup } from '@/features/canvas/utils/itemGroups';
 import { LayoutGrid, Palette, SlidersHorizontal, Type, X } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -213,16 +214,16 @@ export default function EditBar({
             {translate('Join drawings')}
           </button>
         )}
-        {isMulti && (
+        {(isMulti || (!isColumnMode && !!single?.groupId)) && (
           <button
             type="button"
             onClick={onGroupItems}
             className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold"
             style={{ color: 'var(--color-accent)', background: 'var(--color-accent-soft)' }}
-            title={translate('Wrap in a frame')}
+            title={translate(isSingleGroup(selectedItems) ? 'Ungroup' : 'Group')}
           >
             <SlidersHorizontal size={14} />
-            {translate('Group')}
+            {translate(isSingleGroup(selectedItems) ? 'Ungroup' : 'Group')}
           </button>
         )}
 

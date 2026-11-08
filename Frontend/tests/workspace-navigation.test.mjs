@@ -170,3 +170,62 @@ test('viewers can open and close a file preview by mouse and keyboard without fi
     host.remove();
   }
 });
+
+test('read-only workspace context menu opens shared tools without exposing editing actions', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const root = createRoot(host);
+  let appearance = 0;
+  let library = 0;
+  try {
+    await act(async () =>
+      root.render(
+        createElement(
+          ThemeProvider,
+          null,
+          createElement(ReadOnlyBoard, {
+            items: [createCanvasItem('note', 0, 0)],
+            onOpenAppearance: () => appearance++,
+            onOpenLibrary: () => library++,
+          }),
+        ),
+      ),
+    );
+    const surface = host.querySelector('section[aria-label="Read-only board"]');
+    const open = () =>
+      act(async () =>
+        surface.dispatchEvent(
+          new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 100, clientY: 100 }),
+        ),
+      );
+    await open();
+    let buttons = [...document.querySelectorAll('[role="menu"] button')];
+    assert.deepEqual(
+      buttons.map((button) => button.textContent),
+      ['Change application appearance', 'Open library'],
+    );
+    await act(async () => buttons[1].click());
+    assert.equal(library, 1);
+    assert.equal(document.querySelector('[role="menu"]'), null);
+    await open();
+    buttons = [...document.querySelectorAll('[role="menu"] button')];
+    await act(async () => buttons[0].click());
+    assert.equal(appearance, 1);
+    const input = document.createElement('textarea');
+    surface.append(input);
+    const nativeMenu = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    await act(async () => input.dispatchEvent(nativeMenu));
+    assert.equal(nativeMenu.defaultPrevented, false);
+    assert.equal(document.querySelector('[role="menu"]'), null);
+    input.remove();
+    // Anonymous public boards do not receive private workspace tool callbacks.
+    await act(async () => root.render(createElement(ThemeProvider, null, createElement(ReadOnlyBoard, { items: [] }))));
+    const publicMenu = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    await act(async () => host.querySelector('section').dispatchEvent(publicMenu));
+    assert.equal(publicMenu.defaultPrevented, false);
+    assert.equal(document.querySelector('[role="menu"]'), null);
+  } finally {
+    await act(async () => root.unmount());
+    host.remove();
+  }
+});

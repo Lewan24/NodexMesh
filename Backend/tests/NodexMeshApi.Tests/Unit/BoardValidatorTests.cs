@@ -24,6 +24,44 @@ public class BoardValidatorTests
             Data: data ?? Json(new { content = "hello" }));
 
     [Theory]
+    [InlineData("{\"content\":\"legacy <b>literal</b>\"}", true)]
+    [InlineData("{\"content\":\"<p><strong>Formatted</strong></p>\",\"contentFormat\":\"tiptap-html\",\"contentVersion\":1}", true)]
+    [InlineData("{\"content\":\"hello\",\"contentFormat\":\"html\",\"contentVersion\":1}", false)]
+    [InlineData("{\"content\":\"hello\",\"contentFormat\":\"tiptap-html\"}", false)]
+    [InlineData("{\"content\":\"hello\",\"contentVersion\":1}", false)]
+    [InlineData("{\"content\":\"hello\",\"contentFormat\":\"tiptap-html\",\"contentVersion\":2}", false)]
+    public void RichNotesRequireAKnownPairedFormatAndVersion(string data, bool valid)
+    {
+        var act = () => BoardValidator.ValidateItem(NoteItem(data: JsonDocument.Parse(data).RootElement));
+        if (valid) act.Should().NotThrow();
+        else act.Should().Throw<ApiException>().Where(error => error.Code == "invalid_item");
+    }
+
+    [Fact]
+    public void LibraryDefaultLimitIs500MiBAndStillWithinProjectQuota()
+    {
+        var options = new LibraryOptions();
+        options.MaxFileBytes.Should().Be(500L * 1024 * 1024);
+        options.MaxProjectBytes.Should().BeGreaterThanOrEqualTo(options.MaxFileBytes);
+    }
+
+    [Theory]
+    [InlineData("{\"todo\":{\"done\":true}}", true)]
+    [InlineData("{\"todo\":{\"done\":false},\"groupId\":\"10000000-0000-4000-8000-000000000001\"}", true)]
+    [InlineData("{\"todo\":{}}", false)]
+    [InlineData("{\"todo\":null}", false)]
+    [InlineData("{\"todo\":{\"done\":\"yes\"}}", false)]
+    [InlineData("{\"todo\":{\"done\":true,\"script\":\"evil\"}}", false)]
+    [InlineData("{\"groupId\":\"invalid\"}", false)]
+    [InlineData("{\"groupId\":\"00000000-0000-0000-0000-000000000000\"}", false)]
+    public void ItemTodoAndLogicalGroupAreStrictlyValidated(string appearance, bool valid)
+    {
+        var act = () => BoardValidator.ValidateItem(NoteItem(appearance: JsonDocument.Parse(appearance).RootElement));
+        if (valid) act.Should().NotThrow();
+        else act.Should().Throw<ApiException>().Where(error => error.Code == "invalid_item");
+    }
+
+    [Theory]
     [InlineData("checklist", "{\"title\":\"Tasks\",\"entries\":null}")]
     [InlineData("checklist", "{\"title\":\"Tasks\",\"entries\":[null]}")]
     [InlineData("checklist", "{\"title\":\"Tasks\",\"entries\":[{\"id\":\"x\",\"text\":\"Task\",\"done\":false},{\"id\":\"x\",\"text\":\"Duplicate\",\"done\":true}]}")]

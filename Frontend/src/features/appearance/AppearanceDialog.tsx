@@ -19,9 +19,18 @@ import {
   MAX_SIDEBAR_WIDTH,
 } from './appearanceModel';
 
-export default function AppearanceDialog({ onClose, projects }: { onClose: () => void; projects: Project[] }) {
+export default function AppearanceDialog({
+  onClose,
+  projects,
+  onTodoDisplayChange,
+}: {
+  onClose: () => void;
+  projects: Project[];
+  onTodoDisplayChange?: (projectId: string, value: NonNullable<Project['todoDisplay']>) => void;
+}) {
   useTranslation();
   const { preferences, savePreferences } = useTheme();
+  const [todoSettings, setTodoSettings] = useState<Record<string, NonNullable<Project['todoDisplay']>>>({});
   const [settings, setSettings] = useState(() => structuredClone(preferences));
   const [tab, setTab] = useState<'ui' | 'canvas'>('ui');
   const [scope, setScope] = useState('');
@@ -44,6 +53,7 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
         onSubmit={(event) => {
           event.preventDefault();
           savePreferences(settings);
+          for (const [id, value] of Object.entries(todoSettings)) onTodoDisplayChange?.(id, value);
           onClose();
         }}
       >
@@ -186,6 +196,32 @@ export default function AppearanceDialog({ onClose, projects }: { onClose: () =>
                     ))}
                 </select>
               </label>
+              {scope && onTodoDisplayChange && (
+                <label className="block">
+                  {translate('TODO item appearance')}
+                  <select
+                    className="planning-input w-full"
+                    disabled={
+                      !['Owner', 'Editor'].includes(projects.find((project) => project.id === scope)?.role ?? 'Owner')
+                    }
+                    value={
+                      (todoSettings[scope] ?? projects.find((project) => project.id === scope)?.todoDisplay) ===
+                      'strike'
+                        ? 'strike'
+                        : 'checkmark'
+                    }
+                    onChange={(event) =>
+                      setTodoSettings((current) => ({
+                        ...current,
+                        [scope]: event.target.value as NonNullable<Project['todoDisplay']>,
+                      }))
+                    }
+                  >
+                    <option value="checkmark">{translate('Dim with a green checkmark')}</option>
+                    <option value="strike">{translate('Dim and cross out completed items')}</option>
+                  </select>
+                </label>
+              )}
               {scope && (
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 font-medium">

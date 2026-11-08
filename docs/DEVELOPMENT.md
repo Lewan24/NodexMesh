@@ -189,3 +189,63 @@ Item borders are edited in Appearance, including for multiple selected items and
 Status definitions live in `projects.item_statuses` (migration `AddProjectItemStatuses`). Authenticated clients refresh definitions on focus and every 15 seconds while visible; saving a definition updates the current workspace immediately. The mock adapter stores definitions alongside project data. Archives carry definitions and remap status references on import. Pasting into another project discards unavailable status references.
 
 Search supports status titles/descriptions as plain text, `status:done` (item statuses and the existing comment-status filter), `item-status:done` (item statuses only), and `comment-status:resolved` (comments only). Nested-column items participate in the same search results and highlighting.
+
+## Logical groups, item TODO and keyboard navigation
+
+Group/Ungroup in the edit bar and canvas context menu assign/remove a shared UUID (`appearance.groupId`).
+This is independent of FrameBlock and `frameId`; grouping adds no new board item, background or frame.
+Selecting or dragging any member selects/moves its sibling group, with a dashed outline only while selected.
+The drag commits once, moves line endpoints, follows frame descendants and refuses to split a locked group.
+Clipboard and import renew group UUIDs so pasted items do not rejoin their source group.
+
+Every item can enable TODO (`appearance.todo: { done: boolean }`). The canvas context menu enables/removes
+TODO and toggles Done. TODO controls are absent from the edit bar. Completed items are dimmed and show either
+a centered green checkmark or a diagonal strike inside their own bounds. The overlays ignore pointer events;
+no external checkbox can cover adjacent items. Project tools > Appearance > Canvas > Canvas settings for >
+project selects the completion presentation. Older `checkbox` preferences render as the checkmark for compatibility. This setting is shared project metadata (`projects.todo_display`), requires Editor/Owner, and uses the
+existing project revision/save/conflict path. Viewers/public links can see completion but cannot change it.
+Apply migration `AddProjectTodoDisplay` when deploying. Export/import retain the setting and item completion.
+
+Space plus left-drag pans even when a button is focused. A short Space press retains native keyboard activation;
+a hold of 250 ms, key repetition, or a mouse gesture suppresses activation. Text inputs, editable content and
+modal/menu interactions keep their normal keyboard behavior. Window blur clears the held-key state.
+
+Fontsource subsets remain for fonts that include Polish. Comic Neue uses the full upstream font; Short Stack,
+Schoolbell and Walter Turncoat use locally generated derivatives with their own outlines for missing Polish
+letters. `Frontend/src/assets/fonts/README.md` documents sources, hashes, licenses and the rebuild script.
+Tests inspect the primary font family for every Polish letter in normal/bold/italic styles, preventing fallback
+from hiding missing glyphs.
+
+Regression coverage: `Frontend/tests/item-groups-todo-space.test.mjs`, `canvas-touch.test.mjs`, `fonts.test.mjs`,
+`Frontend/e2e/editor-interactions.spec.mjs`, `BoardValidatorTests` and `ProjectEndpointsTests`.
+
+## Font previews and rich notes
+
+The edit bar keeps its quick font-family select and adds Preview fonts. The modal lists the same families,
+accepts up to 2,000 characters of sample text, and previews size, bold and italic. Only Use font commits the
+chosen family; Cancel/Escape leaves item typography unchanged. The preview uses React text, including when
+the sample looks like HTML. The dialog uses native modal focus management and keyboard-accessible radios.
+
+Double-clicking a note opens a lazy-loaded Tiptap editor inside its existing sticky-note shell. The local
+formatting bar supports selected-word bold, italic, underline, strikethrough, headings, lists, quotes, inline
+code and clearing formatting. Done, Escape, deselection and outside clicks end editing. Changes save through
+the normal item adapter while typing; panning/zooming preserves the editor DOM and selection.
+
+Legacy notes remain plain text (including literal HTML-looking snippets) until edited. Rich notes persist
+`contentFormat: "tiptap-html"` and `contentVersion: 1` together in note data. Both client and API reject unknown
+or unpaired formats/versions. No database migration is required for this JSONB extension; deploy API and
+frontend together before saving rich notes. Copies, archives and nested notes retain formatting.
+
+Rich-note display and editor initialization pass through an inert-template allowlist of formatting tags.
+No attributes, styles, URLs, active elements or embedded media are retained. The renderer creates React
+nodes rather than injecting HTML into the live page. Search, drag summaries and camera previews use the same
+content helpers. Acknowledgements of our own edits never replace the editor document or reset selection.
+
+### Workspace tools in the context menu
+
+Right-clicking the canvas background or an item exposes Change application appearance and Open library,
+separated from item actions. Both reuse the existing project tools dialogs and the active project. The same
+workspace shortcuts are available on authenticated read-only boards; anonymous public pages retain their
+native menu. Text fields keep native editing menus. Library stays disabled in the local demo, and existing
+server authorization and file-management permissions continue to apply. App-bar and context-menu library
+entry points share the same dialog state. Long menus scroll inside the viewport and retain keyboard navigation.

@@ -1,4 +1,3 @@
-import LibraryDialog from '@/features/library/LibraryDialog';
 import { isMockDataSource } from '@/app/services';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +25,7 @@ interface AppBarProps {
   onRefresh: () => Promise<void>;
   liveStatus?: string;
   onAppearance: () => void;
+  onLibrary: () => void;
   projects: Project[];
   activeProjectId: string;
   onSelectProject: (id: string) => void;
@@ -53,6 +53,7 @@ export default function AppBar({
   onRefresh,
   liveStatus,
   onAppearance,
+  onLibrary,
   projects,
   activeProjectId,
   onSelectProject,
@@ -75,7 +76,6 @@ export default function AppBar({
   const { theme, toggleTheme } = useTheme();
   const mobile = useMobileLayout();
 
-  const [libraryOpen, setLibraryOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [mobileCollapsed, setMobileCollapsed] = useState(false);
 
@@ -112,9 +112,6 @@ export default function AppBar({
 
   return (
     <>
-      {libraryOpen && (
-        <LibraryDialog key={activeProjectId} projectId={activeProjectId} onClose={() => setLibraryOpen(false)} />
-      )}
       <header
         data-app-bar="true"
         className="workspace-app-bar h-16 min-h-16 flex items-center shrink-0 relative z-50 gap-2"
@@ -263,7 +260,7 @@ export default function AppBar({
                 disabled={isMockDataSource || !activeProjectId}
                 onClick={() => {
                   setOpenMenu(null);
-                  setLibraryOpen(true);
+                  onLibrary();
                 }}
               >
                 <Library size={16} aria-hidden="true" />

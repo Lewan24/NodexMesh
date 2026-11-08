@@ -143,6 +143,12 @@ public static class ProjectEndpoints
 
         if (request.Name is not null) project.Name = request.Name;
         if (request.Color is not null) project.Color = request.Color;
+        if (request.TodoDisplay is not null)
+        {
+            if (request.TodoDisplay is not ("checkbox" or "checkmark" or "strike"))
+                throw new ApiException(422, "invalid_settings", "Invalid TODO display.");
+            project.TodoDisplay = request.TodoDisplay;
+        }
         project.Revision += 1;
         project.UpdatedAt = DateTimeOffset.UtcNow;
         project.UpdatedBy = userId;
@@ -475,7 +481,7 @@ public static class ProjectEndpoints
 
     private static ProjectRecordDto ToDto(Project p, ProjectRole role, int itemCount = 0) => new(
         p.Id, p.OwnerId, p.Name, p.Color, p.Revision,
-        p.CreatedAt, p.UpdatedAt, p.CreatedBy, p.UpdatedBy, p.DeletedAt, role.ToString(), itemCount);
+        p.CreatedAt, p.UpdatedAt, p.CreatedBy, p.UpdatedBy, p.DeletedAt, role.ToString(), itemCount, p.TodoDisplay);
 
     private static Dictionary<string, string> EmailValues(string displayName, string projectName, string message) => new()
     {

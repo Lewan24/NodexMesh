@@ -1,3 +1,4 @@
+import { TodoDisplayContext } from '@/features/blocks/shared/ItemTodo';
 import { PublicStatusesProvider } from '@/features/statuses/ProjectStatusesContext';
 import type { ProjectStatus } from '@/features/statuses/types';
 import { translate } from '@/shared/i18n';
@@ -147,7 +148,9 @@ export default function PublicProjectPage({ token }: { token: string }) {
       ) : view ? (
         <PublicAppearanceProvider appearance={view.appearance}>
           <PublicStatusesProvider statuses={view.statuses}>
-            <ReadOnlyBoard key={boardId} items={view.project.items} />
+            <TodoDisplayContext.Provider value={view.project.todoDisplay ?? 'checkbox'}>
+              <ReadOnlyBoard key={boardId} items={view.project.items} />
+            </TodoDisplayContext.Provider>
           </PublicStatusesProvider>
         </PublicAppearanceProvider>
       ) : (

@@ -83,6 +83,8 @@ const sectionStyle = object({
   textAlign: optional(choice('left', 'center', 'right')),
 });
 const appearance = object({
+  groupId: optional(uuid),
+  todo: optional(object({ done: bool })),
   border: optional(validItemBorder),
   statusId: optional(uuid),
   customCss: optional(
@@ -131,7 +133,16 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
     }),
   },
   'section-title': { version: 1, canNest: false, validate: object({ content: text }) },
-  note: { version: 1, canNest: true, validate: object({ content: text }) },
+  note: {
+    version: 1,
+    canNest: true,
+    validate: (value) =>
+      object({ content: text, contentFormat: optional(choice('tiptap-html')), contentVersion: optional(choice(1)) })(
+        value,
+      ) &&
+      ((value as { contentFormat?: string }).contentFormat === undefined) ===
+        ((value as { contentVersion?: number }).contentVersion === undefined),
+  },
   text: { version: 1, canNest: true, validate: object({ content: text, size: choice('sm', 'md', 'lg', 'xl') }) },
   document: {
     version: 1,

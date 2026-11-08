@@ -1,0 +1,34 @@
+.item-todo {
+  position: relative;
+}
+.item-todo[data-todo-done='true'] > .item-todo-content {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+.item-todo-completion {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 20;
+}
+.item-todo-strike {
+  width: 100%;
+  height: 100%;
+  stroke: var(--color-text-primary);
+  stroke-width: 2;
+}
+.item-todo-strike path {
+  vector-effect: non-scaling-stroke;
+}
+.item-todo-checkmark {
+  width: min(60%, 128px);
+  height: min(80%, 128px);
+  fill: none;
+  stroke: #16a34a;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

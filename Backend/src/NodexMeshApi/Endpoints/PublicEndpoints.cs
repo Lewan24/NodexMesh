@@ -48,7 +48,7 @@ public static class PublicEndpoints
             .ToListAsync(ct);
 
         return TypedResults.Ok(new PublicProjectSnapshotDto(
-            new PublicProjectDto(project.Id, project.Name, project.Color, project.UpdatedAt),
+            new PublicProjectDto(project.Id, project.Name, project.Color, project.UpdatedAt, project.TodoDisplay),
             boards));
     }
 
@@ -97,7 +97,7 @@ public static class PublicEndpoints
                 assignedStatuses.Add(statusId);
         }
         return TypedResults.Ok(new PublicBoardSnapshotDto(
-            new PublicProjectDto(project.Id, project.Name, project.Color, project.UpdatedAt),
+            new PublicProjectDto(project.Id, project.Name, project.Color, project.UpdatedAt, project.TodoDisplay),
             new PublicBoardDto(board.Id, board.Name, board.SortOrder),
             items.Select(ToPublicDto).ToList(),
             links.Select(l => new ItemLinkDto(l.SourceItemId, l.TargetItemId, ToWireKind(l.Kind))).ToList(),
