@@ -24,7 +24,7 @@ export default function ColumnLayoutControls({ item, onUpdate }: ColumnLayoutCon
 
   return (
     <div
-      className="edit-bar-control-card flex items-center gap-2 rounded-xl border p-2"
+      className="edit-bar-control-card flex flex-wrap items-center gap-2 rounded-xl border p-2"
       style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
     >
       <span

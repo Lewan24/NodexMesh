@@ -16,7 +16,9 @@ await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 const { normalizeItemNumbers } = await server.ssrLoadModule('/src/entities/board/normalizeNumbers.ts');
 const { createEmptySibling } = await server.ssrLoadModule('/src/features/canvas/utils/quickCreate.ts');
-const { resolveLineItem } = await server.ssrLoadModule('/src/features/canvas/utils/lineGeometry.ts');
+const { resolveLineItem, lockLineConnectionSides, getItemRect } = await server.ssrLoadModule(
+  '/src/features/canvas/utils/lineGeometry.ts',
+);
 
 test('indexed connection geometry matches measured, missing-target and divider behavior', () => {
   const start = { ...createCanvasItem('note', 10, 20), id: 'start' };
@@ -1437,4 +1439,55 @@ test('private library references persist for image, icon and file blocks without
   const copy = cloneItems([icon], 32, 32, 2)[0];
   assert.equal(copy.source, source);
   assert.equal(copy.iconMode, 'library');
+});
+
+test('attached arrows slide only along the selected edges after moves and resizes', () => {
+  const start = { ...createCanvasItem('note', 0, 0), id: 'start' };
+  const end = { ...createCanvasItem('note', 600, 0), id: 'end' };
+  const line = {
+    ...createCanvasItem('line', 0, 0),
+    startItemId: start.id,
+    endItemId: end.id,
+    startSide: 'right',
+    endSide: 'left',
+  };
+  for (const [x, y] of [
+    [600, 0],
+    [600, 900],
+    [-600, -900],
+    [0, 600],
+  ]) {
+    const sizes = new Map([
+      ['start', { width: 400, height: 240 }],
+      ['end', { width: 500, height: 320 }],
+    ]);
+    const target = { ...end, x, y };
+    const resolved = resolveLineItem(line, [start, target], sizes);
+    assert.equal(resolved.x, 400);
+    assert.ok(resolved.y >= 0 && resolved.y <= 240);
+    assert.equal(resolved.x2, x);
+    assert.ok(resolved.y2 >= y && resolved.y2 <= y + 320);
+    assert.equal(resolveLineItem(resolved, [start, target], sizes), resolved);
+  }
+  const vertical = resolveLineItem({ ...line, startSide: 'bottom', endSide: 'top' }, [start, end]);
+  assert.equal(vertical.y, start.y + getItemRect(start).height);
+  assert.equal(vertical.y2, end.y);
+  const data = flattenItems([line], crypto.randomUUID())[0].item.data;
+  assert.equal(data.startSide, 'right');
+  assert.equal(data.endSide, 'left');
+  assert.ok(itemSchemas.line.validate(data));
+});
+
+test('legacy connections lock their current edges before their targets move', () => {
+  const start = { ...createCanvasItem('note', 0, 0), id: 'start' };
+  const end = { ...createCanvasItem('note', 600, 0), id: 'end' };
+  const line = { ...createCanvasItem('line', 320, 80), startItemId: start.id, endItemId: end.id };
+  const upgraded = lockLineConnectionSides([start, end, line]);
+  assert.equal(upgraded[2].startSide, 'right');
+  assert.equal(upgraded[2].endSide, 'left');
+  assert.equal(line.startSide, undefined);
+  const resolved = resolveLineItem(upgraded[2], [start, { ...end, x: -600, y: 1000 }]);
+  assert.equal(resolved.x, 320);
+  assert.equal(resolved.x2, -600);
+  assert.equal(lockLineConnectionSides(upgraded)[2], upgraded[2]);
 });

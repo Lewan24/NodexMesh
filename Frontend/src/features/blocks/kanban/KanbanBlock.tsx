@@ -26,7 +26,7 @@ import {
 
 import { useKanbanDrag } from '@/features/blocks/kanban/hooks/useKanbanDrag';
 import { getTypographyStyle } from '../typography/typographyUtils';
-import { ITEM_WIDTH } from '@/features/canvas/constants';
+import { CANVAS_GRID_SIZE, DEFAULT_NOTE_WIDTH, ITEM_WIDTH } from '@/features/canvas/constants';
 
 interface KanbanBlockProps {
   item: KanbanItem;
@@ -117,7 +117,13 @@ export default function KanbanBlock({
         return {
           ...current,
           columns,
-          width: Math.max(current.width ?? ITEM_WIDTH.kanban, getKanbanMinWidth(columns.length)),
+          width:
+            Math.max(
+              current.width ?? ITEM_WIDTH.kanban,
+              boardRef.current?.offsetWidth ?? 0,
+              getKanbanMinWidth(current.columns.length),
+            ) +
+            Math.max(0, columns.length - current.columns.length) * (DEFAULT_NOTE_WIDTH + CANVAS_GRID_SIZE),
         };
       });
     },

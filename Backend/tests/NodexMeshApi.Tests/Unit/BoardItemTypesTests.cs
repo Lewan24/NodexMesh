@@ -8,6 +8,24 @@ namespace NodexMeshApi.Tests.Unit;
 public class BoardItemTypesTests
 {
     [Fact]
+    public void Line_ConnectionSides_RoundTripAndAcceptLegacyLines()
+    {
+        const string json = """{"x2":600,"y2":80,"arrowStart":false,"arrowEnd":true,"strokeWidth":2,"startSide":"right","endSide":"left","staticAnchors":true,"startOffset":0.25,"endOffset":0.75}""";
+        var line = (LineData)BoardItemTypes.Deserialize("line", json);
+        line.StartSide.Should().Be("right");
+        line.EndSide.Should().Be("left");
+        line.StaticAnchors.Should().BeTrue();
+        line.StartOffset.Should().Be(0.25);
+        line.EndOffset.Should().Be(0.75);
+        var saved = System.Text.Json.JsonSerializer.Serialize(line, BoardItemTypes.StrictOptions);
+        BoardItemTypes.Deserialize("line", saved).Should().BeEquivalentTo(line);
+        const string legacy = """{"x2":600,"y2":80,"arrowStart":false,"arrowEnd":true,"strokeWidth":2}""";
+        var oldLine = (LineData)BoardItemTypes.Deserialize("line", legacy);
+        oldLine.StartSide.Should().BeNull();
+        oldLine.EndSide.Should().BeNull();
+    }
+
+    [Fact]
     public void Diagram_ConnectionAppearance_RoundTripsAndAcceptsLegacyEdges()
     {
         const string json = """{"title":"Flow","nodes":[],"edges":[{"id":"e","source":"a","target":"b","color":"#123456","strokeWidth":6,"lineStyle":"dashed","arrow":false}]}""";

@@ -41,12 +41,13 @@ export default function CompletedTasksButton({
     }
   };
   return (
-    <div onMouseDown={(event) => event.stopPropagation()} className="px-3 py-2 text-xs">
+    <div className="px-3 py-2 text-xs cursor-grab active:cursor-grabbing">
       <button
         data-read-only-action={readOnly || undefined}
         type="button"
         aria-pressed={hiding}
         disabled={busy}
+        onMouseDown={(event) => event.stopPropagation()}
         onClick={() => void toggle()}
         className="completed-tasks-button"
       >

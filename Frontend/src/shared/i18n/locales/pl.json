@@ -1583,5 +1583,14 @@
   "Request body exceeds the upload limit.": "Żądanie przekracza limit rozmiaru przesyłanych danych.",
   "The request could not be processed.": "Nie udało się przetworzyć żądania.",
   "Invalid palette gradient.": "Nieprawidłowy gradient palety.",
-  "Use a six-digit hexadecimal color.": "Użyj sześciocyfrowego koloru szesnastkowego."
+  "Use a six-digit hexadecimal color.": "Użyj sześciocyfrowego koloru szesnastkowego.",
+  "Fill gaps": "Uzupełnij luki",
+  "Fill empty space below shorter items for a compact layout.": "Wypełniaj puste miejsca pod niższymi elementami, aby uzyskać zwarty układ.",
+  "Items keep their sizes. With gap filling disabled, they follow reading order. Groups and frame contents move together. Wider items get their own row. Positions and minimum gaps follow the grid.": "Elementy zachowują swoje rozmiary. Po wyłączeniu uzupełniania luk zachowują kolejność czytania. Grupy i zawartość ramek przesuwają się razem. Szersze elementy otrzymują osobny wiersz. Pozycje i minimalne odstępy są dopasowane do siatki.",
+  "Static endpoints": "Stałe punkty zaczepienia",
+  "Keep endpoints at the chosen positions on item edges": "Zachowuj końce strzałki w wybranych miejscach na krawędziach elementów",
+  "Appearance options": "Opcje wyglądu",
+  "Board icon": "Ikona tablicy",
+  "Line thickness": "Grubość linii",
+  "Thickness": "Grubość"
 }

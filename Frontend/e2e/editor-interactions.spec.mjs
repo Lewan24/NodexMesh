@@ -31,7 +31,11 @@ test('board card has a clear CTA and optional preset and isolated SVG icons that
     .getByRole('textbox', { name: 'Board block description' })
     .fill('Ideas, references and decisions for the next release.');
   await card.locator('.board-block-kind').click();
-  await page.getByRole('tab', { name: 'Appearance', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'Appearance', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await page
+    .getByRole('group', { name: 'Appearance options', exact: true })
+    .getByRole('button', { name: 'Board icon', exact: true })
+    .click();
   await expect(page.getByRole('button', { name: 'Choose board icon' })).toBeDisabled();
   await page.getByRole('checkbox', { name: 'Show board icon' }).check();
   await expect(card.locator('.board-block-icon svg')).toHaveCount(1);
@@ -50,7 +54,11 @@ test('board card has a clear CTA and optional preset and isolated SVG icons that
   await expect(title).toHaveValue('Research and product planning board with a longer title');
   await expect(card.locator('.board-block-icon [role="img"]')).toHaveAttribute('aria-label', 'Rocket');
   await card.locator('.board-block-kind').click();
-  await page.getByRole('tab', { name: 'Appearance', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'Appearance', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await page
+    .getByRole('group', { name: 'Appearance options', exact: true })
+    .getByRole('button', { name: 'Board icon', exact: true })
+    .click();
   await page.getByRole('button', { name: 'Choose board icon' }).click();
   await picker.getByRole('button', { name: 'Custom SVG', exact: true }).click();
   await picker
@@ -66,7 +74,11 @@ test('board card has a clear CTA and optional preset and isolated SVG icons that
   await page.reload();
   await expect(card.locator('.board-block-icon img')).toHaveCount(1);
   await card.locator('.board-block-kind').click();
-  await page.getByRole('tab', { name: 'Appearance', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'Appearance', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await page
+    .getByRole('group', { name: 'Appearance options', exact: true })
+    .getByRole('button', { name: 'Board icon', exact: true })
+    .click();
   await page.getByRole('checkbox', { name: 'Show board icon' }).uncheck();
   await expect(card.locator('.board-block-icon')).toHaveCount(0);
 });

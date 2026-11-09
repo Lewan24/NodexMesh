@@ -61,7 +61,7 @@ export default function BorderPanel({
           <X size={14} />
         </button>
       </div>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="border-panel-fields grid grid-cols-4 gap-2">
         <label>
           {translate('Color')}
           <input type="color" value={border.color} onChange={(event) => patch({ color: event.target.value })} />

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { normalizeItemNumbers } from '@/entities/board/normalizeNumbers';
 import { normalizeFrameMembership, isItemInsideFrame } from '@/features/canvas/utils/frameGeometry';
-import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
+import { resolveLineItem, lockLineConnectionSides } from '@/features/canvas/utils/lineGeometry';
 
 import type { Dispatch, SetStateAction } from 'react';
 
@@ -30,11 +30,11 @@ function detachLines(items: BoardItem[], removedIds: string[]): BoardItem[] {
       let nextItem = resolveLineItem(item, items);
 
       if (item.startItemId && removed.has(item.startItemId)) {
-        nextItem = { ...nextItem, startItemId: undefined };
+        nextItem = { ...nextItem, startItemId: undefined, startSide: undefined };
       }
 
       if (item.endItemId && removed.has(item.endItemId)) {
-        nextItem = { ...nextItem, endItemId: undefined };
+        nextItem = { ...nextItem, endItemId: undefined, endSide: undefined };
       }
 
       return nextItem;
@@ -101,9 +101,9 @@ export function useProjectItems({ activeProjectId, setProjects }: UseProjectItem
           project.id === activeProjectId
             ? {
                 ...project,
-                items: normalizeFrameMembership(update(project.items).map(normalizeItemNumbers)).map((item) =>
-                  item.type === 'frame' && item.zIndex !== 0 ? { ...item, zIndex: 0 } : item,
-                ),
+                items: normalizeFrameMembership(
+                  update(lockLineConnectionSides(project.items)).map(normalizeItemNumbers),
+                ).map((item) => (item.type === 'frame' && item.zIndex !== 0 ? { ...item, zIndex: 0 } : item)),
               }
             : project,
         ),

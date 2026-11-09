@@ -54,7 +54,9 @@ public sealed record FrameData(string Title, double? Opacity);
 public sealed record DispenserData(string Title, [property: RegularExpression("^#[0-9a-fA-F]{6}$")] string? PaperColor = null);
 public sealed record LineData(
     double X2, double Y2, bool ArrowStart, bool ArrowEnd, double StrokeWidth, double? Curve,
-    string? LineCap, string? Label, string? LabelMode, double? LabelOffset, double? LabelFontSize, bool? Divider);
+    string? LineCap, string? Label, string? LabelMode, double? LabelOffset, double? LabelFontSize, bool? Divider,
+    string? StartSide = null, string? EndSide = null, bool? StaticAnchors = null,
+    double? StartOffset = null, double? EndOffset = null);
 public sealed record DrawingStrokeData(IReadOnlyList<GeoPoint> Points, double X, double Y, double ScaleX, double ScaleY, string Color, double StrokeWidth);
 public sealed record DrawingData(IReadOnlyList<GeoPoint> Points, double ViewWidth, double ViewHeight, double StrokeWidth, IReadOnlyList<DrawingStrokeData>? Strokes);
 public sealed record MindmapNodeData(string Id, string? ParentId, string Label, string Side, string BranchColor, string Background, string TextColor);

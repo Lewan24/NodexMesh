@@ -1583,5 +1583,14 @@
   "Request body exceeds the upload limit.": "Request body exceeds the upload limit.",
   "The request could not be processed.": "The request could not be processed.",
   "Invalid palette gradient.": "Invalid palette gradient.",
-  "Use a six-digit hexadecimal color.": "Use a six-digit hexadecimal color."
+  "Use a six-digit hexadecimal color.": "Use a six-digit hexadecimal color.",
+  "Fill gaps": "Fill gaps",
+  "Fill empty space below shorter items for a compact layout.": "Fill empty space below shorter items for a compact layout.",
+  "Items keep their sizes. With gap filling disabled, they follow reading order. Groups and frame contents move together. Wider items get their own row. Positions and minimum gaps follow the grid.": "Items keep their sizes. With gap filling disabled, they follow reading order. Groups and frame contents move together. Wider items get their own row. Positions and minimum gaps follow the grid.",
+  "Static endpoints": "Static endpoints",
+  "Keep endpoints at the chosen positions on item edges": "Keep endpoints at the chosen positions on item edges",
+  "Appearance options": "Appearance options",
+  "Board icon": "Board icon",
+  "Line thickness": "Line thickness",
+  "Thickness": "Thickness"
 }

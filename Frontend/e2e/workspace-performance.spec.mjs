@@ -365,7 +365,11 @@ test('item borders and project statuses compose, update and persist through the 
   await expect(item.locator('[data-status-css]')).toHaveCount(0);
   await expect(styled).toHaveCSS('font-size', '22px');
   expect(await styled.evaluate((node) => ({ width: node.offsetWidth, height: node.offsetHeight }))).toEqual(geometry);
-  await page.getByRole('tab', { name: 'Appearance', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'Appearance', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await page
+    .getByRole('group', { name: 'Appearance options', exact: true })
+    .getByRole('button', { name: 'Border', exact: true })
+    .click();
   const panel = page.getByRole('region', { name: 'Item border', exact: true });
   await expect(panel).toBeVisible();
   await panel.getByLabel('Width', { exact: true }).fill('5');

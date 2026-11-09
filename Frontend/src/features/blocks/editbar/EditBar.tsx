@@ -1,19 +1,15 @@
 import { isSingleGroup } from '@/features/canvas/utils/itemGroups';
 import { LayoutGrid, Palette, SlidersHorizontal, Type, X } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { BoardItem } from '@/entities/board/types';
 import { translate } from '@/shared/i18n';
-import { useMobileLayout } from '@/shared/components/dialogs/MobilePanel';
 
 import { ITEM_TEXT_SECTIONS } from '../typography/sectionTypography';
-import BorderPanel from './components/BorderPanel';
-import BoardIconControls from './components/BoardIconControls';
-import ColorPanel from './components/ColorPanel';
+import AppearanceControls from './components/AppearanceControls';
+import './editBar.css';
 import ColumnLayoutControls from './components/ColumnLayoutControls';
-import DrawingControls from './components/DrawingControls';
-import FrameControls from './components/FrameControls';
 import LayerControls from './components/LayerControls';
 import LineControls from './components/LineControls';
 import SectionTypographyControls from './components/SectionTypographyControls';
@@ -91,13 +87,12 @@ export default function EditBar({
   onDeleteColumnItem,
 }: EditBarProps) {
   useTranslation();
-  const mobile = useMobileLayout();
   const isColumnMode = !!columnItem;
   const isMulti = !isColumnMode && selectedItems.length > 1;
   const single = columnItem ?? (selectedItems.length === 1 ? selectedItems[0] : null);
   const hasAppearance = !!single || isMulti;
   const hasText = !!single && single.type !== 'drawing' && ITEM_TEXT_SECTIONS[single.type].length > 0;
-  const hasLayout = !!single;
+  const hasLayout = !!single || !!frameControls;
   const firstAvailableTab: EditTab | null = hasAppearance
     ? 'appearance'
     : hasText
@@ -105,9 +100,15 @@ export default function EditBar({
       : hasLayout
         ? 'layout'
         : null;
-  const [activeTab, setActiveTab] = useState<EditTab | null>(null);
-
-  useEffect(() => setActiveTab(mobile ? firstAvailableTab : null), [single?.id, isMulti, mobile, firstAvailableTab]);
+  const selectionKey = JSON.stringify([columnItem?.id ?? null, selectedItems.map((item) => item.id).sort()]);
+  const [tabSelection, setTabSelection] = useState<{ key: string; tab: EditTab | null }>({
+    key: selectionKey,
+    tab: firstAvailableTab,
+  });
+  if (tabSelection.key !== selectionKey) {
+    setTabSelection({ key: selectionKey, tab: firstAvailableTab });
+  }
+  const activeTab = tabSelection.key === selectionKey ? tabSelection.tab : firstAvailableTab;
 
   if (!columnItem && selectedItems.length === 0) return null;
 
@@ -132,20 +133,18 @@ export default function EditBar({
         ? translate(ITEM_TYPE_LABELS[single.type] ?? single.type)
         : '';
 
-  const toggleTab = (tab: EditTab) => setActiveTab((current) => (current === tab ? null : tab));
+  const toggleTab = (tab: EditTab) => setTabSelection({ key: selectionKey, tab: activeTab === tab ? null : tab });
 
   return (
     <div
       data-edit-bar="true"
-      className="edit-bar absolute left-1/2 z-50 flex -translate-x-1/2 select-none flex-col overflow-hidden rounded-2xl border shadow-xl"
+      className="edit-bar absolute z-50 flex select-none flex-col overflow-hidden rounded-2xl border shadow-xl"
       style={{
         top: 'var(--canvas-editbar-top, 12px)',
         background: 'var(--edit-bar-bg)',
         borderColor: 'color-mix(in srgb, var(--color-border) 72%, transparent)',
         boxShadow: '0 12px 38px rgba(24, 12, 40, 0.18), 0 2px 8px rgba(24, 12, 40, 0.08)',
         backdropFilter: 'blur(18px) saturate(1.2)',
-        width: 'max-content',
-        maxWidth: 'calc(100% - 24px)',
       }}
       onMouseDown={(event) => event.stopPropagation()}
     >
@@ -246,15 +245,6 @@ export default function EditBar({
         </button>
       </div>
 
-      {isMulti && selectedItems.some((item) => item.type === 'drawing') && (
-        <div
-          className="edit-bar-row flex items-center gap-2 border-t px-3 py-2"
-          style={{ borderColor: 'var(--color-border-soft)' }}
-        >
-          <DrawingControls items={selectedItems.filter((item) => item.type === 'drawing')} onUpdate={onUpdateItem} />
-        </div>
-      )}
-
       {activeTab === 'appearance' && hasAppearance && (
         <div
           id="edit-bar-panel-appearance"
@@ -262,18 +252,13 @@ export default function EditBar({
           className="edit-bar-tab-content edit-bar-appearance-panel flex items-start gap-2 overflow-x-auto border-t p-2"
           style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-panel)' }}
         >
-          {single &&
-            (single.type === 'line' && !isColumnMode ? (
-              <LineControls item={single} onUpdate={handleUpdate} />
-            ) : single.type === 'drawing' ? (
-              <DrawingControls items={[single]} onUpdate={(_, updater) => handleUpdate(updater)} />
-            ) : single.type === 'frame' ? (
-              <FrameControls item={single} onUpdate={handleUpdate} />
-            ) : (
-              <ColorPanel item={single} onUpdate={handleUpdate} />
-            ))}
-          <BorderPanel items={columnItem ? [columnItem] : selectedItems} onUpdate={handleUpdate} />
-          {single?.type === 'board' && <BoardIconControls key={single.id} item={single} onUpdate={handleUpdate} />}
+          <AppearanceControls
+            key={selectionKey}
+            items={columnItem ? [columnItem] : selectedItems}
+            onUpdate={handleUpdate}
+            onUpdateItem={onUpdateItem}
+            isColumnMode={isColumnMode}
+          />
         </div>
       )}
 
@@ -287,18 +272,23 @@ export default function EditBar({
           <div className="flex items-center gap-2 px-2 pt-2">
             <TypographyControls item={single} onUpdate={handleUpdate} />
           </div>
+          {single.type === 'line' && (
+            <div className="edit-bar-line-label">
+              <LineControls item={single} onUpdate={handleUpdate} section="label" />
+            </div>
+          )}
           <SectionTypographyControls key={single.id} item={single} onUpdate={handleUpdate} />
         </div>
       )}
 
-      {single && activeTab === 'layout' && hasLayout && (
+      {activeTab === 'layout' && hasLayout && (
         <div
           id="edit-bar-panel-layout"
           role="tabpanel"
-          className="edit-bar-tab-content edit-bar-layout-panel flex items-center gap-2 overflow-x-auto border-t p-2"
+          className="edit-bar-tab-content edit-bar-layout-panel flex flex-wrap items-center gap-2 overflow-x-auto border-t p-2"
           style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-panel)' }}
         >
-          {!isColumnMode && single.type !== 'frame' && (
+          {!isColumnMode && single && single.type !== 'frame' && (
             <div
               className="edit-bar-control-card flex shrink-0 items-center gap-2 rounded-xl border p-2"
               style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
@@ -325,8 +315,8 @@ export default function EditBar({
               {frameControls}
             </div>
           )}
-          {single.type === 'column' && <ColumnLayoutControls item={single} onUpdate={handleUpdate} />}
-          {!isColumnMode && single.type === 'frame' && (
+          {single?.type === 'column' && <ColumnLayoutControls item={single} onUpdate={handleUpdate} />}
+          {!isColumnMode && single?.type === 'frame' && (
             <div
               className="edit-bar-control-card flex shrink-0 items-center gap-2 rounded-xl border p-2"
               style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
@@ -347,7 +337,7 @@ export default function EditBar({
               </button>
             </div>
           )}
-          {single.type === 'document' && (
+          {single?.type === 'document' && (
             <div
               className="edit-bar-control-card flex shrink-0 items-center gap-2 rounded-xl border p-2"
               style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
@@ -366,7 +356,7 @@ export default function EditBar({
               </button>
             </div>
           )}
-          {single.type === 'embed' && (
+          {single?.type === 'embed' && (
             <label
               className="edit-bar-control-card flex shrink-0 items-center gap-2 rounded-xl border p-2 text-xs font-semibold"
               style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
@@ -384,7 +374,7 @@ export default function EditBar({
               {translate('Show label')}
             </label>
           )}
-          {single.type === 'timeline' && (
+          {single?.type === 'timeline' && (
             <label
               className="edit-bar-control-card flex shrink-0 items-center gap-2 rounded-xl border p-2"
               style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}

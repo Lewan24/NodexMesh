@@ -370,6 +370,8 @@ export interface ChecklistEntry {
   done: boolean;
 }
 
+export type LineConnectionSide = 'top' | 'right' | 'bottom' | 'left';
+
 export interface LineItem extends BaseItem {
   curve?: number;
   lineCap?: 'round' | 'butt' | 'square';
@@ -380,10 +382,16 @@ export interface LineItem extends BaseItem {
   arrowEnd: boolean;
   color: string;
   strokeWidth: number;
-  /** If set, the start point (x,y) follows this item's center instead of being fixed. */
+  /** Attached endpoints slide along their chosen edge. */
   startItemId?: string;
-  /** If set, the end point (x2,y2) follows this item's center instead of being fixed. */
+
   endItemId?: string;
+  startSide?: LineConnectionSide;
+  endSide?: LineConnectionSide;
+  /** Keep the endpoint at a fixed fraction of its edge when the target moves or resizes. */
+  staticAnchors?: boolean;
+  startOffset?: number;
+  endOffset?: number;
 
   label?: string;
   labelMode?: LineLabelMode;

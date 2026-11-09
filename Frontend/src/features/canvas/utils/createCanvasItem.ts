@@ -216,6 +216,7 @@ export function createCanvasItem(
         ...base,
         type: 'line',
         divider: type === 'divider',
+        staticAnchors: type !== 'divider',
         x: type === 'divider' ? Math.round(x / 16) * 16 : x,
         y: type === 'divider' ? Math.round(y / 16) * 16 : y,
         x2: (type === 'divider' ? Math.round(x / 16) * 16 : x) + ITEM_WIDTH.line,

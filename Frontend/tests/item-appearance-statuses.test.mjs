@@ -171,7 +171,7 @@ test('multi-selection border controls apply independent appearance to each selec
     await act(() => root.render(createElement(ThemeProvider, null, createElement(Harness))));
     const appearance = [...host.querySelectorAll('[role="tab"]')].find((button) => button.textContent === 'Appearance');
     assert.ok(appearance);
-    await click(appearance);
+    assert.equal(appearance.getAttribute('aria-selected'), 'true');
     await click([...host.querySelectorAll('button')].find((button) => button.textContent === 'Add border'));
     assert.equal(
       items.every((item) => item.border.width === 2),

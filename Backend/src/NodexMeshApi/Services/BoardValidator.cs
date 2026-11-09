@@ -70,6 +70,11 @@ public static class BoardValidator
             (note.ContentFormat is not null && (note.ContentFormat != "tiptap-html" || note.ContentVersion != 1)) ||
             (note.ContentFormat is null && note.ContentVersion is not null)))
             throw new ApiException(422, "invalid_item", "Invalid note content format.");
+        static bool ValidConnectionSide(string? side) => side is null or "top" or "right" or "bottom" or "left";
+        static bool ValidConnectionOffset(double? offset) => offset is null || (double.IsFinite(offset.Value) && offset >= 0 && offset <= 1);
+        if (data is LineData line && (!ValidConnectionSide(line.StartSide) || !ValidConnectionSide(line.EndSide)
+            || !ValidConnectionOffset(line.StartOffset) || !ValidConnectionOffset(line.EndOffset)))
+            throw new ApiException(422, "invalid_item", "Invalid line connection edge.");
         static bool ValidEntries(IReadOnlyList<TaskEntry>? entries) => entries is not null && entries.Count <= 10_000
             && entries.All(e => e is not null && !string.IsNullOrWhiteSpace(e.Id) && IsText(e.Id) && IsText(e.Text)
                 && (e.Description is null || e.Description.Length <= 20_000)
