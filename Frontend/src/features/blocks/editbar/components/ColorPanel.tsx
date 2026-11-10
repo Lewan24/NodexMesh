@@ -13,6 +13,7 @@ import CustomColorInput from './CustomColorInput';
 
 interface ColorPanelProps {
   item: BoardItem;
+  section?: 'fill' | 'strip';
   onUpdate: (updater: (item: BoardItem) => BoardItem) => void;
 }
 
@@ -202,7 +203,7 @@ function PanelTitle({ icon, children }: { icon: React.ReactNode; children: React
   );
 }
 
-export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
+export default function ColorPanel({ item, onUpdate, section }: ColorPanelProps) {
   useTranslation();
   const { appearance, theme } = useTheme();
   const palette = appearance[theme];
@@ -265,7 +266,7 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
   if (item.type === 'section-title') {
     return (
       <div
-        className="flex items-center gap-3 rounded-xl border px-3 py-2"
+        className="flex flex-wrap items-center gap-3 rounded-xl border px-3 py-2"
         style={{ borderColor: 'var(--color-border-soft)' }}
       >
         <PanelTitle icon={<Palette size={15} />}>{translate('Label color')}</PanelTitle>
@@ -291,9 +292,9 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
 
   return (
     <div className="edit-bar-color-panel flex items-stretch gap-2 p-0.5">
-      {showBackground && (
+      {showBackground && section !== 'strip' && (
         <section
-          className="edit-bar-color-card flex min-w-[300px] flex-col gap-2 rounded-2xl border p-2.5"
+          className="edit-bar-color-card flex min-w-0 flex-col gap-2 rounded-2xl border p-2.5"
           style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
         >
           <div className="flex items-center justify-between gap-3">
@@ -318,7 +319,7 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
                 key={role}
                 color={paletteBackground(palette, role)}
                 active={item.colorRole === role}
-                size={17}
+                size={24}
                 onClick={() => onUpdate((current) => ({ ...current, colorRole: role, gradient: undefined }))}
               />
             ))}
@@ -394,77 +395,82 @@ export default function ColorPanel({ item, onUpdate }: ColorPanelProps) {
         </section>
       )}
 
-      <section
-        className="edit-bar-color-card flex min-w-[300px] flex-col gap-2 rounded-2xl border p-2.5"
-        style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
-      >
-        <div className="flex items-center justify-between gap-3">
-          <PanelTitle icon={<Sparkles size={15} />}>{translate('Top accent strip')}</PanelTitle>
-          <div className="flex items-center gap-1">
-            <ModePicker value={stripMode} onChange={setStripMode} label={translate('Top accent strip')} />
-            {item.topColor && (
-              <button
-                type="button"
-                onClick={() => setStripColor(undefined)}
-                className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-rose-500/10"
-                style={{ color: 'var(--color-text-faint)' }}
-                title={translate('Remove strip')}
-                aria-label={translate('Remove strip')}
-              >
-                <X size={14} />
-              </button>
+      {section !== 'fill' && (
+        <section
+          className="edit-bar-color-card flex min-w-0 flex-col gap-2 rounded-2xl border p-2.5"
+          style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <PanelTitle icon={<Sparkles size={15} />}>{translate('Top accent strip')}</PanelTitle>
+            <div className="flex items-center gap-1">
+              <ModePicker value={stripMode} onChange={setStripMode} label={translate('Top accent strip')} />
+              {item.topColor && (
+                <button
+                  type="button"
+                  onClick={() => setStripColor(undefined)}
+                  className="flex min-h-7 items-center justify-center gap-1 px-2 rounded-lg text-xs transition-colors hover:bg-rose-500/10"
+                  style={{ color: 'var(--color-text-faint)' }}
+                  title={translate('Remove strip')}
+                  aria-label={translate('Remove strip')}
+                >
+                  <X size={14} aria-hidden="true" /> {translate('Remove strip')}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {STRIP_COLORS.map((color) => (
+              <ColorSwatch
+                key={color}
+                color={color}
+                size={24}
+                active={item.topColor === color}
+                onClick={() => setStripColor(item.topColor === color ? undefined : color)}
+              />
+            ))}
+            {stripMode === 'solid' && (
+              <div className="ml-auto">
+                <CustomColorInput
+                  value={item.topColor?.startsWith('#') ? item.topColor : stripGradient.from}
+                  onChange={setStripColor}
+                  title={translate('Custom accent color')}
+                />
+              </div>
             )}
           </div>
-        </div>
 
-        <div className="flex items-center gap-1.5">
-          {STRIP_COLORS.map((color) => (
-            <ColorSwatch
-              key={color}
-              color={color}
-              size={17}
-              active={item.topColor === color}
-              onClick={() => setStripColor(item.topColor === color ? undefined : color)}
-            />
-          ))}
-          {stripMode === 'solid' && (
-            <div className="ml-auto">
-              <CustomColorInput
-                value={item.topColor?.startsWith('#') ? item.topColor : stripGradient.from}
-                onChange={setStripColor}
-                title={translate('Custom accent color')}
+          {stripMode !== 'solid' && (
+            <div className="flex items-center gap-2">
+              <GradientStops
+                from={stripGradient.from}
+                to={stripGradient.to}
+                onChange={(key, color) => updateStripGradient({ [key]: color })}
               />
+              {stripMode === 'linear' && (
+                <label className="flex min-w-0 flex-1 items-center gap-2" title={translate('Gradient angle')}>
+                  <input
+                    aria-label={translate('Gradient angle')}
+                    type="range"
+                    min="0"
+                    max="360"
+                    step="15"
+                    className="min-w-16 flex-1 accent-[var(--color-accent)]"
+                    value={stripGradient.angle}
+                    onChange={(event) => updateStripGradient({ angle: Number(event.target.value) })}
+                  />
+                  <span
+                    className="w-8 text-right text-[10px] tabular-nums"
+                    style={{ color: 'var(--color-text-faint)' }}
+                  >
+                    {stripGradient.angle}°
+                  </span>
+                </label>
+              )}
             </div>
           )}
-        </div>
-
-        {stripMode !== 'solid' && (
-          <div className="flex items-center gap-2">
-            <GradientStops
-              from={stripGradient.from}
-              to={stripGradient.to}
-              onChange={(key, color) => updateStripGradient({ [key]: color })}
-            />
-            {stripMode === 'linear' && (
-              <label className="flex min-w-0 flex-1 items-center gap-2" title={translate('Gradient angle')}>
-                <input
-                  aria-label={translate('Gradient angle')}
-                  type="range"
-                  min="0"
-                  max="360"
-                  step="15"
-                  className="min-w-16 flex-1 accent-[var(--color-accent)]"
-                  value={stripGradient.angle}
-                  onChange={(event) => updateStripGradient({ angle: Number(event.target.value) })}
-                />
-                <span className="w-8 text-right text-[10px] tabular-nums" style={{ color: 'var(--color-text-faint)' }}>
-                  {stripGradient.angle}°
-                </span>
-              </label>
-            )}
-          </div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

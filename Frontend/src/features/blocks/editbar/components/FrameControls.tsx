@@ -22,7 +22,7 @@ export default function FrameControls({ item, onUpdate }: FrameControlsProps) {
 
   return (
     <>
-      <div className="flex items-center gap-1 px-1">
+      <div className="flex flex-wrap items-center gap-1 px-1">
         {FRAME_COLORS.map((color) => (
           <ColorSwatch key={color} color={color} active={item.color === color} onClick={() => update({ color })} />
         ))}

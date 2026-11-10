@@ -161,7 +161,7 @@ test('Kanban column backdrop commits a valid draft through its save handler', as
     await fire(dialog, new MouseEvent('click', { bubbles: true }));
     assert.equal(saved.length, 0);
     await fire(dialog.parentElement, new MouseEvent('click', { bubbles: true }));
-    assert.deepEqual(saved, [{ title: 'Draft title', color: '#abcdef', share: 0.5 }]);
+    assert.deepEqual(saved, [{ title: 'Draft title', color: '#abcdef', icon: undefined, share: 0.5 }]);
   } finally {
     await cleanup();
   }

@@ -31,9 +31,11 @@ export default function ArrangementDialog({
   const [gap, setGap] = useState(String(DEFAULT_ARRANGEMENT.gap));
   const [perRow, setPerRow] = useState(String(DEFAULT_ARRANGEMENT.perRow));
   const [widthModules, setWidthModules] = useState(String(DEFAULT_ARRANGEMENT.widthModules));
+  const [fillGaps, setFillGaps] = useState(DEFAULT_ARRANGEMENT.fillGaps ?? true);
   const [commitError, setCommitError] = useState<string>();
   const options: ArrangementOptions = {
     mode,
+    fillGaps,
     gap: Number(gap),
     perRow: Number(perRow),
     widthModules: Number(widthModules),
@@ -43,6 +45,7 @@ export default function ArrangementDialog({
       return {
         positions: planArrangement(units, {
           mode,
+          fillGaps,
           gap: Number(gap),
           perRow: Number(perRow),
           widthModules: Number(widthModules),
@@ -52,7 +55,7 @@ export default function ArrangementDialog({
     } catch (error) {
       return { positions: undefined, error: error instanceof Error ? error.message : 'Cannot arrange this selection.' };
     }
-  }, [units, mode, gap, perRow, widthModules]);
+  }, [units, mode, gap, perRow, widthModules, fillGaps]);
   const error = blockedReason ?? preview.error ?? commitError;
   const rectangles = units.slice(0, 50).flatMap((unit, index) => {
     const point = preview.positions?.get(unit.id);
@@ -161,6 +164,18 @@ export default function ArrangementDialog({
               </label>
             )}
           </div>
+          <label className="arrangement-fill-gaps">
+            <input
+              type="checkbox"
+              checked={fillGaps}
+              onChange={(event) => {
+                setFillGaps(event.target.checked);
+                setCommitError(undefined);
+              }}
+            />
+            {translate('Fill gaps')}
+          </label>
+          <p className="arrangement-help">{translate('Fill empty space below shorter items for a compact layout.')}</p>
           <p id={helpId} className="arrangement-help">
             {translate(
               'One width module is one default note. The width includes one grid step between modules. One grid step is {{value1}} px.',
@@ -169,7 +184,7 @@ export default function ArrangementDialog({
           </p>
           <p className="arrangement-help">
             {translate(
-              'Items keep their sizes and follow reading order. Groups and frame contents move together. Wider items get their own row. Positions and minimum gaps follow the grid.',
+              'Items keep their sizes. With gap filling disabled, they follow reading order. Groups and frame contents move together. Wider items get their own row. Positions and minimum gaps follow the grid.',
             )}
           </p>
           {preview.positions && (

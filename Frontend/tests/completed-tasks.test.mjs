@@ -302,3 +302,78 @@ for (const [type, Component] of [
     }
   });
 }
+
+for (const [type, Component] of [
+  ['checklist', ChecklistBlock],
+  ['kanban', KanbanBlock],
+]) {
+  test(`${type} filter strip bubbles item gestures while its button remains interactive`, async () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const root = createRoot(host);
+    let gestures = 0;
+    const handleGesture = () => gestures++;
+    document.body.addEventListener('mousedown', handleGesture);
+
+    try {
+      await act(async () =>
+        root.render(
+          createElement(
+            ThemeProvider,
+            null,
+            createElement(Component, { item: makeItem(type), onUpdate() {}, onDelete() {} }),
+          ),
+        ),
+      );
+      const button = host.querySelector('.completed-tasks-button');
+      button.parentElement.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      assert.equal(gestures, 1);
+      button.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      assert.equal(gestures, 1);
+    } finally {
+      document.body.removeEventListener('mousedown', handleGesture);
+      await act(async () => root.unmount());
+      host.remove();
+    }
+  });
+}
+
+test('adding kanban columns grows saved board width by one note and a 16px gap each time', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const root = createRoot(host);
+  let current = {
+    ...makeItem('kanban'),
+    width: 992,
+    hideCompleted: false,
+    taskSummary: undefined,
+    columns: Array.from({ length: 3 }, (_, i) => ({ id: String(i), title: 'Column', color: '#fff', cards: [] })),
+  };
+  const render = () =>
+    root.render(
+      createElement(
+        ThemeProvider,
+        null,
+        createElement(KanbanBlock, {
+          item: current,
+          onDelete() {},
+          onUpdate(updater) {
+            current = updater(current);
+            render();
+          },
+        }),
+      ),
+    );
+  try {
+    await act(async () => render());
+    await click(host.querySelector('button[title="Add column"]'));
+    assert.equal(current.width, 1328);
+    assert.equal(current.columns.length, 4);
+    await click(host.querySelector('button[title="Add column"]'));
+    assert.equal(current.width, 1664);
+    assert.equal(current.columns.length, 5);
+  } finally {
+    await act(async () => root.unmount());
+    host.remove();
+  }
+});

@@ -31,7 +31,11 @@ test('board card has a clear CTA and optional preset and isolated SVG icons that
     .getByRole('textbox', { name: 'Board block description' })
     .fill('Ideas, references and decisions for the next release.');
   await card.locator('.board-block-kind').click();
-  await page.getByRole('tab', { name: 'Appearance', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'Appearance', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await page
+    .getByRole('group', { name: 'Appearance options', exact: true })
+    .getByRole('button', { name: 'Board icon', exact: true })
+    .click();
   await expect(page.getByRole('button', { name: 'Choose board icon' })).toBeDisabled();
   await page.getByRole('checkbox', { name: 'Show board icon' }).check();
   await expect(card.locator('.board-block-icon svg')).toHaveCount(1);
@@ -50,7 +54,11 @@ test('board card has a clear CTA and optional preset and isolated SVG icons that
   await expect(title).toHaveValue('Research and product planning board with a longer title');
   await expect(card.locator('.board-block-icon [role="img"]')).toHaveAttribute('aria-label', 'Rocket');
   await card.locator('.board-block-kind').click();
-  await page.getByRole('tab', { name: 'Appearance', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'Appearance', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await page
+    .getByRole('group', { name: 'Appearance options', exact: true })
+    .getByRole('button', { name: 'Board icon', exact: true })
+    .click();
   await page.getByRole('button', { name: 'Choose board icon' }).click();
   await picker.getByRole('button', { name: 'Custom SVG', exact: true }).click();
   await picker
@@ -66,7 +74,11 @@ test('board card has a clear CTA and optional preset and isolated SVG icons that
   await page.reload();
   await expect(card.locator('.board-block-icon img')).toHaveCount(1);
   await card.locator('.board-block-kind').click();
-  await page.getByRole('tab', { name: 'Appearance', exact: true }).click();
+  await expect(page.getByRole('tab', { name: 'Appearance', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await page
+    .getByRole('group', { name: 'Appearance options', exact: true })
+    .getByRole('button', { name: 'Board icon', exact: true })
+    .click();
   await page.getByRole('checkbox', { name: 'Show board icon' }).uncheck();
   await expect(card.locator('.board-block-icon')).toHaveCount(0);
 });
@@ -334,7 +346,8 @@ test('font dialog previews custom text without changing the item until Apply', a
   await item(page, 10).click({ position: { x: 100, y: 70 } });
   await page.getByRole('tab', { name: 'Text', exact: true }).click();
   const select = page.getByRole('combobox', { name: 'Item font family', exact: true });
-  await select.selectOption('kalam');
+  await select.click();
+  await page.getByRole('option', { name: 'Kalam · Sketch', exact: true }).click();
   await page.getByRole('button', { name: 'Preview fonts', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Preview fonts', exact: true });
   await dialog.getByLabel('Your sample text').fill('Zażółć gęślą jaźń <img src=x>');
@@ -343,13 +356,13 @@ test('font dialog previews custom text without changing the item until Apply', a
   await expect(dialog.locator('[data-font-preview]')).toHaveText('Zażółć gęślą jaźń <img src=x>');
   await expect(dialog.locator('[data-font-preview] img')).toHaveCount(0);
   await page.screenshot({ path: 'test-results/font-preview-dialog.png' });
-  await expect(select).toHaveValue('kalam');
+  await expect(select).toHaveAttribute('data-font-value', 'kalam');
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await expect(select).toHaveValue('kalam');
+  await expect(select).toHaveAttribute('data-font-value', 'kalam');
   await page.getByRole('button', { name: 'Preview fonts', exact: true }).click();
   await dialog.getByRole('radio', { name: 'Comic Neue · Playful', exact: true }).check();
   await dialog.getByRole('button', { name: 'Use font', exact: true }).click();
-  await expect(select).toHaveValue('comic-neue');
+  await expect(select).toHaveAttribute('data-font-value', 'comic-neue');
 });
 
 test('selected words in a note retain formatting after editing, saving and reloading', async ({ page }) => {

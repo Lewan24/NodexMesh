@@ -17,9 +17,11 @@ if (localStorage.getItem(mockWorkspaceKey(DEMO_USER_ID)) !== null && localStorag
   throw new Error('The workspace benchmark requires a fresh browser context; existing demo data was not changed.');
 }
 const parameters = new URLSearchParams(location.search);
+if (parameters.get('welcome') !== '1') localStorage.setItem(`nodexmesh.user-guide.${DEMO_USER_ID}`, 'dismissed');
 const mixed = parameters.get('board') === 'mixed';
 const interactions = parameters.get('board') === 'interactions';
-const dataset = interactions ? 'interactions' : mixed ? 'mixed' : 'notes';
+const guide = parameters.get('board')?.startsWith('guide') ?? false;
+const dataset = guide ? parameters.get('board')! : interactions ? 'interactions' : mixed ? 'mixed' : 'notes';
 const identity = (index: number) => `10000000-0000-4000-8000-${String(index).padStart(12, '0')}`;
 const projectId = identity(1);
 const boardId = identity(2);
@@ -84,6 +86,112 @@ if (interactions) {
   const iconCard = create('icon', 1050, 350);
   items.push(first, second, frame, child, column, boardCard, iconCard);
 }
+if (guide) {
+  items.length = 0;
+  sequence = 10;
+  if (dataset === 'guide-notes') {
+    items.push(
+      create('note', 0, 40, {
+        content: 'Jeden pomysł na notatkę\n\nProste decyzje i wnioski ze spotkań.',
+        width: 250,
+        height: 220,
+        color: '#fff3c4',
+      }),
+      create('document', 290, 40, {
+        title: 'Plan działania',
+        content:
+          '<h2>Cel wydania</h2><p>Ułatwić nowym użytkownikom pierwsze kroki.</p><ul><li>Przygotować instrukcję</li><li>Sprawdzić dostępność</li><li>Zebrać opinie zespołu</li></ul>',
+        width: 420,
+        height: 420,
+        autoHeight: false,
+      }),
+      create('code', 0, 300, {
+        content: 'const nextStep = {\n  title: "Zebrać opinie",\n  done: false\n};',
+        language: 'javascript',
+        width: 250,
+        height: 210,
+      }),
+    );
+  } else if (dataset === 'guide-planning') {
+    items.push(create('mindmap', 0, 20, { title: 'Mapa pomysłów', width: 930, height: 620 }));
+  } else if (dataset === 'guide-connections') {
+    const first = create('note', 0, 160, {
+      content: 'Decyzja\n\nCo chcemy osiągnąć?',
+      width: 250,
+      height: 190,
+      color: '#fff3c4',
+    });
+    const second = create('note', 520, 160, {
+      content: 'Wdrożenie\n\nKto i kiedy to zrealizuje?',
+      width: 250,
+      height: 190,
+      color: '#dceee5',
+    });
+    items.push(
+      first,
+      second,
+      create('line', 250, 255, {
+        x2: 520,
+        y2: 255,
+        startItemId: first.id,
+        endItemId: second.id,
+        startSide: 'right',
+        endSide: 'left',
+        label: 'następny krok',
+        staticAnchors: true,
+      }),
+    );
+  } else {
+    items.push(
+      create('section-title', 0, 0, { content: 'Nowa strona — plan zespołu', width: 860 }),
+      create('note', 0, 90, {
+        content: 'Cel projektu\n\nPrzejrzysta strona, na której każdy szybko znajdzie potrzebne informacje.',
+        width: 250,
+        height: 210,
+        color: '#fff3c4',
+      }),
+      create('note', 280, 90, {
+        content: 'Do omówienia\n\n• Nawigacja\n• Dostępność\n• Pierwsze kroki',
+        width: 250,
+        height: 210,
+        color: '#e4e0f4',
+      }),
+      create('checklist', 560, 90, {
+        title: 'Przygotowanie',
+        width: 290,
+        entries: [
+          { id: identity(50), text: 'Ustalić cel', done: true },
+          { id: identity(51), text: 'Zebrać materiały', done: false },
+          { id: identity(52), text: 'Zaplanować testy', done: false },
+        ],
+      }),
+      create('kanban', 0, 350, {
+        title: 'Zadania zespołu',
+        width: 850,
+        columns: [
+          {
+            id: identity(60),
+            title: 'Do zrobienia',
+            color: '#537f83',
+            cards: [{ id: identity(61), text: 'Przygotować makiety', done: false, deadline: '2026-11-12' }],
+          },
+          {
+            id: identity(62),
+            title: 'W toku',
+            color: '#946a6a',
+            cards: [{ id: identity(63), text: 'Opisać wymagania', done: false }],
+          },
+          {
+            id: identity(64),
+            title: 'Gotowe',
+            color: '#66836d',
+            cards: [{ id: identity(65), text: 'Ustalić cel projektu', done: true }],
+          },
+        ],
+      }),
+    );
+  }
+}
 const metadata = {
   revision: '1',
   createdAt: '2026-10-21T00:00:00Z',
@@ -103,7 +211,13 @@ const board: BoardSnapshot = {
 };
 validateBoard(board);
 const project: ProjectSnapshot = {
-  project: { id: projectId, ownerId: DEMO_USER_ID, name: 'Rendering benchmark', color: '#7c3aed', ...metadata },
+  project: {
+    id: projectId,
+    ownerId: DEMO_USER_ID,
+    name: guide ? 'Nowa strona — zespół' : 'Rendering benchmark',
+    color: '#7c3aed',
+    ...metadata,
+  },
   board,
 };
 if (localStorage.getItem(datasetKey) !== dataset) {
@@ -114,7 +228,7 @@ if (localStorage.getItem(datasetKey) !== dataset) {
   localStorage.setItem(`nodexmesh.default-project.${DEMO_USER_ID}`, projectId);
   localStorage.setItem(
     viewportKey(DEMO_USER_ID, projectId, boardId)!,
-    JSON.stringify({ pan: { x: 40, y: 40 }, zoom: 1 }),
+    JSON.stringify({ pan: { x: 40, y: 40 }, zoom: guide ? 0.85 : 1 }),
   );
   localStorage.setItem(datasetKey, dataset);
 }

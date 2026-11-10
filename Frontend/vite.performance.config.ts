@@ -13,6 +13,7 @@ export default mergeConfig(
         input: [
           path.resolve(import.meta.dirname, 'e2e/performance/index.html'),
           path.resolve(import.meta.dirname, 'e2e/workspace/index.html'),
+          path.resolve(import.meta.dirname, 'e2e/editbar/index.html'),
         ],
       },
     },

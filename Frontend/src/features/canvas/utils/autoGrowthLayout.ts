@@ -5,6 +5,7 @@ import { CANVAS_GRID_SIZE, FRAME_AUTO_EXPAND_PADDING } from '../constants';
 
 export function growsAutomatically(item: BoardItem): boolean {
   if (
+    item.locked ||
     item.type === 'frame' ||
     item.type === 'line' ||
     item.type === 'drawing' ||

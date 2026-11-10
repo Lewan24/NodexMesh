@@ -16,7 +16,9 @@ await (await server.ssrLoadModule('/src/shared/i18n/index.ts')).changeLanguage('
 const { createCanvasItem } = await server.ssrLoadModule('/src/features/canvas/utils/createCanvasItem.ts');
 const { normalizeItemNumbers } = await server.ssrLoadModule('/src/entities/board/normalizeNumbers.ts');
 const { createEmptySibling } = await server.ssrLoadModule('/src/features/canvas/utils/quickCreate.ts');
-const { resolveLineItem } = await server.ssrLoadModule('/src/features/canvas/utils/lineGeometry.ts');
+const { resolveLineItem, lockLineConnectionSides, getItemRect } = await server.ssrLoadModule(
+  '/src/features/canvas/utils/lineGeometry.ts',
+);
 
 test('indexed connection geometry matches measured, missing-target and divider behavior', () => {
   const start = { ...createCanvasItem('note', 10, 20), id: 'start' };
@@ -136,6 +138,9 @@ const { DROPPABLE_ON_COLUMN } = await server.ssrLoadModule('/src/features/canvas
 const { sectionTitleScale } = await server.ssrLoadModule('/src/features/blocks/section-title/SectionTitleBlock.tsx');
 const { appendKanbanColumn, getColumnShare, setColumnShare, equalizeKanbanColumns, getKanbanMinWidth } =
   await server.ssrLoadModule('/src/features/blocks/kanban/utils/kanbanUtils.ts');
+const { resetItemAppearance, resetItemTypography } = await server.ssrLoadModule(
+  '/src/features/blocks/editbar/resetAppearance.ts',
+);
 const { getIconImageSource } = await server.ssrLoadModule('/src/features/blocks/icon/iconUtils.ts');
 const { default: IconBlock } = await server.ssrLoadModule('/src/features/blocks/icon/IconBlock.tsx');
 const {
@@ -1437,4 +1442,128 @@ test('private library references persist for image, icon and file blocks without
   const copy = cloneItems([icon], 32, 32, 2)[0];
   assert.equal(copy.source, source);
   assert.equal(copy.iconMode, 'library');
+});
+
+test('attached arrows slide only along the selected edges after moves and resizes', () => {
+  const start = { ...createCanvasItem('note', 0, 0), id: 'start' };
+  const end = { ...createCanvasItem('note', 600, 0), id: 'end' };
+  const line = {
+    ...createCanvasItem('line', 0, 0),
+    startItemId: start.id,
+    endItemId: end.id,
+    startSide: 'right',
+    endSide: 'left',
+  };
+  for (const [x, y] of [
+    [600, 0],
+    [600, 900],
+    [-600, -900],
+    [0, 600],
+  ]) {
+    const sizes = new Map([
+      ['start', { width: 400, height: 240 }],
+      ['end', { width: 500, height: 320 }],
+    ]);
+    const target = { ...end, x, y };
+    const resolved = resolveLineItem(line, [start, target], sizes);
+    assert.equal(resolved.x, 400);
+    assert.ok(resolved.y >= 0 && resolved.y <= 240);
+    assert.equal(resolved.x2, x);
+    assert.ok(resolved.y2 >= y && resolved.y2 <= y + 320);
+    assert.equal(resolveLineItem(resolved, [start, target], sizes), resolved);
+  }
+  const vertical = resolveLineItem({ ...line, startSide: 'bottom', endSide: 'top' }, [start, end]);
+  assert.equal(vertical.y, start.y + getItemRect(start).height);
+  assert.equal(vertical.y2, end.y);
+  const data = flattenItems([line], crypto.randomUUID())[0].item.data;
+  assert.equal(data.startSide, 'right');
+  assert.equal(data.endSide, 'left');
+  assert.ok(itemSchemas.line.validate(data));
+});
+
+test('legacy connections lock their current edges before their targets move', () => {
+  const start = { ...createCanvasItem('note', 0, 0), id: 'start' };
+  const end = { ...createCanvasItem('note', 600, 0), id: 'end' };
+  const line = { ...createCanvasItem('line', 320, 80), startItemId: start.id, endItemId: end.id };
+  const upgraded = lockLineConnectionSides([start, end, line]);
+  assert.equal(upgraded[2].startSide, 'right');
+  assert.equal(upgraded[2].endSide, 'left');
+  assert.equal(line.startSide, undefined);
+  const resolved = resolveLineItem(upgraded[2], [start, { ...end, x: -600, y: 1000 }]);
+  assert.equal(resolved.x, 320);
+  assert.equal(resolved.x2, -600);
+  assert.equal(lockLineConnectionSides(upgraded)[2], upgraded[2]);
+});
+
+test('appearance resets retain content, geometry and connections, including independent drawing strokes', () => {
+  const line = {
+    ...createCanvasItem('line', 20, 30),
+    startItemId: 'start',
+    endItemId: 'end',
+    startOffset: 0.25,
+    endOffset: 0.75,
+    curve: 0.5,
+    strokeWidth: 6,
+    color: '#ff0000',
+    label: 'Link',
+  };
+  const reset = resetItemAppearance(line);
+  assert.equal(reset.color, '#7C3AED');
+  assert.equal(reset.strokeWidth, 2);
+  for (const field of [
+    'id',
+    'x',
+    'y',
+    'x2',
+    'y2',
+    'startItemId',
+    'endItemId',
+    'startOffset',
+    'endOffset',
+    'staticAnchors',
+    'label',
+  ])
+    assert.equal(reset[field], line[field]);
+  const drawing = {
+    ...createInk(
+      [
+        { x: 0, y: 0 },
+        { x: 20, y: 30 },
+      ],
+      1,
+    ),
+    color: '#ff0000',
+    strokes: [{ points: [{ x: 3, y: 8 }], x: 5, y: 6, scaleX: 2, scaleY: 1, color: '#ff0000', strokeWidth: 9 }],
+  };
+  const ink = resetItemAppearance(drawing);
+  assert.deepEqual(ink.strokes[0], { ...drawing.strokes[0], color: '#7C3AED', strokeWidth: 3 });
+  assert.equal(ink.width, drawing.width);
+  const note = {
+    ...createCanvasItem('note', 50, 60),
+    content: 'Keep this',
+    width: 444,
+    typography: { fontFamily: 'serif' },
+    border: { color: '#fff', width: 2, style: 'solid' },
+  };
+  assert.equal(resetItemAppearance(note).content, note.content);
+  assert.equal(resetItemAppearance(note).width, 444);
+  assert.equal(resetItemTypography(note).typography, undefined);
+});
+
+test('column icons survive saving and quick copies and reject malformed metadata', () => {
+  const board = createCanvasItem('kanban', 0, 0);
+  board.columns[0].icon = { mode: 'preset', source: 'rocket' };
+  board.columns[1].icon = { mode: 'emoji', source: '🧭' };
+  const write = flattenItems([board], crypto.randomUUID())[0].item;
+  assert.deepEqual(write.data.columns[0].icon, board.columns[0].icon);
+  const sibling = createEmptySibling(board);
+  assert.deepEqual(sibling.columns[0].icon, board.columns[0].icon);
+  assert.equal(sibling.columns[0].cards.length, 0);
+  for (const icon of [
+    { mode: 'html', source: '<script>' },
+    { mode: 'emoji', source: '' },
+    { mode: 'emoji', source: 'x'.repeat(65) },
+  ]) {
+    assert.throws(() => flattenItems([{ ...board, columns: [{ ...board.columns[0], icon }] }], crypto.randomUUID()));
+  }
 });

@@ -120,6 +120,7 @@ export default function ItemInspector({
         data-item-inspector="true"
         className="absolute right-3 top-50 z-40 w-72 max-h-[calc(100dvh-15rem)] rounded-2xl shadow-2xl overflow-y-auto"
         style={{
+          width: 'var(--canvas-inspector-width, 18rem)',
           backgroundColor: 'var(--color-surface-translucent)',
 
           border: '1px solid var(--color-border)',

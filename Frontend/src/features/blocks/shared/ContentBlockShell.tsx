@@ -25,18 +25,19 @@ export default function ContentBlockShell({
   onOutsideClick?: () => void;
 }) {
   useTranslation();
+  const fitContent = autoHeight && !item.locked;
   const contentRef = useRef<HTMLDivElement>(null);
   const [fittedHeight, setFittedHeight] = useState(minHeight);
   useEffect(() => {
     const content = contentRef.current;
-    if (!autoHeight || !content) return;
+    if (!fitContent || !content) return;
     const measure = () =>
       setFittedHeight(Math.ceil(Math.max(minHeight, content.offsetHeight) / CANVAS_GRID_SIZE) * CANVAS_GRID_SIZE);
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(content);
     return () => observer.disconnect();
-  }, [autoHeight, minHeight]);
+  }, [fitContent, minHeight]);
   const shellRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!onOutsideClick) return;
@@ -66,7 +67,7 @@ export default function ContentBlockShell({
         {
           width: item.width,
 
-          height: autoHeight ? fittedHeight : item.height,
+          height: fitContent ? fittedHeight : item.height,
 
           minHeight,
 
@@ -93,7 +94,7 @@ export default function ContentBlockShell({
       <div
         ref={contentRef}
         className="flex flex-col min-h-0"
-        style={{ height: autoHeight ? undefined : '100%', flexShrink: autoHeight ? 0 : undefined }}
+        style={{ height: fitContent ? undefined : '100%', flexShrink: fitContent ? 0 : undefined }}
       >
         {item.topColor && <div className="h-[5px] shrink-0" style={{ background: item.topColor }} />}
         <header

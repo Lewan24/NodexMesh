@@ -1,4 +1,5 @@
 import UserAvatar from '@/shared/components/UserAvatar';
+import { UserGuideButton } from '@/features/user-guide/UserGuideProvider';
 import PhotoEditor from '@/features/identity-media/PhotoEditor';
 import { identityMedia } from '@/features/identity-media/api';
 import { isMockDataSource } from '@/app/services';
@@ -81,6 +82,7 @@ export default function ProfilePage({ onClose }: { onClose: () => void }) {
     >
       <div className="mx-auto w-full max-w-6xl pb-8">
         <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <UserGuideButton />
           <button className="btn-ghost flex items-center gap-2 rounded-xl px-3 py-2 text-sm" onClick={onClose}>
             <ArrowLeft size={16} aria-hidden="true" />
             {translate('Workspace')}

@@ -1,18 +1,29 @@
 import { createId } from '@/shared/lib/createId';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import type { RefObject } from 'react';
 
-import type { BoardItem, LineItem } from '@/entities/board/types';
+import type { BoardItem, LineItem, LineConnectionSide } from '@/entities/board/types';
 
 import type { SizeMap } from '@/features/canvas/utils/lineGeometry';
 
-import { getItemRect, getRectBorderPoint, resolveLineItem } from '@/features/canvas/utils/lineGeometry';
+import {
+  getItemRect,
+  getRectBorderPoint,
+  getConnectionAttachment,
+  resolveLineItem,
+} from '@/features/canvas/utils/lineGeometry';
 
 import { getApproxItemSize } from '@/features/canvas/utils/itemGeometry';
 import { ConnectionSide } from '../components/ConnectionHandles';
 import { createEmptySibling } from '../utils/quickCreate';
 import { snapToGrid } from '../utils/gridSnap';
+
+interface AttachHover {
+  id: string;
+  side: LineConnectionSide;
+  offset: number;
+}
 
 interface ProjectLike {
   items: BoardItem[];
@@ -66,13 +77,11 @@ export function useLineDrag({
   onSelectItems,
   onOpenQuickCreate,
 }: UseLineDragOptions) {
-  const [attachHoverId, setAttachHoverId] = useState<string | null>(null);
+  const [attachHover, setAttachHoverState] = useState<AttachHover | null>(null);
+  const attachHoverId = attachHover?.id ?? null;
 
-  const attachHoverIdRef = useRef<string | null>(null);
-
-  const setAttachHover = useCallback((id: string | null) => {
-    attachHoverIdRef.current = id;
-    setAttachHoverId(id);
+  const setAttachHover = useCallback((hover: AttachHover | null) => {
+    setAttachHoverState(hover);
   }, []);
 
   const findAttachTarget = useCallback(
@@ -85,7 +94,13 @@ export function useLineDrag({
 
           const size = measuredSizes.get(target.id) ?? getApproxItemSize(target);
 
-          return x >= target.x && y >= target.y && x <= target.x + size.width && y <= target.y + size.height;
+          const tolerance = 12 / zoomRef.current;
+          return (
+            x >= target.x - tolerance &&
+            y >= target.y - tolerance &&
+            x <= target.x + size.width + tolerance &&
+            y <= target.y + size.height + tolerance
+          );
         })
         .map((target) => {
           const size = measuredSizes.get(target.id) ?? getApproxItemSize(target);
@@ -114,7 +129,17 @@ export function useLineDrag({
 
       return candidates[0]?.target;
     },
-    [projectRef, measuredSizes],
+    [projectRef, measuredSizes, zoomRef],
+  );
+
+  const getAttachHover = useCallback(
+    (x: number, y: number, excludedIds: Set<string>): AttachHover | null => {
+      const target = findAttachTarget(x, y, excludedIds);
+      if (!target) return null;
+      const attachment = getConnectionAttachment(getItemRect(target, measuredSizes), x, y);
+      return { id: target.id, side: attachment.side, offset: attachment.offset };
+    },
+    [findAttachTarget, measuredSizes],
   );
 
   const handleLineEndpointDrag = useCallback(
@@ -127,7 +152,8 @@ export function useLineDrag({
       event.stopPropagation();
 
       const item = projectRef.current.items.find((current) => current.id === id && current.type === 'line') as
-        LineItem | undefined;
+        | LineItem
+        | undefined;
 
       if (!item || item.locked) {
         return;
@@ -147,8 +173,22 @@ export function useLineDrag({
         }
 
         return endpoint === 1
-          ? { ...current, startItemId: undefined, x: originalX, y: originalY }
-          : { ...current, endItemId: undefined, x2: originalX, y2: originalY };
+          ? {
+              ...current,
+              startItemId: undefined,
+              startSide: undefined,
+              startOffset: undefined,
+              x: originalX,
+              y: originalY,
+            }
+          : {
+              ...current,
+              endItemId: undefined,
+              endSide: undefined,
+              endOffset: undefined,
+              x2: originalX,
+              y2: originalY,
+            };
       });
 
       const startX = event.clientX;
@@ -176,14 +216,20 @@ export function useLineDrag({
           excludedIds.add(oppositeTargetId);
         }
 
-        setAttachHover(item.divider ? null : (findAttachTarget(x, y, excludedIds)?.id ?? null));
+        setAttachHover(item.divider ? null : getAttachHover(x, y, excludedIds));
       };
 
       const handleUp = (mouseEvent: MouseEvent) => {
         document.removeEventListener('mousemove', handleMove);
         document.removeEventListener('mouseup', handleUp);
 
-        const targetId = attachHoverIdRef.current;
+        const targetId = item.divider
+          ? undefined
+          : getAttachHover(
+              originalX + (mouseEvent.clientX - startX) / currentZoom,
+              originalY + (mouseEvent.clientY - startY) / currentZoom,
+              new Set([id, ...(oppositeTargetId ? [oppositeTargetId] : [])]),
+            )?.id;
 
         let attached = false;
         if (
@@ -198,7 +244,11 @@ export function useLineDrag({
             const dx = (mouseEvent.clientX - startX) / currentZoom;
             const dy = (mouseEvent.clientY - startY) / currentZoom;
 
-            const point = getRectBorderPoint(getItemRect(target, measuredSizes), originalX + dx, originalY + dy);
+            const { point, side, offset } = getConnectionAttachment(
+              getItemRect(target, measuredSizes),
+              originalX + dx,
+              originalY + dy,
+            );
 
             onUpdateItem(id, (current) => {
               if (current.type !== 'line') {
@@ -206,8 +256,8 @@ export function useLineDrag({
               }
 
               return endpoint === 1
-                ? { ...current, startItemId: target.id, x: point.x, y: point.y }
-                : { ...current, endItemId: target.id, x2: point.x, y2: point.y };
+                ? { ...current, startItemId: target.id, startSide: side, startOffset: offset, x: point.x, y: point.y }
+                : { ...current, endItemId: target.id, endSide: side, endOffset: offset, x2: point.x, y2: point.y };
             });
             attached = true;
           }
@@ -232,16 +282,7 @@ export function useLineDrag({
       document.addEventListener('mousemove', handleMove);
       document.addEventListener('mouseup', handleUp);
     },
-    [
-      projectRef,
-      zoomRef,
-      measuredSizes,
-      pushHistory,
-      onUpdateItem,
-      onOpenQuickCreate,
-      setAttachHover,
-      findAttachTarget,
-    ],
+    [projectRef, zoomRef, measuredSizes, pushHistory, onUpdateItem, onOpenQuickCreate, setAttachHover, getAttachHover],
   );
 
   const handleQuickConnectStart = useCallback(
@@ -295,11 +336,14 @@ export function useLineDrag({
 
         arrowStart: false,
         arrowEnd: true,
+        staticAnchors: true,
 
         color: '#7C3AED',
         strokeWidth: 2,
 
         startItemId: sourceId,
+        startSide: side,
+        startOffset: 0.5,
 
         label: '',
         labelMode: 'horizontal',
@@ -337,9 +381,7 @@ export function useLineDrag({
           return { ...current, x2: x, y2: y };
         });
 
-        const target = findAttachTarget(x, y, new Set([sourceId, lineId]));
-
-        setAttachHover(target?.id ?? null);
+        setAttachHover(getAttachHover(x, y, new Set([sourceId, lineId])));
       };
 
       const handleUp = (mouseEvent: MouseEvent) => {
@@ -347,7 +389,11 @@ export function useLineDrag({
 
         document.removeEventListener('mouseup', handleUp);
 
-        const targetId = attachHoverIdRef.current;
+        const targetId = getAttachHover(
+          startPoint.x + (mouseEvent.clientX - startClientX) / zoom,
+          startPoint.y + (mouseEvent.clientY - startClientY) / zoom,
+          new Set([sourceId, lineId]),
+        )?.id;
 
         // A short click creates a connected blank sibling.
         if (!moved) {
@@ -391,7 +437,14 @@ export function useLineDrag({
           onAddItem(sibling);
           onUpdateItem(lineId, (current) =>
             current.type === 'line'
-              ? { ...current, endItemId: sibling.id, x2: sibling.x + width / 2, y2: sibling.y + height / 2 }
+              ? {
+                  ...current,
+                  endItemId: sibling.id,
+                  endSide: ({ top: 'bottom', right: 'left', bottom: 'top', left: 'right' } as const)[side],
+                  endOffset: 0.5,
+                  x2: sibling.x + width / 2,
+                  y2: sibling.y + height / 2,
+                }
               : current,
           );
           onSelectItems([sibling.id]);
@@ -412,7 +465,11 @@ export function useLineDrag({
 
             const y = startPoint.y + dy;
 
-            const point = getRectBorderPoint(getItemRect(target, measuredSizes), x, y);
+            const {
+              point,
+              side: targetSide,
+              offset,
+            } = getConnectionAttachment(getItemRect(target, measuredSizes), x, y);
 
             onUpdateItem(lineId, (current) => {
               if (current.type !== 'line') {
@@ -423,6 +480,8 @@ export function useLineDrag({
                 ...current,
 
                 endItemId: target.id,
+                endSide: targetSide,
+                endOffset: offset,
 
                 x2: point.x,
                 y2: point.y,
@@ -468,10 +527,10 @@ export function useLineDrag({
       onUpdateItem,
       onSelectItems,
       onOpenQuickCreate,
-      findAttachTarget,
+      getAttachHover,
       setAttachHover,
     ],
   );
 
-  return { attachHoverId, handleLineEndpointDrag, handleQuickConnectStart };
+  return { attachHoverId, attachHover, handleLineEndpointDrag, handleQuickConnectStart };
 }

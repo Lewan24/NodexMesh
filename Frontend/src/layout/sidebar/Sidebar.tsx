@@ -23,6 +23,7 @@ import type { ToolType } from '@/entities/board/toolTypes';
 import { SIDEBAR_TOOLS } from './sidebarTools';
 import { consumeToolDragClickSuppression, startToolDrag } from '@/features/canvas/utils/toolDrag';
 import './sidebar.css';
+import { UserGuideButton } from '@/features/user-guide/UserGuideProvider';
 
 const groups = [
   {
@@ -221,6 +222,7 @@ export default function Sidebar({
           />
         )}
         <div className="tool-sidebar-hint">{translate('Click to add · Drag to place')}</div>
+        <UserGuideButton compact={compact} />
       </aside>
     </MobilePanel>
   );

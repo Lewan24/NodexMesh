@@ -43,7 +43,9 @@ public sealed record FileData(string Title, string Source, string FileName, stri
 public sealed record LinkData(string Url, string Title, string Description);
 public sealed record EmbedData(string Url, string Title, bool ShowLabel);
 public sealed record ChecklistData(string Title, IReadOnlyList<TaskEntry> Entries, bool HideCompleted = false);
-public sealed record KanbanColumnData(string Id, string Title, string Color, double? Width, IReadOnlyList<TaskEntry> Cards);
+public sealed record KanbanColumnIconData(string Mode, string Source);
+public sealed record KanbanColumnData(string Id, string Title, string Color, double? Width, IReadOnlyList<TaskEntry> Cards,
+    KanbanColumnIconData? Icon = null);
 public sealed record KanbanData(string Title, IReadOnlyList<KanbanColumnData> Columns, bool HideCompleted = false);
 public sealed record TimelineTaskData(
     string Id, string Title, string Start, string End, bool Done, string Color,
@@ -54,7 +56,9 @@ public sealed record FrameData(string Title, double? Opacity);
 public sealed record DispenserData(string Title, [property: RegularExpression("^#[0-9a-fA-F]{6}$")] string? PaperColor = null);
 public sealed record LineData(
     double X2, double Y2, bool ArrowStart, bool ArrowEnd, double StrokeWidth, double? Curve,
-    string? LineCap, string? Label, string? LabelMode, double? LabelOffset, double? LabelFontSize, bool? Divider);
+    string? LineCap, string? Label, string? LabelMode, double? LabelOffset, double? LabelFontSize, bool? Divider,
+    string? StartSide = null, string? EndSide = null, bool? StaticAnchors = null,
+    double? StartOffset = null, double? EndOffset = null);
 public sealed record DrawingStrokeData(IReadOnlyList<GeoPoint> Points, double X, double Y, double ScaleX, double ScaleY, string Color, double StrokeWidth);
 public sealed record DrawingData(IReadOnlyList<GeoPoint> Points, double ViewWidth, double ViewHeight, double StrokeWidth, IReadOnlyList<DrawingStrokeData>? Strokes);
 public sealed record MindmapNodeData(string Id, string? ParentId, string Label, string Side, string BranchColor, string Background, string TextColor);

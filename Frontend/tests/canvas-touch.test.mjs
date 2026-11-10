@@ -214,6 +214,9 @@ test('tapping a connection handle creates a sibling and attaches the line to it'
   assert.ok(sibling);
   assert.equal(line.startItemId, source.id);
   assert.equal(line.endItemId, sibling.id);
+  assert.equal(line.staticAnchors, true);
+  assert.equal(line.startSide, 'right');
+  assert.equal(line.endSide, 'left');
 });
 
 test('context menu is suppressed during a hold but remains available to the mouse', (t) => {

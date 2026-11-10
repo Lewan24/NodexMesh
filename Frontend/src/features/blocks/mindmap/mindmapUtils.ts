@@ -28,15 +28,17 @@ export function mindmapTemplate(withBranches = true): MindmapNode[] {
   return [
     root,
     ...(withBranches
-      ? [translate('Explore'), translate('Develop'), translate('Plan')].map((label, index): MindmapNode => ({
-          id: createId(),
-          parentId: root.id,
-          label,
-          side: index === 2 ? 'negative' : 'positive',
-          branchColor: ['#8b5cf6', '#ec4899', '#3b82f6'][index]!,
-          background: 'transparent',
-          textColor: '#374151',
-        }))
+      ? [translate('Explore'), translate('Develop'), translate('Plan')].map(
+          (label, index): MindmapNode => ({
+            id: createId(),
+            parentId: root.id,
+            label,
+            side: index === 2 ? 'negative' : 'positive',
+            branchColor: ['#8b5cf6', '#ec4899', '#3b82f6'][index]!,
+            background: 'transparent',
+            textColor: '#374151',
+          }),
+        )
       : []),
   ];
 }

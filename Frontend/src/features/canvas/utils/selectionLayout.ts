@@ -21,8 +21,15 @@ export interface ArrangementOptions {
   gap: number;
   perRow: number;
   widthModules: number;
+  fillGaps?: boolean;
 }
-export const DEFAULT_ARRANGEMENT: ArrangementOptions = { mode: 'width', gap: 1, perRow: 3, widthModules: 3 };
+export const DEFAULT_ARRANGEMENT: ArrangementOptions = {
+  mode: 'width',
+  gap: 1,
+  perRow: 3,
+  widthModules: 3,
+  fillGaps: true,
+};
 const MAX_COORDINATE = 10_000_000;
 
 function rectFor(item: BoardItem, byId: ReadonlyMap<string, BoardItem>, sizes: SizeMap): LayoutRect {
@@ -204,6 +211,52 @@ export function planArrangement(
     x += width + gap;
     rowHeight = Math.max(rowHeight, height);
     count++;
+  }
+  if (!options.fillGaps) return positions;
+
+  // Keep the shelf layout's width (and count limit), but backfill empty space
+  // below shorter items. Groups and frames remain indivisible rectangles.
+  const packingWidth =
+    options.mode === 'width'
+      ? widthLimit
+      : Math.max(...units.map((unit) => positions.get(unit.id)!.x - startX + cellSize(unit.rect.width)));
+  const placed: LayoutRect[] = [];
+  for (const unit of units) {
+    const width = cellSize(unit.rect.width);
+    const height = cellSize(unit.rect.height);
+    const candidates = [...new Set([startX, ...placed.map((rect) => rect.x + rect.width + gap)])]
+      .filter((candidate) => candidate + width <= startX + packingWidth || candidate === startX)
+      .sort((a, b) => a - b);
+    let best: { x: number; y: number } | undefined;
+    for (const candidateX of candidates) {
+      let candidateY = startY;
+      while (true) {
+        const vertical = placed.filter(
+          (rect) => candidateY < rect.y + rect.height + gap && candidateY + height + gap > rect.y,
+        );
+        const blockers = vertical.filter(
+          (rect) => candidateX < rect.x + rect.width + gap && candidateX + width + gap > rect.x,
+        );
+        // Oversized items occupy their own row, matching the regular layout.
+        const oversized = vertical.filter((rect) => width > packingWidth || rect.width > packingWidth);
+        const conflicts =
+          options.mode === 'count' && vertical.length >= options.perRow ? vertical : [...blockers, ...oversized];
+        if (!conflicts.length) break;
+        candidateY = Math.min(...conflicts.map((rect) => rect.y + rect.height + gap));
+      }
+      if (!best || candidateY < best.y || (candidateY === best.y && candidateX < best.x)) {
+        best = { x: candidateX, y: candidateY };
+      }
+    }
+    if (
+      !best ||
+      ![best.x, best.y, best.x + width, best.y + height].every(
+        (value) => Number.isFinite(value) && Math.abs(value) <= MAX_COORDINATE,
+      )
+    )
+      throw new Error('The layout is too large. Reduce spacing or the number of items.');
+    positions.set(unit.id, best);
+    placed.push({ ...best, width, height });
   }
   return positions;
 }

@@ -1,0 +1,787 @@
+[
+  {
+    "id": "start",
+    "title": "Getting started and finding your way",
+    "summary": "Build your first project and learn where tools and settings live.",
+    "sections": [
+      {
+        "title": "Projects, boards and items",
+        "paragraphs": [
+          "A project contains boards, collaborators and a file library. A board is a large workspace you can pan and zoom. An item is one object on a board: a note, Kanban, image or another block.",
+          "The top bar contains projects, search, sharing, project tools and your account. Create items with the left sidebar. Selecting an item opens the editbar and inspector."
+        ]
+      },
+      {
+        "title": "Make your first board",
+        "steps": [
+          "Choose a project in the top-left menu, or add a new one.",
+          "Expand a tool group. Select Sticky Note, then click the canvas, or drag the tool directly onto it.",
+          "Double-click the note text to edit. Finish by clicking outside the editor or using its completion action.",
+          "Select the note and change its appearance in the editbar. Add a tag in the inspector.",
+          "Check the save indicator before leaving. Changes save automatically."
+        ],
+        "example": "Create a “New website” project with a goal note, requirements checklist and Kanban. Add separate boards for research and delivery later."
+      },
+      {
+        "title": "Finding help",
+        "paragraphs": [
+          "User guide is at the bottom of Tools. A collapsed sidebar shows a book icon; on mobile, open Tools first. It is also available in your profile and administration.",
+          "Search this guide by tool or action. Click an illustration to enlarge it. Button explanations open on hover or keyboard focus."
+        ]
+      },
+      {
+        "title": "Demo versus a server connection",
+        "paragraphs": [
+          "The demo stores data in this browser. Clearing site storage or using a different browser gives you a separate dataset. The library, sharing, collaboration and some account/administration actions require the API."
+        ],
+        "tip": "Your installation may use a custom name, logo and palette. These instructions describe the underlying functions regardless of branding."
+      }
+    ],
+    "image": {
+      "file": "workspace.png",
+      "alt": "Workspace with tools, the canvas and the project bar",
+      "caption": "Screenshots show real application components with fictional training data. Labels, colours and available actions depend on language, permissions and server configuration. The shared screenshots use the Polish interface."
+    }
+  },
+  {
+    "id": "navigation",
+    "title": "Navigation and selection",
+    "summary": "Move around the canvas, zoom into details and select items without accidentally editing.",
+    "sections": [
+      {
+        "title": "Moving the view",
+        "steps": [
+          "Hold Space and drag to pan, or drag with the middle mouse button.",
+          "Use the mouse wheel over the canvas to zoom around the pointer. Zoom and fit-view controls are also available by the board.",
+          "On touch screens, pan and pinch. Tools, editing and details panels open as separate windows."
+        ],
+        "tip": "The wheel scrolls content inside a scrollable item. Over the canvas it zooms. Use Space or the middle button to pan over an item."
+      },
+      {
+        "title": "Selecting and editing",
+        "paragraphs": [
+          "Use Select & move and click an item to select it. Drag on empty canvas to draw a selection box. Shift extends selection.",
+          "Drag an item by its background or header. Inputs, buttons and handles perform their own actions. Many blocks enter editing on double-click; complex blocks also provide edit buttons.",
+          "Escape cancels the current operation or clears selection. Selection handles resize an item."
+        ]
+      },
+      {
+        "title": "Canvas shortcuts",
+        "paragraphs": [
+          "Ctrl/Cmd+C copies selection, Ctrl/Cmd+V pastes, Ctrl/Cmd+D duplicates and Ctrl/Cmd+Z undoes. Delete or Backspace removes selected items, with confirmation where required.",
+          "Canvas shortcuts leave normal typing in text inputs and editors alone. Editors may provide their own undo."
+        ],
+        "example": "Copy three notes, paste them into another part of the board and drag the set into place."
+      }
+    ]
+  },
+  {
+    "id": "editing",
+    "title": "Editbar and item appearance",
+    "summary": "Selection opens a compact toolbar with options relevant to the selected item types.",
+    "sections": [
+      {
+        "title": "Tabs and scope",
+        "paragraphs": [
+          "The first available tab opens when you select an item. Appearance includes backgrounds, accents, borders and resetting styles. Text controls typography. Layout provides arrangement and sizing where supported.",
+          "Multiple selection shows shared options. Check the selection count before applying a colour, grouping or deleting."
+        ]
+      },
+      {
+        "title": "Style an item",
+        "steps": [
+          "Select an item and open Appearance.",
+          "Choose a palette or custom colour. Depending on the block, adjust transparency, gradients, accent strips and borders.",
+          "In text settings, choose a font with a visual preview, size, weight, italic style and alignment. The larger font preview helps compare families.",
+          "Use the visible reset appearance button to remove item appearance overrides. It does not delete content."
+        ],
+        "example": "Use a shared accent for decision notes, larger headings for section titles and neutral colours for supporting material."
+      },
+      {
+        "title": "Layers and tool-specific options",
+        "paragraphs": [
+          "Bring to front/send to back changes stacking order. Groups help select and move a set together.",
+          "Arrows have endpoint, curve and label settings; columns have layout options; section titles have label styles. Controls depend on the current selection."
+        ],
+        "tip": "Item appearance and application appearance are separate. Find application settings under Project tools → Appearance."
+      }
+    ],
+    "image": {
+      "file": "editbar.png",
+      "alt": "editbar",
+      "caption": "A selected note with the Appearance tab open. Tabs depend on the type and number of selected items."
+    }
+  },
+  {
+    "id": "inspector",
+    "title": "Inspector, tags, statuses and comments",
+    "summary": "The right panel describes selection and helps organise collaboration.",
+    "sections": [
+      {
+        "title": "Tags and search",
+        "steps": [
+          "Select one or more items.",
+          "Add a tag in the inspector. Remove a tag using its label action.",
+          "Search from the top bar by content or #tag. The search also supports status:identifier."
+        ],
+        "example": "Tag notes #to-discuss and search that tag during a meeting to find scattered questions."
+      },
+      {
+        "title": "Statuses and comments",
+        "paragraphs": [
+          "Assign project statuses to items. The status manager organises names and styles; permissions determine the available actions.",
+          "Open an item’s comments to leave feedback or discuss it. Distinguish resolved and unresolved threads. Commenters can manage their own comments without editing the board.",
+          "Public project links do not publish comments. With multiple selection, check the operation’s scope in the panel."
+        ]
+      },
+      {
+        "title": "Item locks",
+        "paragraphs": [
+          "Locking prevents movement and manual resizing and captures the current item height. Further content scrolls inside that height instead of growing the block. Content remains editable.",
+          "Hover, focus or click the lock badge for an explanation. A frame containing a locked item can inherit a movement restriction; its explanation distinguishes this from a direct lock.",
+          "Unlock to resize again. In blocks with auto-height, you can then enable fitting height to content."
+        ]
+      }
+    ],
+    "image": {
+      "file": "inspector.png",
+      "alt": "inspector",
+      "caption": "The selected item’s inspector with locking, tags and comments. On smaller screens, open the details panel."
+    }
+  },
+  {
+    "id": "context",
+    "title": "Context menus and arrangement",
+    "summary": "Reach common actions without looking through several panels.",
+    "sections": [
+      {
+        "title": "Right-click menus",
+        "paragraphs": [
+          "Right-click empty canvas for board actions. Right-click an item or selection for actions such as copy, duplicate, layer ordering, locking, grouping and deleting.",
+          "On touch devices, use the canvas action menu and panel buttons instead of relying on a right mouse button."
+        ]
+      },
+      {
+        "title": "Automatic arrangement",
+        "steps": [
+          "Select the items to organise.",
+          "Open Distribute evenly and choose the layout, gap and items per row or available width.",
+          "Review the preview. Fill gaps is enabled by default and tries to place smaller items in space below shorter neighbours.",
+          "Apply. Turn off Fill gaps for a more regular row-based arrangement."
+        ],
+        "example": "Two tall checklists and small notes leave uneven spaces. Fill gaps uses the space below shorter items.",
+        "tip": "Groups and locks affect arrangement availability. Read the dialog explanation if an operation is unavailable."
+      },
+      {
+        "title": "Deleting and recovering",
+        "paragraphs": [
+          "Deleted items go to item trash, available through board/project actions. Restore or permanently remove them there.",
+          "Project trash is separate, inside the project menu. Emptying trash and permanent deletion differ from undoing the latest edit."
+        ]
+      }
+    ],
+    "image": {
+      "file": "context-menu.png",
+      "alt": "context-menu",
+      "caption": "Canvas context menu. Commands depend on where you click, selection and permissions."
+    }
+  },
+  {
+    "id": "notes",
+    "title": "Notes, text, documents and code",
+    "summary": "Choose a format suited to the type and length of content.",
+    "sections": [
+      {
+        "title": "Sticky notes and the dispenser",
+        "paragraphs": [
+          "Notes hold short ideas, decisions and meeting content. Double-click to edit; select for colours, typography and height fitting.",
+          "Pull new notes from the note dispenser onto the canvas. Its settings help maintain a shared style. Generated notes edit and move like ordinary notes."
+        ],
+        "example": "Use a yellow “Ideas” dispenser in a brainstorming workshop, with one idea per note."
+      },
+      {
+        "title": "Text and section titles",
+        "paragraphs": [
+          "Text is useful for short captions and headings without a sticky-note background. Section titles divide areas and offer their own label and background styles.",
+          "Double-click to edit content and use the editbar for size, alignment and colours."
+        ],
+        "example": "Divide a board into “Problem”, “Ideas” and “Decisions”; put small text captions beside connections."
+      },
+      {
+        "title": "Documents and code",
+        "paragraphs": [
+          "Documents provide rich text for descriptions, headings and lists. Edit inside the block; choose auto-height or a fixed scrollable size for longer material.",
+          "Code blocks store snippets and use the selected language for syntax highlighting. They do not automatically execute your code.",
+          "Locking preserves height while editing documents and code too."
+        ],
+        "example": "Place a decision document and an API request snippet beside an architecture diagram."
+      }
+    ],
+    "image": {
+      "file": "notes.png",
+      "alt": "notes",
+      "caption": "Notes, a document and a code block. Each has its own editor; selection controls appearance and movement."
+    }
+  },
+  {
+    "id": "tasks",
+    "title": "Checklists and Kanban",
+    "summary": "Plan work, assign people, set deadlines and filter tasks.",
+    "sections": [
+      {
+        "title": "Checklists and task details",
+        "paragraphs": [
+          "Add a titled entry and mark completion with its checkbox. Checklists work well for procedures, acceptance criteria and simple lists.",
+          "Tasks can include a description, assignee, categories and deadline. Open the task’s details/edit action. Assignees come from project participants; title-only tasks can remain unassigned.",
+          "Only unfinished tasks changes visibility. Completed tasks remain in the data and return when the option is disabled."
+        ]
+      },
+      {
+        "title": "Columns and cards",
+        "steps": [
+          "Add Kanban from Organize. Name it and prepare stages such as To do, In progress and Done.",
+          "Click a column title or icon to change its name, icon and appearance. Arrow buttons reorder columns; a separate button removes one.",
+          "Add tasks and drag cards by their handles. Completion and column position are separate pieces of information.",
+          "Use plus to add a column. Board width grows by the column module and gap. Resize a column with its handle."
+        ],
+        "tip": "Check column content before removing it. Use arrows when you only want to change column order."
+      },
+      {
+        "title": "Filtering tasks",
+        "steps": [
+          "Click Filter beside Only unfinished tasks.",
+          "Choose all assigned people or individual people. Include unassigned independently includes tasks without an assignee, including title-only cards.",
+          "Select one or more categories. A card may match any selected category, but person, category, text and deadline conditions must all match.",
+          "Optionally search title/description and set Deadline before. The selected day is excluded. A separate option includes tasks without a deadline.",
+          "Apply and check the result count. The filter button is highlighted when active. Reset filter clears conditions while preserving Only unfinished tasks."
+        ],
+        "example": "To find Anna’s overdue urgent work, enable unfinished-only, choose Anna, exclude unassigned, select Urgent and choose tomorrow to include deadlines through today.",
+        "tip": "Filters belong to the current Kanban view and do not change task data. Dragging filtered cards preserves hidden cards."
+      }
+    ],
+    "image": {
+      "file": "kanban.png",
+      "alt": "kanban",
+      "caption": "Kanban with the filter dialog. Filters narrow the view without deleting tasks or restoring completed cards hidden by Only unfinished tasks."
+    }
+  },
+  {
+    "id": "organization",
+    "title": "Columns, frames and linked boards",
+    "summary": "Give a large project a readable structure.",
+    "sections": [
+      {
+        "title": "Columns as containers",
+        "paragraphs": [
+          "Columns organise nested items. Drag items in, reorder with handles and move them back to the canvas when needed.",
+          "Use layout controls in the editbar to arrange contents. Headers and backgrounds distinguish work areas."
+        ],
+        "example": "A “Meeting materials” column can contain an agenda document, preparation checklist and reference link."
+      },
+      {
+        "title": "Frames and groups",
+        "paragraphs": [
+          "Frames mark an area of the canvas. Give a frame a title and place related items inside for workshops or process stages.",
+          "Groups select and move a set together. Ungroup when you need to work on individual parts again.",
+          "A locked item inside a frame restricts frame movement. The lock explanation identifies inherited restrictions."
+        ]
+      },
+      {
+        "title": "Linked board cards",
+        "steps": [
+          "Add Board and create or open a linked project board.",
+          "Give the card a name, description and icon explaining its destination.",
+          "Open the card to navigate. Use board navigation to return to earlier locations."
+        ],
+        "example": "A project home board can link to “Research”, “Release plan” and “Documentation” without splitting participants or the library."
+      }
+    ]
+  },
+  {
+    "id": "connections",
+    "title": "Arrows, icons and drawing",
+    "summary": "Explain relationships and add visual cues.",
+    "sections": [
+      {
+        "title": "Connect items",
+        "steps": [
+          "Insert Line / Arrow and select it.",
+          "Drag one endpoint onto the first item’s edge. Highlighting indicates an attachment edge. Place the other endpoint on the second item.",
+          "Fixed attachment points are enabled by default, preserving the chosen position on each edge as items move.",
+          "Disable fixed attachment points in the editbar to let endpoints slide along their chosen edges. The attachment edges remain preserved.",
+          "Adjust arrowheads, colour, thickness, curve, label, label rotation and distance in the editbar."
+        ],
+        "example": "Connect the right edge of “Decision” to the left edge of “Delivery”. Fixed points retain those positions after moving the notes."
+      },
+      {
+        "title": "Dividers and icons",
+        "paragraphs": [
+          "A divider separates areas and snaps to the grid; it does not attach two items together.",
+          "Icon / Emoji supports presets, emoji and supported custom sources. Use a label to make meaning clear."
+        ],
+        "example": "Mark risks with warning icons and completed stages with check marks. Labels explain meaning without relying on colour."
+      },
+      {
+        "title": "Pencil",
+        "paragraphs": [
+          "Select Pencil and draw on the canvas. Escape returns to selection. Select a drawing to style it; smoothing reduces jitter and point count.",
+          "Use drawing for sketches and emphasis. Use attached arrows for relationships that should follow items."
+        ]
+      }
+    ],
+    "image": {
+      "file": "connections.png",
+      "alt": "connections",
+      "caption": "Connected notes and arrow settings. Highlighted edges help place endpoints correctly."
+    }
+  },
+  {
+    "id": "planning",
+    "title": "Timeline, mind maps and diagrams",
+    "summary": "Planning blocks have dedicated editors inside their items.",
+    "sections": [
+      {
+        "title": "Timeline",
+        "paragraphs": [
+          "Open the timeline editor, add tasks and set dates. Available views and settings adapt the level of detail to the plan.",
+          "Finish editing to move the whole block. Planning editor changes save with the project."
+        ],
+        "example": "Plan analysis, design, implementation and testing as release tasks, with a Kanban beside them for delivery."
+      },
+      {
+        "title": "Mind map",
+        "paragraphs": [
+          "Develop a central topic into branches. Edit node text and add connected topics. Layout and connection appearance can be adjusted.",
+          "Outside editing, the map is one item that can be moved, resized, tagged and locked."
+        ],
+        "example": "For “New product”, add “Audience”, “Problems”, “Solutions” and “Risks” branches."
+      },
+      {
+        "title": "Diagrams and database diagrams",
+        "paragraphs": [
+          "Use Diagram to add and connect nodes describing a system or process.",
+          "Use Database diagram to model tables, fields, types and relations. Add them in the block editor and arrange the layout for readable connections.",
+          "A database diagram is visual documentation; drawing a table does not create a real database table."
+        ],
+        "example": "Document a support process and separately model Tickets, Users and Comments tables."
+      }
+    ],
+    "image": {
+      "file": "planning.png",
+      "alt": "planning",
+      "caption": "Planning tools on a board. The outer item size and its internal node layout are separate."
+    }
+  },
+  {
+    "id": "media",
+    "title": "Images, files, links and embeds",
+    "summary": "Combine external content with project material.",
+    "sections": [
+      {
+        "title": "Images and files",
+        "paragraphs": [
+          "Image displays a graphic with size and caption options. Select a library asset or a supported source in the editor.",
+          "File represents an attachment such as a document or spreadsheet. Preview support depends on format; files can also be downloaded. Library selection preserves the project asset reference."
+        ],
+        "example": "Place a mockup image and requirements attachment beside acceptance criteria, and include their version in the caption."
+      },
+      {
+        "title": "Link cards and Embed",
+        "paragraphs": [
+          "Link cards store a URL with a title and description. Use them for references that do not need embedding.",
+          "Embed displays supported content, such as a video. Paste a URL in its editor. Some sites prevent embedding or require login; use an ordinary link in those cases.",
+          "Media controls interact with content; use the item header or background to move the block."
+        ]
+      },
+      {
+        "title": "Access to material",
+        "paragraphs": [
+          "Material visible to you may require access to its source. Project sharing and publicly sharing an individual library asset are separate actions.",
+          "Test public project links in a signed-out window and verify the intended files are available while private material stays private."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "library",
+    "title": "Project library",
+    "summary": "Keep assets together, find them quickly and control access.",
+    "sections": [
+      {
+        "title": "Upload and find files",
+        "steps": [
+          "Open Project tools (three dots in the top bar) → Library.",
+          "Choose Upload files or drag files into the library. Accepted formats and limits depend on the server, and preview support varies.",
+          "Use search, type filters and sorting by name, date or size.",
+          "Select a file to inspect it. When choosing content for a block, use Use file to insert it."
+        ]
+      },
+      {
+        "title": "Names, previews and deletion",
+        "paragraphs": [
+          "People with management access can rename or delete assets. Renaming differs from uploading a replacement file.",
+          "Check whether an asset is used before deleting it: existing blocks referencing it may lose access."
+        ],
+        "example": "Use names such as “Login screen mockup” and “Release 2 specification” rather than relying on original filenames."
+      },
+      {
+        "title": "Private files and public links",
+        "paragraphs": [
+          "Files are private by default. An authorised person can create and copy a public asset link. Anyone with that link can access the material.",
+          "Revoking the link removes access through it. Hiding a block does not revoke asset sharing."
+        ],
+        "tip": "Project JSON contains asset references, not the binary files. Preserve access and back up files separately."
+      }
+    ],
+    "image": {
+      "file": "library.png",
+      "alt": "library",
+      "caption": "Project library with files and a details panel. The library requires the API; the illustration uses training materials."
+    }
+  },
+  {
+    "id": "projects",
+    "title": "Managing projects and boards",
+    "summary": "Create, name, organise and recover workspaces.",
+    "sections": [
+      {
+        "title": "Project menu",
+        "steps": [
+          "Open the project name in the top bar.",
+          "Add a named project and choose a colour.",
+          "Click a project to switch to it; use its rename action to update its name.",
+          "Set a default project if you want to start in that workspace.",
+          "Move an owned project to trash when needed. Restore or permanently delete it in the trash section."
+        ]
+      },
+      {
+        "title": "Multiple boards",
+        "paragraphs": [
+          "Use board navigation and linked board cards to split a project into named spaces.",
+          "The app saves data and retains view state as you navigate. Browser history can return to visited locations."
+        ],
+        "example": "An “Event” project can have Plan, Speakers, Promotion and Event day boards while sharing participants and assets."
+      },
+      {
+        "title": "Automatic saving and recovery",
+        "paragraphs": [
+          "Check saving, saved and error states. If connectivity fails, read the available retry or local recovery actions.",
+          "Project tools → Refresh tries to save changes before reloading projects. Do not ignore save failures.",
+          "Trash helps recover accidental deletion but does not replace server and file backups."
+        ]
+      }
+    ],
+    "image": {
+      "file": "projects.png",
+      "alt": "projects",
+      "caption": "Project menu with projects and actions. Available operations depend on your role; shared projects appear in the same list."
+    }
+  },
+  {
+    "id": "sharing",
+    "title": "Sharing and collaboration",
+    "summary": "Match roles to responsibilities and publish only what is needed.",
+    "sections": [
+      {
+        "title": "Invite a collaborator",
+        "steps": [
+          "As owner, open a project and click Share.",
+          "Enter the email of an existing account in this installation.",
+          "Choose Editor, Commenter or Viewer and confirm.",
+          "The project appears in their list. Owners can change roles or remove participants later."
+        ]
+      },
+      {
+        "title": "Roles",
+        "paragraphs": [
+          "Owners manage membership, public links and the project lifecycle. Editors can change boards and items.",
+          "Commenters read the project and manage their own comments. Viewers have read access. Neither role gains item editing rights.",
+          "View filters differ from data changes. Live collaboration may show presence, selection and cursors; the top bar indicates connection status."
+        ],
+        "example": "Give delivery team members Editor, reviewers Commenter and report recipients Viewer."
+      },
+      {
+        "title": "Public read-only links",
+        "steps": [
+          "Create a public link in sharing settings, optionally with a label and expiry.",
+          "Copy it and test in a signed-out window.",
+          "Recipients can view without an account. Comments are not published.",
+          "Remove the link when no longer needed and separately review public library links."
+        ],
+        "tip": "Anyone possessing a valid public link can use it. Changing a participant role does not revoke a separately created link."
+      }
+    ],
+    "image": {
+      "file": "sharing.png",
+      "alt": "sharing",
+      "caption": "Sharing dialog with participant roles and public links. Sharing needs a server-saved project; names shown are fictional."
+    }
+  },
+  {
+    "id": "transfer",
+    "title": "Exporting and importing data",
+    "summary": "Save a project’s structure as JSON and import it as a project.",
+    "sections": [
+      {
+        "title": "Export",
+        "steps": [
+          "Open the project to export.",
+          "Choose Project tools → Export JSON.",
+          "Save the downloaded file, named from the project.",
+          "Preserve access to library assets: the file contains references, not their binary contents."
+        ]
+      },
+      {
+        "title": "Import",
+        "steps": [
+          "Choose Project tools → Import JSON.",
+          "Select a supported project file. The UI limit is 20 MB; invalid structures are rejected.",
+          "Wait for import confirmation and automatic saving.",
+          "Check boards, links and assets. References from another installation do not upload their files automatically."
+        ],
+        "example": "Export before a major reorganisation, then import a comparison copy instead of recreating notes manually."
+      },
+      {
+        "title": "Separate backups",
+        "paragraphs": [
+          "Project exports do not contain accounts, passwords, server configuration, audit or library files. Operators need separate database and file-store backups.",
+          "A JSON file can contain confidential project content. Protect it as carefully as the project itself."
+        ]
+      }
+    ],
+    "image": {
+      "file": "project-tools.png",
+      "alt": "project-tools",
+      "caption": "Project tools with JSON transfer, appearance and library actions. JSON is not a full backup of the server or library."
+    }
+  },
+  {
+    "id": "profile",
+    "title": "Profile, password and account security",
+    "summary": "Update personal details and protect sign-in.",
+    "sections": [
+      {
+        "title": "Details and profile photo",
+        "steps": [
+          "Open Account menu → Profile and security.",
+          "Change your display name or email. Email changes require your current password.",
+          "Save and check confirmation.",
+          "Click the avatar to select and, where available, crop a supported image. Save or cancel its preview."
+        ]
+      },
+      {
+        "title": "Password and MFA",
+        "paragraphs": [
+          "The password form asks for current, new and confirmation passwords. Use at least 12 characters with uppercase, lowercase, a number and a symbol. Other signed-in sessions close after changing it.",
+          "Configure available MFA methods, such as an authenticator or email, using the setup flow and confirmation code.",
+          "Store recovery codes safely outside the app. Security method changes may require renewed identity verification."
+        ],
+        "tip": "Administrator accounts may have additional MFA requirements. Use recovery procedures rather than sharing passwords or codes."
+      },
+      {
+        "title": "Language, session and deletion",
+        "paragraphs": [
+          "Change language and toggle light/dark mode in the account menu. Full appearance settings are in Project tools.",
+          "Signing out ends the session. Profile also contains the security data notice and account deletion section.",
+          "Read the deletion plan for owned projects; it may require deleting projects or transferring ownership. Review consequences before confirming."
+        ]
+      }
+    ],
+    "image": {
+      "file": "profile.png",
+      "alt": "profile",
+      "caption": "Profile with account details, password and security. Some actions require the API. No passwords or recovery codes are shown."
+    }
+  },
+  {
+    "id": "appearance",
+    "title": "Application and canvas appearance",
+    "summary": "Adjust themes, colours, fonts and the workspace.",
+    "sections": [
+      {
+        "title": "Interface settings",
+        "steps": [
+          "Open Project tools → Appearance.",
+          "Choose the interface theme, palette and font and review the preview.",
+          "Adjust sidebar width. On desktop, drag its right edge; double-click the handle to reset width.",
+          "Save settings, or use the reset action when needed."
+        ]
+      },
+      {
+        "title": "Canvas and semantic colours",
+        "paragraphs": [
+          "Canvas settings control the workspace appearance. Choose backgrounds and palettes that keep notes, lines and selection readable.",
+          "Items using palette roles can respond to theme changes. Custom fixed colours are separate overrides; check contrast on very dark or light backgrounds."
+        ],
+        "example": "Use a calm background for long sessions and a strong accent for active controls. Choose a few readable workshop colours to separate topics."
+      },
+      {
+        "title": "Advanced styles",
+        "paragraphs": [
+          "Some settings support custom item/status CSS. Make deliberate changes and verify editing, scrolling and readability.",
+          "For an unusually styled item, check its editbar overrides and use Reset appearance. Resetting application preferences is a different operation.",
+          "Changing the installation name and logo is an administrator action covered under Branding."
+        ]
+      }
+    ],
+    "image": {
+      "file": "appearance.png",
+      "alt": "appearance",
+      "caption": "Appearance settings for interface and canvas. These are separate from individual item styles."
+    }
+  },
+  {
+    "id": "admin-users",
+    "title": "Administration: users and projects",
+    "summary": "Administrative actions require an Administrator account.",
+    "sections": [
+      {
+        "title": "Users",
+        "steps": [
+          "Open Account menu → Manage users. Administrators may start directly in administration.",
+          "Search Users by name, email or ID and filter by status.",
+          "Create accounts or use available edit, role, block, password/appearance reset and recovery actions.",
+          "Check the target account and scope before confirming. Administrator privileges affect the whole installation."
+        ]
+      },
+      {
+        "title": "Projects and ownership",
+        "paragraphs": [
+          "Search and filter projects by state and participants, manage membership and transfer ownership.",
+          "Recovery and permanent removal depend on project state. Permanent removal is different from moving to trash.",
+          "Transfer ownership to the correct account when project responsibility changes."
+        ],
+        "example": "When a team lead changes, find their projects, verify membership and transfer ownership rather than rebuilding data."
+      },
+      {
+        "title": "Registration, email and MFA",
+        "paragraphs": [
+          "Allow registration controls self-service account creation without deleting existing users.",
+          "Email settings cover delivery, templates and the outbox. Check these when confirmation, password reset or code messages do not arrive.",
+          "MFA resets have their own administrator verification requirements. Verify the requester’s identity before using recovery actions."
+        ]
+      }
+    ],
+    "image": {
+      "file": "admin-users.png",
+      "alt": "admin-users",
+      "caption": "Administration with fictional user accounts and status filters. Installation administrators and project owners are different roles."
+    },
+    "admin": true
+  },
+  {
+    "id": "admin-audit",
+    "title": "Administration: audit and incidents",
+    "summary": "Investigate events in context rather than relying on a single counter.",
+    "sections": [
+      {
+        "title": "Reviewing events",
+        "steps": [
+          "Open Administration → Audit.",
+          "Use Events filters such as severity, type, user, time or outcome and apply them.",
+          "Inspect an event’s UTC time, outcome, route, request identifiers and related events.",
+          "Refresh as needed. Audit persistence failures can affect history completeness."
+        ]
+      },
+      {
+        "title": "Incidents",
+        "paragraphs": [
+          "Use Incidents and review-status filters to find signals needing investigation.",
+          "Compare events with user activity and environment configuration. Update review status after investigating according to your team’s process.",
+          "An alert alone is not proof of intrusion, and no alert does not guarantee security. This panel shows events recorded by the application."
+        ],
+        "example": "For repeated failed sign-ins, check the user, IP, time range and subsequent outcomes before deciding on an account or IP block."
+      },
+      {
+        "title": "Retention and operations",
+        "paragraphs": [
+          "History follows server retention settings and is not an independent forensic backup of infrastructure activity.",
+          "Correlate app audit with reverse-proxy and database logs available to operators. Maintain deployment, retention and backup procedures outside the UI."
+        ]
+      }
+    ],
+    "image": {
+      "file": "admin-audit.png",
+      "alt": "admin-audit",
+      "caption": "Audit filters and statistics. Times are UTC and statistics cover the last 24 hours. The illustration contains no production data."
+    },
+    "admin": true
+  },
+  {
+    "id": "admin-security",
+    "title": "Administration: security monitoring",
+    "summary": "Review IP addresses, blocks and account requirements within the panel’s scope.",
+    "sections": [
+      {
+        "title": "Addresses and blocks",
+        "paragraphs": [
+          "Administration → Security provides IP views and available blocking actions. Inspect address details before changing access.",
+          "Choose Ban IP, enter one IPv4 or IPv6 address, a reason and duration or a permanent ban. Releasing a ban clears failure counters; subsequent abuse can trigger a new ban.",
+          "People behind one company network or proxy can share an IP; blocking it can affect all of them."
+        ]
+      },
+      {
+        "title": "Routine review",
+        "steps": [
+          "Review open incidents and audit warnings.",
+          "Check blocked accounts, administrator roles and registration settings.",
+          "Check email delivery and privileged-account MFA requirements.",
+          "Review public links and project permissions if access is reported unexpectedly.",
+          "Outside the app, check updates, HTTPS, backups and correct reverse-proxy client-IP forwarding."
+        ],
+        "tip": "This panel is not a vulnerability scanner and does not replace infrastructure testing or deployment reviews."
+      },
+      {
+        "title": "Suspected abuse",
+        "paragraphs": [
+          "Record event identifiers and times, restrict access using the appropriate control and investigate related operations. Preserve information needed for investigation.",
+          "After review, update incident status and check that the restriction does not prevent authorised work."
+        ]
+      }
+    ],
+    "image": {
+      "file": "admin-security.png",
+      "alt": "admin-security",
+      "caption": "Administrative security and IP controls. Options depend on server configuration; this is not a scan of a real installation."
+    },
+    "admin": true
+  },
+  {
+    "id": "branding",
+    "title": "Administration: application name and logo",
+    "summary": "Customise the identity of the entire installation.",
+    "sections": [
+      {
+        "title": "Name",
+        "steps": [
+          "Open Administration → Branding.",
+          "Enter an application name and save it.",
+          "Check the header, browser tab title and sign-in page. Other users see this change."
+        ]
+      },
+      {
+        "title": "Logo",
+        "steps": [
+          "Choose Change application logo.",
+          "Select a supported image and review it; adjust cropping if available.",
+          "Save. Cancelling leaves the current logo unchanged.",
+          "Check the header and browser tab icon. Use the remove-image action to return to the default mark."
+        ],
+        "tip": "Use a simple mark that remains readable at favicon size and on light and dark backgrounds."
+      },
+      {
+        "title": "Shared identity versus personal preferences",
+        "paragraphs": [
+          "Name and logo are installation-wide. Appearance preferences adjust the working interface, while item styles belong in the editbar.",
+          "Branding changes do not migrate projects or files or alter participant permissions."
+        ]
+      }
+    ],
+    "image": {
+      "file": "branding.png",
+      "alt": "branding",
+      "caption": "Application branding with name and logo controls. Branding is shared and includes the sign-in page."
+    },
+    "admin": true
+  }
+]

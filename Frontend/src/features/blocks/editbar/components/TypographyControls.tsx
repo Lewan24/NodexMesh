@@ -2,10 +2,12 @@ import { lazy, Suspense, useRef, useState } from 'react';
 import { Type, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import type { BoardItem, FontFamily } from '@/entities/board/types';
+import type { BoardItem } from '@/entities/board/types';
 import { translate } from '@/shared/i18n';
 
-import { FONT_FAMILIES, getFontFamilyCss, updateTypography } from '../../typography/typographyUtils';
+import { getFontFamilyCss, updateTypography } from '../../typography/typographyUtils';
+
+import FontFamilyPicker from './FontFamilyPicker';
 
 const FontPreviewDialog = lazy(() => import('../../typography/FontPreviewDialog'));
 
@@ -39,29 +41,18 @@ export default function TypographyControls({
         >
           <Type size={15} />
         </span>
-        <label className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1">
           <span
             className="block text-[9px] font-bold uppercase tracking-[0.14em]"
             style={{ color: 'var(--color-text-faint)' }}
           >
             {translate('Font family')}
           </span>
-          <select
-            value={typography?.fontFamily ?? (item.type === 'code' ? 'mono' : '')}
-            onChange={(event) => update({ fontFamily: (event.target.value || undefined) as FontFamily | undefined })}
-            onMouseDown={(event) => event.stopPropagation()}
-            className="h-7 w-full bg-transparent text-xs font-semibold outline-none"
-            style={{ color: 'var(--color-text-primary)' }}
-            aria-label={translate('Item font family')}
-          >
-            <option value="">{translate('Project default')}</option>
-            {FONT_FAMILIES.map((font) => (
-              <option key={font.value} value={font.value} style={{ fontFamily: font.css }}>
-                {font.label}
-              </option>
-            ))}
-          </select>
-        </label>
+          <FontFamilyPicker
+            value={typography?.fontFamily ?? (item.type === 'code' ? 'mono' : undefined)}
+            onChange={(fontFamily) => update({ fontFamily })}
+          />
+        </div>
         <button
           type="button"
           className="h-8 w-8 shrink-0 rounded-lg hover:bg-accent-soft"

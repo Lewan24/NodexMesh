@@ -80,7 +80,7 @@ export default function SectionTypographyControls({
       style={{ color: 'var(--color-text-primary)' }}
     >
       <div
-        className="edit-bar-control-card flex items-center gap-2 rounded-xl border p-2"
+        className="edit-bar-control-card flex flex-wrap items-center gap-2 rounded-xl border p-2"
         style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-card)' }}
       >
         <span
@@ -235,7 +235,7 @@ export default function SectionTypographyControls({
 
         <span className="min-w-1 flex-1" />
         <ControlButton title={translate('Reset sections')} onClick={() => update()}>
-          <RotateCcw size={14} />
+          <RotateCcw size={14} aria-hidden="true" /> <span>{translate('Reset sections')}</span>
         </ControlButton>
       </div>
     </div>
