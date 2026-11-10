@@ -1,3 +1,8 @@
+import { ArrowLeft, ArrowRight, GripVertical, X } from 'lucide-react';
+import KanbanFilterControls from './KanbanFilterControls';
+import { EMPTY_KANBAN_FILTERS, hasKanbanFilters, matchesKanbanFilters } from './utils/kanbanFilters';
+import KanbanColumnIcon from './KanbanColumnIcon';
+import './kanbanColumnHeader.css';
 import { saveTaskDetails } from '../shared/saveTaskDetails';
 import TaskDialog from '../shared/TaskDialog';
 import { useCompletedTasks } from '../shared/useCompletedTasks';
@@ -5,6 +10,7 @@ import CompletedTasksButton from '../shared/CompletedTasksButton';
 import { translate, displayLabel } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { getSectionStyle } from '@/features/blocks/typography/sectionTypography';
+import { readableText } from '../typography/textContrast';
 import { useCardAppearance } from '../shared/cardAppearance';
 import { useCallback, useRef, useState } from 'react';
 
@@ -69,6 +75,13 @@ export default function KanbanBlock({
   const [editingTitle, setEditingTitle] = useState(false);
   const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(null);
   const [newCardText, setNewCardText] = useState('');
+
+  const [filters, setFilters] = useState(EMPTY_KANBAN_FILTERS);
+  const filtering = hasKanbanFilters(filters);
+  const displayedColumns = item.columns.map((column) => ({
+    ...column,
+    cards: column.cards.filter((card) => matchesKanbanFilters(card, filters)),
+  }));
 
   const typographyStyle = getTypographyStyle(item);
   const baseFontSize = item.typography?.fontSize;
@@ -153,7 +166,7 @@ export default function KanbanBlock({
   );
 
   const { draggingCardId, dropTarget, handleCardDragStart } = useKanbanDrag({
-    columns: item.columns,
+    columns: displayedColumns,
     boardRef,
     columnRefs,
     cardRowRefs,
@@ -289,7 +302,14 @@ export default function KanbanBlock({
         className="item-rounded shadow-xl overflow-scroll"
         style={{ width: '100%', height: item.height ? '100%' : undefined, background, borderColor }}
       >
-        <CompletedTasksButton item={controlItem} onUpdate={onVisibilityUpdate} readOnly={readOnly} />
+        <CompletedTasksButton item={controlItem} onUpdate={onVisibilityUpdate} readOnly={readOnly}>
+          <KanbanFilterControls
+            filters={filters}
+            readOnly={readOnly}
+            onChange={setFilters}
+            cards={item.columns.flatMap((column) => column.cards)}
+          />
+        </CompletedTasksButton>
         {item.topColor && <div style={{ height: 5, background: item.topColor, borderRadius: '16px 16px 0 0' }} />}
 
         {/* Header */}
@@ -378,7 +398,7 @@ export default function KanbanBlock({
               className="w-8 h-8 flex items-center justify-center rounded-xl transition-colors flex-shrink-0"
               style={{ color: mutedColor }}
               onMouseEnter={(event) => {
-                event.currentTarget.style.color = accentColor;
+                event.currentTarget.style.color = textColor;
                 event.currentTarget.style.backgroundColor = cardBackground;
               }}
               onMouseLeave={(event) => {
@@ -391,14 +411,14 @@ export default function KanbanBlock({
                 <path d="M12 5v14M5 12h14" />
               </svg>
             </button>
-            {item.height !== undefined && (
+            {item.height !== undefined && !item.locked && (
               <button
                 type="button"
                 onClick={resetHeight}
                 className="w-7 h-7 flex items-center justify-center rounded-lg transition-all cursor-pointer"
                 style={{ color: mutedColor }}
                 onMouseEnter={(event) => {
-                  event.currentTarget.style.color = accentColor;
+                  event.currentTarget.style.color = textColor;
                   event.currentTarget.style.backgroundColor = cardBackground;
                 }}
                 onMouseLeave={(event) => {
@@ -432,7 +452,7 @@ export default function KanbanBlock({
               className="opacity-0 group-hover:opacity-100 w-7 h-7 flex items-center justify-center rounded-lg transition-all cursor-pointer"
               style={{ color: mutedColor }}
               onMouseEnter={(event) => {
-                event.currentTarget.style.color = 'var(--color-danger-strong)';
+                event.currentTarget.style.color = isLight ? '#be123c' : '#fda4af';
                 event.currentTarget.style.backgroundColor = 'rgba(255,107,138,0.1)';
               }}
               onMouseLeave={(event) => {
@@ -451,7 +471,7 @@ export default function KanbanBlock({
         {/* Columns */}
 
         <div className="flex p-3 gap-2">
-          {item.columns.map((column, columnIndex) => (
+          {displayedColumns.map((column, columnIndex) => (
             <div
               key={column.id}
               data-kanban-id={item.id}
@@ -489,95 +509,91 @@ export default function KanbanBlock({
             >
               {/* Column header */}
 
-              <div className="flex items-center gap-1.5 mb-2.5 group/colhdr" style={{ order: -3 }}>
-                <button
-                  draggable
-                  aria-label={translate('Reorder column {{value1}}', { value1: column.title })}
-                  title={translate('Drag column · Alt+← / Alt+→')}
-                  className="cursor-grab"
-                  style={{ color: mutedColor }}
-                  onMouseDown={(event) => event.stopPropagation()}
-                  onDragStart={(event) => {
-                    event.stopPropagation();
-                    event.dataTransfer.effectAllowed = 'move';
-                    event.dataTransfer.setData('text/plain', column.id);
-                    setDraggedColumn(column.id);
-                  }}
-                  onDragEnd={() => {
-                    setDraggedColumn(null);
-                    setDropColumn(null);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.altKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
-                      event.preventDefault();
+              <div className="kanban-column-header" style={{ order: -3, borderColor, color: mutedColor }}>
+                <div className="kanban-column-heading">
+                  <button
+                    type="button"
+                    className="kanban-column-icon"
+                    style={{ color: readableText(column.color), background: column.color }}
+                    title={translate('Column icon')}
+                    aria-label={translate('Edit icon for {{value1}}', { value1: column.title })}
+                    onMouseDown={(event) => event.stopPropagation()}
+                    onClick={() => setColumnSettings(column.id)}
+                  >
+                    <KanbanColumnIcon icon={column.icon} />
+                  </button>
+                  <button
+                    type="button"
+                    className="kanban-column-title"
+                    style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'labels') }}
+                    onMouseDown={(event) => event.stopPropagation()}
+                    onClick={() => setColumnSettings(column.id)}
+                    title={`${column.title} · ${translate('Edit column')}`}
+                  >
+                    {column.title}
+                  </button>
+                  <span className="kanban-column-count" style={{ color: mutedColor }}>
+                    {column.cards.length}
+                  </span>
+                </div>
+                <div className="kanban-column-toolbar" onMouseDown={(event) => event.stopPropagation()}>
+                  {item.columns.length > 1 && (
+                    <button
+                      type="button"
+                      className="kanban-column-action kanban-column-delete"
+                      aria-label={translate('Delete column {{value1}}', { value1: column.title })}
+                      title={translate('Delete column {{value1}}', { value1: column.title })}
+                      onClick={() => deleteColumn(column.id)}
+                    >
+                      <X size={16} aria-hidden="true" />
+                    </button>
+                  )}
+                  {([-1, 1] as const).map((direction) => {
+                    const Arrow = direction === -1 ? ArrowLeft : ArrowRight;
+                    return (
+                      <button
+                        key={direction}
+                        type="button"
+                        className="kanban-column-action"
+                        aria-label={translate('Move {{value1}} {{value2}}', {
+                          value1: column.title,
+                          value2: displayLabel(direction === -1 ? 'left' : 'right'),
+                        })}
+                        disabled={!item.columns[columnIndex + direction]}
+                        onClick={() => reorderColumn(column.id, item.columns[columnIndex + direction]!.id)}
+                      >
+                        <Arrow size={17} aria-hidden="true" />
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    draggable
+                    className="kanban-column-action kanban-column-grip"
+                    aria-label={translate('Reorder column {{value1}}', { value1: column.title })}
+                    title={translate('Drag column · Alt+← / Alt+→')}
+                    onDragStart={(event) => {
                       event.stopPropagation();
-                      const target = item.columns[columnIndex + (event.key === 'ArrowLeft' ? -1 : 1)];
-                      if (target) reorderColumn(column.id, target.id);
-                    }
-                  }}
-                >
-                  ⠿
-                </button>
-                {([-1, 1] as const).map((direction) => (
-                  <button
-                    key={direction}
-                    aria-label={translate('Move {{value1}} {{value2}}', {
-                      value1: column.title,
-                      value2: displayLabel(direction === -1 ? 'left' : 'right'),
-                    })}
-                    className="text-xs disabled:opacity-20"
-                    style={{ color: mutedColor }}
-                    disabled={!item.columns[columnIndex + direction]}
-                    onMouseDown={(event) => event.stopPropagation()}
-                    onClick={() => reorderColumn(column.id, item.columns[columnIndex + direction]!.id)}
-                  >
-                    {direction === -1 ? '‹' : '›'}
-                  </button>
-                ))}
-                <button
-                  aria-label={translate('Settings for {{value1}}', { value1: column.title })}
-                  title={translate('Column settings')}
-                  aria-expanded={columnSettings === column.id}
-                  className="w-5 h-5 shrink-0 cursor-pointer border border-current rounded-sm"
-                  style={{ color: column.color, background: `${column.color}22` }}
-                  onMouseDown={(event) => event.stopPropagation()}
-                  onClick={() => setColumnSettings(columnSettings === column.id ? null : column.id)}
-                >
-                  ⚙
-                </button>
-
-                <button
-                  className="flex-1 min-w-0 break-words text-left font-bold uppercase tracking-widest"
-                  style={{ color: textColor, ...typographyStyle, ...getSectionStyle(item.typography, 'labels') }}
-                  onMouseDown={(event) => event.stopPropagation()}
-                  onClick={() => setColumnSettings(column.id)}
-                  title={translate('Edit column')}
-                >
-                  {column.title}
-                </button>
-
-                <span className="ml-auto text-[11px] font-mono flex-shrink-0" style={{ color: mutedColor }}>
-                  {column.cards.length}
-                </span>
-
-                {item.columns.length > 1 && (
-                  <button
-                    onMouseDown={(event) => event.stopPropagation()}
-                    onClick={() => deleteColumn(column.id)}
-                    className="transition-all flex-shrink-0 ml-0.5"
-                    style={{ color: mutedColor }}
-                    onMouseEnter={(event) => {
-                      event.currentTarget.style.color = '#FF6B8A';
+                      event.dataTransfer.effectAllowed = 'move';
+                      event.dataTransfer.setData('text/plain', column.id);
+                      setDraggedColumn(column.id);
                     }}
-                    onMouseLeave={(event) => {
-                      event.currentTarget.style.color = mutedColor;
+                    onDragEnd={() => {
+                      setDraggedColumn(null);
+                      setDropColumn(null);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.altKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        const target = item.columns[columnIndex + (event.key === 'ArrowLeft' ? -1 : 1)];
+                        if (target) reorderColumn(column.id, target.id);
+                      }
                     }}
                   >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M18 6 6 18M6 6l12 12" />
-                    </svg>
+                    <GripVertical size={18} aria-hidden="true" />
                   </button>
-                )}
+                </div>
               </div>
 
               <button
@@ -611,7 +627,7 @@ export default function KanbanBlock({
               >
                 {column.cards.length === 0 && (
                   <p className="px-2 py-3 text-xs" style={{ color: mutedColor }}>
-                    {translate('All tasks done. Add a new one!')}
+                    {translate(filtering ? 'No tasks match these filters.' : 'All tasks done. Add a new one!')}
                   </p>
                 )}
                 {column.cards.map((card, index) => (
@@ -710,7 +726,7 @@ export default function KanbanBlock({
                   className="mt-1 flex items-center gap-1.5 text-xs py-1.5 px-2 rounded-lg transition-colors"
                   style={{ color: mutedColor }}
                   onMouseEnter={(event) => {
-                    event.currentTarget.style.color = accentColor;
+                    event.currentTarget.style.color = textColor;
                     event.currentTarget.style.backgroundColor = cardBackground;
                   }}
                   onMouseLeave={(event) => {
@@ -727,7 +743,7 @@ export default function KanbanBlock({
 
               <div
                 data-manual-resize="true"
-                className="absolute top-0 -right-2 w-4 h-full cursor-col-resize z-20 group/resize"
+                className="absolute top-0 bottom-0 -right-2 w-3 cursor-col-resize z-20 group/resize"
                 onMouseDown={(event) => handleColumnResizeStart(column.id, event)}
                 onDoubleClick={(event) => {
                   event.stopPropagation();

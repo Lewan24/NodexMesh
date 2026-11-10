@@ -138,6 +138,9 @@ const { DROPPABLE_ON_COLUMN } = await server.ssrLoadModule('/src/features/canvas
 const { sectionTitleScale } = await server.ssrLoadModule('/src/features/blocks/section-title/SectionTitleBlock.tsx');
 const { appendKanbanColumn, getColumnShare, setColumnShare, equalizeKanbanColumns, getKanbanMinWidth } =
   await server.ssrLoadModule('/src/features/blocks/kanban/utils/kanbanUtils.ts');
+const { resetItemAppearance, resetItemTypography } = await server.ssrLoadModule(
+  '/src/features/blocks/editbar/resetAppearance.ts',
+);
 const { getIconImageSource } = await server.ssrLoadModule('/src/features/blocks/icon/iconUtils.ts');
 const { default: IconBlock } = await server.ssrLoadModule('/src/features/blocks/icon/IconBlock.tsx');
 const {
@@ -1490,4 +1493,77 @@ test('legacy connections lock their current edges before their targets move', ()
   assert.equal(resolved.x, 320);
   assert.equal(resolved.x2, -600);
   assert.equal(lockLineConnectionSides(upgraded)[2], upgraded[2]);
+});
+
+test('appearance resets retain content, geometry and connections, including independent drawing strokes', () => {
+  const line = {
+    ...createCanvasItem('line', 20, 30),
+    startItemId: 'start',
+    endItemId: 'end',
+    startOffset: 0.25,
+    endOffset: 0.75,
+    curve: 0.5,
+    strokeWidth: 6,
+    color: '#ff0000',
+    label: 'Link',
+  };
+  const reset = resetItemAppearance(line);
+  assert.equal(reset.color, '#7C3AED');
+  assert.equal(reset.strokeWidth, 2);
+  for (const field of [
+    'id',
+    'x',
+    'y',
+    'x2',
+    'y2',
+    'startItemId',
+    'endItemId',
+    'startOffset',
+    'endOffset',
+    'staticAnchors',
+    'label',
+  ])
+    assert.equal(reset[field], line[field]);
+  const drawing = {
+    ...createInk(
+      [
+        { x: 0, y: 0 },
+        { x: 20, y: 30 },
+      ],
+      1,
+    ),
+    color: '#ff0000',
+    strokes: [{ points: [{ x: 3, y: 8 }], x: 5, y: 6, scaleX: 2, scaleY: 1, color: '#ff0000', strokeWidth: 9 }],
+  };
+  const ink = resetItemAppearance(drawing);
+  assert.deepEqual(ink.strokes[0], { ...drawing.strokes[0], color: '#7C3AED', strokeWidth: 3 });
+  assert.equal(ink.width, drawing.width);
+  const note = {
+    ...createCanvasItem('note', 50, 60),
+    content: 'Keep this',
+    width: 444,
+    typography: { fontFamily: 'serif' },
+    border: { color: '#fff', width: 2, style: 'solid' },
+  };
+  assert.equal(resetItemAppearance(note).content, note.content);
+  assert.equal(resetItemAppearance(note).width, 444);
+  assert.equal(resetItemTypography(note).typography, undefined);
+});
+
+test('column icons survive saving and quick copies and reject malformed metadata', () => {
+  const board = createCanvasItem('kanban', 0, 0);
+  board.columns[0].icon = { mode: 'preset', source: 'rocket' };
+  board.columns[1].icon = { mode: 'emoji', source: '🧭' };
+  const write = flattenItems([board], crypto.randomUUID())[0].item;
+  assert.deepEqual(write.data.columns[0].icon, board.columns[0].icon);
+  const sibling = createEmptySibling(board);
+  assert.deepEqual(sibling.columns[0].icon, board.columns[0].icon);
+  assert.equal(sibling.columns[0].cards.length, 0);
+  for (const icon of [
+    { mode: 'html', source: '<script>' },
+    { mode: 'emoji', source: '' },
+    { mode: 'emoji', source: 'x'.repeat(65) },
+  ]) {
+    assert.throws(() => flattenItems([{ ...board, columns: [{ ...board.columns[0], icon }] }], crypto.randomUUID()));
+  }
 });

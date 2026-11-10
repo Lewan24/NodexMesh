@@ -235,7 +235,7 @@ export default function SectionTypographyControls({
 
         <span className="min-w-1 flex-1" />
         <ControlButton title={translate('Reset sections')} onClick={() => update()}>
-          <RotateCcw size={14} />
+          <RotateCcw size={14} aria-hidden="true" /> <span>{translate('Reset sections')}</span>
         </ControlButton>
       </div>
     </div>

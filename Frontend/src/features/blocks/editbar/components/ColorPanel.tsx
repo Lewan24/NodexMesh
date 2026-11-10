@@ -408,12 +408,12 @@ export default function ColorPanel({ item, onUpdate, section }: ColorPanelProps)
                 <button
                   type="button"
                   onClick={() => setStripColor(undefined)}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg transition-colors hover:bg-rose-500/10"
+                  className="flex min-h-7 items-center justify-center gap-1 px-2 rounded-lg text-xs transition-colors hover:bg-rose-500/10"
                   style={{ color: 'var(--color-text-faint)' }}
                   title={translate('Remove strip')}
                   aria-label={translate('Remove strip')}
                 >
-                  <X size={14} />
+                  <X size={14} aria-hidden="true" /> {translate('Remove strip')}
                 </button>
               )}
             </div>

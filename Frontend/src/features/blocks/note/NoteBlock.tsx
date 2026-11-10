@@ -96,7 +96,7 @@ export default function NoteBlock({ item, isSelected, onUpdate, onDelete, readOn
 
         {!editing && (
           <div className="absolute top-1 left-2 right-2 z-10 flex items-center justify-between pointer-events-none [&>button]:pointer-events-auto">
-            {item.height && (
+            {item.height && !item.locked && (
               <button
                 onMouseDown={(event) => event.stopPropagation()}
                 onClick={() => update({ height: undefined })}

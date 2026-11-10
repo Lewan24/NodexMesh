@@ -34,7 +34,10 @@ for (const width of [1280, 1024, 920]) {
       await expect(page.getByRole('tab', { name: 'Appearance', exact: true })).toHaveAttribute('aria-selected', 'true');
       await checkBounds(page);
       const categories = page.getByRole('group', { name: 'Appearance options', exact: true }).getByRole('button');
-      const names = await categories.allTextContents();
+      const names = await page
+        .getByRole('group', { name: 'Appearance options', exact: true })
+        .locator('button[aria-pressed]')
+        .allTextContents();
       for (const name of names) {
         await categories.filter({ hasText: name }).click();
         await checkBounds(page);
@@ -99,7 +102,8 @@ test('fill, gradients, borders, arrow labels and mixed drawing controls remain e
 
   await page.getByLabel('Selection', { exact: true }).selectOption('note');
   await page.getByRole('tab', { name: 'Text', exact: true }).click();
-  await page.getByLabel('Item font family', { exact: true }).selectOption('serif');
+  await page.getByRole('combobox', { name: 'Item font family', exact: true }).click();
+  await page.getByRole('option', { name: 'Serif', exact: true }).click();
   await page.getByLabel('Section font size', { exact: true }).fill('24');
   await page.getByRole('button', { name: 'Center', exact: true }).click();
   await checkBounds(page);

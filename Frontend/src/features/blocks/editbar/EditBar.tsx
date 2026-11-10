@@ -1,5 +1,5 @@
 import { isSingleGroup } from '@/features/canvas/utils/itemGroups';
-import { LayoutGrid, Palette, SlidersHorizontal, Type, X } from 'lucide-react';
+import { LayoutGrid, Palette, SlidersHorizontal, Type, X, RotateCcw } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,6 +7,7 @@ import type { BoardItem } from '@/entities/board/types';
 import { translate } from '@/shared/i18n';
 
 import { ITEM_TEXT_SECTIONS } from '../typography/sectionTypography';
+import { resetItemTypography } from './resetAppearance';
 import AppearanceControls from './components/AppearanceControls';
 import './editBar.css';
 import ColumnLayoutControls from './components/ColumnLayoutControls';
@@ -269,8 +270,12 @@ export default function EditBar({
           className="edit-bar-tab-content edit-bar-text-panel flex flex-col border-t"
           style={{ borderColor: 'var(--color-border-soft)', background: 'var(--edit-bar-panel)' }}
         >
-          <div className="flex items-center gap-2 px-2 pt-2">
+          <div className="flex flex-wrap items-center gap-2 px-2 pt-2">
             <TypographyControls item={single} onUpdate={handleUpdate} />
+            <button type="button" className="edit-bar-reset" onClick={() => handleUpdate(resetItemTypography)}>
+              <RotateCcw size={14} aria-hidden="true" />
+              {translate('Reset text style')}
+            </button>
           </div>
           {single.type === 'line' && (
             <div className="edit-bar-line-label">

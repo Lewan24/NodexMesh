@@ -1,3 +1,4 @@
+import { applyItemLocks } from '@/features/canvas/utils/itemLocks';
 import { useCallback } from 'react';
 import { normalizeItemNumbers } from '@/entities/board/normalizeNumbers';
 import { normalizeFrameMembership, isItemInsideFrame } from '@/features/canvas/utils/frameGeometry';
@@ -102,7 +103,9 @@ export function useProjectItems({ activeProjectId, setProjects }: UseProjectItem
             ? {
                 ...project,
                 items: normalizeFrameMembership(
-                  update(lockLineConnectionSides(project.items)).map(normalizeItemNumbers),
+                  applyItemLocks(project.items, update(lockLineConnectionSides(project.items))).map(
+                    normalizeItemNumbers,
+                  ),
                 ).map((item) => (item.type === 'frame' && item.zIndex !== 0 ? { ...item, zIndex: 0 } : item)),
               }
             : project,

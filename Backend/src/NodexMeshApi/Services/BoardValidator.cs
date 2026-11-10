@@ -92,7 +92,9 @@ public static class BoardValidator
             throw new ApiException(422, "invalid_item", "Invalid checklist tasks.");
         if (data is KanbanData kanban && (!IsText(kanban.Title) || kanban.Columns is null
             || kanban.Columns.Any(c => c is null || string.IsNullOrWhiteSpace(c.Id) || !IsText(c.Id)
-                || !IsText(c.Title) || !IsText(c.Color) || !ValidEntries(c.Cards))
+                || !IsText(c.Title) || !IsText(c.Color) || !ValidEntries(c.Cards)
+                || (c.Icon is not null && (c.Icon.Mode is not ("preset" or "emoji")
+                    || string.IsNullOrWhiteSpace(c.Icon.Source) || c.Icon.Source.Length > 64)))
             || kanban.Columns.Select(c => c.Id).Distinct().Count() != kanban.Columns.Count
             || kanban.Columns.SelectMany(c => c.Cards).Select(c => c.Id).Distinct().Count()
                 != kanban.Columns.Sum(c => c.Cards.Count)))

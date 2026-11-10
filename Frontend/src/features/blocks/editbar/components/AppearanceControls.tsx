@@ -1,3 +1,5 @@
+import { RotateCcw } from 'lucide-react';
+import { resetItemAppearance } from '../resetAppearance';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { BoardItem } from '@/entities/board/types';
@@ -43,15 +45,18 @@ export default function AppearanceControls({
 
   return (
     <div className="edit-bar-appearance-controls">
-      {sections.length > 1 && (
-        <div className="edit-bar-sections" role="group" aria-label={translate('Appearance options')}>
-          {sections.map(({ id, label }) => (
+      <div className="edit-bar-sections" role="group" aria-label={translate('Appearance options')}>
+        {sections.length > 1 &&
+          sections.map(({ id, label }) => (
             <button key={id} type="button" aria-pressed={active === id} onClick={() => setSection(id)}>
               {label}
             </button>
           ))}
-        </div>
-      )}
+        <button type="button" className="edit-bar-reset" onClick={() => onUpdate(resetItemAppearance)}>
+          <RotateCcw size={14} aria-hidden="true" />
+          {translate('Reset appearance')}
+        </button>
+      </div>
       <div className="edit-bar-section-body">
         {active === 'fill' &&
           single &&

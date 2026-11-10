@@ -1,3 +1,4 @@
+import { moveFilteredKanbanCard } from '../utils/kanbanFilters';
 import { useCallback, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 
@@ -158,38 +159,17 @@ export function useKanbanDrag({
           const target = dropTargetRef.current;
 
           if (card && target) {
-            updateColumns((currentColumns) => {
-              let removedCard: KanbanCard | undefined;
-
-              let nextColumns = currentColumns.map((column) => {
-                if (column.id !== sourceColumnId) return column;
-
-                const index = column.cards.findIndex((currentCard) => currentCard.id === cardId);
-
-                if (index === -1) return column;
-
-                const cards = [...column.cards];
-                removedCard = cards.splice(index, 1)[0];
-
-                return { ...column, cards };
-              });
-
-              if (!removedCard) return currentColumns;
-
-              nextColumns = nextColumns.map((column) => {
-                if (column.id !== target.columnId) return column;
-
-                const cards = [...column.cards];
-
-                const safeIndex = Math.max(0, Math.min(target.index, cards.length));
-
-                cards.splice(safeIndex, 0, removedCard!);
-
-                return { ...column, cards };
-              });
-
-              return nextColumns;
-            });
+            const visibleTarget = columnsRef.current.find((column) => column.id === target.columnId)?.cards ?? [];
+            updateColumns((currentColumns) =>
+              moveFilteredKanbanCard(
+                currentColumns,
+                sourceColumnId,
+                target.columnId,
+                cardId,
+                visibleTarget,
+                target.index,
+              ),
+            );
           }
         }
 

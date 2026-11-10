@@ -1,0 +1,46 @@
+.font-family-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  text-align: left;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+.font-family-trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.font-family-list {
+  position: fixed;
+  z-index: 250000;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 22%);
+}
+.font-family-list [role='option'] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 17px;
+  cursor: pointer;
+}
+.font-family-list .is-active {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+.font-family-list [aria-selected='true'] {
+  box-shadow: inset 3px 0 var(--color-accent);
+}

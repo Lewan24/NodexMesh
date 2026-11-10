@@ -282,7 +282,13 @@ export interface KanbanItem extends BaseItem {
   color?: string;
 }
 
+export interface KanbanColumnIcon {
+  mode: 'preset' | 'emoji';
+  source: string;
+}
+
 export interface KanbanColumn {
+  icon?: KanbanColumnIcon;
   id: string;
   title: string;
   color: string;

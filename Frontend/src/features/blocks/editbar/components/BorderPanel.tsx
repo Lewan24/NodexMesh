@@ -58,7 +58,7 @@ export default function BorderPanel({
           disabled={!enabled}
           onClick={() => onUpdate((item) => ({ ...item, border: undefined }))}
         >
-          <X size={14} />
+          <X size={14} aria-hidden="true" /> {translate('Remove border')}
         </button>
       </div>
       <div className="border-panel-fields grid grid-cols-4 gap-2">

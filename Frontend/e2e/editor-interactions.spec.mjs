@@ -346,7 +346,8 @@ test('font dialog previews custom text without changing the item until Apply', a
   await item(page, 10).click({ position: { x: 100, y: 70 } });
   await page.getByRole('tab', { name: 'Text', exact: true }).click();
   const select = page.getByRole('combobox', { name: 'Item font family', exact: true });
-  await select.selectOption('kalam');
+  await select.click();
+  await page.getByRole('option', { name: 'Kalam · Sketch', exact: true }).click();
   await page.getByRole('button', { name: 'Preview fonts', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Preview fonts', exact: true });
   await dialog.getByLabel('Your sample text').fill('Zażółć gęślą jaźń <img src=x>');
@@ -355,13 +356,13 @@ test('font dialog previews custom text without changing the item until Apply', a
   await expect(dialog.locator('[data-font-preview]')).toHaveText('Zażółć gęślą jaźń <img src=x>');
   await expect(dialog.locator('[data-font-preview] img')).toHaveCount(0);
   await page.screenshot({ path: 'test-results/font-preview-dialog.png' });
-  await expect(select).toHaveValue('kalam');
+  await expect(select).toHaveAttribute('data-font-value', 'kalam');
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await expect(select).toHaveValue('kalam');
+  await expect(select).toHaveAttribute('data-font-value', 'kalam');
   await page.getByRole('button', { name: 'Preview fonts', exact: true }).click();
   await dialog.getByRole('radio', { name: 'Comic Neue · Playful', exact: true }).check();
   await dialog.getByRole('button', { name: 'Use font', exact: true }).click();
-  await expect(select).toHaveValue('comic-neue');
+  await expect(select).toHaveAttribute('data-font-value', 'comic-neue');
 });
 
 test('selected words in a note retain formatting after editing, saving and reloading', async ({ page }) => {
