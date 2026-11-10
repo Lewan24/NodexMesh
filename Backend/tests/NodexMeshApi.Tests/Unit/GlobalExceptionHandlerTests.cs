@@ -9,6 +9,19 @@ namespace NodexMeshApi.Tests.Unit;
 
 public class GlobalExceptionHandlerTests
 {
+    [Theory]
+    [InlineData(400, "invalid_request")]
+    [InlineData(413, "request_too_large")]
+    public async Task KestrelRequestFailuresKeepTheirClientStatusAndDoNotLeakServerMessages(int status, string code)
+    {
+        var handler = new GlobalExceptionHandler(NullLogger<GlobalExceptionHandler>.Instance);
+        var (context, body) = NewContext();
+        await handler.TryHandleAsync(context, new BadHttpRequestException("internal server limits", status), default);
+        context.Response.StatusCode.Should().Be(status);
+        var json = await ReadResponseJsonAsync(body);
+        json.GetProperty("title").GetString().Should().Be(code);
+        json.GetProperty("detail").GetString().Should().NotContain("internal server limits");
+    }
     private static (DefaultHttpContext Context, MemoryStream Body) NewContext()
     {
         var context = new DefaultHttpContext();

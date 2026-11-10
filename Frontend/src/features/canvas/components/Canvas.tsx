@@ -43,7 +43,7 @@ import {
   ZOOM_MAX,
   ZOOM_MIN,
 } from '@/features/canvas/constants';
-import { resolveLineItem } from '@/features/canvas/utils/lineGeometry';
+import { resolveLineItem, getConnectionSide } from '@/features/canvas/utils/lineGeometry';
 
 import { useCanvasHistory } from '@/features/canvas/hooks/useCanvasHistory';
 import { useCanvasMeasurements } from '@/features/canvas/hooks/useCanvasMeasurements';
@@ -389,7 +389,7 @@ function CanvasContent({
     onFrameResizeEnd: handleFrameResizeEnd,
   });
 
-  const { attachHoverId, handleLineEndpointDrag, handleQuickConnectStart } = useLineDrag({
+  const { attachHoverId, attachHover, handleLineEndpointDrag, handleQuickConnectStart } = useLineDrag({
     projectRef,
     zoomRef,
     measuredSizes,
@@ -1398,9 +1398,14 @@ function CanvasContent({
               if (current.type !== 'line') return current;
               const centerX = created.x + size.width / 2;
               const centerY = created.y + size.height / 2;
+              const side = getConnectionSide(
+                { x: created.x, y: created.y, ...size },
+                quickConnectMenu.endpoint === 1 ? current.x2 : current.x,
+                quickConnectMenu.endpoint === 1 ? current.y2 : current.y,
+              );
               return quickConnectMenu.endpoint === 1
-                ? { ...current, startItemId: created.id, x: centerX, y: centerY }
-                : { ...current, endItemId: created.id, x2: centerX, y2: centerY };
+                ? { ...current, startItemId: created.id, startSide: side, startOffset: 0.5, x: centerX, y: centerY }
+                : { ...current, endItemId: created.id, endSide: side, endOffset: 0.5, x2: centerX, y2: centerY };
             });
             onSelectItems([created.id]);
             closeQuickConnectMenu();
@@ -1467,6 +1472,8 @@ function CanvasContent({
               scrollPositions={scrollPositions.current}
               isSelected={selectedItemIds.has(item.id)}
               isAttachTarget={attachHoverId === item.id}
+              attachSide={attachHover?.id === item.id ? attachHover.side : undefined}
+              attachOffset={attachHover?.id === item.id ? attachHover.offset : undefined}
               isDragOver={dragOverColumnId === item.id}
               isAnimating={animatingIds.has(item.id)}
               selectedIds={safeSelectedIds}

@@ -70,6 +70,11 @@ public static class BoardValidator
             (note.ContentFormat is not null && (note.ContentFormat != "tiptap-html" || note.ContentVersion != 1)) ||
             (note.ContentFormat is null && note.ContentVersion is not null)))
             throw new ApiException(422, "invalid_item", "Invalid note content format.");
+        static bool ValidConnectionSide(string? side) => side is null or "top" or "right" or "bottom" or "left";
+        static bool ValidConnectionOffset(double? offset) => offset is null || (double.IsFinite(offset.Value) && offset >= 0 && offset <= 1);
+        if (data is LineData line && (!ValidConnectionSide(line.StartSide) || !ValidConnectionSide(line.EndSide)
+            || !ValidConnectionOffset(line.StartOffset) || !ValidConnectionOffset(line.EndOffset)))
+            throw new ApiException(422, "invalid_item", "Invalid line connection edge.");
         static bool ValidEntries(IReadOnlyList<TaskEntry>? entries) => entries is not null && entries.Count <= 10_000
             && entries.All(e => e is not null && !string.IsNullOrWhiteSpace(e.Id) && IsText(e.Id) && IsText(e.Text)
                 && (e.Description is null || e.Description.Length <= 20_000)
@@ -87,7 +92,9 @@ public static class BoardValidator
             throw new ApiException(422, "invalid_item", "Invalid checklist tasks.");
         if (data is KanbanData kanban && (!IsText(kanban.Title) || kanban.Columns is null
             || kanban.Columns.Any(c => c is null || string.IsNullOrWhiteSpace(c.Id) || !IsText(c.Id)
-                || !IsText(c.Title) || !IsText(c.Color) || !ValidEntries(c.Cards))
+                || !IsText(c.Title) || !IsText(c.Color) || !ValidEntries(c.Cards)
+                || (c.Icon is not null && (c.Icon.Mode is not ("preset" or "emoji")
+                    || string.IsNullOrWhiteSpace(c.Icon.Source) || c.Icon.Source.Length > 64)))
             || kanban.Columns.Select(c => c.Id).Distinct().Count() != kanban.Columns.Count
             || kanban.Columns.SelectMany(c => c.Cards).Select(c => c.Id).Distinct().Count()
                 != kanban.Columns.Sum(c => c.Cards.Count)))

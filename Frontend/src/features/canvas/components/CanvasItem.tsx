@@ -3,7 +3,7 @@ import CanvasNotePreview from './CanvasNotePreview';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { BoardItem, ChecklistEntry, KanbanCard } from '@/entities/board/types';
+import type { BoardItem, ChecklistEntry, KanbanCard, LineConnectionSide } from '@/entities/board/types';
 
 import BlockRenderer from '@/features/blocks/BlockRenderer';
 import ItemWatcher from '@/features/canvas/components/ItemWatcher';
@@ -36,6 +36,8 @@ interface CanvasItemProps {
 
   isSelected: boolean;
   isAttachTarget: boolean;
+  attachSide?: LineConnectionSide;
+  attachOffset?: number;
   isDragOver: boolean;
   isAnimating: boolean;
 
@@ -90,6 +92,8 @@ function CanvasItem({
   renderedItem,
   isSelected,
   isAttachTarget,
+  attachSide,
+  attachOffset,
   isDragOver,
   isAnimating,
   selectedIds,
@@ -150,6 +154,7 @@ function CanvasItem({
     motionPreview &&
     !simplified &&
     item.type === 'note' &&
+    !item.dispenserId &&
     Boolean(item.height && item.height > 0) &&
     !item.customCss?.enabled &&
     !item.statusId &&
@@ -397,15 +402,32 @@ function CanvasItem({
         />
       )}
 
-      {isAttachTarget && (
-        <div
-          className="absolute pointer-events-none rounded-2xl"
-          style={{
-            inset: -6,
-            boxShadow:
-              '0 0 0 3px var(--color-accent), 0 0 18px color-mix(in srgb, var(--color-accent) 35%, transparent)',
-          }}
-        />
+      {isAttachTarget && attachSide && (
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 75 }} data-attach-edge={attachSide}>
+          <div
+            style={{
+              position: 'absolute',
+              background: 'var(--color-accent)',
+              boxShadow: '0 0 12px var(--color-accent)',
+              ...(attachSide === 'top' || attachSide === 'bottom'
+                ? { left: 0, right: 0, height: 4, [attachSide]: -2 }
+                : { top: 0, bottom: 0, width: 4, [attachSide]: -2 }),
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              background: 'var(--color-accent)',
+              border: '2px solid var(--color-surface)',
+              transform: 'translate(-50%, -50%)',
+              left: attachSide === 'left' ? 0 : attachSide === 'right' ? '100%' : `${(attachOffset ?? 0.5) * 100}%`,
+              top: attachSide === 'top' ? 0 : attachSide === 'bottom' ? '100%' : `${(attachOffset ?? 0.5) * 100}%`,
+            }}
+          />
+        </div>
       )}
 
       <div

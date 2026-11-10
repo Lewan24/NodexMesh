@@ -1,0 +1,126 @@
+.kanban-column-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  container-type: inline-size;
+  z-index: 30;
+  margin-bottom: 8px;
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid;
+}
+.kanban-column-heading,
+.kanban-column-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.kanban-column-heading {
+  flex: 1;
+  gap: 6px;
+}
+.kanban-column-icon,
+.kanban-column-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 4px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.kanban-column-icon {
+  width: 30px;
+  height: 30px;
+}
+.kanban-column-title {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.kanban-column-count {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.kanban-column-toolbar {
+  flex-shrink: 0;
+  color: inherit;
+}
+.kanban-column-action:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.kanban-column-action:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+.kanban-column-delete:hover {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.kanban-column-grip {
+  cursor: grab;
+}
+.kanban-column-grip:active {
+  cursor: grabbing;
+}
+.kanban-icon-picker legend {
+  font-size: 13px;
+  font-weight: 600;
+}
+.kanban-icon-options {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 4px;
+  max-height: 144px;
+  overflow-y: auto;
+  margin-block: 6px;
+}
+.kanban-icon-options button {
+  display: grid;
+  place-items: center;
+  min-height: 32px;
+  border-radius: 6px;
+}
+.kanban-icon-options button:hover,
+.kanban-icon-options button[aria-pressed='true'] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-ink);
+}
+.kanban-column-header button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.kanban-icon-picker button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .kanban-column-action {
+    min-width: 28px;
+    min-height: 36px;
+  }
+}
+
+@container (max-width: 240px) {
+  .kanban-column-count {
+    display: none;
+  }
+  .kanban-column-toolbar {
+    gap: 0;
+  }
+  .kanban-column-heading {
+    gap: 4px;
+  }
+  .kanban-column-icon {
+    width: 28px;
+  }
+}

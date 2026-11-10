@@ -48,17 +48,17 @@ export function getApproxItemSize(item: BoardItem): ItemSize {
     case 'icon':
       return { width: item.width ?? ITEM_WIDTH.icon, height: item.height ?? ITEM_WIDTH.icon };
     case 'image':
-      return { width: item.width ?? ITEM_WIDTH.image, height: (item.imgHeight ?? 178) + 56 };
+      return { width: item.width ?? ITEM_WIDTH.image, height: item.height ?? (item.imgHeight ?? 178) + 56 };
 
     case 'file':
       return { width: item.width ?? ITEM_WIDTH.file, height: item.height ?? 176 };
 
     case 'link':
-      return { width: item.width ?? ITEM_WIDTH.link, height: 150 };
+      return { width: item.width ?? ITEM_WIDTH.link, height: item.height ?? 150 };
 
     case 'section-title':
     case 'text':
-      return { width: item.width ?? ITEM_WIDTH.text, height: 60 };
+      return { width: item.width ?? ITEM_WIDTH.text, height: item.height ?? 60 };
 
     case 'checklist':
       return { width: item.width ?? ITEM_WIDTH.checklist, height: item.height ?? 200 };

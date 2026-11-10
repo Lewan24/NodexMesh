@@ -159,15 +159,22 @@ public sealed class IpProtectionHubFilter(IServiceScopeFactory scopes, IpConnect
 {
     public async Task OnConnectedAsync(HubLifetimeContext context, Func<HubLifetimeContext, Task> next)
     {
+        var ct = context.Context.ConnectionAborted;
+        if (ct.IsCancellationRequested) return;
         var ip = ClientIpResolver.Resolve(context.Context.GetHttpContext());
         await using var scope = scopes.CreateAsyncScope();
-        if (await scope.ServiceProvider.GetRequiredService<IpProtectionService>().IsBannedAsync(ip, context.Context.ConnectionAborted))
+        try
         {
-            context.Context.Abort();
-            return;
+            if (await scope.ServiceProvider.GetRequiredService<IpProtectionService>().IsBannedAsync(ip, ct))
+            {
+                context.Context.Abort();
+                return;
+            }
+            ct.ThrowIfCancellationRequested();
+            connections.Add(context.Context, ip);
+            await next(context);
         }
-        connections.Add(context.Context, ip);
-        try { await next(context); }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { connections.Remove(context.Context.ConnectionId); }
         catch { connections.Remove(context.Context.ConnectionId); throw; }
     }
 
@@ -181,14 +188,23 @@ public sealed class IpProtectionHubFilter(IServiceScopeFactory scopes, IpConnect
     public async ValueTask<object?> InvokeMethodAsync(Microsoft.AspNetCore.SignalR.HubInvocationContext context,
         Func<Microsoft.AspNetCore.SignalR.HubInvocationContext, ValueTask<object?>> next)
     {
-        await using var scope = scopes.CreateAsyncScope();
-        var protection = scope.ServiceProvider.GetRequiredService<IpProtectionService>();
-        if (await protection.IsBannedAsync(ClientIpResolver.Resolve(context.Context.GetHttpContext()), context.Context.ConnectionAborted))
+        var ct = context.Context.ConnectionAborted;
+        if (ct.IsCancellationRequested) return null;
+        try
         {
-            context.Context.Abort();
-            throw new Microsoft.AspNetCore.SignalR.HubException("Access denied.");
+            await using var scope = scopes.CreateAsyncScope();
+            var protection = scope.ServiceProvider.GetRequiredService<IpProtectionService>();
+            if (await protection.IsBannedAsync(ClientIpResolver.Resolve(context.Context.GetHttpContext()), ct))
+            {
+                context.Context.Abort();
+                throw new Microsoft.AspNetCore.SignalR.HubException("Access denied.");
+            }
+            ct.ThrowIfCancellationRequested();
+            return await next(context);
         }
-        return await next(context);
+        // A socket closed while EF was awaiting the ban lookup. Do not execute a
+        // hub method or turn a normal disconnection into a SignalR server error.
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { return null; }
     }
 }
 

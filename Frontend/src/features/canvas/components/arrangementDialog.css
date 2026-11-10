@@ -99,3 +99,16 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.arrangement-body .arrangement-fill-gaps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.arrangement-fill-gaps input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  accent-color: var(--color-accent);
+}

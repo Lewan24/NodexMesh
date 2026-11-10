@@ -6,6 +6,7 @@ The [frontend review and refactor plan](FRONTEND_REVIEW.md) records the 2026-10-
 
 | Document                                       | Contents                                                                                          |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| [USER_GUIDE.md](USER_GUIDE.md) | In-app illustrated user guide, coverage, source content and screenshot regeneration |
 | [DEVELOPMENT.md](DEVELOPMENT.md)               | Local setup, repository structure, data adapters, demo data, import/export, and verification      |
 | [DEPLOYMENT.md](DEPLOYMENT.md)                 | Docker Compose, Portainer, secrets, TLS/proxy settings, persistent volumes, and backups           |
 | [REVERSE_PROXY.md](REVERSE_PROXY.md) | Exact Nginx Proxy Manager setup, real client IPs, refresh-safe quotas, bans and friendly IPs |

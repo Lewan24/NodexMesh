@@ -1,0 +1,787 @@
+[
+  {
+    "id": "start",
+    "title": "Pierwsze kroki i mapa aplikacji",
+    "summary": "Od pustej tablicy do pierwszego projektu. Poznaj miejsca, w których znajdziesz narzędzia i ustawienia.",
+    "sections": [
+      {
+        "title": "Projekt, tablica i item — czym się różnią?",
+        "paragraphs": [
+          "Projekt jest wspólnym miejscem dla tablic, uczestników i biblioteki plików. Tablica to duża przestrzeń, po której możesz swobodnie się poruszać. Item to pojedynczy element, np. notatka, Kanban albo obraz.",
+          "Na górze znajdują się wybór projektu, wyszukiwanie, udostępnianie, narzędzia projektu i menu konta. Lewy pasek zawiera narzędzia do tworzenia elementów. Po zaznaczeniu itemu pojawiają się editbar oraz inspektor."
+        ]
+      },
+      {
+        "title": "Zbuduj pierwszą tablicę",
+        "steps": [
+          "Wybierz projekt z menu w lewym górnym rogu lub utwórz nowy przyciskiem dodawania projektu.",
+          "Rozwiń grupę narzędzi po lewej. Kliknij Notatkę i wskaż miejsce na tablicy albo przeciągnij narzędzie bezpośrednio na tablicę.",
+          "Kliknij dwukrotnie treść notatki i wpisz pomysł. Zakończ edycję kliknięciem poza edytorem lub odpowiednim przyciskiem zakończenia.",
+          "Zaznacz notatkę i zmień jej wygląd w editbarze. Dodaj tag w inspektorze.",
+          "Sprawdź wskaźnik zapisu przed zamknięciem aplikacji. Zmiany zapisują się automatycznie."
+        ],
+        "example": "Projekt „Nowa strona”: jedna notatka z celem, checklista z wymaganiami i Kanban z zadaniami. Później dodaj osobne tablice dla badań i wdrożenia."
+      },
+      {
+        "title": "Gdzie szukać pomocy?",
+        "paragraphs": [
+          "Instrukcja obsługi znajduje się na samym dole paska narzędzi; w zwiniętym pasku jest oznaczona książką. Na telefonie otwórz panel Narzędzia. Instrukcja jest też dostępna w profilu oraz administracji.",
+          "Wpisz w wyszukiwarce instrukcji nazwę narzędzia albo czynności. Kliknięcie ilustracji otwiera jej większy podgląd. Podpowiedzi przy przyciskach pojawiają się po najechaniu myszą lub ustawieniu na nich fokusu klawiaturą."
+        ]
+      },
+      {
+        "title": "Demo i połączenie z serwerem",
+        "paragraphs": [
+          "Demo zapisuje projekt w pamięci przeglądarki. Inna przeglądarka lub usunięcie danych witryny oznacza osobny zestaw danych. Biblioteka, udostępnianie, praca wielu osób oraz część operacji konta i administracji wymagają wersji połączonej z API."
+        ],
+        "tip": "Własny wygląd aplikacji może zmieniać kolory i logo. Instrukcja opisuje funkcje niezależnie od brandingu instalacji."
+      }
+    ],
+    "image": {
+      "file": "workspace.png",
+      "alt": "Obszar roboczy z narzędziami po lewej, tablicą i paskiem projektu",
+      "caption": "Przykładowy projekt szkoleniowy. Zrzuty w instrukcji przedstawiają prawdziwe komponenty aplikacji z przykładowymi danymi; nazwy i dostępne akcje zależą od języka, uprawnień oraz konfiguracji serwera."
+    }
+  },
+  {
+    "id": "navigation",
+    "title": "Poruszanie się i zaznaczanie",
+    "summary": "Przesuwaj widok, przybliżaj szczegóły i wybieraj elementy bez przypadkowej edycji.",
+    "sections": [
+      {
+        "title": "Nawigacja po tablicy",
+        "steps": [
+          "Przytrzymaj Spację i przeciągnij myszą, aby przesuwać widok. Możesz też przeciągać środkowym przyciskiem myszy.",
+          "Użyj kółka myszy nad tablicą, aby zmieniać powiększenie wokół kursora. Kontrolki powiększenia i dopasowania widoku znajdziesz także przy tablicy.",
+          "Na ekranie dotykowym użyj gestów przesuwania i szczypania. Panele Narzędzia, edycji i szczegółów otwierają się jako osobne okna."
+        ],
+        "tip": "Kółko nad przewijalną zawartością itemu przewija jego treść. Kółko nad pustą tablicą zmienia powiększenie. Gdy chcesz przesunąć widok nad itemem, użyj Spacji lub środkowego przycisku."
+      },
+      {
+        "title": "Zaznaczanie i edycja",
+        "paragraphs": [
+          "W narzędziu Zaznacz i przesuń kliknij item, aby go zaznaczyć. Przeciągnij pusty fragment tablicy, aby objąć kilka elementów zaznaczeniem. Shift pozwala rozszerzać zaznaczenie.",
+          "Przeciągnij zaznaczony item za jego tło lub nagłówek. Pola tekstowe, przyciski oraz uchwyty wykonują własne akcje. Wiele elementów otwiera edytor po dwukrotnym kliknięciu treści; rozbudowane bloki mają również przyciski edycji.",
+          "Escape kończy bieżącą operację albo czyści zaznaczenie. Uchwyty przy zaznaczonym itemie służą do zmiany jego rozmiaru."
+        ]
+      },
+      {
+        "title": "Skróty podczas pracy na tablicy",
+        "paragraphs": [
+          "Ctrl/Cmd+C kopiuje zaznaczenie, Ctrl/Cmd+V wkleja, Ctrl/Cmd+D tworzy duplikat, a Ctrl/Cmd+Z cofa zmianę. Delete lub Backspace usuwa zaznaczone elementy z potwierdzeniem tam, gdzie aplikacja go wymaga.",
+          "Skróty tablicy nie przejmują zwykłego wpisywania w polach tekstowych i edytorach. Niektóre edytory mają własne cofanie."
+        ],
+        "example": "Zaznacz trzy notatki, skopiuj je i wklej w drugiej części tablicy. Następnie przeciągnij cały zestaw w docelowe miejsce."
+      }
+    ]
+  },
+  {
+    "id": "editing",
+    "title": "Editbar i wygląd elementów",
+    "summary": "Zaznaczenie otwiera kompaktowy pasek z ustawieniami odpowiednimi dla danego typu itemu.",
+    "sections": [
+      {
+        "title": "Zakładki i zakres zmian",
+        "paragraphs": [
+          "Pierwsza dostępna zakładka otwiera się po zaznaczeniu. Wygląd obejmuje m.in. tło, akcent, obramowanie i reset stylu. Tekst zawiera ustawienia typografii. Układ udostępnia opcje porządkowania i rozmiarów, gdy są obsługiwane.",
+          "Przy wielu zaznaczonych itemach pasek pokazuje ustawienia wspólne dla zaznaczenia. Sprawdź liczbę zaznaczonych elementów przed zmianą koloru, usunięciem albo grupowaniem."
+        ]
+      },
+      {
+        "title": "Dostosuj wygląd",
+        "steps": [
+          "Kliknij element, a następnie zakładkę Wygląd.",
+          "Wybierz kolor z palety lub kolor własny. Zależnie od bloku możesz dodać przezroczystość, gradient, pasek akcentu i obramowanie.",
+          "W ustawieniach tekstu wybierz czcionkę z podglądem, rozmiar, grubość, pochylenie i wyrównanie. Większy podgląd czcionek pomaga porównać kroje.",
+          "Użyj widocznego przycisku resetowania wyglądu, aby usunąć własne nadpisania wyglądu itemu. Reset nie kasuje treści."
+        ],
+        "example": "Notatkom z decyzjami ustaw wspólny kolor akcentu. Nagłówki wyróżnij większą czcionką, a materiały pomocnicze pozostaw w neutralnych kolorach."
+      },
+      {
+        "title": "Warstwy i opcje specyficzne dla narzędzia",
+        "paragraphs": [
+          "Polecenia przeniesienia na wierzch lub pod spód zmieniają kolejność nakładania elementów. Grupowanie pozwala traktować kilka itemów jak jeden zestaw przy zaznaczaniu i przenoszeniu.",
+          "Strzałka ma ustawienia zakończeń, krzywizny i etykiety; kolumna — układu; sekcja — stylu nagłówka. Brak kontrolki zwykle oznacza, że nie pasuje do aktualnego typu zaznaczenia."
+        ],
+        "tip": "Zmiany wyglądu itemu i wyglądu całej aplikacji to osobne ustawienia. Motyw aplikacji znajdziesz w Narzędziach projektu → Wygląd."
+      }
+    ],
+    "image": {
+      "file": "editbar.png",
+      "alt": "Zaznaczona notatka i otwarta zakładka wyglądu editbara",
+      "caption": "Zakładki i dostępne kontrolki zależą od typu oraz liczby zaznaczonych elementów."
+    }
+  },
+  {
+    "id": "inspector",
+    "title": "Inspektor, tagi, statusy i komentarze",
+    "summary": "Prawy panel opisuje zaznaczone itemy i pomaga organizować współpracę.",
+    "sections": [
+      {
+        "title": "Tagi i wyszukiwanie",
+        "steps": [
+          "Zaznacz jeden lub kilka itemów.",
+          "W inspektorze wpisz nazwę tagu i dodaj ją do zaznaczenia. Istniejące tagi możesz usuwać przyciskiem przy etykiecie.",
+          "Użyj wyszukiwarki projektu na górze aplikacji. Szukaj po treści albo wpisz #tag; obsługiwane jest również wyszukiwanie status:identyfikator."
+        ],
+        "example": "Oznacz #do-omowienia wszystkie notatki wymagające decyzji. Podczas spotkania wyszukaj ten tag, aby odnaleźć rozproszone elementy."
+      },
+      {
+        "title": "Statusy i komentarze",
+        "paragraphs": [
+          "Sekcja statusów pozwala przypisać itemom statusy projektu. Zarządzanie statusami umożliwia porządkowanie nazw i wyglądu; dostępne opcje zależą od uprawnień.",
+          "Otwórz komentarze zaznaczonego elementu, aby zostawić uwagę lub odpowiedzieć w dyskusji. Możesz rozróżniać sprawy rozwiązane i nierozwiązane. Rola Komentujący daje dostęp do własnych komentarzy bez prawa edycji tablicy.",
+          "Publiczny link do projektu nie publikuje komentarzy. Przy wielu zaznaczonych elementach sprawdź informację o zakresie operacji w panelu."
+        ]
+      },
+      {
+        "title": "Blokada elementu",
+        "paragraphs": [
+          "Zablokowanie uniemożliwia przesuwanie i ręczną zmianę rozmiaru oraz utrwala bieżącą wysokość itemu. Dopisana treść przewija się wewnątrz zamiast rozciągać blok. Edycja zawartości nadal jest możliwa.",
+          "Kłódka wyświetla szczegółową podpowiedź po najechaniu, ustawieniu fokusu lub kliknięciu. Ramka zawierająca zablokowany element może mieć blokadę ruchu wynikającą z zawartości — podpowiedź odróżnia ten przypadek.",
+          "Aby znów swobodnie zmieniać rozmiar, odblokuj item. W blokach z automatyczną wysokością możesz następnie włączyć dopasowanie wysokości do treści."
+        ]
+      }
+    ],
+    "image": {
+      "file": "inspector.png",
+      "alt": "Inspektor zaznaczonego itemu z blokadą, tagami i komentarzami",
+      "caption": "Na węższym ekranie szczegóły otworzysz przyciskiem panelu szczegółów."
+    }
+  },
+  {
+    "id": "context",
+    "title": "Menu kontekstowe i porządkowanie",
+    "summary": "Przydatne operacje są dostępne bez szukania ich w wielu panelach.",
+    "sections": [
+      {
+        "title": "Kliknięcie prawym przyciskiem",
+        "paragraphs": [
+          "Kliknij prawym przyciskiem pusty obszar tablicy, aby zobaczyć operacje tablicy. Kliknięcie itemu lub zaznaczenia udostępnia działania na elementach, np. kopiowanie, duplikowanie, kolejność warstw, blokadę, grupowanie i usuwanie.",
+          "Na urządzeniach dotykowych korzystaj z menu akcji tablicy oraz przycisków paneli. Nie musisz odtwarzać prawego przycisku myszy."
+        ]
+      },
+      {
+        "title": "Automatyczne rozmieszczanie",
+        "steps": [
+          "Zaznacz itemy, które chcesz uporządkować.",
+          "Otwórz polecenie równomiernego rozmieszczania. Ustaw sposób układania, odstęp i liczbę elementów w wierszu lub szerokość.",
+          "Sprawdź podgląd. Domyślnie włączone Uzupełnij luki stara się umieścić mniejsze itemy pod niższymi sąsiadami.",
+          "Zatwierdź rozmieszczenie. Wyłącz uzupełnianie luk, jeśli zależy Ci na bardziej regularnych wierszach."
+        ],
+        "example": "Dwie wysokie checklisty i kilka małych notatek mogą tworzyć puste miejsca. Uzupełnienie luk wykorzysta wolną przestrzeń pod niższymi itemami.",
+        "tip": "Grupy i ograniczenia blokady wpływają na dostępność rozmieszczania. Jeśli operacja jest niedostępna, sprawdź komunikat w oknie i blokady zaznaczonych itemów."
+      },
+      {
+        "title": "Usuwanie i kosz",
+        "paragraphs": [
+          "Usunięte itemy trafiają do kosza elementów, który otworzysz z dostępnych akcji projektu/tablicy. Możesz je przywrócić lub usunąć trwale.",
+          "Kosz projektów jest osobny i znajduje się w menu projektów. Opróżnianie kosza i trwałe usuwanie są operacjami innymi niż zwykłe cofnięcie ostatniej zmiany."
+        ]
+      }
+    ],
+    "image": {
+      "file": "context-menu.png",
+      "alt": "Menu kontekstowe tablicy z poleceniami tworzenia i porządkowania",
+      "caption": "Menu zmienia się w zależności od miejsca kliknięcia, zaznaczenia i uprawnień."
+    }
+  },
+  {
+    "id": "notes",
+    "title": "Notatki, tekst, dokumenty i kod",
+    "summary": "Wybierz format odpowiedni do długości i rodzaju treści.",
+    "sections": [
+      {
+        "title": "Notatka i podajnik notatek",
+        "paragraphs": [
+          "Notatka służy do krótkich pomysłów, decyzji i treści spotkań. Dwukrotnie kliknij tekst, aby go edytować. Zaznaczenie udostępnia kolory, typografię i dopasowanie wysokości.",
+          "Podajnik notatek jest miejscem do szybkiego wyciągania kolejnych notatek. Przeciągnij nową notatkę z podajnika na tablicę; jego ustawienia pomagają zachować spójny styl. Utworzoną notatkę edytujesz i przenosisz jak zwykłą."
+        ],
+        "example": "Podczas burzy mózgów przygotuj podajnik z żółtymi notatkami „Pomysły”. Każda osoba wyciąga osobną kartkę i zapisuje jeden pomysł."
+      },
+      {
+        "title": "Tekst i tytuł sekcji",
+        "paragraphs": [
+          "Tekst nadaje się do krótkich podpisów i nagłówków bez ramki notatki. Tytuł sekcji wyraźnie oddziela obszary tablicy i oferuje własne ustawienia stylu etykiety oraz tła.",
+          "Dwukrotne kliknięcie pozwala zmienić treść. W editbarze dopasuj rozmiar, wyrównanie i kolory."
+        ],
+        "example": "Podziel tablicę nagłówkami „Problem”, „Pomysły” i „Decyzje”. Krótkie teksty obok strzałek mogą wyjaśniać zależności."
+      },
+      {
+        "title": "Dokument i kod",
+        "paragraphs": [
+          "Dokument ma edytor tekstu sformatowanego. Używaj go do opisów, ustaleń, nagłówków i list. Edytuj treść w bloku; przy długich dokumentach wybierz dopasowanie wysokości lub stały rozmiar z przewijaniem.",
+          "Blok kodu przechowuje fragment programu. Wybór języka odpowiada za podświetlanie składni; kod jest materiałem do odczytu i edycji, a nie automatycznie wykonywanym programem.",
+          "Blokada itemu zachowuje ustaloną wysokość także podczas edycji dokumentu albo kodu."
+        ],
+        "example": "Obok diagramu architektury umieść dokument z decyzjami technicznymi i blok kodu z przykładowym żądaniem API."
+      }
+    ],
+    "image": {
+      "file": "notes.png",
+      "alt": "Notatki, dokument i blok kodu na przykładowej tablicy",
+      "caption": "Każdy blok ma własny sposób edycji; zaznaczenie służy do stylowania i przenoszenia."
+    }
+  },
+  {
+    "id": "tasks",
+    "title": "Checklisty i Kanban",
+    "summary": "Planuj pracę, przypisuj osoby, ustalaj terminy i filtruj zadania.",
+    "sections": [
+      {
+        "title": "Checklista i szczegóły zadania",
+        "paragraphs": [
+          "Dodaj wpis, nadaj mu tytuł, a checkboxem oznacz wykonanie. Checklista pasuje do prostych procedur, list kontrolnych i kryteriów odbioru.",
+          "Zadania mogą mieć dodatkowy opis, przypisaną osobę, kategorie i deadline. Otwórz szczegóły zadania jego przyciskiem edycji/szczegółów. Lista osób korzysta z uczestników projektu. Zadanie może zawierać sam tytuł i nie musi mieć przypisanej osoby.",
+          "Przycisk Tylko nieukończone zmienia wyłącznie widok. Wykonane zadania pozostają w danych i wracają po wyłączeniu tej opcji."
+        ]
+      },
+      {
+        "title": "Kolumny i karty Kanbana",
+        "steps": [
+          "Dodaj Kanban z grupy Organizacja. Nadaj mu nazwę i przygotuj etapy, np. Do zrobienia, W toku, Gotowe.",
+          "Kliknij tytuł albo ikonę kolumny, aby zmienić jej nazwę, ikonę i wygląd. Strzałki zmieniają kolejność kolumn; osobny przycisk usuwa kolumnę.",
+          "Dodaj zadania do odpowiednich kolumn. Przenoś karty uchwytem przeciągania; ukończenie zadania i jego położenie w kolumnie to odrębne informacje.",
+          "Dodaj kolejną kolumnę przyciskiem plus. Szerokość Kanbana rośnie zgodnie z modułem kolumny i odstępem. Szerokość kolumny zmienisz jej uchwytem."
+        ],
+        "tip": "Przed usunięciem kolumny sprawdź jej zawartość. Jeśli chcesz tylko zmienić kolejność, użyj strzałek zamiast kasowania i odtwarzania kolumny."
+      },
+      {
+        "title": "Filtrowanie zadań",
+        "steps": [
+          "Kliknij Filtruj obok Tylko nieukończone.",
+          "Wybierz wszystkie przypisane osoby albo konkretne osoby. Checkbox zadań bez osoby niezależnie określa, czy uwzględniać nieprzypisane karty, w tym zadania z samym tytułem.",
+          "Zaznacz jedną lub kilka kategorii. Wystarczy pasowanie do jednej z wybranych kategorii; warunki osób, kategorii, tekstu i terminu muszą pasować jednocześnie.",
+          "Opcjonalnie podaj tekst tytułu/opisu i datę Termin przed (deadline). Wybrany dzień nie jest wliczany. Osobna opcja pozwala uwzględnić zadania bez terminu.",
+          "Zastosuj filtr i sprawdź licznik wyników. Aktywny przycisk jest wyróżniony; Resetuj filtr usuwa warunki, zachowując ustawienie Tylko nieukończone."
+        ],
+        "example": "Chcesz zobaczyć zaległą pracę Anny: włącz Tylko nieukończone, wybierz Annę, wyłącz nieprzypisane, zaznacz kategorię Pilne i ustaw datę jutrzejszą, aby uwzględnić terminy do końca dzisiejszego dnia.",
+        "tip": "Filtry są ustawieniem bieżącego widoku Kanbana. Nie zmieniają samych zadań. Także przy aktywnym filtrze przenoszenie kart zachowuje karty ukryte."
+      }
+    ],
+    "image": {
+      "file": "kanban.png",
+      "alt": "Kanban z zadaniami i oknem filtrowania",
+      "caption": "Filtr ogranicza widok kart. Nie usuwa zadań i nie przywraca ukończonych kart ukrytych przyciskiem Tylko nieukończone."
+    }
+  },
+  {
+    "id": "organization",
+    "title": "Kolumny, ramki i tablice podrzędne",
+    "summary": "Zbuduj czytelną strukturę dużego projektu.",
+    "sections": [
+      {
+        "title": "Kolumna jako kontener",
+        "paragraphs": [
+          "Kolumna układa zagnieżdżone itemy w uporządkowanym kontenerze. Przeciągaj elementy do kolumny, zmieniaj ich kolejność za uchwyt i w razie potrzeby przenoś je z powrotem na tablicę.",
+          "Ustawienia układu kolumny w editbarze pozwalają dopasować rozmieszczenie zawartości. Nagłówek i tło kolumny pomagają odróżnić obszary pracy."
+        ],
+        "example": "W kolumnie „Materiały spotkania” umieść dokument z agendą, checklistę przygotowań i link do materiałów."
+      },
+      {
+        "title": "Ramka i grupa",
+        "paragraphs": [
+          "Ramka wydziela obszar tablicy. Nadaj jej tytuł i umieść elementy w środku. Jest przydatna do warsztatów, etapów procesu i logicznych zestawów.",
+          "Grupa łączy zaznaczone itemy na potrzeby wspólnego zaznaczania i przenoszenia. Rozgrupuj zestaw, gdy chcesz znów działać na jego częściach.",
+          "Zablokowany element w ramce ogranicza ruch całej ramki. Kłódka wyjaśnia, czy blokada dotyczy jej samej czy elementu wewnątrz."
+        ]
+      },
+      {
+        "title": "Karta tablicy",
+        "steps": [
+          "Dodaj narzędzie Tablica i utwórz lub otwórz powiązaną tablicę projektu.",
+          "Ustaw nazwę, opis i ikonę karty, aby było jasne, dokąd prowadzi.",
+          "Otwórz kartę, aby przejść na docelową tablicę. Korzystaj z nawigacji tablic oraz powrotu do wcześniejszego miejsca."
+        ],
+        "example": "Tablica główna może być spisem treści: karty „Badania”, „Plan wydania” i „Dokumentacja” prowadzą do osobnych przestrzeni tego samego projektu."
+      }
+    ]
+  },
+  {
+    "id": "connections",
+    "title": "Strzałki, ikony i rysowanie",
+    "summary": "Pokaż powiązania i dodaj wizualne wskazówki.",
+    "sections": [
+      {
+        "title": "Łączenie elementów strzałką",
+        "steps": [
+          "Wstaw Linię / strzałkę i zaznacz ją.",
+          "Przeciągnij pierwszy koniec na krawędź pierwszego itemu. Podświetlenie krawędzi wskazuje dostępne zaczepienie. Drugi koniec umieść na drugim itemie.",
+          "Domyślnie stałe punkty zaczepienia zachowują wybrane położenie końca na krawędzi przy przesuwaniu itemów.",
+          "Jeśli wyłączysz stałe punkty w editbarze, końce mogą przesuwać się wzdłuż wybranych krawędzi, dopasowując połączenie. Krawędzie zaczepienia pozostają zachowane.",
+          "W editbarze ustaw groty, kolor, grubość, krzywiznę, tekst etykiety, jej obrót i odległość od linii."
+        ],
+        "example": "Połącz prawą krawędź notatki „Decyzja” z lewą krawędzią „Wdrożenie”. Włączone stałe punkty zachowają wybrane miejsca także po przesunięciu notatek."
+      },
+      {
+        "title": "Separator, ikony i emoji",
+        "paragraphs": [
+          "Separator jest linią porządkującą przestrzeń, przyciąganą do siatki; nie działa jak połączenie dwóch itemów.",
+          "Ikona / Emoji pozwala wybrać symbol, emoji albo obsługiwane własne źródło. Użyj etykiety i kolorów, aby symbol miał jasne znaczenie."
+        ],
+        "example": "Oznacz ryzyka ikoną ostrzeżenia, a ukończone etapy znacznikiem wyboru. Dodatkowy podpis pomaga zrozumieć znaczenie bez polegania wyłącznie na kolorze."
+      },
+      {
+        "title": "Ołówek",
+        "paragraphs": [
+          "Wybierz Ołówek i rysuj na tablicy. Escape wraca do zaznaczania. Zaznaczony rysunek można stylować, a opcja wygładzania ogranicza drobne drgania i liczbę punktów.",
+          "Rysunek nadaje się do odręcznych podkreśleń i szybkich szkiców. Do trwałych zależności między itemami użyj strzałek z zaczepieniem."
+        ]
+      }
+    ],
+    "image": {
+      "file": "connections.png",
+      "alt": "Połączone notatki i ustawienia strzałki",
+      "caption": "Podświetlenie krawędzi ułatwia trafienie końcem strzałki w element."
+    }
+  },
+  {
+    "id": "planning",
+    "title": "Oś czasu, mapa myśli i diagramy",
+    "summary": "Rozbudowane narzędzia planowania mają własne edytory wewnątrz itemu.",
+    "sections": [
+      {
+        "title": "Oś czasu",
+        "paragraphs": [
+          "Oś czasu organizuje zadania i terminy. Otwórz edycję bloku, dodaj zadania i ustaw ich daty. Dostępne widoki i ustawienia pozwalają dopasować poziom szczegółowości do planu.",
+          "Zakończ edycję, aby wrócić do przenoszenia całego itemu po tablicy. Zmiany w edytorach planowania są zapisywane w projekcie."
+        ],
+        "example": "Rozpisz analizę, projekt, implementację i testy jako kolejne zadania wydania. Obok dodaj Kanban do bieżącej realizacji."
+      },
+      {
+        "title": "Mapa myśli",
+        "paragraphs": [
+          "Mapa myśli służy do rozwijania tematu w gałęzie. Otwórz edytor, zmieniaj tekst węzłów i dodawaj tematy powiązane. Ustawienia pozwalają zmieniać układ oraz wygląd połączeń.",
+          "Poza edytorem mapa zachowuje się jak jeden item: możesz ją przesunąć, zmienić rozmiar, opisać tagami i zablokować."
+        ],
+        "example": "Dla tematu „Nowy produkt” utwórz gałęzie „Odbiorcy”, „Problemy”, „Rozwiązania” i „Ryzyka”."
+      },
+      {
+        "title": "Diagram i schemat bazy danych",
+        "paragraphs": [
+          "Diagram pozwala tworzyć węzły i połączenia przedstawiające proces lub system. W jego edytorze dodaj obiekty, opisz je i połącz w logiczną całość.",
+          "Schemat bazy danych służy do modelowania tabel, pól, typów i relacji. Dodawaj tabele oraz relacje w edytorze bloku; dopasuj układ tak, aby nazwy i połączenia były czytelne.",
+          "Schemat jest dokumentacją wizualną. Samo narysowanie tabeli nie tworzy tabeli w działającej bazie danych aplikacji."
+        ],
+        "example": "Pokaż diagram procesu obsługi zgłoszenia i osobno schemat tabel „Zgłoszenia”, „Użytkownicy” oraz „Komentarze”."
+      }
+    ],
+    "image": {
+      "file": "planning.png",
+      "alt": "Przykładowe narzędzia planowania na tablicy",
+      "caption": "Zewnętrzny rozmiar itemu i układ jego wewnętrznych węzłów to oddzielne ustawienia."
+    }
+  },
+  {
+    "id": "media",
+    "title": "Obrazy, pliki, linki i osadzanie",
+    "summary": "Łącz treści zewnętrzne z materiałami projektu.",
+    "sections": [
+      {
+        "title": "Obraz i plik",
+        "paragraphs": [
+          "Obraz wyświetla grafikę na tablicy, z możliwością dopasowania rozmiaru i podpisu. Wybierz materiał z biblioteki albo obsługiwane źródło w edytorze.",
+          "Blok Plik przedstawia załącznik, np. dokument lub arkusz. Dostępny podgląd zależy od formatu; plik możesz również pobrać. Wybór z biblioteki zachowuje powiązanie z zasobem projektu."
+        ],
+        "example": "Obok checklisty odbioru umieść obraz makiety i plik z wymaganiami. W podpisie wskaż wersję materiału."
+      },
+      {
+        "title": "Karta linku i Embed",
+        "paragraphs": [
+          "Karta linku zapisuje adres wraz z tytułem i opisem. Nadaje się do dokumentacji zewnętrznej oraz odnośników, które nie muszą być osadzone.",
+          "Embed osadza obsługiwany materiał, np. film. Wklej adres w edytorze. Część stron blokuje osadzanie albo wymaga logowania — w takim przypadku użyj zwykłego linku.",
+          "Elementy multimedialne rozróżniają interakcję z zawartością i przesuwanie całego itemu. Korzystaj z nagłówka lub tła do przenoszenia i z kontrolek odtwarzacza do oglądania."
+        ]
+      },
+      {
+        "title": "Dostęp do materiałów",
+        "paragraphs": [
+          "Obraz widoczny Tobie może wymagać uprawnień do źródła. Udostępnienie projektu i publiczne udostępnienie konkretnego pliku to odrębne operacje.",
+          "Przy publikacji projektu sprawdź podgląd publiczny w osobnym oknie. Upewnij się, że potrzebne pliki są dostępne dla odbiorcy, a pozostałe materiały pozostały prywatne."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "library",
+    "title": "Biblioteka projektu",
+    "summary": "Przechowuj zasoby w jednym miejscu, wyszukuj je i kontroluj udostępnianie.",
+    "sections": [
+      {
+        "title": "Dodawanie i znajdowanie plików",
+        "steps": [
+          "Otwórz Narzędzia projektu (trzy kropki na górnym pasku) → Biblioteka.",
+          "Kliknij Prześlij pliki lub przeciągnij pliki do obszaru biblioteki. Obsługiwane typy i limity wynikają z konfiguracji serwera; nie każdy format ma taki sam podgląd.",
+          "Użyj wyszukiwania, filtrów typu i sortowania po nazwie, dacie lub rozmiarze.",
+          "Kliknij plik. W panelu szczegółów sprawdź nazwę, podgląd i dostępne akcje. W trybie wyboru użyj Użyj pliku, aby wstawić go do edytowanego bloku."
+        ]
+      },
+      {
+        "title": "Nazwy, podgląd i usuwanie",
+        "paragraphs": [
+          "Osoby z prawem zarządzania mogą zmieniać nazwy i usuwać zasoby. Zmiana nazwy nie jest tym samym co ponowne przesłanie pliku.",
+          "Przed usunięciem sprawdź, czy plik nie jest używany na tablicach. Usunięty zasób może przestać być dostępny w blokach, które go wskazują."
+        ],
+        "example": "Nazwij pliki „Makieta — ekran logowania” i „Specyfikacja — wydanie 2”, aby inni mogli łatwo je znaleźć bez znajomości oryginalnych nazw."
+      },
+      {
+        "title": "Prywatność i publiczne linki",
+        "paragraphs": [
+          "Pliki są domyślnie prywatne. Właściwa rola może utworzyć publiczny link do wybranego zasobu i skopiować go z panelu szczegółów. Każdy posiadacz takiego linku może otworzyć materiał.",
+          "Cofnięcie linku odbiera dostęp przez ten link. Samo ukrycie bloku na tablicy nie cofa udostępnienia zasobu."
+        ],
+        "tip": "Eksport JSON nie zawiera binarnych plików z biblioteki. Zachowaj dostęp do oryginalnych zasobów i osobno zadbaj o ich kopię."
+      }
+    ],
+    "image": {
+      "file": "library.png",
+      "alt": "Biblioteka projektu z listą plików i panelem szczegółów",
+      "caption": "Biblioteka wymaga połączenia z API. Ilustracja używa przykładowych materiałów szkoleniowych."
+    }
+  },
+  {
+    "id": "projects",
+    "title": "Zarządzanie projektami i tablicami",
+    "summary": "Twórz, nazywaj, porządkuj i odzyskuj projekty.",
+    "sections": [
+      {
+        "title": "Menu projektów",
+        "steps": [
+          "Otwórz nazwę projektu na górnym pasku.",
+          "Dodaj nowy projekt, podając nazwę. Ustaw kolor ułatwiający rozpoznanie go na liście.",
+          "Przełączaj projekty kliknięciem ich nazwy. Zmień nazwę przyciskiem przy projekcie.",
+          "Ustaw projekt domyślny, jeśli chcesz zaczynać pracę od konkretnej przestrzeni.",
+          "W razie potrzeby przenieś własny projekt do kosza. W sekcji kosza możesz go przywrócić lub usunąć trwale."
+        ]
+      },
+      {
+        "title": "Wiele tablic w jednym projekcie",
+        "paragraphs": [
+          "Projekt może zawierać kilka tablic. Korzystaj z nawigacji tablic i kart prowadzących do tablic podrzędnych. Nadaj im nazwy odpowiadające zakresowi pracy.",
+          "Przy zmianie tablic aplikacja przechowuje stan widoku i zapisuje dane. Przeglądarka pozwala także wracać do odwiedzanych miejsc za pomocą historii nawigacji."
+        ],
+        "example": "Jeden projekt „Konferencja” może mieć tablice „Plan”, „Prelegenci”, „Promocja” i „Dzień wydarzenia”, bez rozdzielania biblioteki i uczestników."
+      },
+      {
+        "title": "Automatyczny zapis i odzyskiwanie",
+        "paragraphs": [
+          "Wskaźnik zapisu informuje o zapisywaniu, błędzie albo poprawnym zapisaniu zmian. Przy problemie z siecią sprawdź komunikat i dostępne ponowienie lub odzyskanie lokalnych zmian.",
+          "Odświeżenie w Narzędziach projektu najpierw próbuje zapisać zmiany, a potem ponownie wczytać projekty. Nie ignoruj komunikatów o nieudanym zapisie.",
+          "Kosz jest pomocą przy przypadkowym usunięciu, ale nie zastępuje kopii zapasowych serwera i plików."
+        ]
+      }
+    ],
+    "image": {
+      "file": "projects.png",
+      "alt": "Menu projektów z listą projektów i ich akcjami",
+      "caption": "Dostępne działania zależą od roli w projekcie. Projekty udostępnione pojawiają się na tej samej liście."
+    }
+  },
+  {
+    "id": "sharing",
+    "title": "Udostępnianie i współpraca",
+    "summary": "Dobierz rolę do odpowiedzialności i publikuj tylko potrzebne materiały.",
+    "sections": [
+      {
+        "title": "Zaproś uczestnika",
+        "steps": [
+          "Jako właściciel otwórz projekt i kliknij Udostępnij na górnym pasku.",
+          "Wpisz adres e-mail istniejącego konta w tej instalacji.",
+          "Wybierz rolę: Edytor, Komentujący albo Przeglądający. Zatwierdź udostępnienie.",
+          "Projekt pojawi się na liście tej osoby. Właściciel może później zmienić rolę albo usunąć uczestnika."
+        ]
+      },
+      {
+        "title": "Co umożliwiają role?",
+        "paragraphs": [
+          "Właściciel zarządza projektem, uczestnikami, linkami publicznymi i cyklem życia projektu. Edytor może zmieniać tablice i itemy.",
+          "Komentujący czyta projekt oraz zarządza własnymi komentarzami. Przeglądający ma dostęp do odczytu. Te role mogą przeglądać zawartość, ale nie dostają praw do zmiany itemów.",
+          "Filtrowanie i inne operacje widoku nie powinny być mylone ze zmianą danych. Współpraca na żywo może pokazywać obecność, zaznaczenia i kursory innych osób; status na pasku informuje o połączeniu."
+        ],
+        "example": "Zespół realizujący zadania otrzymuje Edytora, osoba akceptująca materiały Komentującego, a odbiorca raportu Przeglądającego."
+      },
+      {
+        "title": "Publiczny link tylko do odczytu",
+        "steps": [
+          "W oknie udostępniania utwórz publiczny link. Opcjonalnie nadaj etykietę i termin ważności.",
+          "Skopiuj link i sprawdź go w oknie bez zalogowania.",
+          "Odbiorca może przeglądać projekt bez konta; komentarze nie są publikowane.",
+          "Usuń link, gdy dostęp nie jest już potrzebny. Sprawdź osobno publiczne linki do plików biblioteki."
+        ],
+        "tip": "Każdy, kto posiada publiczny link, może użyć go w okresie jego ważności. Zmiana roli uczestnika nie unieważnia odrębnie utworzonego linku publicznego."
+      }
+    ],
+    "image": {
+      "file": "sharing.png",
+      "alt": "Okno udostępniania projektu z rolami uczestników i linkami publicznymi",
+      "caption": "Udostępnianie wymaga zapisania projektu na serwerze. Dane uczestników na ilustracji są przykładowe."
+    }
+  },
+  {
+    "id": "transfer",
+    "title": "Eksport i import danych",
+    "summary": "Zapisz strukturę projektu do pliku JSON i odtwórz ją jako zaimportowany projekt.",
+    "sections": [
+      {
+        "title": "Eksport projektu",
+        "steps": [
+          "Otwórz projekt, który chcesz wyeksportować.",
+          "Wejdź w Narzędzia projektu → Eksport JSON.",
+          "Zapisz pobrany plik. Nazwa pliku jest wyprowadzana z nazwy projektu.",
+          "Jeśli projekt używa biblioteki, zachowaj także dostęp do źródłowych plików. Eksport zapisuje ich referencje, a nie zawartość binarną."
+        ]
+      },
+      {
+        "title": "Import projektu",
+        "steps": [
+          "W Narzędziach projektu wybierz Import JSON.",
+          "Wskaż obsługiwany plik projektu. Limit pliku w interfejsie wynosi 20 MB; błędna struktura zostanie odrzucona.",
+          "Poczekaj na potwierdzenie importu i automatyczny zapis.",
+          "Sprawdź tablice, odnośniki i materiały z biblioteki. Referencje do zasobów z innej instalacji nie przesyłają automatycznie tych zasobów."
+        ],
+        "example": "Przed większą reorganizacją wyeksportuj projekt. Możesz później zaimportować go do porównania z nowym układem, bez ręcznego odtwarzania notatek."
+      },
+      {
+        "title": "Co wymaga osobnej kopii?",
+        "paragraphs": [
+          "Eksport projektu nie jest kopią kont, haseł, konfiguracji serwera, audytu ani plików biblioteki. Administrator powinien osobno utrzymywać kopie bazy danych i magazynu plików.",
+          "Plik JSON może zawierać poufne treści projektu. Przechowuj i udostępniaj go z taką samą ostrożnością jak sam projekt."
+        ]
+      }
+    ],
+    "image": {
+      "file": "project-tools.png",
+      "alt": "Menu narzędzi projektu z eksportem, importem, wyglądem i biblioteką",
+      "caption": "Plik JSON jest przenośnym zapisem danych projektu, lecz nie pełną kopią serwera ani biblioteki."
+    }
+  },
+  {
+    "id": "profile",
+    "title": "Profil, hasło i bezpieczeństwo konta",
+    "summary": "Zmieniaj własne dane i zabezpiecz logowanie.",
+    "sections": [
+      {
+        "title": "Dane profilu i zdjęcie",
+        "steps": [
+          "Otwórz menu konta w prawym górnym rogu → Profil i bezpieczeństwo.",
+          "Zmień nazwę wyświetlaną lub e-mail. Zmiana e-maila wymaga bieżącego hasła.",
+          "Zapisz profil i sprawdź potwierdzenie.",
+          "Kliknij zdjęcie/awatar, aby wybrać i wykadrować obsługiwany obraz. Zapisz zmianę lub anuluj podgląd."
+        ]
+      },
+      {
+        "title": "Hasło i uwierzytelnianie wieloskładnikowe",
+        "paragraphs": [
+          "Zmianę hasła wykonasz w osobnym formularzu z bieżącym hasłem, nowym hasłem i potwierdzeniem. Interfejs wymaga co najmniej 12 znaków oraz wielkiej i małej litery, liczby i symbolu. Po zmianie inne zalogowane sesje są zamykane.",
+          "W sekcji MFA możesz skonfigurować dostępne metody, np. aplikację uwierzytelniającą lub e-mail. Postępuj według etapów kreatora i potwierdź konfigurację wymaganym kodem.",
+          "Kody odzyskiwania zapisz w bezpiecznym miejscu poza aplikacją. Zmiany metod zabezpieczeń mogą wymagać ponownego potwierdzenia tożsamości."
+        ],
+        "tip": "Administrator może mieć narzucone dodatkowe wymagania MFA. W razie utraty dostępu korzystaj z przewidzianej procedury odzyskiwania; nie przekazuj innym osobom hasła ani kodów."
+      },
+      {
+        "title": "Język, sesja i usunięcie konta",
+        "paragraphs": [
+          "W menu konta zmienisz język i szybko przełączysz jasny/ciemny motyw. Pełne ustawienia wyglądu są dostępne w Narzędziach projektu.",
+          "Wylogowanie kończy bieżącą sesję. Na stronie profilu znajdziesz również informację o zbieraniu danych bezpieczeństwa i sekcję usunięcia konta.",
+          "Usuwając konto, przeczytaj plan dotyczący własnych projektów: może wymagać wskazania usunięcia lub przekazania właściciela. Sprawdź skutki przed zatwierdzeniem."
+        ]
+      }
+    ],
+    "image": {
+      "file": "profile.png",
+      "alt": "Strona profilu z danymi konta, hasłem i ustawieniami bezpieczeństwa",
+      "caption": "Nie wszystkie operacje konta są dostępne w demo. Hasła i kody zabezpieczeń nie są prezentowane na zrzutach."
+    }
+  },
+  {
+    "id": "appearance",
+    "title": "Dostosowanie aplikacji i tablicy",
+    "summary": "Zmień motyw interfejsu, paletę, czcionki i wygląd przestrzeni roboczej.",
+    "sections": [
+      {
+        "title": "Motyw i interfejs",
+        "steps": [
+          "Otwórz Narzędzia projektu → Wygląd.",
+          "W zakładce interfejsu wybierz motyw i dostosuj paletę oraz czcionkę. Podgląd pomaga ocenić czytelność.",
+          "Ustaw szerokość lewego paska. Na komputerze możesz też przeciągać jego prawą krawędź; dwukrotne kliknięcie uchwytu przywraca szerokość domyślną.",
+          "Zapisz ustawienia. W razie potrzeby użyj resetowania ustawień w oknie."
+        ]
+      },
+      {
+        "title": "Tablica i kolory semantyczne",
+        "paragraphs": [
+          "Zakładka tablicy zawiera ustawienia płótna i jego wyglądu. Wybierz takie tło i paletę, na których dobrze widać notatki, linie i zaznaczenie.",
+          "Kolory itemów powiązane z rolami palety mogą reagować na zmianę motywu. Własny stały kolor jest osobnym nadpisaniem. Sprawdź kontrast tekstu na bardzo ciemnych lub jasnych tłach."
+        ],
+        "example": "Do długiej pracy wybierz spokojne tło, a mocny akcent zostaw dla aktywnych kontrolek. W projekcie warsztatowym użyj kilku czytelnych kolorów do podziału tematów."
+      },
+      {
+        "title": "Zaawansowane style",
+        "paragraphs": [
+          "Wybrane ustawienia udostępniają własny CSS itemu lub statusu. Używaj go do celowych zmian, a po każdej zmianie sprawdzaj edycję, przewijanie i czytelność.",
+          "Jeżeli element wygląda inaczej niż reszta projektu, sprawdź jego własne ustawienia w editbarze i użyj Resetuj wygląd. Reset preferencji całej aplikacji jest inną operacją.",
+          "Zmiana nazwy i logo całej instalacji jest funkcją administratora opisaną w rozdziale Rebranding."
+        ]
+      }
+    ],
+    "image": {
+      "file": "appearance.png",
+      "alt": "Okno wyglądu z ustawieniami interfejsu i tablicy",
+      "caption": "Ustawienia wyglądu aplikacji są oddzielone od indywidualnych stylów itemów."
+    }
+  },
+  {
+    "id": "admin-users",
+    "title": "Administracja: użytkownicy i projekty",
+    "summary": "Czynności administracyjne wykonuj z konta z rolą Administrator.",
+    "sections": [
+      {
+        "title": "Wejście i zarządzanie użytkownikami",
+        "steps": [
+          "W menu konta wybierz Zarządzaj użytkownikami. Konto administratora może również zaczynać sesję bezpośrednio w panelu administracji.",
+          "W zakładce Użytkownicy skorzystaj z wyszukiwania po nazwie, e-mailu lub ID oraz filtra statusu.",
+          "Utwórz konto albo otwórz akcje istniejącego: edycję danych i roli, blokowanie, reset hasła lub wyglądu oraz dostępne operacje odzyskiwania.",
+          "Przed zatwierdzeniem sprawdź konto docelowe i zakres działania. Zmiana roli administracyjnej daje szeroki dostęp do instalacji."
+        ]
+      },
+      {
+        "title": "Projekty i właściciele",
+        "paragraphs": [
+          "Zakładka Projekty pozwala wyszukiwać projekty, filtrować ich stan i uczestników, zarządzać członkostwem oraz przekazywać własność.",
+          "Dostępne są operacje przywrócenia i trwałego usunięcia zgodnie ze stanem projektu. Trwałe usuwanie nie jest tym samym co przeniesienie do kosza.",
+          "Przy przekazywaniu własności wskaż właściwe konto. To przydatne, gdy zmienia się opiekun zespołu lub odchodzi dotychczasowy właściciel."
+        ],
+        "example": "Po zmianie lidera znajdź projekty poprzedniego właściciela, zweryfikuj uczestników i przekaż je nowej osobie zamiast odtwarzać dane."
+      },
+      {
+        "title": "Rejestracja i poczta",
+        "paragraphs": [
+          "Przełącznik Zezwalaj na rejestrację kontroluje samodzielne zakładanie kont. Wyłączenie rejestracji nie usuwa istniejących użytkowników.",
+          "Zakładka E-mail obejmuje ustawienia poczty, szablony i kolejkę wiadomości. Sprawdź konfigurację wysyłki, jeśli użytkownicy nie otrzymują wiadomości weryfikacyjnych, resetów hasła lub kodów.",
+          "Operacje resetowania MFA mają własne wymagania weryfikacji administratora. Korzystaj z nich po potwierdzeniu tożsamości osoby zgłaszającej utratę dostępu."
+        ]
+      }
+    ],
+    "image": {
+      "file": "admin-users.png",
+      "alt": "Panel administratora z użytkownikami i filtrami",
+      "caption": "Ilustracja przedstawia fikcyjne konta. Uprawnienia administratora nie są tym samym co rola właściciela pojedynczego projektu."
+    },
+    "admin": true
+  },
+  {
+    "id": "admin-audit",
+    "title": "Administracja: audyt i incydenty",
+    "summary": "Sprawdzaj zdarzenia i sygnały bezpieczeństwa w kontekście, zamiast opierać się na pojedynczym liczniku.",
+    "sections": [
+      {
+        "title": "Przegląd zdarzeń",
+        "steps": [
+          "Otwórz Administracja → Audyt.",
+          "Wybierz zakładkę Zdarzenia i ustaw filtry, np. poziom ważności, typ, użytkownika, datę lub wynik. Zastosuj filtry.",
+          "Otwórz szczegóły interesującego zdarzenia. Sprawdź czas UTC, wynik operacji, trasę, identyfikatory żądania i powiązane zdarzenia.",
+          "Odśwież wyniki po zmianie sytuacji. Zwracaj uwagę na błędy utrwalenia audytu, ponieważ wpływają na kompletność historii."
+        ]
+      },
+      {
+        "title": "Incydenty i ocena",
+        "paragraphs": [
+          "Zakładka Incydenty zbiera sygnały wymagające przeglądu. Filtr stanu oceny pomaga odnaleźć sprawy oczekujące na analizę.",
+          "Porównaj zdarzenia z aktywnością użytkownika i konfiguracją środowiska. Zaktualizuj stan oceny po sprawdzeniu incydentu zgodnie z procedurami zespołu.",
+          "Sam alarm nie jest dowodem włamania, a brak alarmu nie gwarantuje bezpieczeństwa. Panel pokazuje zdarzenia rejestrowane przez aplikację."
+        ],
+        "example": "Przy serii nieudanych logowań sprawdź użytkownika, adres IP, zakres czasu i wynik późniejszych prób. Dopiero potem zdecyduj o blokadzie konta lub adresu."
+      },
+      {
+        "title": "Ograniczenia i utrzymanie",
+        "paragraphs": [
+          "Historia podlega retencji i ustawieniom serwera. Nie traktuj panelu jako niezależnej kopii dowodowej wszystkich operacji infrastruktury.",
+          "Przy analizie łącz audyt aplikacji z logami reverse proxy i bazy danych, do których dostęp ma operator. Konfigurację wdrożenia, retencję i kopie zapasowe utrzymuj poza samym interfejsem."
+        ]
+      }
+    ],
+    "image": {
+      "file": "admin-audit.png",
+      "alt": "Panel audytu z filtrami zdarzeń i statystykami",
+      "caption": "Czasy w panelu audytu podawane są w UTC, a statystyki dotyczą ostatnich 24 godzin. Przykład szkoleniowy nie przedstawia danych produkcyjnych."
+    },
+    "admin": true
+  },
+  {
+    "id": "admin-security",
+    "title": "Administracja: monitorowanie bezpieczeństwa",
+    "summary": "Kontroluj adresy IP, blokady i wymagania kont, pamiętając o granicach panelu.",
+    "sections": [
+      {
+        "title": "Adresy i blokady",
+        "paragraphs": [
+          "W Administracja → Bezpieczeństwo znajdziesz widok adresów i dostępne działania związane z blokadami IP. Wyszukaj adres i sprawdź jego szczegóły przed wprowadzeniem zmiany.",
+          "Kliknij Zablokuj IP, podaj pojedynczy adres IPv4 lub IPv6, powód i czas blokady albo wybierz blokadę bezterminową. Akcja zwolnienia blokady czyści liczniki błędów; kolejne nadużycia mogą wywołać nową blokadę.",
+          "Jeśli wielu użytkowników korzysta z jednego adresu przez firmową sieć lub proxy, blokada tego adresu może dotknąć ich wszystkich."
+        ]
+      },
+      {
+        "title": "Rutynowy przegląd",
+        "steps": [
+          "Sprawdź otwarte incydenty i ostrzeżenia w audycie.",
+          "Zweryfikuj zablokowane konta, role administratorów i ustawienia rejestracji.",
+          "Sprawdź konfigurację poczty oraz wymagania MFA dla kont uprzywilejowanych.",
+          "Przejrzyj publiczne linki i uprawnienia projektów, jeśli zgłoszono niezamierzony dostęp.",
+          "Poza aplikacją sprawdź aktualizacje, HTTPS, kopie zapasowe i poprawne przekazywanie adresów IP przez reverse proxy."
+        ],
+        "tip": "Panel bezpieczeństwa nie jest skanerem podatności serwera. Nie zastępuje testów infrastruktury ani kontroli konfiguracji wdrożenia."
+      },
+      {
+        "title": "Gdy podejrzewasz nadużycie",
+        "paragraphs": [
+          "Zapisz identyfikatory i czasy zdarzeń, ogranicz dostęp odpowiednim mechanizmem i sprawdź powiązane operacje. Unikaj kasowania danych, które są potrzebne do wyjaśnienia incydentu.",
+          "Po zakończeniu analizy odnotuj ocenę incydentu i sprawdź, czy zastosowana blokada nie uniemożliwia pracy uprawnionym osobom."
+        ]
+      }
+    ],
+    "image": {
+      "file": "admin-security.png",
+      "alt": "Administracyjny panel bezpieczeństwa i zarządzania adresami IP",
+      "caption": "Opcje i bieżące wyniki zależą od konfiguracji serwera. Ilustracja nie jest skanem rzeczywistej instalacji."
+    },
+    "admin": true
+  },
+  {
+    "id": "branding",
+    "title": "Administracja: nazwa i logo aplikacji",
+    "summary": "Dostosuj identyfikację całej instalacji do organizacji.",
+    "sections": [
+      {
+        "title": "Zmiana nazwy",
+        "steps": [
+          "Otwórz Administracja → Nazwa i logo.",
+          "Wprowadź nazwę aplikacji i kliknij Zapisz nazwę.",
+          "Sprawdź nagłówek, tytuł karty przeglądarki i stronę logowania. Zmiana jest widoczna dla innych użytkowników."
+        ]
+      },
+      {
+        "title": "Zmiana logo",
+        "steps": [
+          "Kliknij Zmień logo aplikacji.",
+          "Wybierz obsługiwany obraz i sprawdź podgląd. Dopasuj kadr, jeśli edytor udostępnia taką opcję.",
+          "Zapisz obraz. Anulowanie zamyka podgląd bez zmiany obecnego logo.",
+          "Sprawdź logo w nagłówku oraz ikonę karty przeglądarki. Jeśli chcesz wrócić do domyślnego znaku, użyj dostępnej operacji usunięcia własnego obrazu."
+        ],
+        "tip": "Wybierz prosty, czytelny znak. Małe detale mogą zniknąć w ikonie karty; sprawdź efekt na jasnym i ciemnym tle."
+      },
+      {
+        "title": "Branding a osobisty wygląd",
+        "paragraphs": [
+          "Nazwa i logo są wspólne dla wszystkich. Motyw, paleta i czcionki w ustawieniach wyglądu służą do dostosowania sposobu pracy, a indywidualny styl itemu zmieniasz w editbarze.",
+          "Zmiana brandingu nie przenosi projektu ani plików do innego serwera i nie zmienia praw uczestników."
+        ]
+      }
+    ],
+    "image": {
+      "file": "branding.png",
+      "alt": "Ustawienia brandingu z nazwą aplikacji i zmianą logo",
+      "caption": "Branding jest wspólny dla instalacji i obejmuje także stronę logowania."
+    },
+    "admin": true
+  }
+]

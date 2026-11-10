@@ -49,8 +49,11 @@
   color: var(--color-text-secondary);
 }
 .border-panel-clear {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
   min-width: 28px;
   min-height: 28px;
   border-radius: 6px;

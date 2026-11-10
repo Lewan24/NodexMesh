@@ -15,6 +15,42 @@ namespace NodexMeshApi.Tests.Security;
 
 public class RateLimitingTests : IDisposable
 {
+    [Fact]
+    public async Task AvatarWritesUseIndependentUserBucketsInsteadOfLoginOrSharedIpQuotas()
+    {
+        using var factory = new TestWebApplicationFactory().WithWebHostBuilder(builder => builder.ConfigureAppConfiguration((_, configuration) =>
+            configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["RateLimiting:UserRequestsPerMinute"] = "8" })));
+        var users = new List<HttpClient>();
+        foreach (var n in new[] { 1, 2 })
+        {
+            var client = factory.CreateClient();
+            var email = $"avatar-quota-{n}-{Guid.NewGuid():N}@nodexmesh.test";
+            const string password = "Correct#Horse9Battery";
+            (await client.PostAsJsonAsync("/api/v1/auth/register", new RegisterRequest(email, password, password, "Quota test", true))).EnsureSuccessStatusCode();
+            var auth = await (await client.PostAsJsonAsync("/api/v1/auth/login", new LoginRequest(email, password))).Content.ReadFromJsonAsync<AuthResponse>();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", auth!.AccessToken);
+            users.Add(client);
+        }
+        var directory = Path.Combine(Path.GetTempPath(), "nodex-avatar-quotas-" + Guid.NewGuid());
+        factory.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<NodexMeshApi.Services.PublicImageOptions>>().Value.Path = directory;
+        try
+        {
+            // Both users share the TestServer IP. Each still receives its own eight writes,
+            // even though login/register share a five-attempt anonymous bucket.
+            for (var n = 0; n < 9; n++)
+                foreach (var client in users)
+                {
+                    using var image = new ByteArrayContent("GIF89a"u8.ToArray());
+                    var response = await client.PutAsync("/api/v1/auth/profile/avatar?name=image.gif", image);
+                    response.StatusCode.Should().Be(n < 8 ? HttpStatusCode.OK : HttpStatusCode.TooManyRequests);
+                }
+        }
+        finally
+        {
+            foreach (var client in users) client.Dispose();
+            if (Directory.Exists(directory)) Directory.Delete(directory, true);
+        }
+    }
     private readonly TestWebApplicationFactory _factory = new();
 
     public void Dispose() => _factory.Dispose();

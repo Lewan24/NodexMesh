@@ -157,8 +157,8 @@ export function useCollaborationPresence(
       clearTimeout(retryTimer);
       clearTimeout(publishTimer.current);
       publishTimer.current = undefined;
-      if (next.state === HubConnectionState.Connected)
-        void next.invoke('ClearPresence', projectId).catch(() => undefined);
+      // OnDisconnectedAsync clears presence server-side. Invoking ClearPresence
+      // immediately before stop() races with cancellation of the IP-ban lookup.
       void next.stop().catch(() => undefined);
       connection.current = undefined;
       setRemote({});

@@ -218,6 +218,12 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
           ...title,
           color: text,
           width: optional(number),
+          icon: optional(
+            object({
+              mode: choice('preset', 'emoji'),
+              source: (v) => typeof v === 'string' && v.trim().length > 0 && v.length <= 64,
+            }),
+          ),
           cards: (v) => list(task)(v) && uniqueIds(v),
         }),
       ),
@@ -266,6 +272,11 @@ export const itemSchemas: Record<BoardItem['type'], { version: 1; canNest: boole
     validate: object({
       x2: number,
       y2: number,
+      staticAnchors: optional(bool),
+      startOffset: optional((v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1),
+      endOffset: optional((v) => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1),
+      startSide: optional(choice('top', 'right', 'bottom', 'left')),
+      endSide: optional(choice('top', 'right', 'bottom', 'left')),
       arrowStart: bool,
       arrowEnd: bool,
       strokeWidth: number,

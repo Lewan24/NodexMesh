@@ -112,7 +112,7 @@ test('count mode reserves measured grid cells and configurable gaps in both axes
   ];
   const sizes = new Map([['a', { width: 223, height: 211 }]]);
   const { units } = getLayoutSelection(items, ['a', 'b', 'c'], sizes);
-  const plan = planArrangement(units, { ...DEFAULT_ARRANGEMENT, mode: 'count', perRow: 2, gap: 2 });
+  const plan = planArrangement(units, { ...DEFAULT_ARRANGEMENT, mode: 'count', perRow: 2, gap: 2, fillGaps: false });
   assert.deepEqual(
     [...plan.values()],
     [
@@ -212,4 +212,50 @@ test('swapped items leave their old frame and acquire their new containing frame
   );
   assert.equal(result[1].frameId, null);
   assert.equal(result[2].frameId, 'frame');
+});
+
+test('gap filling is enabled by default and backfills below a short middle item', () => {
+  assert.equal(DEFAULT_ARRANGEMENT.fillGaps, true);
+  const items = [
+    note('left', 0, 0, { height: 640 }),
+    note('middle', 400, 0, { height: 160 }),
+    note('right', 800, 0, { height: 640 }),
+    note('small', 1200, 0, { height: 176 }),
+  ];
+  const compact = arrange(items);
+  assert.deepEqual(
+    compact.map(({ x, y }) => [x, y]),
+    [
+      [0, 0],
+      [336, 0],
+      [672, 0],
+      [336, 176],
+    ],
+  );
+  const regular = arrange(items, { fillGaps: false });
+  assert.deepEqual([regular[3].x, regular[3].y], [0, 656]);
+  const counted = arrange(items, { mode: 'count', perRow: 3 });
+  assert.deepEqual([counted[3].x, counted[3].y], [336, 176]);
+});
+
+test('compact mixed-size layouts keep grid gaps, maximum width and rigid rectangles', () => {
+  const items = Array.from({ length: 40 }, (_, index) =>
+    note(String(index), index * 2000, 0, { width: index % 4 === 0 ? 656 : 320, height: 80 + (index % 5) * 80 }),
+  );
+  for (const mode of ['width', 'count']) {
+    const result = arrange(items, { mode, gap: 2, perRow: 3 });
+    for (const [index, a] of result.entries()) {
+      assert.equal(a.x % 16, 0);
+      assert.equal(a.y % 16, 0);
+      if (mode === 'width') assert.ok(a.x + a.width <= noteModuleWidth(3));
+      for (const b of result.slice(index + 1)) {
+        assert.ok(
+          a.x + a.width + 32 <= b.x ||
+            b.x + b.width + 32 <= a.x ||
+            a.y + a.height + 32 <= b.y ||
+            b.y + b.height + 32 <= a.y,
+        );
+      }
+    }
+  }
 });
