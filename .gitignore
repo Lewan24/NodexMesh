@@ -27,5 +27,6 @@ dist-ssr
 
 # Browser performance fixtures and test artifacts
 Frontend/dist-performance/
+Frontend/dist-guide/
 Frontend/test-results/
 Frontend/playwright-report/

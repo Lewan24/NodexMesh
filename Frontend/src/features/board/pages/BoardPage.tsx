@@ -3,6 +3,7 @@ import { TodoDisplayContext } from '@/features/blocks/shared/ItemTodo';
 import { ProjectStatusesProvider } from '@/features/statuses/ProjectStatusesContext';
 import { ProjectTasksProvider } from '@/features/blocks/shared/ProjectTasksContext';
 import { LibraryContext } from '@/features/library/LibraryContext';
+import { UserGuideButton } from '@/features/user-guide/UserGuideProvider';
 import { translate } from '@/shared/i18n';
 import { useTranslation } from 'react-i18next';
 import SharingDialog from '@/features/projects/components/SharingDialog';
@@ -694,6 +695,11 @@ export default function BoardPage({ userId, onOpenAdminPanel, onOpenProfile }: B
                 )}
                 {!readOnly && !activeProject.itemsLoading && (
                   <Sidebar selectedTool={selectedTool} onSelectTool={selectTool} />
+                )}
+                {readOnly && (
+                  <div className="absolute bottom-4 left-4 z-40" data-canvas-ui="true">
+                    <UserGuideButton />
+                  </div>
                 )}
 
                 {activeProject.itemsLoading ? (

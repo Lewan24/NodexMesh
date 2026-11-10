@@ -11,6 +11,7 @@ import { ThemeProvider } from '@/app/providers/ThemeProvider';
 import AppUpdateDialog from '@/features/version/components/AppUpdateDialog';
 import LoadingScreen from '@/shared/components/LoadingScreen';
 import ErrorBoundary from '@/shared/components/ErrorBoundary';
+import TooltipLayer from '@/shared/components/TooltipLayer';
 
 const PublicProjectPage = React.lazy(() => import('@/features/projects/components/PublicProjectPage'));
 
@@ -22,6 +23,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <BrandingProvider>
         <ThemeProvider>
+          <TooltipLayer />
           {publicMatch ? (
             <React.Suspense fallback={<LoadingScreen />}>
               <PublicProjectPage token={publicMatch[1]!} />

@@ -24,7 +24,11 @@
     "test:browser": "playwright test",
     "benchmark:browser": "playwright test --grep \"profile pan\"",
     "benchmark:workspace": "playwright test workspace-performance --grep \"profile workspace\"",
-    "typecheck:browser": "tsc --project tsconfig.browser.json"
+    "typecheck:browser": "tsc --project tsconfig.browser.json",
+    "build:guide": "vite build --config vite.guide.config.ts",
+    "preview:guide": "vite preview --config vite.guide.config.ts --host 127.0.0.1 --port 4181 --strictPort",
+    "guide:screenshots": "playwright test --config playwright.guide.config.ts",
+    "guide:screenshots:workspace": "UPDATE_GUIDE_SCREENSHOTS=1 playwright test user-guide --grep 'capture workspace illustrations'"
   },
   "dependencies": {
     "@fontsource/architects-daughter": "^5.3.0",

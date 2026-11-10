@@ -1,4 +1,5 @@
 import UserAvatar from '@/shared/components/UserAvatar';
+import { UserGuideButton } from '@/features/user-guide/UserGuideProvider';
 import PhotoEditor from '@/features/identity-media/PhotoEditor';
 import { identityMedia } from '@/features/identity-media/api';
 import { isMockDataSource } from '@/app/services';
@@ -132,6 +133,7 @@ export default function AdminUsersPanel({ onClose }: { onClose?: () => void }) {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <UserGuideButton />
             <button className="btn-ghost rounded-xl px-3 py-2 text-sm" onClick={toggleTheme}>
               {translate('Use') + ' '}
               {theme === 'light' ? 'dark' : 'light'} {' ' + translate('theme')}
